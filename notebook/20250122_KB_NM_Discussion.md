@@ -10,11 +10,11 @@
   - **src**: Please upload main code files and whatever datasets they require
     - If datasets were created via code files, please upload those code files as well
     - Remember principles of code reproducibility
-    - **data**: see src section for what data to include here 
+  - **data**: see src section for what data to include here 
   - **notebook**: for meeting notes, analysis notes
     - For analyses: include major figures, brief interpretation/description of finding it shows, how you produced said figure(s) (i.e. models, analysis methods, etc.)
       - Linking code/data here would be super helpful
-    - **figures**: pretty self-explanatory, any figures that may contribute to results should go here
+  - **figures**: pretty self-explanatory, any figures that may contribute to results should go here
 - Review preliminary figures in slideshow
 - Review methods if people have had time to write them
 - Do we want a regular meeting time?
