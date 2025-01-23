@@ -1,8 +1,10 @@
 ---
-title: "Environment_Length_Survival_Hatchery"
+title: "Envr_of_Origin_Length_Survival_Hatchery"
 output: pdf_document
 date: "2024-10-26"
 ---
+
+This code analyzes the effect of condition in the environments-of-origin on offspring oyster survival and shell length in the hatchery and nursery at VIMS ABC.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -179,18 +181,21 @@ length78_lat_pval <- unname(length78_lat_pval[2])
 ```
 
 ```{r}
+#test correlation between temperature and latitude. If they are highly correlated, one must be excluded from the upcoming multiple regression.
 temp_lat_corr <- cor.test(surv_length_envr$Mean_Annual_Temperature_C, surv_length_envr$lat)
 temp_lat_corr #significant correlation between temp and lat, cannot include both in multiple regression
 
-#multiple regression
+#multiple regression testing effect of mean annual temp and mean annual salinity at the environments-of-origin on percent survival
 surv_temp_sal_lm <- lm(percent_survival ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt, data = surv_length_envr)
 summary(surv_temp_sal_lm) #both explanatory variables significant, whole model significant
 
+#multiple regression testing effect of mean annual temp and mean annual salinity at the environments-of-origin on mean length at the eyed stage (days 15-21)
 length21_temp_sal_lm <- lm(mean_length_mm_21 ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt, data = surv_length_envr)
 summary(length21_temp_sal_lm) #neither explanatory variable significant, model not significant
 
+#multiple regression testing effect of mean annual temp and mean annual salinity at the environments-of-origin on mean length at the pre-deployment stage (day 78)
 length78_temp_sal_lm <- lm(mean_length_mm_78 ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt, data = surv_length_envr)
-summary(length78_temp_sal_lm) #neither explanatory variable significant, model insignifcant
+summary(length78_temp_sal_lm) #neither explanatory variable significant, model insignificant
 #put multiple regression output table in results
 ```
 
@@ -206,7 +211,7 @@ p_values
 p_adj
 
 ```
-ADJUSTED P-VALUES - NICOLE YOU NEED TO UPDATE THESE
+ADJUSTED P-VALUES
 - Mean annual temp is not a significant predictor of mean length at day 21 (p = 0.831)
 - Mean annual salinity is not a significant predictor of mean length at day 21 (p = 0.831). 
 - Latitude is not a significant predictor of mean length at day 21 (p = 0.831). 
@@ -256,111 +261,6 @@ surv_plots
 
 ggsave("surv_plots.png",
        plot = surv_plots,
-       device = png,
-       path = "/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/results/NM_results/Result_plots")
-```
-
-Make distance matrices for difference in mean length across groups at days 21 and 78 and difference in survival across groups at day 21
-```{r}
-#save vector of row and column names
-rownames <- c("DEBY", "LOLA", "JR", "TX", "LA", "FL", "NH", "ME")
-colnames <- c("DEBY", "LOLA", "JR", "TX", "LA", "FL", "NH", "ME")
-
-means_mm_21 <- subset(means_mm_21, select = -c(site_name))
-
-day21_len_dist <- as.matrix(dist(means_mm_21$mean_length_mm_21))
-rownames(day21_len_dist) <- rownames
-colnames(day21_len_dist) <- colnames
-
-day78_len_dist <- as.matrix(dist(means_mm_78$mean_length_mm_78))
-rownames(day78_len_dist) <- rownames
-colnames(day78_len_dist) <- colnames
-
-day21_surv_dist <- as.matrix(dist(survival_filter$percent_survival))
-rownames(day21_surv_dist) <- rownames
-colnames(day21_surv_dist) <- colnames
-
-#remove site_name column from envr_dist, and make it a matrix
-envr_dist <- subset(envr_dist, select = -c(X))
-envr_dist_mat <- as.matrix(envr_dist)
-```
-
-I will run Mantel tests comparing days 21 and 78 length distance and day 21 survival distance to environmental distance. The goal is to see if more environmentally distant pairs of groups also have greater differences in length and survival. 
-
-H0: There is no correlation between the environmental distance matrix values and the length or survival matrix values. Environmental distance and length/survival do not vary with each other in any predictable way
-
-#Mantel test
-```{r}
-length21_envr = mantel(day21_len_dist, envr_dist_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
-length21_envr
-#mantel r = 0.3054, p = 0.078492. As environmental distance between a pair of sights increases, so does the distance between their mean shell length at day 21. This is not significant.
-
-length78_envr = mantel(day78_len_dist, envr_dist_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
-length78_envr 
-#mantel r = -0.1653. p = 0.73843. As environmental distance between a pair of sights increases, the distance between their mean shell length at day 78 decreases. This is not significant.
-
-surv21_envr = mantel(day21_surv_dist, envr_dist_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
-surv21_envr
-#mantel r = -0.2299, p = 0.50545
-```
-
-#Correct Mantel p-values
-```{r}
-mantel_p <- c(0.078492, 0.73843, 0.50545)
-
-mantel_p_adj <- p.adjust(mantel_p, method = "BH")
-
-mantel_p_adj
-
-#length21_envr corrected p = 0.235476, length78_envr corrected p = 0.738430, surv21_envr corrected p = 0.738430
-```
-
-#Plot Mantel test results
-```{r}
-envr_pairwise_dist <- as.vector(envr_dist_mat)
-
-day21_pairwise_len_dist <- as.vector(day21_len_dist)
-
-day78_pairwise_len_dist <- as.vector(day78_len_dist)
-
-day21_pairwise_surv_dist <- as.vector(day21_surv_dist)
-
-pairwise_dist <- as.data.frame(cbind(envr_pairwise_dist, day21_pairwise_len_dist, day78_pairwise_len_dist, day21_pairwise_surv_dist))
-
-length21_envr_dist <- pairwise_dist %>%
-  ggplot(aes(x = envr_pairwise_dist, y = day21_pairwise_len_dist))+
-  geom_point()+
-  labs(subtitle = "A: p = 0.078, corrected p = 0.235, r = 0.31")+
-  ylab(wrapper("Difference in Day 21 Length (mm)", width = 20))+
-  theme(axis.title.y = element_text(size = 9), axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), plot.subtitle = element_text(size = 10), plot.title= element_blank())
-
-length21_envr_dist
-
-length78_envr_dist <- pairwise_dist %>%
-  ggplot(aes(x = envr_pairwise_dist, y = day78_pairwise_len_dist))+
-  geom_point()+
-  labs(subtitle = "B: p = 0.738, corrected p = 0.738, r = -0.17")+
-  ylab(wrapper("Difference in Day 78 Length (mm)", width = 20))+
-  theme(axis.title.y = element_text(size = 9), axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), plot.subtitle = element_text(size = 10))
-
-length78_envr_dist
-
-surv_envr_dist <- pairwise_dist %>%
-  ggplot(aes(x = envr_pairwise_dist, y = day21_pairwise_surv_dist))+
-  geom_point()+
-  labs(subtitle = "C: p = 0.505, corrected p = 0.738, r = -0.23")+
-  ylab(wrapper("Difference in Survival (%)", width = 20))+
-  xlab("Environmental Distance")+
-  theme(axis.title.y = element_text(size = 9), axis.title.x = element_text(size = 9), plot.subtitle = element_text(size = 10))
-
-surv_envr_dist
-
-mantel_plots <- plot_grid(length21_envr_dist, length78_envr_dist, surv_envr_dist, ncol = 1, align = "v")
-
-mantel_plots
-
-ggsave("mantel_plots.png",
-       plot = mantel_plots,
        device = png,
        path = "/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/results/NM_results/Result_plots")
 ```
