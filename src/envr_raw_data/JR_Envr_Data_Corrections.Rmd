@@ -1,0 +1,190 @@
+---
+title: "JR_Data_Comparisons"
+output: pdf_document
+date: "2024-10-15"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This code examines the differences between environmental data for the JR site, located at Deep Water Shoal, James River, Virginia, as part of the CViMVP project. The two data sources are:
+
+1. VIMS Water Quality Data, which were downloaded by Madeline Eppley on 15 September 2023
+2. NOAA National Buoy Data Center (NBDC), Chesapeake Bay Interpretive Buoy System downloaded by myself (Nicole Mongillo) on 1 October 2024. 
+
+I will plot the salinity and temperature data from each data set against each other to see how similar the data are. I will then apply a correction factor to the NBDC data based on the difference between NBDC and VIMS data. 
+
+All labels for objects with data from NOAA will begin with NBDC, and all labels for objects with data from VIMS will be labeled VIMS.
+
+```{r}
+setwd("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/src/NM")
+```
+
+```{r packages}
+library("dplyr") #Used for working with data frames
+library("lubridate") #Used for time-date conversions
+library("readr") #Used to read the CSV file
+library("ggplot2") 
+library("stringr")
+```
+
+#VIMS Data Upload and Cleaning
+```{r VIMS_cleaning}
+#Environmental data from the NBDC could only be downloaded by year, so first we need to merge the yearly data sets.
+
+VIMS_raw <- read_csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/VA1-raw.csv")
+
+# View how the data are stored. Note the variable names and the format and units that the data are stored in.  
+summary(VIMS_raw)
+
+#Convert to POSIXct format. Store it into a column named datetime in the data frame.
+VIMS_raw$datetime <- as.POSIXct(VIMS_raw$DateRetrieved, "%d-%b-%y", tz = "")
+
+#Print the new data frame and examine to make sure the new datetime column is in the correct format. 
+head(VIMS_raw)
+
+
+#rename columns
+VIMS_raw <- VIMS_raw %>% rename("salinity_VIMS" = "Salinity")
+VIMS_raw <- VIMS_raw  %>% rename("temp_VIMS" = "WaterTemperature")
+
+#Filter the data between the values of 0 and 40 for both salinity and temperature. 
+VIMS_filtered <- VIMS_raw %>%
+    filter(between(salinity_VIMS, 0, 40)) 
+           
+VIMS_filtered <- VIMS_raw %>%
+    filter(between(temp_VIMS, 0, 40))
+
+# Sanity check - print the ranges to ensure values are filtered properly. We can see that the ranges for both are now in the appropriate range.  
+print(summary(VIMS_filtered$salinity_VIMS))
+print(summary(VIMS_filtered$temp_VIMS))
+
+VIMS_filtered$date <- as.POSIXct(VIMS_filtered$datetime, "%Y-%m-%d", tz = "")
+
+```
+
+#NDBC Data Upload and Cleaning
+```{r NBDC}
+#Environmental data from the NBDC could only be downloaded by year, so first we need to merge the yearly data sets.
+
+#set working directory to files location
+setwd("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/JR_NBDC_Data_44041")
+
+#merge files into one
+NBDC_raw <- list.files(path="/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/JR_NBDC_Data_44041") %>% 
+  lapply(read.csv) %>% 
+  bind_rows 
+
+NBDC_raw <- subset(NBDC_raw, select = c(X.YY, MM, DD, hh, mm, OTMP, SAL)) #keep year, month, day, hour, minute, ocean temperature, and salinity columns.
+
+# View how the data are stored. Note the variable names and the format and units that the data are stored in.  
+summary(NBDC_raw)
+
+#make one single datetime column in POSIXct format
+NBDC_raw$datetime <- as.POSIXct(paste(NBDC_raw$X.YY, NBDC_raw$MM, NBDC_raw$DD, NBDC_raw$hh, NBDC_raw$mm), format="%Y %m %d %H %M", tz = "")
+
+#remove unmerged date-time columns
+NBDC_raw<- subset(NBDC_raw, select = c(OTMP, SAL, datetime))
+
+#reorder and rename columns
+NBDC_raw <- NBDC_raw[ , c(3,1,2)]
+
+colnames(NBDC_raw) <- c("datetime", "temp_NBDC", "salinity_NBDC")
+
+#Filter the data between the values of 0 and 40 for both salinity and temperature. 
+NBDC_filtered <- NBDC_raw %>%
+    filter(between(salinity_NBDC, 0, 40)) 
+           
+NBDC_filtered <- NBDC_raw %>%
+    filter(between(temp_NBDC, 0, 40))
+
+# Sanity check - print the ranges to ensure values are filtered properly. We can see that the ranges for both are now in the appropriate range.  
+print(summary(NBDC_filtered$salinity_NBDC))
+print(summary(NBDC_filtered$temp_NBDC))
+```
+
+```{r temperature_plot1}
+tempplot <- ggplot(NBDC_filtered, aes(x=datetime, y = temp_NBDC, color = "NBDC")) +
+    geom_line()+
+    geom_line(data = VIMS_filtered, aes(x=datetime, y = temp_VIMS, color = "VIMS"))+
+  scale_color_manual(values=c("black", "red"))+
+  labs(x = "Time", y = "Temperature C", title = "Temperature Plot for NBDC and VIMS Data Sets")
+
+tempplot
+```
+
+```{r salinity-plot1}
+salplot <- ggplot(NBDC_filtered, aes(x=datetime, y = salinity_NBDC, color = "NBDC")) +
+    geom_line()+
+    geom_line(data = VIMS_filtered, aes(x=datetime, y = salinity_VIMS, color = "VIMS"))+
+  scale_color_manual(values=c("black", "red"))+
+  labs(x = "Time", y = "Salinity ppt", title = "Salinity Plot for NBDC and VIMS Data Sets")
+
+salplot
+```
+
+VIMS data are recorded daily, while NBDC are recorded once an hour. I will average NBDC temperature and salinity by day. Then I will select days that appear in both data sets in order to do a correction.
+```{r}
+#extract date from datetime and make it POSIXct format
+NBDC_filtered$date <- format(NBDC_filtered$datetime, "%Y-%m-%d")
+NBDC_filtered$date <- as.POSIXct(NBDC_filtered$date, "%Y-%m-%d", tz = "")
+
+#average temperature and salinity by day for NBDC
+NBDC_filtered <- NBDC_filtered %>% 
+  group_by(date) %>% 
+  mutate(mean_daily_temp_NBDC = mean(temp_NBDC), mean_daily_sal_NBDC = mean(salinity_NBDC))
+
+#filter so each day is represented once
+
+NBDC_day <- NBDC_filtered[match(unique(NBDC_filtered$date), NBDC_filtered$date), ]
+
+NBDC_day_filtered <- NBDC_day[NBDC_day$date %in% VIMS_filtered$datetime, ]
+
+VIMS_day_filtered <- VIMS_filtered[VIMS_filtered$datetime %in% NBDC_day_filtered$date, ]
+```
+
+Re-plot temperature and salinity from the two data sets to make sure dates look like they align
+```{r temperature-plot}
+filter_tempplot <- ggplot(NBDC_day_filtered, aes(x=datetime, y = mean_daily_temp_NBDC, color = "NBDC")) +
+    geom_point()+
+    geom_point(data = VIMS_day_filtered, aes(x=date, y = temp_VIMS, color = "VIMS"))+
+  scale_color_manual(values=c("black", "red"))+
+  labs(x = "Time", y = "Temperature C", title = "Temperature Plot for NBDC and VIMS Data Sets") 
+
+filter_tempplot
+```
+
+```{r salinity-plot}
+filtered_salplot <- ggplot(NBDC_day_filtered, aes(x=datetime, y = mean_daily_sal_NBDC, color = "NBDC")) +
+    geom_point()+
+    geom_point(data = VIMS_day_filtered, aes(x=date, y = salinity_VIMS, color = "VIMS"))+
+  scale_color_manual(values=c("black", "red"))+
+  labs(x = "Time", y = "Salinity ppt", title = "Salinity Plot for NBDC and VIMS Data Sets")
+
+filtered_salplot
+```
+
+```{r correction_value}
+NBDC_VIMS_df <- left_join(VIMS_day_filtered,
+          NBDC_day_filtered, by = "date")
+
+#select relevant columns
+NBDC_VIMS_df <- NBDC_VIMS_df[ , c("date", "mean_daily_temp_NBDC", "temp_VIMS", "mean_daily_sal_NBDC", "salinity_VIMS")]
+
+NBDC_VIMS_df <- NBDC_VIMS_df %>% 
+  mutate(temp_diff = temp_VIMS-mean_daily_temp_NBDC, sal_diff = salinity_VIMS -mean_daily_sal_NBDC)
+
+temp_correction <- mean(NBDC_VIMS_df$temp_diff)
+#On average, VIMS temperature readings are 1.4 °C lower than readings from NBDC. Correct NBDC temperature values by subtracting 1.4°C from each reading.
+
+sal_correction <- mean(NBDC_VIMS_df$sal_diff)
+#On average, VIMS salinity readings are 12.1 ppt higher than readings from NBDC. Correct NBDC salinity values by adding 12.1 ppt to each reading.
+
+NBDC_raw$temp_corrected <- NBDC_raw$temp_NBDC-1.4
+
+NBDC_raw$salinity_corrected <- NBDC_raw$salinity_NBDC+12.1
+
+write.csv(NBDC_raw, "/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/JR-NBDC-corrected.csv")
+```
+
