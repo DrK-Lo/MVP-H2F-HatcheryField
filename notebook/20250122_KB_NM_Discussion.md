@@ -1,0 +1,21 @@
+# Discussion Notes for Meeting on Friday
+- Journal to aim for: Evolution, possibly Evolutionary Applications?
+  - We like that the funding goes toward funding other research and fellowships
+  - Broader audience is appealing, we recognize that the introduction will need to be broader to match this
+- Question for KEL: is this the GitHub we are using for our own organization, or is this meant to be published at the end of the process?
+  - If yes, we may want to reorganize based on analysis type
+- Talk through GitHub organization - KB and NM will populate/update README files
+  - Reminder that GitHub is for final versions of analyses, start to populate with final datasets
+  - Feel free to create new folders to keep code, results, etc. organized
+  - **src**: Please upload main code files and whatever datasets they require
+    - If datasets were created via code files, please upload those code files as well
+    - Remember principles of code reproducibility
+    - **data**: see src section for what data to include here 
+  - **notebook**: for meeting notes, analysis notes
+    - For analyses: include major figures, brief interpretation/description of finding it shows, how you produced said figure(s) (i.e. models, analysis methods, etc.)
+      - Linking code/data here would be super helpful
+    - **figures**: pretty self-explanatory, any figures that may contribute to results should go here
+- Review preliminary figures in slideshow
+- Review methods if people have had time to write them
+- Do we want a regular meeting time?
+- Merge outline docs - we currently have 2
