@@ -7,6 +7,13 @@ This repository is for the manuscript detailing the oyster hatchery to field pro
 4. What regions of the genome are putatively under spatially heterogeneous selection? 
 5. How do different strategies for increasing diversity (e.g. by crossing gametes from different genetic groups vs. by combining seed from different genetic groups) contribute to long-term success at different field sites?
 
+In this repository, please find folders related to the following subjects.
+
+- src: code files used for data analysis
+- data: relevant datasets used for analysis
+- figures: image files with result figures
+- notebook: markdown files with meeting notes, analysis documentation, and planning material.
+
 ## Important Links
 - [Manuscript outline](https://docs.google.com/document/d/1umBOnKRsqdk8dJJk9OFpyiXz1s_kKJ5wWHXGKqlc-O8/edit?tab=t.0)
 - [Manuscript](https://docs.google.com/document/d/196gimBon8jOaJf0-BipGwY2uMGEjL5sQ/edit?usp=sharing&ouid=113793533995581421488&rtpof=true&sd=true)
