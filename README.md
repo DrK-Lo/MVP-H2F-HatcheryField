@@ -2,7 +2,7 @@
 This repository is for the manuscript detailing the oyster hatchery to field project. Adult Eastern oysters (*Crassostrea virginica*) were collected from 11 locations along the East Coast of the USA and brought the Virginia Institute of Marine Science's Aquaculture Genetics and Breeding Technology Center (ABC). In May 2023, adult oysters were strip spawned and their offspring were raised in the ABC until age 79 days, at which point they were deployed in two field sites: the York River and the Lewisetta River. This project examined the following questions:
 
 1. What is the extent of differences in survival and growth among oysters from different parental groups through time in the hatchery and at different field sites?
-2. To what extent does parental group, parental heterozygosity, and parental environment-of-orgin predict short-term hatchery success or long-term performance of oysters in the field?
+2. To what extent does parental group, parental heterozygosity, and parental environment-of-origin predict short-term hatchery success or long-term performance of oysters in the field?
 3. To what extent does pairwise difference in parental genetics and environment-of-origin predict pairwise differences in growth or survival in the hatchery? In the field?
 4. What regions of the genome are putatively under spatially heterogeneous selection? 
 5. How do different strategies for increasing diversity (e.g. by crossing gametes from different genetic groups vs. by combining seed from different genetic groups) contribute to long-term success at different field sites?
