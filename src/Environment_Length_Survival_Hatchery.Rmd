@@ -1,0 +1,368 @@
+---
+title: "Environment_Length_Survival_Hatchery"
+output: pdf_document
+date: "2024-10-26"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+setwd("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/src/NM")
+```
+
+```{r packages}
+library(tidyverse)
+library(ggplot2)
+library(gridExtra)
+library(multcompView) #extract significance letters from Tukey-Kramer test
+library(tidyverse)
+library(grid)#for ggplot arranging
+library(cowplot) #arrange ggplots
+library(ggpmisc)
+library(vegan) #for Mantel tests
+```
+
+#read in necessary files
+```{r}
+#this file contains raw lengths of all oysters aged 15-78 days
+length <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/latestage_length.csv")
+
+#this file has summary statistics on temperature and salinity for the 8 sites (DEBY, LOLA, JR, TX, LA, FL, NH, ME)
+envr_summary <-  read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/NM_envr_for_violinplots.csv")
+
+#this file is a matrix of the environmental distances between each site
+envr_dist <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/NM_envr_dist.csv")
+
+#this file contains survival rate data for larval oysters up to day 21 post hatching
+survival <-  read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/CViMVP_larvae_survival.csv")
+```
+
+Extract survival rates from survival data frame, and reorganize data frame
+```{r}
+summary(survival)
+
+#For survival rates, we only care about survival from day 21 (marked as day_an 15-21), so filter for those day_an only. Reminder that days 15-21 were grouped for analysis because there were constant larval drops occurring during that time, but the number of drops varied by site. Also exclude LARMIX, since there is no environmental data for that, given that it represents oysters from multiple sites
+survival_day21 <- survival %>% 
+  filter(Day_analysis == "15-21") %>% 
+  filter(Tank_naming != "MVP-LARMIX")
+
+#Exclude any groups with "small" in their label. The length data only considers the eyed oysters.
+#use grep function to make a vector of all indices in latestage_len with the phrase "small" in them, ignore.case=TRUE means query is not case sensitive
+small <- grep("small", survival_day21$Group_Day_Label, ignore.case = TRUE)
+
+#make new dataframe WITHOUT any indices saved in small, mean remaining data are everything except small larvae
+survival_day21_sub <- survival_day21[-small, ]
+
+#exclude "MVP" from group names to shorten them
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-DEBY"] <- "DEBY"
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"]  == "MVP-FL"] <- "FL"
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-JR"] <- "JR"
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-LA"] <- "LA"
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-LOLA"] <- "LOLA"
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-ME"] <- "ME"
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-NH"] <- "NH"
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-TX"] <- "TX"
+
+#select only tank naming and survival rate columns
+survival_filter <- survival_day21_sub[, c("Tank_naming", "Survival_rate_perc")]
+
+#rename columns
+colnames(survival_filter) <- c("site_name", "percent_survival")
+```
+
+#length df organizing
+```{r}
+#select columns with group, day, and shell length in mm
+length <- length[,c("group", "day_an", "shell_length_mm")]
+
+#filter out LARMIX from group
+length_filter <- length %>% 
+  filter(group != "LARMIX")
+
+#keep only data from days 15-21
+length_21 <- length_filter %>% 
+  filter(day_an == "15-21")
+
+length_78 <- length_filter %>% 
+  filter(day_an == "78")
+
+#find mean shell lengths of each group on each day
+means_mm_21 <- aggregate(shell_length_mm ~ group, FUN = mean, data = length_21)
+colnames(means_mm_21) <- c("site_name", "mean_length_mm_21")
+
+means_mm_78 <- aggregate(shell_length_mm ~ group, FUN = mean, data = length_78)
+colnames(means_mm_78) <- c("site_name", "mean_length_mm_78")
+```
+
+#remove extra columns from environmental data frame
+```{r}
+#remove extra site label and standard deviations from envr_summary
+envr <- envr_summary[,-c(2,6,10)]
+
+summary(envr)
+
+#rename cols
+colnames(envr) <- c("site_name", "Mean_Annual_Temperature_C", "Mean_max_temperature_C", "Mean_min_temperature_C", "Mean_Annual_Salinity_ppt", "Mean_max_Salinity_ppt", "Mean_min_Salinity_ppt")
+
+#add sampling site latitudes. Note that these latitudes ARE NOT the same as the latitudes of where environmental data came from. These latitudes, while similar, were often slightly different, and I am using our actual sampling site latitudes. These latitudes are the same ones as those in table 1 in my thesis.
+envr$lat <- c(37.249107, 37.98030, 37.1501163, 28.096000, 29.239925, 30.440030, 43.053746, 44.01330)
+```
+
+#Join data frames
+```{r}
+surv_length_envr <- left_join(envr, means_mm_21, by = "site_name") %>% 
+  left_join(means_mm_78, by = "site_name") %>% 
+  left_join(survival_filter, by = "site_name")
+
+write.csv(surv_length_envr, "/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/Survival_Length_Envr_Data.csv", row.names = FALSE)
+```
+
+```{r}
+#compare mean length on day 21 to mean annual temp, mean annual salinity, and latitude
+
+length21_temp_lm <- lm(mean_length_mm_21 ~ Mean_Annual_Temperature_C, data = surv_length_envr)
+summary(length21_temp_lm)
+#extract p-value (.568)
+length21_temp_pval <- summary(length21_temp_lm)$coefficients[,4]
+length21_temp_pval <- unname(length21_temp_pval[2])
+
+
+length21_sal_lm <- lm(mean_length_mm_21 ~ Mean_Annual_Salinity_ppt, data = surv_length_envr)
+#extract p-value (.411)
+length21_sal_pval <- summary(length21_sal_lm)$coefficients[,4]
+length21_sal_pval <- unname(length21_sal_pval[2])
+
+length21_lat_lm <- lm(mean_length_mm_21 ~ lat, data = surv_length_envr)
+summary(length21_lat_lm)
+#extract p-value (0.646)
+length21_lat_pval <- summary(length21_lat_lm)$coefficients[,4]
+length21_lat_pval <- unname(length21_lat_pval[2])
+
+#compare percent survival to mean annual temp, mean annual salinity, and envr distance from DEBY
+surv_temp_lm <- lm(percent_survival ~ Mean_Annual_Temperature_C, data = surv_length_envr)
+summary(surv_temp_lm)
+#extract p-value (0.024)
+surv_temp_pval <- summary(surv_temp_lm)$coefficients[,4]
+surv_temp_pval <- unname(surv_temp_pval[2])
+
+surv_sal_lm <- lm(percent_survival ~ Mean_Annual_Salinity_ppt, data = surv_length_envr)
+summary(surv_sal_lm)
+#extract p-value (0.172)
+surv_sal_pval <- summary(surv_sal_lm)$coefficients[,4]
+surv_sal_pval <- unname(surv_sal_pval[2])
+
+surv_lat_lm <- lm(percent_survival ~ lat, data = surv_length_envr)
+summary(surv_lat_lm)
+#extract p-value (0.0466)
+surv_lat_pval <- summary(surv_lat_lm)$coefficients[,4]
+surv_lat_pval <- unname(surv_lat_pval[2])
+
+#compare length at day 78 to mean annual temp, mean annual salinity, and envr distance from DEBY
+length78_temp_lm <- lm(mean_length_mm_78 ~ Mean_Annual_Temperature_C, data = surv_length_envr)
+summary(length78_temp_lm)
+#extract p-value (0.543)
+length78_temp_pval <- summary(length78_temp_lm)$coefficients[,4]
+length78_temp_pval <- unname(length78_temp_pval[2])
+
+
+length78_sal_lm <- lm(mean_length_mm_78 ~ Mean_Annual_Salinity_ppt, data = surv_length_envr)
+#extract p-value (0.983)
+length78_sal_pval <- summary(length78_sal_lm)$coefficients[,4]
+length78_sal_pval <- unname(length78_sal_pval[2])
+
+length78_lat_lm <- lm(mean_length_mm_78 ~ lat, data = surv_length_envr)
+#extract p-value (0.962)
+length78_lat_pval <- summary(length78_lat_lm)$coefficients[,4]
+length78_lat_pval <- unname(length78_lat_pval[2])
+```
+
+```{r}
+temp_lat_corr <- cor.test(surv_length_envr$Mean_Annual_Temperature_C, surv_length_envr$lat)
+temp_lat_corr #significant correlation between temp and lat, cannot include both in multiple regression
+
+#multiple regression
+surv_temp_sal_lm <- lm(percent_survival ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt, data = surv_length_envr)
+summary(surv_temp_sal_lm) #both explanatory variables significant, whole model significant
+
+length21_temp_sal_lm <- lm(mean_length_mm_21 ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt, data = surv_length_envr)
+summary(length21_temp_sal_lm) #neither explanatory variable significant, model not significant
+
+length78_temp_sal_lm <- lm(mean_length_mm_78 ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt, data = surv_length_envr)
+summary(length78_temp_sal_lm) #neither explanatory variable significant, model insignifcant
+#put multiple regression output table in results
+```
+
+
+#adjust p-values
+```{r}
+p_values <- c(length21_temp_pval, length21_sal_pval, length21_lat_pval, surv_temp_pval, surv_sal_pval, surv_lat_pval, length78_temp_pval ,length78_sal_pval, length78_lat_pval)
+
+p_adj <- p.adjust(p_values, method = "BH")
+
+p_values
+
+p_adj
+
+```
+ADJUSTED P-VALUES - NICOLE YOU NEED TO UPDATE THESE
+- Mean annual temp is not a significant predictor of mean length at day 21 (p = 0.831)
+- Mean annual salinity is not a significant predictor of mean length at day 21 (p = 0.831). 
+- Latitude is not a significant predictor of mean length at day 21 (p = 0.831). 
+
+- Mean annual temp is no longer a significant predictor of percent survival at day 21 (p = 0.210).
+- Mean annual salinity is not a significant predictor of percent survival at day 21 (p = 0.516). 
+- Latitude is not a significant predictor of percent survival at day 21 (p = 0.210). 
+
+- Mean annual temp is not a significant predictor of mean length at day 78 (p = 0.831)
+- Mean annual salinity is not a significant predictor of mean length at day 78 (p = 0.983). 
+- Latitude is not a significant predictor of mean length at day 78 (p = 0.983).
+
+```{r}
+#make function to wrap title text
+wrapper <- function(x, ...) 
+{
+  paste(strwrap(x, ...), collapse = "\n")
+}
+
+surv_temp_plot <- surv_length_envr %>%
+  ggplot(aes(x = Mean_Annual_Temperature_C, y = percent_survival))+
+  geom_point()+
+  labs(subtitle = "A: p = 0.009, slope = 0.28")+
+  ggtitle("Percent Survival vs. Mean Annual Temperature & Mean Annual Salinity")+
+  ylab("% Survival")+
+  xlab("Mean Annual Temperature (°C)")+
+  ylim(c(0,5))+
+  theme(axis.title.y = element_text(size = 9), axis.title.x = element_text(size = 9), axis.text.x = element_text(size = 9), plot.subtitle = element_text(size = 10), plot.title = element_text(size = 12))+
+  geom_smooth(method = "lm", se = TRUE, fullrange = TRUE)
+
+surv_temp_plot
+
+surv_sal_plot <- surv_length_envr %>%
+  ggplot(aes(x = Mean_Annual_Salinity_ppt, y = percent_survival))+
+  geom_point()+
+  labs(subtitle = "B: p = 0.041, slope = -0.08")+
+  ylab("% Survival")+
+  xlab("Mean Annual Salinity (ppt)")+
+  theme(axis.title.x = element_text(size = 9), plot.title = element_blank(), plot.subtitle = element_text(size = 10), axis.title.y = element_text(size = 9))+
+  geom_smooth(method = "lm", se = TRUE, fullrange = TRUE)
+
+surv_sal_plot
+
+surv_plots <- plot_grid(surv_temp_plot, surv_sal_plot, ncol = 1, align = "v")
+
+surv_plots
+
+ggsave("surv_plots.png",
+       plot = surv_plots,
+       device = png,
+       path = "/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/results/NM_results/Result_plots")
+```
+
+Make distance matrices for difference in mean length across groups at days 21 and 78 and difference in survival across groups at day 21
+```{r}
+#save vector of row and column names
+rownames <- c("DEBY", "LOLA", "JR", "TX", "LA", "FL", "NH", "ME")
+colnames <- c("DEBY", "LOLA", "JR", "TX", "LA", "FL", "NH", "ME")
+
+means_mm_21 <- subset(means_mm_21, select = -c(site_name))
+
+day21_len_dist <- as.matrix(dist(means_mm_21$mean_length_mm_21))
+rownames(day21_len_dist) <- rownames
+colnames(day21_len_dist) <- colnames
+
+day78_len_dist <- as.matrix(dist(means_mm_78$mean_length_mm_78))
+rownames(day78_len_dist) <- rownames
+colnames(day78_len_dist) <- colnames
+
+day21_surv_dist <- as.matrix(dist(survival_filter$percent_survival))
+rownames(day21_surv_dist) <- rownames
+colnames(day21_surv_dist) <- colnames
+
+#remove site_name column from envr_dist, and make it a matrix
+envr_dist <- subset(envr_dist, select = -c(X))
+envr_dist_mat <- as.matrix(envr_dist)
+```
+
+I will run Mantel tests comparing days 21 and 78 length distance and day 21 survival distance to environmental distance. The goal is to see if more environmentally distant pairs of groups also have greater differences in length and survival. 
+
+H0: There is no correlation between the environmental distance matrix values and the length or survival matrix values. Environmental distance and length/survival do not vary with each other in any predictable way
+
+#Mantel test
+```{r}
+length21_envr = mantel(day21_len_dist, envr_dist_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
+length21_envr
+#mantel r = 0.3054, p = 0.078492. As environmental distance between a pair of sights increases, so does the distance between their mean shell length at day 21. This is not significant.
+
+length78_envr = mantel(day78_len_dist, envr_dist_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
+length78_envr 
+#mantel r = -0.1653. p = 0.73843. As environmental distance between a pair of sights increases, the distance between their mean shell length at day 78 decreases. This is not significant.
+
+surv21_envr = mantel(day21_surv_dist, envr_dist_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
+surv21_envr
+#mantel r = -0.2299, p = 0.50545
+```
+
+#Correct Mantel p-values
+```{r}
+mantel_p <- c(0.078492, 0.73843, 0.50545)
+
+mantel_p_adj <- p.adjust(mantel_p, method = "BH")
+
+mantel_p_adj
+
+#length21_envr corrected p = 0.235476, length78_envr corrected p = 0.738430, surv21_envr corrected p = 0.738430
+```
+
+#Plot Mantel test results
+```{r}
+envr_pairwise_dist <- as.vector(envr_dist_mat)
+
+day21_pairwise_len_dist <- as.vector(day21_len_dist)
+
+day78_pairwise_len_dist <- as.vector(day78_len_dist)
+
+day21_pairwise_surv_dist <- as.vector(day21_surv_dist)
+
+pairwise_dist <- as.data.frame(cbind(envr_pairwise_dist, day21_pairwise_len_dist, day78_pairwise_len_dist, day21_pairwise_surv_dist))
+
+length21_envr_dist <- pairwise_dist %>%
+  ggplot(aes(x = envr_pairwise_dist, y = day21_pairwise_len_dist))+
+  geom_point()+
+  labs(subtitle = "A: p = 0.078, corrected p = 0.235, r = 0.31")+
+  ylab(wrapper("Difference in Day 21 Length (mm)", width = 20))+
+  theme(axis.title.y = element_text(size = 9), axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), plot.subtitle = element_text(size = 10), plot.title= element_blank())
+
+length21_envr_dist
+
+length78_envr_dist <- pairwise_dist %>%
+  ggplot(aes(x = envr_pairwise_dist, y = day78_pairwise_len_dist))+
+  geom_point()+
+  labs(subtitle = "B: p = 0.738, corrected p = 0.738, r = -0.17")+
+  ylab(wrapper("Difference in Day 78 Length (mm)", width = 20))+
+  theme(axis.title.y = element_text(size = 9), axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), plot.subtitle = element_text(size = 10))
+
+length78_envr_dist
+
+surv_envr_dist <- pairwise_dist %>%
+  ggplot(aes(x = envr_pairwise_dist, y = day21_pairwise_surv_dist))+
+  geom_point()+
+  labs(subtitle = "C: p = 0.505, corrected p = 0.738, r = -0.23")+
+  ylab(wrapper("Difference in Survival (%)", width = 20))+
+  xlab("Environmental Distance")+
+  theme(axis.title.y = element_text(size = 9), axis.title.x = element_text(size = 9), plot.subtitle = element_text(size = 10))
+
+surv_envr_dist
+
+mantel_plots <- plot_grid(length21_envr_dist, length78_envr_dist, surv_envr_dist, ncol = 1, align = "v")
+
+mantel_plots
+
+ggsave("mantel_plots.png",
+       plot = mantel_plots,
+       device = png,
+       path = "/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/results/NM_results/Result_plots")
+```
+
+

@@ -1,0 +1,243 @@
+---
+title: "Envr_Violin_Plots"
+output: pdf_document
+date: "2024-10-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Download packages
+```{r packages}
+library(dplyr) #Used for working with data frames
+library(lubridate) #Used for time-date conversions
+library(readr) #Used to read the CSV file
+library(ggplot2) #plot with ggplot
+library(cowplot) #arrange ggplots
+library(ggpmisc)
+```
+
+Salinity file read-in and cleaning
+```{r}
+#set working directory to files location
+setwd("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/src/NM")
+#Read in salinity files
+DEBY_sal <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/full_sal/DEBY_sal_full.csv")
+
+FL_sal <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/full_sal/FL_sal_full.csv")
+
+JR_sal <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/full_sal/JR_sal_full.csv")
+#remove uncorrected salinity column and rename corrected_salinity to salinity
+JR_sal <- subset(JR_sal, select = -c(salinity))
+
+colnames(JR_sal) <- c("site_name", "datetime", "salinity")
+
+LA_sal <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/full_sal/LA4_sal_full.csv")
+
+LOLA_sal <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/full_sal/LOLA_sal_full.csv")
+
+ME_sal <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/full_sal/ME_sal_full.csv")
+
+NH_sal <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/full_sal/NH_sal_full.csv")
+
+TX_sal <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/full_sal/TX_sal_full.csv")
+```
+
+```{r salinity_datetime}
+#convert all date times to POSIXct
+DEBY_sal$datetime <- as.POSIXct(DEBY_sal$datetime, "%Y-%m-%d %H:%M:%S", tz = "")
+
+FL_sal$datetime <- as.POSIXct(FL_sal$datetime, "%m/%d/%y %H:%M", tz = "")
+
+JR_sal$datetime <- as.POSIXct(JR_sal$datetime, "%Y-%m-%d %H:%M:%S", tz = "")
+
+LA_sal$datetime <- as.POSIXct(LA_sal$datetime, "%Y-%m-%d %H:%M:%S", tz = "")
+
+LOLA_sal$datetime <- as.POSIXct(LOLA_sal$datetime, "%Y-%m-%d %H:%M:%S", tz = "")
+
+ME_sal$datetime <- as.POSIXct(ME_sal$datetime, "%m/%d/%y %H:%M", tz = "")
+
+NH_sal$datetime <- as.POSIXct(NH_sal$datetime,"%m/%d/%y %H:%M", tz = "")
+
+TX_sal$datetime <- as.POSIXct(TX_sal$datetime, "%m/%d/%y %H:%M", tz = "")
+
+#ME only has 2 data points in October 2022 and one in July 2022, so exclude those points
+ME_sal <- ME_sal[-c(26312, 26313, 26314), ]
+```
+
+
+```{r salinity_numeric_merge}
+#make all salinity variables numeric
+DEBY_sal$salinity <- as.numeric(DEBY_sal$salinity)
+FL_sal$salinity <- as.numeric(FL_sal$salinity)
+JR_sal$salinity <- as.numeric(JR_sal$salinity)
+LA_sal$salinity <- as.numeric(LA_sal$salinity)
+LOLA_sal$salinity <- as.numeric(LOLA_sal$salinity)
+ME_sal$salinity <- as.numeric(ME_sal$salinity)
+NH_sal$salinity <- as.numeric(NH_sal$salinity)
+TX_sal$salinity <- as.numeric(TX_sal$salinity)
+
+#remove extra columns from NH and TX
+NH_sal <- NH_sal[, c(1,2,3)]
+TX_sal <- TX_sal[, c(1,2,3)]
+
+#merge data frames
+full_sal <- rbind(DEBY_sal, FL_sal, JR_sal, LA_sal, LOLA_sal, ME_sal, NH_sal, TX_sal)
+
+#remove NAs
+na_full_sal <- is.na(full_sal) # store our NAs in a variable
+summary(na_full_sal) # we have 3696 NAs in datetime and 192381 NAs in salinity that are stored as "TRUE" 
+
+full_sal <- na.omit(full_sal) #remove NAs using na.omit
+
+#filter out temps below 0 and above 40
+filtered_sal <- full_sal %>%
+    filter(between(salinity, 0, 40)) 
+
+```
+
+```{r salinity_monthly_avgs}
+#average monthly salinity
+monthly_sal <- filtered_sal %>%
+    mutate(year = year(datetime), month = month(datetime)) %>%
+    group_by(site_name, year, month) %>%
+    summarise(mean_sal = mean(salinity))
+
+#make sure all 8 sites are still present
+monthly_sal_sites <- list(unique(monthly_sal$site_name))
+
+monthly_sal_sites
+
+#write to csv for future analyses
+write.csv(monthly_sal, "/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/mean_monthly_sal.csv", row.names = FALSE)
+```
+
+
+#Temperature
+
+```{r}
+#set working directory to files location
+setwd("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/src/NM")
+#Read in temp files
+DEBY_temp <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/full_temp/DEBY_temp_full.csv")
+
+FL_temp <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/full_temp/FL_temp_full.csv")
+
+JR_temp <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/full_temp/JR_temp_full.csv")
+
+#remove uncorrected salinity column and rename corrected_salinity to salinity
+JR_temp <- subset(JR_temp, select = -c(temp))
+colnames(JR_temp) <- c("site_name", "datetime", "temp")
+
+LA_temp <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/full_temp/LA4_temp_full.csv")
+
+LOLA_temp <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/full_temp/LOLA_temp_full.csv")
+
+ME_temp <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/full_temp/ME_temp_full.csv")
+
+NH_temp <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/full_temp/NH_temp_full.csv")
+
+TX_temp <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/full_temp/TX_temp_full.csv")
+```
+
+```{r temp_datetime}
+#convert all date times to POSIXct
+DEBY_temp$datetime <- as.POSIXct(DEBY_temp$datetime, "%Y-%m-%d %H:%M:%S", tz = "")
+
+FL_temp$datetime <- as.POSIXct(FL_temp$datetime, "%m/%d/%y %H:%M", tz = "")
+
+JR_temp$datetime <- as.POSIXct(JR_temp$datetime, "%Y-%m-%d %H:%M", tz = "")
+
+LA_temp$datetime <- as.POSIXct(LA_temp$datetime, "%Y-%m-%d %H:%M:%S", tz = "")
+
+LOLA_temp$datetime <- as.POSIXct(LOLA_temp$datetime, "%Y-%m-%d %H:%M:%S", tz = "")
+
+ME_temp$datetime <- as.POSIXct(ME_temp$datetime, "%m/%d/%y %H:%M", tz = "")
+
+NH_temp$datetime <- as.POSIXct(NH_temp$datetime, "%m/%d/%y %H:%M", tz = "")
+
+TX_temp$datetime <- as.POSIXct(TX_temp$datetime, "%m/%d/%y %H:%M", tz = "")
+```
+
+
+```{r temp_numeric_merge}
+#make all temp variables numeric
+DEBY_temp$temp <- as.numeric(DEBY_temp$temp)
+FL_temp$temp <- as.numeric(FL_temp$temp)
+JR_temp$temp <- as.numeric(JR_temp$temp)
+LA_temp$temp <- as.numeric(LA_temp$temp)
+LOLA_temp$temp <- as.numeric(LOLA_temp$temp)
+ME_temp$temp <- as.numeric(ME_temp$temp)
+NH_temp$temp <- as.numeric(NH_temp$temp)
+TX_temp$temp <- as.numeric(TX_temp$temp)
+
+#remove extra columns from NH
+NH_temp <- NH_temp[, c(1,2,3)]
+
+#merge data frames
+full_temp <- rbind(DEBY_temp, FL_temp, JR_temp, LA_temp, LOLA_temp, ME_temp, NH_temp, TX_temp)
+
+#remove NAs
+na_full_temp <- is.na(full_temp) # store our NAs in a variable
+summary(na_full_temp) # we have 3820 NAs in datetime and 180627 NAs in temp that are stored as "TRUE" 
+
+full_temp <- na.omit(full_temp) #remove NAs using na.omit
+
+#filter out temps below 0 and above 40
+filtered_temp <- full_temp %>%
+    filter(between(temp, 0, 40)) 
+```
+
+Violin plots with the raw data cause R to crash due to large data size. Therefore, I will make the violin plots using monthly temp/salinity averages rather than raw data.
+```{r monthly_avgs_temp}
+#average monthly temperatures
+monthly_temp <- filtered_temp %>%
+    mutate(year = year(datetime), month = month(datetime)) %>%
+    group_by(site_name, year, month) %>%
+    summarise(mean_temp = mean(temp))
+
+#make sure all 8 sites are still present
+monthly_temp_sites <- list(unique(monthly_temp$site_name))
+
+monthly_temp_sites
+
+#write to csv for future analyses
+write.csv(monthly_temp, "/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/mean_monthly_temp.csv", row.names = FALSE)
+```
+
+## Violin Plots
+```{r violin_plots}
+sal_violin <- ggplot(monthly_sal, aes(x = site_name, y = mean_sal)) +
+  geom_violin()+
+  geom_boxplot(width = .1) +
+  ggtitle("Mean Monthly Salinity and Temperature Across Broodstock Groups")+
+  ylab("Salinity (ppt)")+
+  scale_x_discrete(name = "Site Name", limits = c("DEBY","LOLA","JR", "TX", "LA", "FL", "NH", "ME"))+
+  theme(axis.title.x = element_blank(), axis.ticks.x = element_blank(), axis.text.x = element_blank())
+
+sal_violin
+
+ggsave(sal_violin, 
+       filename = "salinity_violinplot.png",
+       device = "png",
+       path = "/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/results/NM_results")
+
+temp_violin <- ggplot(monthly_temp, aes(x = site_name, y = mean_temp)) +
+  geom_violin()+
+  geom_boxplot(width = .1) +
+  xlab("Broodstock Group")+
+  ylab("Temperature (°C)")+
+  scale_x_discrete(name = "Broodstock Group", limits = c("DEBY","LOLA","JR", "TX", "LA", "FL", "NH", "ME"))+
+  theme(plot.title = element_blank())
+
+temp_violin
+
+ggsave(temp_violin, 
+       filename = "temperature_violinplot.png",
+       device = "png",
+       path = "/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/results/NM_results")
+
+##merge plots
+plot_grid(sal_violin, temp_violin, ncol = 1, align = "v")
+```
