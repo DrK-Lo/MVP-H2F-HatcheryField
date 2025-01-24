@@ -18,4 +18,5 @@ In this repository, please find folders related to the following subjects.
 - [Manuscript outline](https://docs.google.com/document/d/1umBOnKRsqdk8dJJk9OFpyiXz1s_kKJ5wWHXGKqlc-O8/edit?tab=t.0)
 - [Manuscript](https://docs.google.com/document/d/196gimBon8jOaJf0-BipGwY2uMGEjL5sQ/edit?usp=sharing&ouid=113793533995581421488&rtpof=true&sd=true)
 - [Preliminary results and figures slide deck](https://docs.google.com/presentation/d/1G5ccQxhMMUNDfvZH6ZZ75OQBxbdCmuAzjz9AyvcIxqs/edit?usp=sharing)
+- [GitHub repository](https://github.com/ModelValidationProgram/MVP_Chesapeake_VIMS_hatchery) with NM and KB's thesis data, code, and figures.
 
