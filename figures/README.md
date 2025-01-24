@@ -1,1 +1,2 @@
-
+# Figures
+This folder is for final versions of figures that will be included in the manuscript. Please sort figures into the appropriate sub-folders based on what study question they relate to. When you upload a figure to this folder, please also write a notebook entry detailing what the figure shows and how it was created (for more info, see the [notebook folder README file](https://github.com/DrK-Lo/MVP-H2F-HatcheryField/tree/main/notebook#readme)).
