@@ -37,14 +37,16 @@ collection_type <- ("continuous")
 
 #Environmental data could only be downloaded by year, so first we need to merge the yearly data sets.
 
-#set working directory to files location
-setwd("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/DEBY_York_")
+#set working directory to location of files
+setwd("../../data/envr_of_origin/DEBY_York_Raw_Yearly")
 
 #merge files into one
-raw_DEBY_env <- list.files(path="../../data/envr_of_origin/DEBY_York_Raw_Yearly") %>% 
+raw_DEBY_env <- list.files(path=".") %>% 
   lapply(read.csv) %>% 
   bind_rows 
 
+#set working directory back to rmd file location
+setwd("../../../src/envr_data")
 
 #The metadata for these data (located at the bottom of this site: http://vecos.vims.edu/Content.aspx?idContent=44) explain the various error codes listed alongside observations that are unusable or questionable. Error codes for a certain water quality observation are listed in a column titled WATERQUALITY_A, where WATERQUALITY is whatever aspect of water quality is being measured. For example, next to the SALINITY column is SALINITY_A, which lists error codes for salinity observations if applicable. Blank or NA WATERQUALITY_A cells indicate no error code is applicable. We need to remove observations marked with these codes by keeping only data with blank cells or NA in these columns.
 
@@ -65,7 +67,6 @@ summary(subset_DEBY_env)
 #rename columns. "datetime" = date and time of data collection, "temp" = water temperature in degrees C, "salinity" = water salinity in parts per thousand (ppt)
 
 colnames(subset_DEBY_env) <- c("datetime", "temp", "salinity")
-
 ```
 
 ### Start with the date and time of collection. We will use the lubridate package to standardize all values into the date-time format called POSIXct. This format stores the date and time in number of seconds since a past point (1/1/1970). This makes comparisons easy and helps to standardizes values. 
@@ -143,12 +144,10 @@ DEBY_temp_full <- DEBY_env_full[, c(1,2,3)]
 
 DEBY_sal_full <- DEBY_env_full[, c(1, 2, 4)]
 
-#save DEBY_env_full as csv for future analyses
-write.csv(DEBY_temp_full, "/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/full_temp/DEBY_temp_full.csv", row.names = FALSE)
+#save DEBY_temp_full and DEBY_sal_full as csv files for future analyses
+write.csv(DEBY_temp_full, "../../data/envr_of_origin/full_temp/DEBY_temp_full.csv", row.names = FALSE)
 
-write.csv(DEBY_sal_full, "/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/full_sal/DEBY_sal_full.csv", row.names = FALSE)
-
-
+write.csv(DEBY_sal_full, "../../data/envr_of_origin/full_sal/DEBY_sal_full.csv", row.names = FALSE)
 ```
 
 ### Visualize the salinity, temperature, and date ranges over time. This can help us see if there are any anomalies or gaps in the data and make sure the filtering was done correctly. Sanity check - do the temperature and salinity ranges look appropriate for the geography of the site (ex. near full ocean salinity for coastal sites, lower salinity for estuaries or near rivers)?
@@ -246,7 +245,7 @@ timeplot_temp <- ggplot(DEBY_envrmonth_temp, aes(x = year)) +
 timeplot_temp
 ```
 
-### We can now calculate a list of variables that we will have collected for all sites. This will allow us to compare sites easily. We will calculate the number of observations from each site, the mean annual, maximum annual, and minimum annual value for all variables. 
+We can now calculate a list of variables that we will have collected for all sites. This will allow us to compare sites easily. We will calculate the number of observations from each site, the mean annual, maximum annual, and minimum annual value for all variables. 
 
 Our list of variables includes: 
 
@@ -279,7 +278,7 @@ DEBY_temp <- cbind(site_name, download_date, source_description, lat, lon, first
 print(DEBY_temp)
 
 # Write to a unique new CSV file
-write.csv(DEBY_temp, "/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/Temp/DEBY_temperature.csv", row.names = FALSE)
+write.csv(DEBY_temp, "../../data/envr_of_origin/env_summarized/Temperature/DEBY_temp_summarized.csv", row.names = FALSE)
 
 ```
 
@@ -299,5 +298,5 @@ print(DEBY_salinity)
 
 # Write to the combined file with all sites 
 # Write to a unique new CSV file
-write.csv(DEBY_salinity, "/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/Salinity/DEBY_salinity.csv", row.names = FALSE)
+write.csv(DEBY_salinity, "../../data/envr_of_origin/env_summarized/Salinity/DEBY_salinity_summarized.csv", row.names = FALSE)
 ```
