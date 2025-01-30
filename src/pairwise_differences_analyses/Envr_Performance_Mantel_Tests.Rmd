@@ -22,19 +22,23 @@ library(ggpmisc)
 library(vegan) #for Mantel tests
 ```
 
+```{r}
+setwd("../src")
+```
+
 #read in necessary files
 ```{r}
 #this file contains raw lengths of all oysters aged 15-78 days
-length <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/latestage_length.csv")
+length <- read.csv("../data/performance_H2F/latestage_length.csv")
 
 #this file has summary statistics on temperature and salinity for the 8 sites (DEBY, LOLA, JR, TX, LA, FL, NH, ME)
-envr_summary <-  read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/NM_envr_for_violinplots.csv")
+envr_summary <-  read.csv("../data/envr_of_origin/envr_for_violinplots.csv")
 
 #this file is a matrix of the environmental distances between each site
-envr_dist <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/NM_envr_dist.csv")
+envr_dist <- read.csv("../data/envr_of_origin/envr_dist.csv")
 
 #this file contains survival rate data for larval oysters up to day 21 post hatching
-survival <-  read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/CViMVP_larvae_survival.csv")
+survival <-  read.csv("../data/performance_H2F/CViMVP_larvae_survival.csv")
 ```
 
 Extract survival rates from survival data frame, and reorganize data frame
@@ -114,7 +118,8 @@ surv_length_envr <- left_join(envr, means_mm_21, by = "site_name") %>%
   left_join(means_mm_78, by = "site_name") %>% 
   left_join(survival_filter, by = "site_name")
 
-write.csv(surv_length_envr, "/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/Survival_Length_Envr_Data.csv", row.names = FALSE)
+#save csv for further analyses
+write.csv(surv_length_envr, "../data/parent_effects_H2F/Survival_Length_Envr_Data.csv", row.names = FALSE)
 ```
 
 Make distance matrices for difference in mean length across groups at days 21 and 78 and difference in survival across groups at day 21
@@ -228,5 +233,5 @@ mantel_plots
 ggsave("mantel_plots.png",
        plot = mantel_plots,
        device = png,
-       path = "/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/results/NM_results/Result_plots")
+       path = "../figures/pairwise_differences_analyses")
 ```
