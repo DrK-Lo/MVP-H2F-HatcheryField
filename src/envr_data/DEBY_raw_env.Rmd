@@ -8,9 +8,7 @@ date: "2024-04-03"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
-setwd("../src/envr_data")
-```
+First, set working directory to Rmd file location by clicking "Session" --> "Set Working Directory --> "To Source File Location"
 
 ### Load required packages. 
 ```{r}
@@ -40,12 +38,13 @@ collection_type <- ("continuous")
 #Environmental data could only be downloaded by year, so first we need to merge the yearly data sets.
 
 #set working directory to files location
-setwd("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/DEBY_York")
+setwd("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/DEBY_York_")
 
 #merge files into one
-raw_DEBY_env <- list.files(path="/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/DEBY_York") %>% 
+raw_DEBY_env <- list.files(path="../../data/envr_of_origin/DEBY_York_Raw_Yearly") %>% 
   lapply(read.csv) %>% 
   bind_rows 
+
 
 #The metadata for these data (located at the bottom of this site: http://vecos.vims.edu/Content.aspx?idContent=44) explain the various error codes listed alongside observations that are unusable or questionable. Error codes for a certain water quality observation are listed in a column titled WATERQUALITY_A, where WATERQUALITY is whatever aspect of water quality is being measured. For example, next to the SALINITY column is SALINITY_A, which lists error codes for salinity observations if applicable. Blank or NA WATERQUALITY_A cells indicate no error code is applicable. We need to remove observations marked with these codes by keeping only data with blank cells or NA in these columns.
 
