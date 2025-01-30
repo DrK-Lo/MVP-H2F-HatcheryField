@@ -8,7 +8,9 @@ date: "2024-04-03"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-First, set working directory to Rmd file location by clicking "Session" --> "Set Working Directory --> "To Source File Location"
+```{r}
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
 
 ### Load required packages. 
 ```{r}
@@ -38,7 +40,7 @@ collection_type <- ("continuous")
 #Environmental data could only be downloaded by year, so first we need to merge the yearly data sets.
 
 #set working directory to location of files
-setwd("../../data/envr_of_origin/DEBY_York_Raw_Yearly")
+setwd("../../data/envr_of_origin/raw_envr_data/DEBY_York_Raw_Yearly")
 
 #merge files into one
 raw_DEBY_env <- list.files(path=".") %>% 
@@ -46,7 +48,7 @@ raw_DEBY_env <- list.files(path=".") %>%
   bind_rows 
 
 #set working directory back to rmd file location
-setwd("../../../src/envr_data")
+setwd("../../../../src/envr_data")
 
 #The metadata for these data (located at the bottom of this site: http://vecos.vims.edu/Content.aspx?idContent=44) explain the various error codes listed alongside observations that are unusable or questionable. Error codes for a certain water quality observation are listed in a column titled WATERQUALITY_A, where WATERQUALITY is whatever aspect of water quality is being measured. For example, next to the SALINITY column is SALINITY_A, which lists error codes for salinity observations if applicable. Blank or NA WATERQUALITY_A cells indicate no error code is applicable. We need to remove observations marked with these codes by keeping only data with blank cells or NA in these columns.
 
@@ -148,6 +150,7 @@ DEBY_sal_full <- DEBY_env_full[, c(1, 2, 4)]
 write.csv(DEBY_temp_full, "../../data/envr_of_origin/full_temp/DEBY_temp_full.csv", row.names = FALSE)
 
 write.csv(DEBY_sal_full, "../../data/envr_of_origin/full_sal/DEBY_sal_full.csv", row.names = FALSE)
+
 ```
 
 ### Visualize the salinity, temperature, and date ranges over time. This can help us see if there are any anomalies or gaps in the data and make sure the filtering was done correctly. Sanity check - do the temperature and salinity ranges look appropriate for the geography of the site (ex. near full ocean salinity for coastal sites, lower salinity for estuaries or near rivers)?
