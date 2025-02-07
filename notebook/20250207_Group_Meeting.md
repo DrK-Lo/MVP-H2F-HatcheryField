@@ -1,7 +1,7 @@
 # Meeting Notes: 2025-02-07
 NM, KB, CR, ME, KEL
 
-Agenda:
+## Agenda:
 - Go through statistical analysis methods
   - Make sure everything looks good before running analyses
 - Decide on the same response variables for Qs 1, 2, and 3 (hatchery and field)
@@ -9,6 +9,7 @@ Agenda:
 - Show new graphs if time/if people have them
 - Go through rest of methods if time
 
+## Notes
 - Madeline will process field envr data to send to Camile
 - Raw envr data in GitHub
 - Sentinel environmental data in google drive (disease data)
