@@ -1,0 +1,200 @@
+---
+title: "Fstats_experimental.Rmd"
+author: "Kiran Bajaj"
+output: html_document
+date: "2025-02-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+setwd("~/Desktop/MVP-H2F-HatcheryField")
+```
+
+### Packages
+```{r}
+
+library(dplyr)
+library(bigsnpr)
+library(robustbase)
+library(ggplot2)
+library(ggrepel)
+library(hierfstat)
+library(reshape2)
+library(adegenet)
+library(viridis)
+library(pegas)
+library(tidyverse)
+library(colorspace)
+
+```
+
+### Load data
+```{r}
+
+full_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_FULLSNPs_exp.rds"))
+
+thinned_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_THINNEDSNPs_exp.rds"))
+
+muts_maf_filtered <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_FULLmuts_exp.rds"))
+
+samp_full_subset <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_samp_full_subset_exp.rds"))
+
+```
+
+```{r}
+
+# rename datasets for processing
+gen <- thinned_snps
+muts <- muts_maf_filtered
+
+# check dimensions
+dim(gen) # 154 individuals and 104958 SNPs
+dim(muts) 
+
+```
+
+### Fst data preparation
+
+#### Filter SNPs that are all heterozygous
+```{r}
+
+# filter SNPs that are all heterozygous (all 1s)
+keep_snps_fst <- apply(gen, 2, function(col) !all(col == 1))
+
+# filter genotype matrix for these SNPs
+GEN_filtered_fst <- gen[, keep_snps_fst]
+dim(GEN_filtered_fst) # 1 column removed - now there are 104957 SNPs
+
+# check column name to make sure it was a real column
+col_heterozygous <- apply(gen, 2, function(col) all(col == 1))
+colnames(gen)[col_heterozygous] #Affx-1246226248
+
+```
+
+```{r}
+
+# now filter the muts again to just retain our SNPs that are not all heterozygous
+muts_heterozygous_filtered <- muts[muts$Affx.ID %in% colnames(GEN_filtered_fst), ]
+dim(muts_heterozygous_filtered) # goes down to 104957
+
+```
+
+#### Format data for Fst
+``` {r}
+
+# rename for processing
+fst_data <- GEN_filtered_fst
+head(fst_data)
+
+# make sample IDs into a real column (instead of rownames)
+sample_IDs <- rownames(fst_data)
+fst_data$merge_ID_inds <- sample_IDs # "merge_ID_inds" is the column name in samp_full_subset
+
+# reset the rownames to empty
+rownames(fst_data) <- NULL
+
+# make sure labels in fst data still line up with sample data
+if(!identical((fst_data$merge_ID_inds),samp_full_subset$merge_ID_inds)){
+    print("Error sample names don't line up")
+    break
+   } # passes
+
+# store data to check labels 
+fst_labels_check <- fst_data$merge_ID_inds
+head(fst_labels_check)
+samp_labels_check <- samp_full_subset$merge_ID_inds
+head(samp_labels_check)
+
+# check everything is all lined up # everything good
+identical(fst_labels_check, samp_labels_check) # TRUE
+
+```
+
+```{r}
+
+# add population labels to fst data
+fst_data$ID_SiteDate <- samp_full_subset$ID_SiteDate
+
+fst_data <- fst_data %>%
+  mutate(ID_SiteDate = recode(ID_SiteDate,
+                           "DEBY" = "S2-DEBY",
+                           "FL-KingPlan" = "W3-FL",
+                           "LA-SisLake" = "W2-LA",
+                           "LOLA" = "S1-LOLA",
+                           "ME-HogIs" = "W6-ME",
+                           "NH-GrtBay" = "W5-NH",
+                           "TX-CapBay" = "W1-TX",
+                           "VA-DeepWatSh" = "W4-VA"))
+
+# move sample and population columns to front 
+n_cols <- ncol(fst_data)
+fst_data <- fst_data[, c((n_cols-1):n_cols, 1:(n_cols-2))]
+
+# sanity check: number of columns 
+dim(fst_data) # number of SNPs (104957) + sample col + pop col = 104959
+
+# check number of samples per population
+population_counts <- table(fst_data$ID_SiteDate)
+population_counts
+
+```
+
+```{r}
+
+# remove sample ID column for Fst calculation
+fst_data <- fst_data[, -1]
+
+# convert population to factor
+fst_data$ID_SiteDate <- as.factor(fst_data$ID_SiteDate)
+
+# check dimensions one more time
+dim(fst_data) # 104959 - pop col = 104958
+
+```
+
+### Calculate and plot Fst 
+
+```{r}
+
+# run Fst calculation
+fst_results <- pairwise.WCfst(fst_data)
+fst_results[is.na(fst_results)] <- 0
+
+# view results
+print(fst_results)
+
+fst_results <- read_csv("fst_results.csv")
+
+# convert the matrix to a long format, and edit column names
+fst_plotting <- melt(fst_results, na.rm = TRUE)
+colnames(fst_plotting) <- c("Var1", "Var2", "value")
+
+# create a vector for the desired order of populations
+population_order <- c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME")
+
+# reorder the Var1 and Var2 columns based on the defined order
+fst_plotting$Var1 <- factor(fst_plotting$Var1, levels = population_order)
+fst_plotting$Var2 <- factor(fst_plotting$Var2, levels = population_order)
+
+# view data one more time
+fst_plotting
+
+# create heatmap using viridis color palette
+fig_fst_heatmap <- ggplot(fst_plotting, aes(Var1, Var2, fill = value)) +
+  geom_tile(color = "white") +
+  #geom_text(aes(label = round(value, 3)), color = "black") +
+  scale_fill_viridis_c(option = "D", na.value = "grey50") +  # use viridis color scale
+  labs(x = "Population", y = "Population", fill = "Fst") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggsave("fig_fst_heatmap_full.png", fig_fst_heatmap_full, width = 8, height = 6)
+
+fst_results <- as.data.frame(fst_results)
+write_csv(fst_results, "fst_results.csv")
+
+```
+
