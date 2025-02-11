@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-setwd("~/Desktop/MVP-H2F-HatcheryField")
+#setwd("~/Desktop/MVP-H2F-HatcheryField")
 ```
 
 ### Packages
@@ -34,13 +34,11 @@ library(colorspace)
 ### Load data
 ```{r}
 
-full_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_FULLSNPs_exp.rds"))
+thinned_snps <- readRDS(file.path("..", "parental_genetics_structure", "20250203_THINNEDSNPs_exp.rds"))
 
-thinned_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_THINNEDSNPs_exp.rds"))
+muts_maf_filtered <- readRDS(file.path("..", "parental_genetics_structure", "20250203_FULLmuts_exp.rds"))
 
-muts_maf_filtered <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_FULLmuts_exp.rds"))
-
-samp_full_subset <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_samp_full_subset_exp.rds"))
+samp_full_subset <- readRDS(file.path("..", "parental_genetics_structure", "20250203_samp_full_subset_exp.rds"))
 
 ```
 
@@ -166,7 +164,7 @@ fst_results[is.na(fst_results)] <- 0
 # view results
 print(fst_results)
 
-fst_results <- read_csv("fst_results.csv")
+saveRDS(fst_results, "fst_results.rds")
 
 # convert the matrix to a long format, and edit column names
 fst_plotting <- melt(fst_results, na.rm = TRUE)
@@ -191,10 +189,7 @@ fig_fst_heatmap <- ggplot(fst_plotting, aes(Var1, Var2, fill = value)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave("fig_fst_heatmap_full.png", fig_fst_heatmap_full, width = 8, height = 6)
-
-fst_results <- as.data.frame(fst_results)
-write_csv(fst_results, "fst_results.csv")
+ggsave("fig_fst_heatmap.png", fig_fst_heatmap, width = 8, height = 6)
 
 ```
 
