@@ -20,22 +20,20 @@ library(car) #upload package with Anova function
 library(cowplot)
 ```
 
+#Set working directory
 ```{r}
-#download data in csv format and view it
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+```{r}
+#download data in csv format
 
 #download spawn treatment data
-spawn <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/CviMVP_Larvae_Growth-spawn_trt.csv")
-#Examine data
-spawn
-summary(spawn)
-
+spawn <- read.csv("../../data/performance_H2F/CviMVP_Larvae_Growth-spawn_trt.csv")
 #download group data
-group <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/CviMVP_Larvae_Growth-group.csv")
-summary(group)
-
+group <- read.csv("../../data/performance_H2F/CviMVP_Larvae_Growth-group.csv")
 #download larvae image length data
-larvae_img <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/CviMVP_Larvae_Growth-larvae_img.csv")
-summary(larvae_img)
+larvae_img <- read.csv("../../data/performance_H2F/CviMVP_Larvae_Growth-larvae_img.csv")
 ```
 
 ```{r}
@@ -52,8 +50,8 @@ len_analysis_df <- subset(len_df, select = -c(Ind_ID, Group_Day_Label.y, Image_K
 ```
 
 ```{r}
-#subset late stage oyster data (days19-78)
-latestage_df <- subset(len_analysis_df, Day_analysis == "49"| Day_analysis == "78"| Day_analysis == "15-21")
+#subset data for oysters aged 15-78 days (later stage offspring)
+latestage_df <- subset(len_analysis_df, Day_analysis == "78"| Day_analysis == "15-21")
 
 #a sample marked WV is erroneously in this data set- remove
 latestage_df <- subset(latestage_df, Image_Label != "WV_06_200L_6")
@@ -61,12 +59,9 @@ latestage_df <- subset(latestage_df, Image_Label != "WV_06_200L_6")
 #rename cols
 colnames(latestage_df) <- c("group", "group_day_key", "group_day_label", "day_trt", "day_an", "day", "date", "image_label", "shell_length_um")
 
+#make column with measurements in millimeters instead of microns
 latestage_df$shell_length_mm <- (latestage_df$shell_length_um)/1000
-
 head(latestage_df)
-
-#preliminary exploration of data
-summary(latestage_df)
 ```
 
 ```{r}
@@ -84,23 +79,24 @@ no_small_df <- latestage_df[-small_img, ]
 #rename rows
 colnames(no_small_df) <- c("group", "group_day_key", "group_day_label", "day_trt", "day_an", "day", "date", "image_label", "shell_length_um", "shell_length_mm")
 
-#exclude "MVP" from group names to shorten them
-no_small_df["group"][no_small_df["group"] == "MVP-DEBY"] <- "DEBY"
-no_small_df["group"][no_small_df["group"] == "MVP-FL"] <- "FL"
-no_small_df["group"][no_small_df["group"] == "MVP-JR"] <- "JR"
-no_small_df["group"][no_small_df["group"] == "MVP-LA"] <- "LA"
-no_small_df["group"][no_small_df["group"] == "MVP-LARMIX"] <- "LARMIX"
-no_small_df["group"][no_small_df["group"] == "MVP-LOLA"] <- "LOLA"
-no_small_df["group"][no_small_df["group"] == "MVP-ME"] <- "ME"
-no_small_df["group"][no_small_df["group"] == "MVP-NH"] <- "NH"
-no_small_df["group"][no_small_df["group"] == "MVP-TX"] <- "TX"
+#exclude "MVP" from group names and include wild or selection line label
+no_small_df["group"][no_small_df["group"] == "MVP-TX"] <- "W1-TX"
+no_small_df["group"][no_small_df["group"] == "MVP-LA"] <- "W2-LA"
+no_small_df["group"][no_small_df["group"] == "MVP-FL"] <- "W3-FL"
+no_small_df["group"][no_small_df["group"] == "MVP-LOLA"] <- "S1-LOLA"
+no_small_df["group"][no_small_df["group"] == "MVP-DEBY"] <- "S2-DEBY"
+no_small_df["group"][no_small_df["group"] == "MVP-JR"] <- "W4-VA"
+no_small_df["group"][no_small_df["group"] == "MVP-NH"] <- "W5-NH"
+no_small_df["group"][no_small_df["group"] == "MVP-ME"] <- "W6-ME"
+no_small_df["group"][no_small_df["group"] == "MVP-LARMIX"] <- "H1-LARMIX"
+
 
 no_small_df <- no_small_df %>% 
   mutate(group = group %>% 
-           fct_relevel("DEBY", "LOLA", "JR", "TX", "LA", "FL", "NH", "ME", "LARMIX"))
+           fct_relevel("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME", "H1-LARMIX"))
 
 #save latestage_df as a csv file for future analyses
-write.csv(no_small_df, "/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/latestage_length.csv")
+write.csv(no_small_df, "../../data/performance_H2F/latestage_length.csv")
 
 ```
 
@@ -125,40 +121,43 @@ colnames(se_mm) <- c("group", "days", "se_length_mm")
 ```{r}
 #Check if late stage oyster data (day 19 onward, small oysters excluded) match assumptions of ANOVA
 
-len.lm <- lm(shell_length_mm ~ day_an + group, data = no_small_df) #fit to lm
-
+len.lm <- lm(shell_length_mm ~ day_an*group, data = no_small_df) #fit to lm
 len.lm.resid <- len.lm$residuals #save residuals
-
-shapiro.test(len.lm.resid) #use Shapiro Wilk test to assess normality
-
-#plots to assess if data meet assumptions of ANOVA
-par(mfrow = c(1,1))
+shapiro.test(len.lm.resid) #use Shapiro Wilk test to assess normality. p <2.2e-16, data is not normal
 
 #plot(len.lm)
-#normality is a bit off, definite funnel in homoscedasticity plots, but KEL said to expect that what with the range of values in this data between ages
+#normality is off, definite funnel in homoscedasticity plots, but KEL said to expect that what with the range of values in this data between ages.
 
 #log10 transformation lm
-loglen.lm <- lm(log(shell_length_mm) ~ day_an + group, data = no_small_df)
+loglen.lm <- lm(log10(shell_length_mm) ~ day_an*group, data = no_small_df)
 loglen.lm.resid <- loglen.lm$residuals
+shapiro.test(loglen.lm.resid)#p < 2.2e-16, no change in normality
 
-#plot(loglen.lm)
-# I'm planning to use the log10 transformed data for the analysis, transformations helped get rid of some of the funneling of homoscedasticity, normality is still a bit off, but it's not much different from non-transformed data. No outliers in either model
+plot(loglen.lm)
+# I'm planning to use the log10 transformed data for the analysis, transformations helped get rid of some of the funneling of homoscedasticity, normality is still off, but it's not much different from non-transformed data. No outliers in either model.
 
 #run ANOVA on log transformed length data
-no_small_df$log10len <- log10(no_small_df$shell_length_mm)
+no_small_df$loglen <- log10(no_small_df$shell_length_mm)
 
-len.anova3 <- Anova(lm(log10len ~ day_an + group + day_an:group, data = no_small_df), type = 3)
+len.anova3 <- Anova(lm(loglen ~ day_an*group, data = no_small_df), type = 3)
 
 len.anova3
-
-summary(len.anova3)
+#significant interactive effect of group and age (p < 2e-16), but no significant effect of group on its own (0.1978)
 
 all_pval <- len.anova3$`Pr(>F)`
-
 all_pval <- na.omit(all_pval)
+```
 
-#significant interactive effect of group and age (p < 2e-16), but no significant effect of group on its own (0.4428)
-
+#Interaction plot for length as a function of day*
+```{r}
+ggplot(no_small_df, aes(day_an, loglen, group = group))+
+  #geom_point(data = means_mm, aes(days, log10(mean_length_mm), color = group))+
+  geom_smooth(method = "lm", se = F, linewidth = .5, aes(color = group))+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  xlab("Day")+
+  ylab("Log10 Transformed Shell Length")+
+  ggtitle("Shell Length Across Groups in the Nursery and Hatchery")
 ```
 
 ```{r subset_ages}
@@ -167,83 +166,11 @@ no_small_df$group <- as.factor(no_small_df$group)
 no_small_df$day_an <- as.factor(no_small_df$day_an)
 str(no_small_df)
 
-#subsetting based on oyster age (days)
-eyed <- subset(no_small_df, day_an == "15-21")
-seed <- subset(no_small_df, day_an == "49")
+#subsetting based on oyster age (days) for oysters on day 78 (end of hatchery stage, pre field deployment (pre-dep))
 predep <- subset(no_small_df, day_an == "78")
-
-#make barplots of shell length vs group for each age/day
-
-#barplot of shell length distributions pooled across all days
-bp_all <- boxplot(no_small_df$shell_length_mm ~ no_small_df$group,
-        main = "Shell Length Distribution In Each Group Days 19-78",
-        xlab = "Group Label",
-        ylab = "Shell Length mm")
-#seed larvae shell length vs group
-bp_seed <- boxplot(seed$shell_length_mm ~ seed$group,
-        main = "Seed Larvae (Day 49) Shell Length",
-        xlab = "Group Label",
-        ylab = "Shell Length (mm)",
-        ylim = c(0, 10))
 ```
 
-#Eyed ANOVA and Post-Hoc Comparison
-```{r}
-#I want to run ANOVAs comparing shell length to group for each day separately
-
-#ANOVA for eyed shell lengths
-eyed$group <- as.factor(eyed$group)
-
-eyed.lm <- lm(shell_length_mm ~ group, data = eyed) #fit to lm
-
-eyed.lm.resid <- eyed.lm$residuals #save residuals
-
-shapiro.test(eyed.lm.resid) #use Shapiro Wilk test to assess normality, p < 1.78 e-09,so not normal
-
-#plots to assess if data meet assumptions of ANOVA
-
-#plot(eyed.lm)
-#normality is a bit off, check log10 transformed lengths
-
-#log10 transformation lm
-logeyed.lm <- lm(log(shell_length_mm) ~ group, data = eyed)
-logeyed.lm.resid <- logeyed.lm$residuals
-
-
-#plot(logeyed.lm)
-
-#no real change in normality between transformed and non-transformed data, no outliers and homoscedastic data regardless, so I am going to do this with non transformed data
-
-
-#run ANOVA on non transformed length data
-eyed.anova3 <- Anova(lm(shell_length_mm ~ group, data = eyed), type = 3)
-eyed.anova3 #p <2e-16, same as with other aov function
-
-eyed.anova <- aov(lm(shell_length_mm ~ group, data = eyed))
-eyed_anova_result <- as.matrix(summary(eyed.anova)) #significant p-value, p <2e-16
-
-eyed_pval <- summary(eyed.anova)[[1]][["Pr(>F)"]][1]
-print(eyed_pval)
-
-#post-hoc comparison- Tukey-Kramer test
-eyed.tuk <- TukeyHSD(x=eyed.anova,conf.level = 0.95)
-
-par(mfrow = c(1,1))
-
-plot(eyed.tuk)
-require(multcompView)
-
-eyed_cld <- multcompLetters4(eyed.anova, eyed.tuk)
-
-eyed_dt <- group_by(eyed, group) %>%
-  summarise(m=mean(shell_length_mm)) %>%
-  arrange(desc(m))
-
-eyed_cld <- as.data.frame.list(eyed_cld$group)
-eyed_dt$eyed_cld <- eyed_cld$Letters
-```
-
-##ANOVA for pre-deployment (day 78) shell lengths only
+##ANOVA for end of hatchery (day 78) shell lengths only
 ```{r}
 #Linera model and ANOVA for predep shell lengths
 predep$group <- as.factor(predep$group)
@@ -256,12 +183,15 @@ shapiro.test(predep.lm.resid) #use Shapiro Wilk test to assess normality
 # p = 0.08176, fail to reject H0, data are normal
 
 #plots to assess if data meet assumptions of 2-way ANOVA
-
 #plot(predep.lm)
 
 #this data looks good, normal, homoscedastic, no outliers
 
-#I should use Anova function, but Tukey Kramer test won't run on an Anova object, only aov. Both functions produce the same p-value, so I am going to stick with the aov function for the TK test.
+#I should use Anova function to have control over the sum of squares type, but Tukey Kramer test won't run on an Anova object, only aov. Both functions produce the same p-value, so I am going to stick with the aov function for the TK test.
+
+#Tukey-Kramer labels only allow one - per comparison label, so I will replace the - with _
+predep$group <- gsub("-", "_", predep$group)
+
 predep.anova3 <- Anova(lm(shell_length_mm ~ group, data = predep))
 predep.anova3
 
@@ -294,7 +224,7 @@ predep$shell_length_mm <- as.numeric(predep$shell_length_mm)
 #P Adjust
 ```{r p_adjust}
 #adjust p-value to correct for multiple tests. Make vector of p-values from each ANOVA
-p_values <- c(all_pval, eyed_pval, predep_pval)
+p_values <- c(all_pval, predep_pval)
 
 p_values
 
@@ -304,33 +234,22 @@ p_adj
 ```
 
 
-```{r 2panel_plot}
-eyed_box <- ggplot(data = eyed, aes(group, shell_length_mm))+
-  geom_boxplot(size = .2)+
-  stat_summary(fun.data = mean_se, geom = "errorbar", width = 0.2, linewidth = .2, color = "red")+
-  ggtitle("Oyster Shell Lengths at Days 15-21 and Day 78 Across Broodstock Groups")+
-  ylab("Days 15-21 Shell Length (mm)")+
-  xlab("Broodstock Group")+
-  ylim(c(0.2,.4))+
-  geom_text(data = eyed_dt, size = 3, aes(label = eyed_cld, y = .35), vjust = -0.5)+
-  labs(subtitle = "A: p < 0.001")+
-  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), title = element_text(size = 9),  plot.subtitle = element_text(size = 9), axis.title.y = element_text(size = 8), axis.title.x = element_blank())
-
-eyed_box
-
-#plot
+```{r predep_boxplot}
+#plot. fatten = NULL will remove the median lines in each box, allowing me to display the mean instead. Making fatten = NULL will result in warning messages, but that's ok.
 predep_box <- ggplot(data = predep, aes(group, shell_length_mm))+
-  geom_boxplot(size = .2)+
-  stat_summary(fun.data = mean_se, geom = "errorbar", width = 0.2, linewidth = .2, color = "red")+
+  geom_boxplot(size = .2, fatten = NULL)+
+  stat_summary(fun.data = mean_se, geom = "errorbar", width = 0.2, linewidth = .4, color = "red")+
+  stat_summary(fun = mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..), width = 0.75, size = .4, linetype = "solid")+
   ylab("Day 78 Shell Length (mm)")+
   xlab("Broodstock Group")+
-  labs(subtitle = "B: p < 0.001")+
+  labs(subtitle = "p < 0.001")+
   ylim(c(0,32))+
   geom_text(data = predep_dt, size = 3, aes(label = predep_cld, y = 29, x = group), vjust = -0.5)+
-  theme(plot.title = element_blank(), plot.subtitle = element_text(size = 9), axis.title.y = element_text(size = 8), axis.title.x = element_text(size = 8))
+  ggtitle("Pre-Field-Deployment (Day 78) Shell Lengths")+
+  theme_bw()+
+  theme(plot.subtitle = element_text(size = 9), axis.title.y = element_text(size = 11), axis.title.x = element_text(size = 11), panel.grid.major = element_blank(), panel.grid.minor = element_blank())+
+  scale_x_discrete(name = "Broodstock Group", limits = c("H1_LARMIX", "W1_TX","W2_LA","W3_FL", "S1_LOLA", "S2_DEBY", "W4_VA", "W5_NH", "W6_ME"), labels = c("H1-LARMIX", "W1-TX","W2-LA","W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME"))
 
 predep_box
-
-plot_grid(eyed_box, predep_box, ncol = 1, align = "v")
 ```
 
