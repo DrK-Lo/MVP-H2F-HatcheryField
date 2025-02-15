@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-setwd("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/src/NM")
+#setwd("~/Desktop/MVP-H2F-HatcheryField")
 ```
 
 ```{r packages}
@@ -29,7 +29,7 @@ library(vegan) #for Mantel tests
 #read in necessary files
 ```{r}
 #this file contains raw lengths of all oysters aged 15-78 days
-length <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/latestage_length.csv")
+length <- read.csv(file.path("..", "..", "data", "performance_H2F", "latestage_length.csv"))
 
 #this file has summary statistics on temperature and salinity for the 8 sites (DEBY, LOLA, JR, TX, LA, FL, NH, ME)
 envr_summary <-  read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/NM_envr_for_violinplots.csv")

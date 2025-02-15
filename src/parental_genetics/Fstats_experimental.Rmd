@@ -34,11 +34,11 @@ library(colorspace)
 ### Load data
 ```{r}
 
-thinned_snps <- readRDS(file.path("..", "parental_genetics_structure", "20250203_THINNEDSNPs_exp.rds"))
+thinned_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_THINNEDSNPs_exp.rds"))
 
-muts_maf_filtered <- readRDS(file.path("..", "parental_genetics_structure", "20250203_FULLmuts_exp.rds"))
+muts_maf_filtered <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_FULLmuts_exp.rds"))
 
-samp_full_subset <- readRDS(file.path("..", "parental_genetics_structure", "20250203_samp_full_subset_exp.rds"))
+samp_full_subset <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_samp_full_subset_exp.rds"))
 
 ```
 
@@ -54,9 +54,9 @@ dim(muts)
 
 ```
 
-### Fst data preparation
+### Fst 
 
-#### Filter SNPs that are all heterozygous
+#### Data preparation
 ```{r}
 
 # filter SNPs that are all heterozygous (all 1s)
@@ -80,7 +80,6 @@ dim(muts_heterozygous_filtered) # goes down to 104957
 
 ```
 
-#### Format data for Fst
 ``` {r}
 
 # rename for processing
@@ -153,7 +152,7 @@ dim(fst_data) # 104959 - pop col = 104958
 
 ```
 
-### Calculate and plot Fst 
+#### Calculate and plot Fst 
 
 ```{r}
 
@@ -190,6 +189,175 @@ fig_fst_heatmap <- ggplot(fst_plotting, aes(Var1, Var2, fill = value)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ggsave("fig_fst_heatmap.png", fig_fst_heatmap, width = 8, height = 6)
+
+```
+
+### Basic stats with hierfstat
+
+#### Data preparation
+
+```{r}
+
+# rename for processing
+basic_stats_data <- fst_data
+
+# make the population column a factor
+basic_stats_data$ID_SiteDate <- as.factor(basic_stats_data$ID_SiteDate)
+
+# convert data frame to a genind object using df2genind
+genind_obj<- df2genind(basic_stats_data[, -1],   # exclude population column
+                        pop = basic_stats_data$ID_SiteDate, # provide population column here
+                        ploidy = 2,             # specify ploidy (2 for diploids)
+                        ncode = 1) 
+
+```
+
+```{r}
+
+# convert to hierfstat object using genind2hierfstat
+hierfstat_obj <- genind2hierfstat(genind_obj) 
+
+# run basic stats
+div <- basic.stats(hierfstat_obj) 
+
+```
+
+#### Observed and expected heterozygosity
+
+```{r}
+
+# extract values
+Ho <- div$Ho # one value per SNP per population
+Hs <- div$Hs # one value per SNP per population
+
+# convert observed heterozygosity values to a data frame
+Ho_df <- as.data.frame(Ho)
+Ho_df$Locus <- rownames(Ho_df)
+
+# convert expected heterozygosity values to a data frame
+Hs_df <- as.data.frame(Hs)
+Hs_df$Locus <- rownames(Hs_df)
+
+# reshape data frames to long format
+Ho_long_pop <- Ho_df %>%
+  pivot_longer(cols = -Locus, names_to = "Population", values_to = "Ho") 
+Hs_long_pop <- Hs_df %>%
+  pivot_longer(cols = -Locus, names_to = "Population", values_to = "Hs")
+
+# merge observed and expected data by populations and loci
+pop_data <- merge(Ho_long_pop, Hs_long_pop, by = c("Locus", "Population"))
+
+# combine into long format for plotting
+pop_long <- pop_data %>%
+  pivot_longer(cols = c("Ho", "Hs"), names_to = "Type", values_to = "Value")
+
+# plot values by population
+ggplot(pop_long, aes(x = factor(Population, levels = population_order), y = Value, fill = Type)) +
+  geom_boxplot() +
+  labs(title = "Observed and Expected Heterozygosity by Population",
+       x = "Population",
+       y = "Heterozygosity") +
+  scale_fill_manual(values = c("Ho" = "blue", "Hs" = "orange")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+
+```
+
+```{r}
+
+# calculate average observed and expected heterozygosity per population
+avg_het_per_pop <- pop_data %>%
+  group_by(Population) %>%
+  summarise(
+    avg_observed_ho = mean(Ho, na.rm = TRUE),
+    avg_expected_hs = mean(Hs, na.rm = TRUE)
+  )
+
+print(avg_het_per_pop)
+
+```
+
+```{r}
+
+# reshape average heterozygosity data for plotting
+avg_het_long <- avg_het_per_pop %>%
+  pivot_longer(cols = c(avg_observed_ho, avg_expected_hs), names_to = "Type", values_to = "Value")
+
+# plot by population
+ggplot(avg_het_long, aes(x = factor(Population, levels = population_order), y = Value, group = Type, color = Type)) +
+  geom_line(size = 1.2) +  # lines for averages
+  geom_point(size = 3) +   # points for each average
+  labs(title = "Average Ho and Hs by Population",
+       x = "Population",
+       y = "Average Heterozygosity") +
+  scale_color_manual(values = c("avg_observed_ho" = "blue", "avg_expected_hs" = "orange")) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # angle labels for readability
+
+```
+
+#### Allelic richness
+
+Total number of unique alleles present in a population. Results are close to whole numbers because of small adjustments from rarefaction. 
+
+```{r}
+
+# calculate allelic richness
+ar_results <- allelic.richness(hierfstat_obj, min.n=34, diploid = TRUE) # min.n = number in smallest population * 2
+
+# extract results
+ar_results <- ar_results$Ar # one value per SNP per population
+
+# make column for locus
+ar_results <- rownames_to_column(ar_results, var = "Locus")
+ar_results <- ar_results[, c("Locus", colnames(ar_results)[-1])] # move to front
+
+# format data for plotting
+ar_long <- melt(ar_results, id.vars = "Locus", variable.name = "Population", value.name = "Allelic_Richness")
+
+# calculate means to put on graph
+means <- aggregate(Allelic_Richness ~ Population, data = ar_long, mean)
+
+```
+
+```{r}
+
+# plot allelic richness results
+ggplot(ar_long, aes(x = factor(Population, levels = population_order), y = Allelic_Richness)) +
+  geom_boxplot(fill = "lightblue") +
+  labs(title = "Allelic Richness by Population", x = "Population", y = "Allelic Richness") +
+  geom_point(data = means, aes(x = Population, y = Allelic_Richness, shape = "Mean"), 
+             size = 2, color = "black") +  # plot means in addition to medians
+  scale_shape_manual(name = "Legend", values = c(16), labels = c("Mean alleleic richness")) + 
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+```{r}
+
+# calculate average ar per population
+avg_ar_per_pop <- ar_long %>%
+  group_by(Population) %>%
+  summarise(
+    avg_allelic_richness = mean(Allelic_Richness, na.rm = TRUE),
+  )
+
+print(avg_ar_per_pop)
+
+```
+
+#### AR/Ho/Hs data product
+
+This will get used in a linear model that includes temperature, salinity, AR, and Ho. It is saved to the "parent_effects_H2F" folder under "data."
+
+```{r}
+
+parent_genetic_effects <- merge(avg_het_per_pop, avg_ar_per_pop, by = "Population") %>%
+  mutate(Population = factor(Population, levels = population_order)) %>%
+  arrange(Population)
+
+write_csv(parent_genetic_effects, file.path("..", "..", "data", "parent_effects_H2F", "parent_genetic_effects.csv"))
 
 ```
 
