@@ -14,6 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ### Packages
+
 ```{r}
 
 library(dplyr)
@@ -35,6 +36,7 @@ library(CMplot)
 ```
 
 ### Load data
+
 ```{r}
 
 thinned_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_THINNEDSNPs_exp.rds"))
@@ -63,6 +65,7 @@ dim(muts)
 ### Fst 
 
 #### Data preparation
+
 ```{r}
 
 # filter SNPs that are all heterozygous (all 1s)

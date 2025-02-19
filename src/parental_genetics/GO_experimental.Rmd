@@ -1,0 +1,197 @@
+---
+title: "GO_experimental.Rmd"
+author: "Kiran Bajaj"
+output: html_document
+date: "2025-02-19"
+---
+
+Try to really understand the code in this file and restructure it a bit before producing the new graph. 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#setwd("~/Desktop/MVP-H2F-HatcheryField")
+```
+
+### Packages
+
+```{r}
+
+library(dplyr)
+library(here)
+library(readr)
+library(grid)
+library(colorspace)
+
+```
+
+### Data preparation
+
+```{r}
+
+outflank_output <- read_csv(file.path("..", "..", "data", "putative_selection", "outflank_results.csv"))
+
+# filter for outliers and SNPs with available gene info to put into ShinyGO
+outliers_only <- outflank_output %>%
+  filter(OutlierFlag == TRUE) %>%
+  dplyr::select(LocusName, FST, pvalues, Chromosome, Position, cust_id, cust_gene_id, cust_gene_name) %>%
+  filter(!is.na(cust_gene_id)) %>%
+  filter(!is.na(cust_gene_name)) %>%
+  rename(gene = cust_gene_id)
+
+# generate list for ShinyGO
+paste(outliers_only$gene, collapse = " ") # this is 917 genes
+
+```
+
+### Gene ontology enrichment
+
+- Go to the website (ShinyGO)[https://bioinformatics.sdstate.edu/go/]
+- Paste the list of genes above into the box on the left
+- Press "Change species", type in crassostrea virginica, and choose: "cvirginica.3.0_eg_gene"
+- Keep all other settings as default values and press submit
+- On the "Enrichment" tab, download the top pathways
+- On the "Genes" tab, download the gene info table
+
+### Analysis
+
+```{r}
+
+# load in outputs from ShinyGO
+
+# this one is the enriched pathways and the genes that go with them
+enriched <- read_csv(file.path("..", "..", "data", "putative_selection", "shinyGO_enriched.csv"))
+
+# this one is all the genes that matched the database and info about them
+genes <- read_csv(file.path("..", "..", "data", "putative_selection", "shinyGO_genes.csv"))
+
+```
+
+```{r}
+
+# regular viridis colors
+viridis_colors <- viridis::viridis(length(unique(outflank_output$Chromosome)))
+# lightened colors for non-outliers
+lightened_colors <- lighten(viridis_colors, amount = 0.4)
+
+# prepare data
+manhattan_fst <- outflank_output %>%
+  filter(He > 0.1) %>%  # filter based on heterozygosity
+  mutate(
+    Chromosome = as.numeric(Chromosome),
+    Position = as.numeric(Position),
+    pvalues = as.numeric(pvalues),
+    FST = ifelse(FST < 0, 0.00001, FST),  # assign small value to negative FST
+    Outlier = ifelse(pvalues < 0.01, "outlier", "nonoutlier"),  # identify outliers
+    Color = ifelse(Outlier == "nonoutlier",  # color outliers with lightened colors
+                   viridis_colors[Chromosome],
+                   lightened_colors[Chromosome])
+  )
+
+# compute chromosome lengths and cumulative positions
+chromosome_lengths <- manhattan_fst %>%
+  group_by(Chromosome) %>%
+  summarise(chr_len = max(Position)) %>%
+  mutate(tot = cumsum(lag(chr_len + 1e7, default = 0))) # buffer between positions
+
+# merge cumulative positions back into the data
+manhattan_fst <- left_join(manhattan_fst, chromosome_lengths, by = c("Chromosome" = "Chromosome")) %>%
+  arrange(Chromosome, Position) %>%
+  mutate(Cumulative_Position = Position + tot)
+
+# create axis ticks for chromosome labels
+chrom_ticks <- manhattan_fst %>%
+  group_by(Chromosome) %>%
+  summarize(center = (max(Cumulative_Position) + min(Cumulative_Position)) / 2)
+
+```
+
+#### Data preparation
+
+These data need to be reshaped. The OutFLANK data product has loci in rows, and genes IDs, brief functional annotations, chromosomes, and chromosome positions in columns. The "enriched" csv has pathways in rows, and a list of genes separated by spaces in one column that need to be split. The "genes" csv has genes in rows, and positions and bunch of other stuff in columns. We should check these positions with the OutFLANK positions (they might come from the same place so should be the same). 
+
+```{r}
+
+head(enriched)
+
+# split up the genes column so there is one row per gene
+enriched_split <- enriched %>%
+  mutate(gene = strsplit(as.character(Genes), " ")) %>%
+  unnest(gene) %>%
+  dplyr::select(-URL, -Genes)
+
+# rename gene column for merge
+genes <- genes %>%
+  rename(gene = Pasted)
+
+# join enriched pathway genes with full gene info from the other dataframe
+enriched_joined <- enriched_split %>%
+  inner_join(genes, by = "gene")
+
+manhattan_fst <- manhattan_fst %>%
+  rename(gene = cust_gene_id)
+
+# join enriched pathway genes with Outflank output data
+enriched_fully_joined <- manhattan_fst %>%
+  dplyr::inner_join(enriched_joined, by = "gene") %>%
+  dplyr::select(LocusName, `Enrichment FDR`, nGenes, `Pathway Genes`, `Fold Enrichment`, Pathway) %>%
+  # generalize pathway types for graphing
+  mutate(gene_type = case_when(
+    grepl("ion", Pathway, ignore.case = TRUE) ~ "ion transport",
+    grepl("membrane", Pathway, ignore.case = TRUE) ~ "membrane",
+    TRUE ~ NA_character_  
+  ))
+  
+```
+
+```{r}
+
+merged_manhattan <- manhattan_fst %>%
+  left_join(enriched_fully_joined, by = "LocusName") # merge
+
+ggplot_manhattan <- ggplot(merged_manhattan, aes(x = Cumulative_Position, y = FST)) +
+  geom_point(aes(
+    color = case_when(
+      `gene_type` == "membrane" ~ "black",  # Black color for membrane
+      `gene_type` == "ion transport" ~ "black",  # Black color for ion transport
+      TRUE ~ Color  # Default viridis/lightened colors
+    ),
+    shape = case_when(
+      `gene_type` == "membrane" ~ "circle",  # Circle shape for membrane
+      `gene_type` == "ion transport" ~ "triangle",  # Triangle shape for ion transport
+      TRUE ~ "default"  # Default shape for other points
+    )
+  ), size = 1) +
+  scale_x_continuous(breaks = chrom_ticks$center, labels = chrom_ticks$Chromosome) +
+  scale_color_identity(guide = "none") +  # Remove color guide from the legend
+  scale_shape_manual(
+    values = c(
+      "circle" = 16,   # Circle for membrane
+      "triangle" = 17, # Triangle for ion transport
+      "default" = 1    # Default shape for others
+    ),
+    breaks = c("circle", "triangle"),  # Only include "membrane" and "ion transport" in the legend
+    labels = c("Black circle = membrane", "Black triangle = ion transport")  # Custom legend labels
+  ) +
+  labs(x = "Chromosome", y = "FST") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid.major.x = element_blank(),  # Remove vertical grid lines
+    panel.grid.minor.x = element_blank()
+  ) +
+  geom_hline(aes(yintercept = 0.45, linetype = "p < 0.01"), color = "black",
+             show.legend = TRUE) +
+  scale_linetype_manual(name = "Outlier threshold", values = c("p < 0.01" = "dashed")) +
+  guides(
+    shape = guide_legend(title = "Gene Type")  # Only show shape legend
+  )
+
+#ggsave("fig_ggplot_manhattan_plot.jpg", ggplot_manhattan, width = 17, height = 6, dpi = 300)
+ggplot_manhattan
+
+
+
+```
