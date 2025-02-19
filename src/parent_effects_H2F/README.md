@@ -3,6 +3,6 @@ Data in this folder help answer the question: To what extent does parental group
 
 # Files
 
-| Code file    | Datasets created |
-| -------- | ------- |
-| Envr_of_Origin_Length_Survival_Hatchery.Rmd |  data/parent_effects_H2F/Survival_Length_Envr_Data.csv  |
+| Code file    | Datasets created | Description | 
+| -------- | ------- | ------- |
+| Envr_of_Origin_Length_Survival_Hatchery.Rmd |  data/parent_effects_H2F/Survival_Length_Envr_Data.csv  | Environmental and performance data for all groups in the hatchery and nursery| 
