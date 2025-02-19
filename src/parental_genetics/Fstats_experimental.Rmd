@@ -18,6 +18,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(dplyr)
 library(bigsnpr)
+library(bigstatsr)
 library(robustbase)
 library(ggplot2)
 library(ggrepel)
@@ -28,6 +29,8 @@ library(viridis)
 library(pegas)
 library(tidyverse)
 library(colorspace)
+library(OutFLANK)
+library(CMplot)
 
 ```
 
@@ -35,6 +38,8 @@ library(colorspace)
 ```{r}
 
 thinned_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_THINNEDSNPs_exp.rds"))
+
+full_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_FULLSNPs_exp.rds"))
 
 muts_maf_filtered <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_FULLmuts_exp.rds"))
 
@@ -45,6 +50,7 @@ samp_full_subset <- readRDS(file.path("..", "..", "data", "parental_genetics_str
 ```{r}
 
 # rename datasets for processing
+full <- full_snps
 gen <- thinned_snps
 muts <- muts_maf_filtered
 
@@ -152,7 +158,7 @@ dim(fst_data) # 104959 - pop col = 104958
 
 ```
 
-#### Calculate and plot Fst 
+#### Data product: Fst matrix 
 
 ```{r}
 
@@ -163,7 +169,7 @@ fst_results[is.na(fst_results)] <- 0
 # view results
 print(fst_results)
 
-saveRDS(fst_results, "fst_results.rds")
+saveRDS(fst_results, file.path("..", "..", "data", "pairwise_differences_analyses", "fst_results.rds"))
 
 # convert the matrix to a long format, and edit column names
 fst_plotting <- melt(fst_results, na.rm = TRUE)
@@ -347,7 +353,7 @@ print(avg_ar_per_pop)
 
 ```
 
-#### AR/Ho/Hs data product
+#### Data product: AR, Ho, Hs
 
 This will get used in a linear model that includes temperature, salinity, AR, and Ho. It is saved to the "parent_effects_H2F" folder under "data."
 
@@ -361,3 +367,267 @@ write_csv(parent_genetic_effects, file.path("..", "..", "data", "parent_effects_
 
 ```
 
+### Fst outliers with OutFLANK
+
+#### Data preparation
+
+Same steps as before but with full SNP set. 
+
+```{r}
+
+# rename for processing
+full <- full_snps
+
+dim(full)
+
+```
+
+```{r}
+# filter SNPs that are all heterozygous (all 1s)
+keep_snps_fst <- apply(full, 2, function(col) !all(col == 1))
+
+# filter genotype matrix for these SNPs
+FULL_filtered_fst <- full[, keep_snps_fst]
+dim(FULL_filtered_fst) # 1 column removed - now there are 154608 SNPs
+
+# check column name to make sure it was a real column
+col_heterozygous <- apply(full, 2, function(col) all(col == 1))
+colnames(full)[col_heterozygous] #Affx-1246226248
+
+# now filter the muts again to just retain our SNPs that are not all heterozygous
+muts_outflank <- muts[muts$Affx.ID %in% colnames(FULL_filtered_fst), ]
+dim(muts_outflank) # goes down to 154608
+
+```
+
+```{r}
+
+outflank_data <- FULL_filtered_fst
+
+# make sample IDs into a real column (instead of rownames)
+sample_IDs <- rownames(outflank_data)
+outflank_data$merge_ID_inds <- sample_IDs # "merge_ID_inds" is the column name in samp_full_subset
+
+# reset the rownames to empty
+rownames(outflank_data) <- NULL
+
+# make sure labels in fst data still line up with sample data
+if(!identical((outflank_data$merge_ID_inds),samp_full_subset$merge_ID_inds)){
+    print("Error sample names don't line up")
+    break
+   } # passes
+
+# store data to check labels 
+fst_labels_check <- outflank_data$merge_ID_inds
+head(fst_labels_check)
+samp_labels_check <- samp_full_subset$merge_ID_inds
+head(samp_labels_check)
+
+# check everything is all lined up # everything good
+identical(fst_labels_check, samp_labels_check) # TRUE
+
+```
+
+```{r}
+
+# add population labels to fst data
+outflank_data$ID_SiteDate <- samp_full_subset$ID_SiteDate
+
+outflank_data <- outflank_data %>%
+  mutate(ID_SiteDate = recode(ID_SiteDate,
+                           "DEBY" = "S2-DEBY",
+                           "FL-KingPlan" = "W3-FL",
+                           "LA-SisLake" = "W2-LA",
+                           "LOLA" = "S1-LOLA",
+                           "ME-HogIs" = "W6-ME",
+                           "NH-GrtBay" = "W5-NH",
+                           "TX-CapBay" = "W1-TX",
+                           "VA-DeepWatSh" = "W4-VA"))
+
+# move sample and population columns to front 
+n_cols <- ncol(outflank_data)
+outflank_data <- outflank_data[, c((n_cols-1):n_cols, 1:(n_cols-2))]
+
+# sanity check: number of columns 
+dim(outflank_data) # number of SNPs (154608) + sample col + pop col = 154610
+
+# check number of samples per population
+population_counts <- table(outflank_data$ID_SiteDate)
+population_counts
+
+```
+
+```{r}
+
+# remove sample ID column for Fst calculation
+outflank_data <- outflank_data[, -1]
+
+# convert population to factor
+outflank_data$ID_SiteDate <- as.factor(outflank_data$ID_SiteDate)
+
+# check dimensions one more time
+dim(outflank_data) # 154610 - pop col = 154609
+
+```
+
+```{r}
+
+# OutFLANK components: snp matrix, locus names, population names
+# documentation: https://github.com/whitlock/OutFLANK/blob/master/OutFLANK%20readme.pdf
+
+# create snp matrix
+SNPmat <- as.matrix(outflank_data[,-1])  # snp matrix - exclude the population column
+SNPmat <- apply(SNPmat, 2, as.numeric)  # convert all columns to numeric
+SNPmat[is.na(SNPmat)] <- 9  # replace NA with 9 for missing data - there shouldn't be any 9s
+
+# create locus names
+locus_names <- colnames(outflank_data)[-1]  # exclude first column (population)
+
+# create pop names
+pop_names <- rep(outflank_data$ID_SiteDate, each = nrow(SNPmat) / nrow(outflank_data)) # replicate based on number of rows
+pop_counts_outflank <- table(pop_names) # create a table to check with pop counts from before
+
+pop_counts_outflank # these two should match
+population_counts # these two should match
+
+# make input data for OutFLANK
+FstDataFrame <- MakeDiploidFSTMat(SNPmat, locus_names, pop_names)
+
+```
+
+#### Data checks
+
+```{r}
+
+# data check: heterozygosity vs. Fst
+plot(FstDataFrame$He, FstDataFrame$FST) 
+
+# data check: Fst vs. FstNoCorr
+plot(FstDataFrame$FST, FstDataFrame$FSTNoCorr) # uncorrected Fst is always larger
+
+```
+
+#### Thin for LD
+
+```{r}
+
+# following "Bonus" section of OutFLANKAnalysis.Rmd vignette
+
+# install bigstatsr and bigsnpr
+if (!("bigstatsr" %in% installed.packages())){install.packages("bigstatsr")}
+library(bigstatsr)
+if (!("bigsnpr" %in% installed.packages())){devtools::install_github("privefl/bigsnpr")}
+library(bigsnpr)
+
+# convert snp matrix to required format for bigsnpr
+G <- add_code256(big_copy(as.matrix(SNPmat), type="raw"), code=bigsnpr:::CODE_012)
+
+# data check - number of columns in SNP matrix = number of values in chromosome and position vectors
+if (ncol(SNPmat) == length(muts_outflank$Chromosome) && ncol(SNPmat) == length(muts_outflank$Position)) {
+  cat("The number of SNPs matches the lengths of chromosome and position vectors.\n")
+} else {
+  cat("Mismatch detected:\n")
+  cat("Number of SNPs: ", ncol(SNPmat), "\n")
+  cat("Length of chromosome vector: ", length(muts_outflank$Chromosome), "\n")
+  cat("Length of position vector: ", length(muts_outflank$Position), "\n")
+}
+
+# data check - order of locus names = order in SNP matrix and chromosome info
+
+# check if the lengths are the same
+if (length(muts_outflank$Affx.ID) != length(colnames(SNPmat))) {
+  cat("Mismatch detected: Number of locus names does not match the number of SNP names.\n")
+} else {
+  # check if the orders are the same
+  if (all(muts_outflank$Affx.ID == colnames(SNPmat))) {
+    cat("The order of locus names matches the order of SNP matrix column names.\n")
+  } else {
+    cat("The order of locus names does NOT match the order of SNP matrix column names.\n")
+    
+    # identify mismatches
+    mismatches <- muts_outflank$Affx.ID != colnames(SNPmat)
+    cat("Mismatched names:\n")
+    for (i in which(mismatches)) {
+      cat("Position:", i, "- Locus Name:", muts_outflank$Affx.ID[i], "- SNP Name:", colnames(SNPmat)[i], "\n")
+    }
+  }
+}
+
+# SNP trimming
+newpc <-snp_autoSVD(G=G,infos.chr =muts_outflank$Chromosome,infos.pos = muts_outflank$Position)
+which_pruned <- attr(newpc, which="subset") # indexes of remaining SNPS after pruning
+
+length(which_pruned) # 104957 - same as thinned snp set - this makes sense I think
+
+```
+
+#### Run OutFLANK
+
+```{r}
+
+# run OutFLANK
+out_trim <- OutFLANK(FstDataFrame[which_pruned,], # using pruned SNPs
+                     LeftTrimFraction = 0.05, # defaults
+                     RightTrimFraction = 0.05, 
+                     Hmin = 0.1, 
+                     NumberOfSamples = 8, # number of populations
+                     qthreshold = 0.05)
+
+# view results
+str(out_trim)
+head(out_trim$results)
+
+# check the fit
+OutFLANKResultsPlotter(out_trim, withOutliers = TRUE,
+                       NoCorr = TRUE, Hmin = 0.1, binwidth = 0.001, Zoom =
+                         FALSE, RightZoomFraction = 0.05, titletext = NULL) # looks fine
+
+# zoom in on right tail
+OutFLANKResultsPlotter(out_trim , withOutliers = TRUE,
+                       NoCorr = TRUE, Hmin = 0.1, binwidth = 0.001, Zoom =
+                         TRUE, RightZoomFraction = 0.15, titletext = NULL) # looks fine
+
+# check p value histogram - should look flat ish
+hist(out_trim$results$pvaluesRightTail)
+
+```
+
+#### Calculate p-values
+
+```{r}
+
+# calulate p-values
+P1 <- pOutlierFinderChiSqNoCorr(FstDataFrame, Fstbar = out_trim$FSTNoCorrbar, 
+                                   dfInferred = out_trim$dfInferred, qthreshold = 0.05, Hmin=0.05)
+
+# view data
+head(P1)
+tail(P1)
+
+# look for outliers - highlighted in blue
+my_out <- P1$OutlierFlag==TRUE
+plot(P1$He, P1$FST, pch=19, col=rgb(0,0,0,0.1))
+points(P1$He[my_out], P1$FST[my_out], col="blue")
+
+# check the p-value histogram for the full set of data
+# if there are outliers, it should look flat with an inflation near 0
+hist(P1$pvaluesRightTail)
+
+```
+
+#### Data product: OutFLANK results, SNP info
+
+```{r}
+
+# separating by chromosome
+
+a = sprintf("%08d", muts_outflank$Position)
+muts_outflank$chrom_position <- paste(muts_outflank$Chromosome, a, sep = ".")
+
+# add chromosome positions to dataframe
+P1$Affx.ID <- P1$LocusName
+joined_P1 <- left_join(P1, muts_outflank, by = c("Affx.ID" = "Affx.ID")) # add order check here
+
+write_csv(joined_P1, file.path("..", "..", "data", "putative_selection", "outflank_results.csv"))
+
+```
