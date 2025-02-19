@@ -3,6 +3,6 @@ Data in this folder help answer the question: To what extent does pairwise diffe
 
 # Files
 
-| Dataset    | Created in | Stored in | Description | 
-| -------- | ------- | ------- |  ------- |
-| fst_results.rds |  Fstats_experimental.Rmd  | src/parental_genetics| Matrix of pairwise Fst results| 
+| Dataset    | Description | Created in |
+| -------- | ------- | ------- |
+| fst_results.rds | Matrix of pairwise Fst results | src/parental_genetics/Fstats_experimental.Rmd | 
