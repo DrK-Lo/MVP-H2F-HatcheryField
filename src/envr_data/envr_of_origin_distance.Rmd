@@ -1,0 +1,108 @@
+---
+title: "NM_Envr_Data"
+output: pdf_document
+date: "2024-03-21"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Set working directory
+```{r}
+#set working directory to Rmd file location
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+
+```{r}
+#read in appropriate packages
+library(dplyr)
+library(readr)
+library(forcats)
+library(RColorBrewer)
+library(circlize)
+library(BiocManager)
+library(ComplexHeatmap)
+library(vegan)#for Mantel test
+```
+
+All the data for each site are in separate csv files. There is one temp and one salinity csv for each site. We need to combine those files into one salinity data frame and one temperature data frame, and then join the salinity and temperature data frames into one to conduct the distance analysis.
+
+## Combining temp and salinity csvs respectively from each site
+```{r}
+#set working directory to temperature files location
+setwd("../../data/envr_of_origin/Temp")
+# read in all temp files as csvs and combine into one file named "temp"
+temp <- list.files(path=".") %>% 
+  lapply(read_csv) %>% 
+  bind_rows
+
+#View temp file
+View(temp)
+#set working directory to Salinity folder
+setwd("../Salinity")
+# read in all salinity files as csvs and combine into one file named "sal"
+sal <- list.files(path=".") %>% 
+  lapply(read_csv) %>% 
+  bind_rows
+
+View(sal)
+
+#set working directory to location where code is saved
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+
+#remove extra column at the end of each data frame
+ncol(temp) #ncol = 15
+temp <- temp[ , -c(15)]
+
+ncol(sal) #ncol = 15
+sal <- sal[ , -c(15)]
+```
+
+## Join temp and sal data frames
+```{r}
+#left join temp and salinity dfs and save into an object called "envr"
+envr <-temp %>%
+          left_join(sal, by = "site_name")
+
+#remove rows unnecessary for distance analysis and save into an object called "envr_sub"
+envr_sub <- subset(envr, select = -c(download_date.x, firstyear.x, finalyear.x, source_description.x, lat.x, lon.x, Temperature_n, Temperature_years, collection_type.x, download_date.y, source_description.y, lat.y, lon.y, firstyear.y, finalyear.y, Salinity_n, Salinity_years, collection_type.y))
+
+# make envr_sub into a data frame and save as "envr_df"
+envr.df <- data.frame(envr_sub)
+
+#update site names with labeling scheme
+envr.df["site_name"][envr.df["site_name"] == "TX2"] <- "W1-TX"
+envr.df["site_name"][envr.df["site_name"] == "LA4"] <- "W2-LA"
+envr.df["site_name"][envr.df["site_name"] == "FL3"] <- "W3-FL"
+envr.df["site_name"][envr.df["site_name"] == "LOLA"] <- "S1-LOLA"
+envr.df["site_name"][envr.df["site_name"] == "DEBY"] <- "S2-DEBY"
+envr.df["site_name"][envr.df["site_name"] == "JR"] <- "W4-VA"
+envr.df["site_name"][envr.df["site_name"] == "NH1"] <- "W5-NH"
+envr.df["site_name"][envr.df["site_name"] == "ME2"] <- "W6-ME"
+
+#reorder rows of data frame
+envr.df <- envr.df %>% 
+  arrange(factor(site_name, levels = c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME")))
+
+#save envr.df as a csv for future analyses
+write.csv(envr.df, "../../data/envr_of_origin/envr_summary_stats.csv")
+          
+#rename rows with MVP population names
+rownames(envr.df) <- c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME")
+#remove site names from data frame and save as object called "envr.df.dist"
+envr.df.dist <- subset(envr.df, select = -c(site_name))
+```
+
+## Run distance analysis and visualize with a heat map
+```{r}
+#make run distance analysis on envr.df.dist and save the results as a matrix named "envr.dist.mat"
+envr.dist.mat <- as.matrix(dist(envr.df.dist))
+
+#save envr distance matrix as csv
+write.csv(envr.dist.mat, "../../data/envr_of_origin/envr_dist.csv")
+
+#View distance matrix
+View(envr.dist.mat)
+```

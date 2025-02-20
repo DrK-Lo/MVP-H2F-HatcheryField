@@ -173,23 +173,6 @@ filtered_temp <- full_temp %>%
     filter(between(temp, 0, 40)) 
 ```
 
-Violin plots with the raw data cause R to crash due to large data size. Therefore, I will make the violin plots using monthly temp/salinity averages rather than raw data.
-```{r monthly_avgs_temp}
-#average monthly temperatures
-monthly_temp <- filtered_temp %>%
-    mutate(year = year(datetime), month = month(datetime)) %>%
-    group_by(site_name, year, month) %>%
-    summarise(mean_temp = mean(temp))
-
-#make sure all 8 sites are still present
-monthly_temp_sites <- list(unique(monthly_temp$site_name))
-
-monthly_temp_sites
-
-#write to csv for future analyses
-write.csv(monthly_temp, "/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/mean_monthly_temp.csv", row.names = FALSE)
-```
-
 ## Violin Plots
 ```{r violin_plots}
 sal_violin <- ggplot(filtered_sal, aes(x = site_name, y = salinity)) +
