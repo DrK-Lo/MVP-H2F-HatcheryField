@@ -1,10 +1,10 @@
 ---
-title: "Envr_of_Origin_Length_Survival_Hatchery"
+title: "Envr_Genetics_Length_Survival_Hatchery"
 output: pdf_document
 date: "2025-02-20"
 ---
 
-This code analyzes the effect of condition in the environments-of-origin on offspring oyster survival and shell length in the hatchery and nursery at VIMS ABC.
+This code analyzes the effect of conditions in the environments-of-origin and parent genetics on offspring oyster survival and shell length in the VIMS ABC hatchery and nursery.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -77,12 +77,12 @@ colnames(survival_filter) <- c("site_name", "percent_survival")
 
 ##Length df organizing
 ```{r length_cleaning_means}
-#select columns with group, day, and shell length in mm
-length <- length[,c("group", "day_an", "shell_length_mm")]
+#select columns with site name, day, and shell length in mm
+length <- length[,c("site_name", "day_an", "shell_length_mm")]
 
 #filter out LARMIX from group
 length_filter <- length %>% 
-  filter(group != "LARMIX")
+  filter(site_name != "LARMIX")
 
 #keep only data from days 15-21
 length_21 <- length_filter %>% 
@@ -92,10 +92,10 @@ length_78 <- length_filter %>%
   filter(day_an == "78")
 
 #find mean shell lengths of each group on each day
-means_mm_21 <- aggregate(shell_length_mm ~ group, FUN = mean, data = length_21)
+means_mm_21 <- aggregate(shell_length_mm ~ site_name, FUN = mean, data = length_21)
 colnames(means_mm_21) <- c("site_name", "mean_length_mm_21")
 
-means_mm_78 <- aggregate(shell_length_mm ~ group, FUN = mean, data = length_78)
+means_mm_78 <- aggregate(shell_length_mm ~ site_name, FUN = mean, data = length_78)
 colnames(means_mm_78) <- c("site_name", "mean_length_mm_78")
 ```
 

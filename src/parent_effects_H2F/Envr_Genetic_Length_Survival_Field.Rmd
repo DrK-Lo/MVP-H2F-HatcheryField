@@ -1,0 +1,179 @@
+---
+title: "Envr_Genetics_Length_Survival_Field"
+output: pdf_document
+date: "2025-02-20"
+---
+
+This code analyzes the effect of conditions in the environments-of-origin and parent genetics on offspring oyster survival and shell length in field sites at the York and Lewisetta Rivers
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Set working directory
+```{r setwd}
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+## Load packages
+```{r packages}
+library(tidyverse)
+library(ggplot2)
+library(gridExtra)
+library(multcompView) #extract significance letters from Tukey-Kramer test
+library(grid)#for ggplot arranging
+library(cowplot) #arrange ggplots
+library(ggpmisc)
+library(vegan) #for Mantel tests
+library(broom)#save lm results to tibbles
+```
+
+##Read in necessary files
+```{r read_csvs}
+#this file contains mean shell lengths oysters in each bag at each of the three field sampling dates. There are six bags per broodstock group, with three bags at the York site and three at the Lewisetta site.
+length <- read.csv(file.path("../../data/performance_H2F/lengths_bags_022025.csv"))
+
+#this file contains percent survival at each of the three field sampling dates. There are six bags per broodstock group, with three bags at the York site and three at the Lewisetta site.
+survival <- read.csv(file.path("../../data/performance_H2F/mortality_bags_022025.csv"))
+
+#this file has summary statistics on temperature and salinity for the 8 sites (W1-TX, W2-LA, W3-FL, S1-LOLA, S2-DEBY, W4-VA, W5-NH, W6-ME)
+envr_summary <-  read.csv("../../data/envr_of_origin/envr_summary_stats.csv")
+
+#this file is a matrix of the environmental distances between each site
+envr_dist <- read.csv("../../data/envr_of_origin/envr_dist.csv")
+
+#this file contains average observed heterozygosity, average expected heterozygosity, and average allelic richness across every loci at each site
+parent_genetics <- read.csv("../../data/parent_effects_H2F/parent_genetic_effects.csv")
+```
+
+Calculate average survival per 
+```{r survival_cleaning}
+#Exclude any LARMIX and SEEDMIX bags, which do are crosses of oysters from different groups, and do not contain distinct environmental or genetic data
+survival <- survival %>% 
+  filter(pop != "SEEDMIX" & pop != "LARMIX")
+
+#exclude add in W or S labels to group names
+survival["pop"][survival["pop"] == "TX"] <- "W1-TX"
+survival["pop"][survival["pop"] == "LA"] <- "W2-LA"
+survival["pop"][survival["pop"] == "FL"] <- "W3-FL"
+survival["pop"][survival["pop"] == "LOLA"] <- "S1-LOLA"
+survival["pop"][survival["pop"] == "DEBY"] <- "S2-DEBY"
+survival["pop"][survival["pop"] == "JR"] <- "W4-VA"
+survival["pop"][survival["pop"] == "NH"] <- "W5-NH"
+survival["pop"][survival["pop"] == "ME"] <- "W6-ME"
+
+#select only site names (labeled "pop" for now), bag labels, bag field site locations, and survival at times t1, t2, and t3 (each of the field sampling sites respectively).
+survival_filter <- survival[, c("pop", "bags_label", "bag_site", "t1", "t2", "t3")]
+
+#rename columns
+colnames(survival_filter) <- c("site_name", "bag_label", "bag_site", "t1_surv", "t2_surv", "t3_surv")
+
+#find average survival for each group at each time point in each field site and save results to new table
+mean_t1surv <- aggregate(t1_surv ~ site_name + bag_site, FUN = mean, data = survival_filter)
+mean_t2surv <- aggregate(t2_surv ~ site_name + bag_site, FUN = mean, data = survival_filter)
+mean_t3surv <- aggregate(t3_surv ~ site_name + bag_site, FUN = mean, data = survival_filter)
+
+#separate data for each field site at each time point into different 
+```
+
+##Length df organizing
+```{r length_cleaning_means}
+#select columns with group, day, and shell length in mm
+length <- length[,c("bag", "monitoring_event", "length", "site")]
+
+#add site_name column
+
+
+#keep only data from days 15-21
+length_21 <- length_filter %>% 
+  filter(day_an == "15-21")
+
+length_78 <- length_filter %>% 
+  filter(day_an == "78")
+
+#find mean shell lengths of each group on each day
+means_mm_21 <- aggregate(shell_length_mm ~ group, FUN = mean, data = length_21)
+colnames(means_mm_21) <- c("site_name", "mean_length_mm_21")
+
+means_mm_78 <- aggregate(shell_length_mm ~ group, FUN = mean, data = length_78)
+colnames(means_mm_78) <- c("site_name", "mean_length_mm_78")
+```
+
+##Remove extra columns from environmental data frame and add latitude
+```{r envr_cleaning}
+#remove extra site label and standard deviations from envr_summary
+envr <- envr_summary[,-c(1,6,10)]
+
+summary(envr)
+
+#rename cols
+colnames(envr) <- c("site_name", "Mean_Annual_Temperature_C", "Mean_max_temperature_C", "Mean_min_temperature_C", "Mean_Annual_Salinity_ppt", "Mean_max_Salinity_ppt", "Mean_min_Salinity_ppt")
+
+#add sampling site latitudes. Note that these latitudes ARE NOT the same as the latitudes of where environmental data came from. These latitudes, while similar, were often slightly different, and I am using our actual sampling site latitudes.
+envr$lat <- c(28.096000, 29.239925, 30.440030, 37.1501163, 37.98030, 37.249107, 43.053746, 44.01330)
+```
+
+
+```{r parent_genetics_cleaning}
+#rename column names 
+colnames(parent_genetics) <- c("site_name", "avg_observed_ho", "avg_expected_hs", "avg_allelic_richness")
+```
+
+#Join data frames
+```{r join_dfs}
+surv_length_envr_gen <- left_join(envr, means_mm_21, by = "site_name") %>% 
+  left_join(means_mm_78, by = "site_name") %>% 
+  left_join(survival_filter, by = "site_name") %>% 
+  left_join(parent_genetics, by = "site_name")
+
+write.csv(surv_length_envr_gen, "../../data/parent_effects_H2F/Hatchery_Performance_Envr_ParentGenetics.csv", row.names = FALSE)
+```
+
+The next chunk includes multiple regressions testing the effects of several environmental and genetic parameters on length and survival in the hatchery/nursery. The explanatory variables are 1) mean annual temperature at the environment-of-origin (mean temp), 2) mean annual salinity at the environment of origin (mean sal), 3) mean observed heterozygosity in the parent oysters from each site (Ho), and 4) mean allelic richness (AR) in the parent oysters from each site.
+
+## Multiple regressions
+```{r mult_regressions}
+#test correlation between temperature and latitude. If they are highly correlated, one must be excluded from the upcoming multiple regression.
+temp_lat_corr <- cor.test(surv_length_envr_gen$Mean_Annual_Temperature_C, surv_length_envr_gen$lat)
+temp_lat_corr #significant correlation (r = -0.962, p = 0.00014) between temp and lat, cannot include both in multiple regression
+
+#multiple regression testing effect of mean annual temp, mean annual salinity, mean Ho, and mean AR on percent survival at day 21 (end of hatchery stage)
+surv21_mr <- lm(percent_survival ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt + avg_observed_ho + avg_allelic_richness, data = surv_length_envr_gen)
+summary(surv21_mr) 
+#model p-value = 0.06075
+#model F-stat = 7.876
+#adjusted R squared = -.7971
+surv21_tidy <- tidy(surv21_mr) #save coefficients as table
+
+
+#multiple regression testing effect of mean annual temp, mean annual salinity, mean Ho, and mean AR on percent length at day 21 (end of hatchery stage)
+length21_mr <- lm(mean_length_mm_21 ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt + avg_observed_ho + avg_allelic_richness, data = surv_length_envr_gen)
+summary(length21_mr) 
+#model p-value = 0.89
+#model F-stat = 0.2551
+#Adjusted R squared = -0.74
+length21_tidy <- tidy(length21_mr) #save coefficients in table
+
+#multiple regression testing effect of mean annual temp, mean annual salinity, mean Ho, and mean AR on percent length at day 78 (end of nursery stage)
+length78_mr <- lm(mean_length_mm_78 ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt + avg_observed_ho + avg_allelic_richness, data = surv_length_envr_gen)
+summary(length78_mr) 
+#model p-value = 0.5623
+#model F-stat = 0.8865
+#adjusted R squared = -0.06934
+length78_tidy <- tidy(length78_mr) #save coefficients as table
+```
+
+#adjust p-values
+```{r}
+model_p_values <- c(0.06075, 0.89, 0.5623)
+
+model_p_adj <- p.adjust(model_p_values, method = "BH")
+
+model_p_adj
+```
+
+Adjusted model p-values
+Survival at day 21: 0.18225 
+Length at day 21: 0.89000 
+Length at day 78: 0.84345
+
