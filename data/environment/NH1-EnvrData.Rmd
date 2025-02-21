@@ -1,0 +1,436 @@
+---
+title: "W5_NH - Processed Environmental Data"
+author: "Madeline Eppley"
+date: "7/11/2023"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+setwd("/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment")
+```
+
+### Load required packages. 
+```{r}
+library("dplyr") #Used for working with data frames
+library("lubridate") #Used for time-date conversions
+library("readr") #Used to read the CSV file
+library("ggplot2") 
+```
+
+### Note the date of data download and source. All available data should be used for each site regardless of year. Note from the CSV file how often the site was sampled, and if there are replicates in the data. Also describe if the sampling occurred at only low tide, only high tide, or continuously.  
+```{r}
+#Data was downloaded on 7/11/2023
+#Source - https://cdmo.baruch.sc.edu//dges/- Selected Great Bay, Squamscott River. The station code is GRBSQWQ.
+
+#Create text strings with metadata information that we want to include in the final data frame. 
+download_date <- ("07-11-2023")
+source_description <- ("NERR Centralized Data. Great Bay - Squamscott River GRBSQWQ")
+site_name <- ("W5_NH") #Use site code with site number based on lat position and state
+collection_type <- ("continuous")
+```
+
+### Use the file path name in your working directory or desktop, see example below. Or, import data set through the "Files" window in R studio. Store the file in a variable with the "raw_ID_Site" format. If salinity and temperature data are in separate files, read in both and store them with "_sal" or "_temp" in the variable names. 
+```{r}
+#The file we will be working with is from Great Bay, Mouth of the Squamscott River in New Hampshire. The ID_Site for this site is W5_NH. 
+raw_W5_NH <- read_csv("/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/W5-NH-raw.csv")
+
+# View how the data is stored. Note the variable names and the format and units that the data are stored in.  
+#spec(raw_W5_NH)
+#View(raw_W5_NH)
+```
+
+### Start with the date and time of collection. We will use the lubridate package to standardize all values into the date-time format called POSIXct. This format stores the date and time in number of seconds since a past point (1/1/1970). This makes comparisons easy and helps to standardizes values. 
+```{r}
+# SKIP combining, date and time of collection is already in a column together 
+
+# Use unclass to view the way that the time and date are stored 
+# unclass(raw_W5_NH$DateTimeStamp)
+# The data is stored in month-day-yearXX hours(12):minutes format
+
+#Convert to POSIXct format. Store it into a column named datetime in the data frame.
+raw_W5_NH$datetime <- as.POSIXct(raw_W5_NH$DateTimeStamp, "%m/%d/%y %H:%M", tz = "")
+
+#Print the new data frame and examine to make sure the new datetime column is in the correct format. 
+summary(raw_W5_NH)
+
+# we have NAs, so remove those
+raw_W5_NH <- raw_W5_NH %>%
+    filter(!is.na(datetime))
+summary(raw_W5_NH$datetime)
+```
+
+### Analyze the ranges of all of our variables of interest - time, salinity, and temperature. Make sure that the latitude and longitude values are consistent for a static collection site. This is a quick check so we can determine how to conduct the next filtering step. 
+```{r}
+#Standardize column and variable names. We will use "temp" for temperature in degrees C, "salinity" for salinity in parts per thousand (ppt), "lat" for latitude in degrees, and "lon" for longitude in degrees. 
+#Use the dyplr format to rename multiple columns in the format "dataframe %>% rename("new name 1" = "old name 1", "new name 2", "old name 2")
+raw_W5_NH <- raw_W5_NH %>% rename("temp" = "Temp", "salinity" = "Sal") #No lat and long data in this file - check metadata files
+
+#Print the range (minimum and maximum) of dates of data collection. 
+print(summary(raw_W5_NH$datetime))
+
+#Print the range (minimum and maximum) of the salinity values. 
+print(summary(raw_W5_NH$salinity))
+
+#Print the range (minimum and maximum) of the temperature values.
+print(summary(raw_W5_NH$temp))
+
+
+#Store variables that we will include in the final data frame. Pull metadata from metadata file in download .zip file. 
+lat <- 43.05240
+lon <- -70.91181
+firstyear <- 1997
+finalyear <- 2022
+```
+
+### We can see that some of the values make sense - the minimum and maximum latitude and longitude values are the same.
+
+Filter any of the variables that have data points outside of normal range. We will use 0-40 as the accepted range for salinity (ppt) and temperature (C) values. Note, in the summer, salinity values can sometimes exceed 40. Check to see if there are values above 40. In this case, adjust the range or notify someone that the site has particularly high salinity values. 
+```{r}
+#Filter the data between the values of 0 and 40 for both salinity and temperature. 
+filtered_W5_NH<- raw_W5_NH %>%
+    filter(between(salinity, 0, 40) & between(temp, -1, 40))
+
+# Sanity check - print the ranges to ensure values are filtered properly. We can see that the ranges for both are now in the appropriate range.  
+print(summary(filtered_W5_NH$salinity))
+print(summary(filtered_W5_NH$temp))
+
+#Store our data into a variable name with just the site name. 
+W5_NH <- filtered_W5_NH
+
+```
+
+### Visualize the salinity, temperature, and date ranges over time. This can help us see if there are any anomalies or gaps in the data and make sure the filtering was done correctly. Sanity check - do the temperature and salinity ranges look appropriate for the geography of the site (ex. near full ocean salinity for coastal sites, lower salinity for estuaries or near rivers)?
+```{r salinity-plot}
+salplot <- ggplot(W5_NH, aes(x = datetime)) +
+    geom_line(aes(y = salinity, color = "Salinity (ppt)")) +
+    ylim(0,45) +
+    labs(x = "Time", y = "Salinity ppt", title = "Salinity Plot for W5_NH - Great Bay - Squamscott River") +
+    scale_color_manual(values = c("Salinity (ppt)" = "blue")) +
+    theme_minimal()
+
+
+salplot
+
+```
+
+```{r temperature-plot}
+tempplot <- ggplot(W5_NH, aes(x = datetime)) +
+    geom_line(aes(y = temp, color = "Temperature (C)")) +
+    ylim(-10, 45) +
+    labs(x = "Time", y = "Temperature C", title = "Temperature Plot for W5_NH - Great Bay - Squamscott River") +
+    scale_color_manual(values = c( "Temperature (C)" = "red")) +
+    theme_minimal()
+
+
+tempplot
+
+```
+
+
+### We need to calculate the mean, maximum, and minimum values for salinity and temperature per month and year. First make two data frames to contain each of the annual and monthly averages.
+```{r}
+#Calculate the mean, maximum, and minimum values for salinity and temperature for each month. 
+W5_NH_envrmonth <- W5_NH %>%
+    mutate(year = year(datetime), month = month(datetime)) %>%
+    group_by(year, month) %>%
+    summarise(
+      min_salinity = min(salinity),
+      max_salinity = max(salinity),
+      mean_salinity = mean(salinity),
+      length_salinity = length(salinity),
+      min_temp = min(temp),
+      max_temp = max(temp),
+      mean_temp = mean(temp),
+      length_temp = length(temp))
+  
+print(W5_NH_envrmonth)
+
+
+#Calculate the mean, maximum, and minimum values for salinity and temperature for each year. 
+W5_NH_envryear <- W5_NH %>%
+    mutate(year = year(datetime)) %>%
+    group_by(year) %>%
+    summarise(
+      min_salinity = min(salinity),
+      max_salinity = max(salinity),
+      mean_salinity = mean(salinity),
+      min_temp = min(temp),
+      max_temp = max(temp),
+      mean_temp = mean(temp))
+
+print(W5_NH_envryear)
+
+
+#Calculate the mean, maximum, and minimum values for salinity and temperature for each day. 
+W5_NH_envrday <- W5_NH %>%
+    mutate(year = year(datetime), month = month(datetime), day = day(datetime)) %>%
+    group_by(year, month, day) %>%
+    summarise(
+      min_salinity = min(salinity),
+      max_salinity = max(salinity),
+      mean_salinity = mean(salinity),
+      length_salinity = length(salinity),
+      min_temp = min(temp),
+      max_temp = max(temp),
+      mean_temp = mean(temp),
+      length_temp = length(temp))
+  
+print(W5_NH_envrday)
+
+
+```
+### Plot the months and years of data collection to check if there are any collection gaps in the data.
+```{r timeplot}
+timeplot <- ggplot(W5_NH_envrmonth, aes(x = year)) +
+    geom_point(aes(y = month, color = length_salinity), size = 4) +
+    labs(x = "Time", y = "Month", title = "Timeplot for W5_NH - Great Bay - Squamscott River") +
+    ylim(1,12) +
+    theme_minimal()
+
+timeplot
+```
+
+
+# Calculate days above and below thresholds and plot
+```{r}
+# open up a blank data frame that spans all 12 months for all years of data collection for this site
+# we will merge this with the observations so that we can plot over time 
+
+complete_year_month <- expand.grid(
+  year = unique(firstyear:finalyear),
+  month = 1:12
+)
+
+```
+
+# start with low salinity stress 
+```{r low-sal-stress}
+# first calculate for low salinity
+W5_NH$low_sal_stress <- W5_NH$salinity < 12
+
+low_sal_stress_count <- W5_NH %>%
+  mutate(year = year(datetime), 
+         month = month(datetime), 
+         day = day(datetime)) %>% 
+  filter(low_sal_stress == 1) %>%  
+  distinct(year, month, day) %>%  # remove dups
+  group_by(year, month) %>%
+  summarise(low_sal_stress = n(), .groups = "drop") # group all occurrences together by month rather than by numeric day
+
+print(low_sal_stress_count)
+
+# this plots low sal stress days only, years with no observations of low salinity stress will not appear in the graph 
+ggplot(low_sal_stress_count, aes(x = factor(month), y = low_sal_stress, fill = factor(month))) +
+  geom_bar(stat = "identity", fill = "#1f77b4") +
+  facet_wrap(~ year) +
+  labs(title = "W5_NH: count of low salinity (< 12 ppt) days per month",
+       x = "month",
+       y = "count of days") +
+  theme_minimal()
+
+# Merge with the original dataset, filling missing values with 0 for low_sal_stress
+low_sal_complete_data <- complete_year_month %>%
+  left_join(low_sal_stress_count, by = c("year", "month")) %>%
+  mutate(low_sal_stress = ifelse(is.na(low_sal_stress), 0, low_sal_stress))
+
+low_sal_complete_data$month <- as.numeric(low_sal_complete_data$month)
+
+# bars
+ggplot(low_sal_complete_data, aes(x = factor(month), y = low_sal_stress)) +
+  geom_bar(stat = "identity", fill = "#1f77b4") + 
+  facet_wrap(~ year) +
+  labs(title = "W5_NH: count of low salinity (< 12 ppt) days per month",
+       x = "month",
+       y = "count of low salinity stress days") +
+  theme_minimal()
+
+# points
+ggplot(low_sal_complete_data, aes(x = factor(month), y = low_sal_stress)) +
+  geom_point(color = "#1f77b4", size = 2) + 
+  facet_wrap(~ year) +  
+  labs(title = "W5_NH: count of low salinity (< 12 ppt) days per month",
+       x = "month",
+       y = "count of low salinity stress days") +
+  theme_minimal()
+```
+
+# now calculate for high salinity stress
+```{r high-sal-stress}
+W5_NH$high_sal_stress <- W5_NH$salinity > 35
+
+high_sal_stress_count <- W5_NH %>%
+  mutate(year = year(datetime), 
+         month = month(datetime), 
+         day = day(datetime)) %>% 
+  filter(high_sal_stress == 1) %>%  
+  distinct(year, month, day) %>%  # remove dups
+  group_by(year, month) %>%
+  summarise(high_sal_stress = n(), .groups = "drop") # group all occurrences together by month rather than by numeric day
+
+print(high_sal_stress_count) # no high salinity stress 
+
+```
+
+
+# high temp stress calculations
+```{r high-temp-stress}
+W5_NH$high_temp_stress <- W5_NH$temp > 28
+
+high_temp_stress_count <- W5_NH %>%
+  mutate(year = year(datetime), 
+         month = month(datetime), 
+         day = day(datetime)) %>% 
+  filter(high_temp_stress == 1) %>%  
+  distinct(year, month, day) %>%  # remove dups
+  group_by(year, month) %>%
+  summarise(high_temp_stress = n(), .groups = "drop") # group all occurrences together by month rather than by numeric day
+
+print(high_temp_stress_count)
+
+ggplot(high_temp_stress_count, aes(x = factor(month), y = high_temp_stress, fill = factor(month))) +
+  geom_bar(stat = "identity", fill = "#DD4124FF") +
+  facet_wrap(~ year) +
+  labs(title = "W5_NH: count of high temperature (> 28 C) days per month",
+       x = "month",
+       y = "count of days") +
+  theme_minimal()
+
+
+high_temp_complete_data <- complete_year_month %>%
+  left_join(high_temp_stress_count, by = c("year", "month")) %>%
+  mutate(high_temp_stress = ifelse(is.na(high_temp_stress), 0, high_temp_stress))
+
+high_temp_complete_data$month <- as.numeric(high_temp_complete_data$month)
+
+# bars
+ggplot(high_temp_complete_data, aes(x = factor(month), y = high_temp_stress)) +
+  geom_bar(stat = "identity", fill = "#DD4124FF") + 
+  facet_wrap(~ year) +
+  labs(title = "W5_NH: count of high temperature (> 28 C) days per month",
+       x = "month",
+       y = "count of days") +
+  theme_minimal()
+
+# points
+ggplot(high_temp_complete_data, aes(x = factor(month), y = high_temp_stress)) +
+  geom_point(color = "#DD4124FF", size = 2) + 
+  facet_wrap(~ year) +  
+  labs(title = "W5_NH: count of high temperature (> 28 C) days per month",
+       x = "month",
+       y = "count of days") +
+  theme_minimal()
+
+```
+
+### We can now calculate a list of variables that we will have collected for all sites. This will allow us to compare sites easily. We will calculate the number of observations from each site, the mean annual, maximum annual, and minimum annual value for all variables. 
+
+Our list of variables includes: 
+
+- Mean_Annual_Temperature_C: average of all available data
+- Mean_max_temperature_C: average of maximums for each year
+- Mean_min_temperature_C: average of minimums for each year
+- Temperature_st_dev: standard deviation of all available data
+- Temperature_n: total number of data points
+- Temperature_years: number of years in data set
+
+- Mean_Annual_Salinity_ppt: average of all available data
+- Mean_min_Salinity_ppt: average of minimums for each year
+- Mean_max_Salinity_ppt: average of maximums for each year
+- Salinity_st_dev: standard deviation of all available data
+- Salinity_n: total number of data points
+- Salinity_years: number of years in data set
+
+```{r}
+#Calculate temperature variables. 
+Mean_Annual_Temperature_C <- mean(W5_NH$temp)
+Mean_max_temperature_C <- mean(W5_NH_envryear$max_temp)
+Mean_min_temperature_C <- mean(W5_NH_envryear$min_temp)
+Temperature_st_dev <- sd(W5_NH$temp)
+Temperature_n <- nrow(W5_NH)
+Temperature_years <- nrow(W5_NH_envryear)
+high_temp_stress_days <- sum(high_temp_stress_count$high_temp_stress)
+frac_high_temp_stress_days <- high_temp_stress_days/nrow(W5_NH_envrday)
+
+Mean_Monthly_Temperature_C <- W5_NH_envrmonth %>%
+  filter(!is.na(month)) %>% 
+  group_by(month) %>%
+  summarise(Mean_Temperature = mean(mean_temp))
+
+Mean_min_Monthly_Temperature_C <- W5_NH_envrmonth %>%
+  filter(!is.na(month)) %>% 
+  group_by(month) %>%
+  summarise(Mean_min_Temperature = mean(min_temp))
+
+Mean_max_Monthly_Temperature_C <- W5_NH_envrmonth %>%
+  filter(!is.na(month)) %>% 
+  group_by(month) %>%
+  summarise(Mean_max_Temperature = mean(max_temp))
+
+#Create a data frame to store the temperature results
+W5_NH_temp <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Temperature_C, Mean_max_temperature_C, Mean_min_temperature_C, Temperature_st_dev, high_temp_stress_days, frac_high_temp_stress_days, Temperature_n, Temperature_years, collection_type)
+print(W5_NH_temp)
+
+W5_NH_monthly_temp <- cbind(Mean_Monthly_Temperature_C, Mean_min_Monthly_Temperature_C, Mean_max_Monthly_Temperature_C)
+W5_NH_monthly_temp <- W5_NH_monthly_temp[, !duplicated(names(W5_NH_monthly_temp))]
+print(W5_NH_monthly_temp)
+
+# Write to the combined file with all sites 
+write.table(W5_NH_temp, "/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/all_temperature.csv", sep = ",", append = TRUE, col.names = FALSE, row.names = FALSE) # The column names should be changed to FALSE after 1st row is added to the data frame
+
+# Write to a unique new CSV file
+write.csv(W5_NH_temp, "/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/W5_NH_temperature.csv")
+
+# Write all montly data to a unique new CSV file
+write.csv(W5_NH_monthly_temp, "/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/W5_NH_monthly_temp.csv")
+
+```
+
+```{r}
+#Calculate the salinity variables
+Mean_Annual_Salinity_ppt <- mean(W5_NH$salinity)
+Mean_max_Salinity_ppt <- mean(W5_NH_envryear$max_salinity)
+Mean_min_Salinity_ppt <- mean(W5_NH_envryear$min_salinity)
+Salinity_st_dev <- sd(W5_NH$salinity)
+Salinity_n <- nrow(W5_NH)
+Salinity_years <- nrow(W5_NH_envryear)
+high_sal_stress_days <- sum(high_sal_stress_count$high_sal_stress)
+low_sal_stress_days <- sum(low_sal_stress_count$low_sal_stress)
+frac_high_sal_stress_days <- high_sal_stress_days/nrow(W5_NH_envrday)
+frac_low_sal_stress_days <- low_sal_stress_days/nrow(W5_NH_envrday)
+
+Mean_Monthly_Salinity <- W5_NH_envrmonth %>%
+  filter(!is.na(month)) %>%
+  group_by(month) %>%
+  summarise(Mean_Salinity = mean(mean_salinity))
+
+Min_Monthly_Salinity <- W5_NH_envrmonth %>%
+  filter(!is.na(month)) %>%
+  group_by(month) %>%
+  summarise(Min_Salinity = mean(min_salinity))
+
+Max_Monthly_Salinity <- W5_NH_envrmonth %>%
+  filter(!is.na(month)) %>%
+  group_by(month) %>%
+  summarise(Max_Salinity = mean(max_salinity))
+
+#Create a data frame to store the temperature results
+W5_NH_salinity <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Salinity_ppt, Mean_max_Salinity_ppt, Mean_min_Salinity_ppt, high_sal_stress_days,low_sal_stress_days, frac_high_sal_stress_days, frac_low_sal_stress_days, Salinity_st_dev, Salinity_n, Salinity_years, collection_type)
+print(W5_NH_salinity)
+
+W5_NH_monthly_sal <- cbind(Mean_Monthly_Salinity, Min_Monthly_Salinity, Max_Monthly_Salinity)
+W5_NH_monthly_sal <- W5_NH_monthly_sal[, !duplicated(names(W5_NH_monthly_sal))]
+print(W5_NH_monthly_sal)
+
+# Write to the combined file with all sites 
+write.table(W5_NH_salinity, "/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/all_salinity.csv", sep = ",", append = TRUE, col.names = FALSE, row.names = FALSE) # The column names should be changed to FALSE after 1st row is added to the data frame
+
+# Write all year data to a unique new CSV file
+write.csv(W5_NH_salinity, "/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/W5_NH_salinity.csv")
+# Write all montly data to a unique new CSV file
+write.csv(W5_NH_monthly_sal, "/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/W5_NH_monthly_sal.csv")
+
+```
