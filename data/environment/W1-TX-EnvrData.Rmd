@@ -361,7 +361,7 @@ high_temp_complete_data <- complete_year_month %>%
 high_temp_complete_data$month <- as.numeric(high_temp_complete_data$month)
 
 # bars
-ggplot(high_temp_complete_data, aes(x = as.numeric(month), y = high_temp_stress)) +
+ggplot(high_temp_complete_data, aes(x = factor(month), y = high_temp_stress)) +
   geom_bar(stat = "identity", fill = "#DD4124FF") + 
   facet_wrap(~ year) +
   labs(title = "W1_TX: count of high temperature (> 28 C) days per month",
@@ -370,7 +370,7 @@ ggplot(high_temp_complete_data, aes(x = as.numeric(month), y = high_temp_stress)
   theme_minimal()
 
 # points
-ggplot(high_temp_complete_data, aes(x = as.numeric(month), y = high_temp_stress)) +
+ggplot(high_temp_complete_data, aes(x = factor(month), y = high_temp_stress)) +
   geom_point(color = "#DD4124FF", size = 2) + 
   facet_wrap(~ year) +  
   labs(title = "W1_TX: count of high temperature (> 28 C) days per month",
