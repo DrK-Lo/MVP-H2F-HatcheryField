@@ -17,46 +17,12 @@ setwd("/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment")
 
 ``` r
 library("dplyr") #Used for working with data frames
-```
-
-    ## 
-    ## Attaching package: 'dplyr'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     filter, lag
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
-
-``` r
 library("lubridate") #Used for time-date conversions
-```
-
-    ## 
-    ## Attaching package: 'lubridate'
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     date, intersect, setdiff, union
-
-``` r
 library("readr") #Used to read the CSV file
 library("ggplot2") 
 library("dataRetrieval") #Used to download USGS data
 library("tidyverse") #Used to join data frames
 ```
-
-    ## ── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
-    ## ✔ forcats 1.0.0     ✔ tibble  3.2.1
-    ## ✔ purrr   1.0.2     ✔ tidyr   1.3.0
-    ## ✔ stringr 1.5.1
-
-    ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-    ## ✖ dplyr::filter() masks stats::filter()
-    ## ✖ dplyr::lag()    masks stats::lag()
-    ## ℹ Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
 
 ### Note the date of data download and source. All available data should be used for each site regardless of year. Note from the CSV file how often the site was sampled, and if there are replicates in the data. Also describe if the sampling occurred at only low tide, only high tide, or continuously.
 
@@ -84,7 +50,7 @@ comment(W2_LAInfo)
     ##  [1] "#"                                                                                        
     ##  [2] "#"                                                                                        
     ##  [3] "# US Geological Survey"                                                                   
-    ##  [4] "# retrieved: 2025-02-21 13:37:33 -05:00\t(caas01)"                                        
+    ##  [4] "# retrieved: 2025-02-21 14:00:02 -05:00\t(caas01)"                                        
     ##  [5] "#"                                                                                        
     ##  [6] "# The Site File stores location and general information about groundwater,"               
     ##  [7] "# surface water, and meteorological sites"                                                
@@ -186,20 +152,13 @@ raw_W2_LA <- subset(raw_W2_LA, select = -c(dateTime))
 summary(raw_W2_LA)
 ```
 
-    ##     agency              site              salinity          temp      
-    ##  Length:246950      Length:246950      Min.   : 0.20   Min.   : 2.20  
-    ##  Class :character   Class :character   1st Qu.: 6.10   1st Qu.:17.40  
-    ##  Mode  :character   Mode  :character   Median :10.00   Median :23.90  
-    ##                                        Mean   :10.46   Mean   :22.86  
-    ##                                        3rd Qu.:15.00   3rd Qu.:29.00  
-    ##                                        Max.   :31.00   Max.   :34.40  
-    ##     datetime                     
-    ##  Min.   :2007-10-01 06:00:00.00  
-    ##  1st Qu.:2010-08-02 05:37:30.00  
-    ##  Median :2014-09-16 08:45:00.00  
-    ##  Mean   :2014-11-20 05:40:05.08  
-    ##  3rd Qu.:2018-09-23 05:52:30.00  
-    ##  Max.   :2022-08-10 04:30:00.00
+    ##     agency              site              salinity          temp          datetime                     
+    ##  Length:246950      Length:246950      Min.   : 0.20   Min.   : 2.20   Min.   :2007-10-01 06:00:00.00  
+    ##  Class :character   Class :character   1st Qu.: 6.10   1st Qu.:17.40   1st Qu.:2010-08-02 05:37:30.00  
+    ##  Mode  :character   Mode  :character   Median :10.00   Median :23.90   Median :2014-09-16 08:45:00.00  
+    ##                                        Mean   :10.46   Mean   :22.86   Mean   :2014-11-20 05:40:05.08  
+    ##                                        3rd Qu.:15.00   3rd Qu.:29.00   3rd Qu.:2018-09-23 05:52:30.00  
+    ##                                        Max.   :31.00   Max.   :34.40   Max.   :2022-08-10 04:30:00.00
 
 ``` r
 # we have NAs, so remove those
@@ -208,10 +167,8 @@ raw_W2_LA <- raw_W2_LA %>%
 summary(raw_W2_LA$datetime)
 ```
 
-    ##                       Min.                    1st Qu. 
-    ## "2007-10-01 06:00:00.0000" "2010-08-02 05:37:30.0000" 
-    ##                     Median                       Mean 
-    ## "2014-09-16 08:45:00.0000" "2014-11-20 05:40:05.0937" 
+    ##                       Min.                    1st Qu.                     Median                       Mean 
+    ## "2007-10-01 06:00:00.0000" "2010-08-02 05:37:30.0000" "2014-09-16 08:45:00.0000" "2014-11-20 05:40:05.0937" 
     ##                    3rd Qu.                       Max. 
     ## "2018-09-23 05:52:30.0000" "2022-08-10 04:30:00.0000"
 
@@ -222,10 +179,8 @@ summary(raw_W2_LA$datetime)
 print(summary(raw_W2_LA$datetime))
 ```
 
-    ##                       Min.                    1st Qu. 
-    ## "2007-10-01 06:00:00.0000" "2010-08-02 05:37:30.0000" 
-    ##                     Median                       Mean 
-    ## "2014-09-16 08:45:00.0000" "2014-11-20 05:40:05.0937" 
+    ##                       Min.                    1st Qu.                     Median                       Mean 
+    ## "2007-10-01 06:00:00.0000" "2010-08-02 05:37:30.0000" "2014-09-16 08:45:00.0000" "2014-11-20 05:40:05.0937" 
     ##                    3rd Qu.                       Max. 
     ## "2018-09-23 05:52:30.0000" "2022-08-10 04:30:00.0000"
 
@@ -285,8 +240,7 @@ W2_LA <- filtered_W2_LA
 write.table(W2_LA, "/Users/madelineeppley/GitHub/EasternOysterEnvData/2022_SiteEnvironmentData/W2_LA_raw.csv", sep = ",", append = TRUE, col.names = TRUE, row.names = FALSE) # The column names should be changed to FALSE after 1st row is added to the data frame
 ```
 
-    ## Warning in write.table(W2_LA,
-    ## "/Users/madelineeppley/GitHub/EasternOysterEnvData/2022_SiteEnvironmentData/W2_LA_raw.csv", :
+    ## Warning in write.table(W2_LA, "/Users/madelineeppley/GitHub/EasternOysterEnvData/2022_SiteEnvironmentData/W2_LA_raw.csv", :
     ## appending column names to file
 
 ### Visualize the salinity, temperature, and date ranges over time. This can help us see if there are any anomalies or gaps in the data and make sure the filtering was done correctly. Sanity check - do the temperature and salinity ranges look appropriate for the geography of the site (ex. near full ocean salinity for coastal sites, lower salinity for estuaries or near rivers)?
@@ -337,8 +291,7 @@ W2_LA_envrmonth <- W2_LA %>%
       length_temp = length(temp))
 ```
 
-    ## `summarise()` has grouped output by 'year'. You can override using the
-    ## `.groups` argument.
+    ## `summarise()` has grouped output by 'year'. You can override using the `.groups` argument.
 
 ``` r
 print(W2_LA_envrmonth)
@@ -346,20 +299,19 @@ print(W2_LA_envrmonth)
 
     ## # A tibble: 178 × 10
     ## # Groups:   year [16]
-    ##     year month min_salinity max_salinity mean_salinity length_salinity min_temp
-    ##    <dbl> <dbl>        <dbl>        <dbl>         <dbl>           <int>    <dbl>
-    ##  1  2007    10          8.1           25         16.5              570     15.7
-    ##  2  2007    11         10             24         15.6              719     13.2
-    ##  3  2007    12          7.2           20         15.8              461     11  
-    ##  4  2008     1          2.8           18         12.3              498      6.9
-    ##  5  2008     2          1.2           23         11.6              696     11.4
-    ##  6  2008     3          2.8           26         10.5              739     11.2
-    ##  7  2008     4          2.2           21         11.3              715     16  
-    ##  8  2008     5          0.6           13          5.02             744     22.1
-    ##  9  2008     6          1             12          4.90             720     28.1
-    ## 10  2008     7          0.6           12          5.03             744     28.2
+    ##     year month min_salinity max_salinity mean_salinity length_salinity min_temp max_temp mean_temp length_temp
+    ##    <dbl> <dbl>        <dbl>        <dbl>         <dbl>           <int>    <dbl>    <dbl>     <dbl>       <int>
+    ##  1  2007    10          8.1           25         16.5              570     15.7     28.8      23.6         570
+    ##  2  2007    11         10             24         15.6              719     13.2     23.2      19.0         719
+    ##  3  2007    12          7.2           20         15.8              461     11       23.8      18.0         461
+    ##  4  2008     1          2.8           18         12.3              498      6.9     18.4      12.2         498
+    ##  5  2008     2          1.2           23         11.6              696     11.4     21.9      17.2         696
+    ##  6  2008     3          2.8           26         10.5              739     11.2     24.6      18.6         739
+    ##  7  2008     4          2.2           21         11.3              715     16       27.8      23.4         715
+    ##  8  2008     5          0.6           13          5.02             744     22.1     31        26.4         744
+    ##  9  2008     6          1             12          4.90             720     28.1     32.2      30.0         720
+    ## 10  2008     7          0.6           12          5.03             744     28.2     32.8      30.5         744
     ## # ℹ 168 more rows
-    ## # ℹ 3 more variables: max_temp <dbl>, mean_temp <dbl>, length_temp <int>
 
 ``` r
 #Calculate the mean, maximum, and minimum values for salinity and temperature for each year. 
@@ -413,8 +365,7 @@ W2_LA_envrday <- W2_LA %>%
       length_temp = length(temp))
 ```
 
-    ## `summarise()` has grouped output by 'year', 'month'. You can override using the
-    ## `.groups` argument.
+    ## `summarise()` has grouped output by 'year', 'month'. You can override using the `.groups` argument.
 
 ``` r
 print(W2_LA_envrday)
@@ -422,21 +373,19 @@ print(W2_LA_envrday)
 
     ## # A tibble: 4,787 × 11
     ## # Groups:   year, month [178]
-    ##     year month   day min_salinity max_salinity mean_salinity length_salinity
-    ##    <dbl> <dbl> <int>        <dbl>        <dbl>         <dbl>           <int>
-    ##  1  2007    10     1           16           20          17.8              18
-    ##  2  2007    10     2           16           20          17.7              24
-    ##  3  2007    10     3           16           19          17.6              24
-    ##  4  2007    10     4           15           16          15.2               5
-    ##  5  2007    10     5           17           24          21.3              19
-    ##  6  2007    10     6           18           21          20.1              24
-    ##  7  2007    10     7           17           22          20.2              24
-    ##  8  2007    10     8           18           22          19.6              24
-    ##  9  2007    10     9           18           19          18.9              24
-    ## 10  2007    10    10           19           19          19                 5
+    ##     year month   day min_salinity max_salinity mean_salinity length_salinity min_temp max_temp mean_temp length_temp
+    ##    <dbl> <dbl> <int>        <dbl>        <dbl>         <dbl>           <int>    <dbl>    <dbl>     <dbl>       <int>
+    ##  1  2007    10     1           16           20          17.8              18     26.4     28        27.4          18
+    ##  2  2007    10     2           16           20          17.7              24     26.4     28        27.3          24
+    ##  3  2007    10     3           16           19          17.6              24     26.3     27.7      27.0          24
+    ##  4  2007    10     4           15           16          15.2               5     27.1     27.6      27.4           5
+    ##  5  2007    10     5           17           24          21.3              19     26.9     28.5      27.3          19
+    ##  6  2007    10     6           18           21          20.1              24     27.6     28.8      28.0          24
+    ##  7  2007    10     7           17           22          20.2              24     27.6     28.7      28.0          24
+    ##  8  2007    10     8           18           22          19.6              24     27.5     28.6      27.9          24
+    ##  9  2007    10     9           18           19          18.9              24     27.4     28.7      27.9          24
+    ## 10  2007    10    10           19           19          19                 5     28.1     28.4      28.3           5
     ## # ℹ 4,777 more rows
-    ## # ℹ 4 more variables: min_temp <dbl>, max_temp <dbl>, mean_temp <dbl>,
-    ## #   length_temp <int>
 
 ### Plot the months and years of data collection to check if there are any collection gaps in the data.
 
@@ -615,7 +564,7 @@ high_temp_complete_data <- complete_year_month %>%
 high_temp_complete_data$month <- as.numeric(high_temp_complete_data$month)
 
 # bars
-ggplot(high_temp_complete_data, aes(x = as.numeric(month), y = high_temp_stress)) +
+ggplot(high_temp_complete_data, aes(x = factor(month), y = high_temp_stress)) +
   geom_bar(stat = "identity", fill = "#DD4124FF") + 
   facet_wrap(~ year) +
   labs(title = "W2_LA: count of high temperature (> 28 C) days per month",
@@ -628,7 +577,7 @@ ggplot(high_temp_complete_data, aes(x = as.numeric(month), y = high_temp_stress)
 
 ``` r
 # points
-ggplot(high_temp_complete_data, aes(x = as.numeric(month), y = high_temp_stress)) +
+ggplot(high_temp_complete_data, aes(x = factor(month), y = high_temp_stress)) +
   geom_point(color = "#DD4124FF", size = 2) + 
   facet_wrap(~ year) +  
   labs(title = "W2_LA: count of high temperature (> 28 C) days per month",
@@ -698,16 +647,12 @@ W2_LA_temp <- cbind(site_name, download_date, source_description, lat, lon, firs
 print(W2_LA_temp)
 ```
 
-    ##      site_name download_date source_description                      
-    ## [1,] "W2_LA"   "08-15-2023"  "USGS Water Data Sister Lake - 07381349"
-    ##      lat           lon           firstyear finalyear Mean_Annual_Temperature_C
-    ## [1,] "29.24916667" "-90.9211111" "2007"    "2022"    "22.8635853411622"       
-    ##      Mean_max_temperature_C Mean_min_temperature_C Temperature_st_dev
-    ## [1,] "33.16875"             "7.3125"               "6.69138590137851"
-    ##      high_temp_stress_days frac_high_temp_stress_days Temperature_n
-    ## [1,] "1787"                "0.373302694798412"        "246950"     
-    ##      Temperature_years collection_type
-    ## [1,] "16"              "continuous"
+    ##      site_name download_date source_description                       lat           lon           firstyear finalyear
+    ## [1,] "W2_LA"   "08-15-2023"  "USGS Water Data Sister Lake - 07381349" "29.24916667" "-90.9211111" "2007"    "2022"   
+    ##      Mean_Annual_Temperature_C Mean_max_temperature_C Mean_min_temperature_C Temperature_st_dev high_temp_stress_days
+    ## [1,] "22.8635853411622"        "33.16875"             "7.3125"               "6.69138590137851" "1787"               
+    ##      frac_high_temp_stress_days Temperature_n Temperature_years collection_type
+    ## [1,] "0.373302694798412"        "246950"      "16"              "continuous"
 
 ``` r
 W2_LA_monthly_temp <- cbind(Mean_Monthly_Temperature_C, Mean_min_Monthly_Temperature_C, Mean_max_Monthly_Temperature_C)
@@ -773,16 +718,12 @@ W2_LA_salinity <- cbind(site_name, download_date, source_description, lat, lon, 
 print(W2_LA_salinity)
 ```
 
-    ##      site_name download_date source_description                      
-    ## [1,] "W2_LA"   "08-15-2023"  "USGS Water Data Sister Lake - 07381349"
-    ##      lat           lon           firstyear finalyear Mean_Annual_Salinity_ppt
-    ## [1,] "29.24916667" "-90.9211111" "2007"    "2022"    "10.464868596882"       
-    ##      Mean_max_Salinity_ppt Mean_min_Salinity_ppt high_sal_stress_days
-    ## [1,] "25.75"               "0.96875"             "0"                 
-    ##      low_sal_stress_days frac_high_sal_stress_days frac_low_sal_stress_days
-    ## [1,] "3562"              "0"                       "0.744098600376018"     
-    ##      Salinity_st_dev    Salinity_n Salinity_years collection_type
-    ## [1,] "5.58216683742257" "246950"   "16"           "continuous"
+    ##      site_name download_date source_description                       lat           lon           firstyear finalyear
+    ## [1,] "W2_LA"   "08-15-2023"  "USGS Water Data Sister Lake - 07381349" "29.24916667" "-90.9211111" "2007"    "2022"   
+    ##      Mean_Annual_Salinity_ppt Mean_max_Salinity_ppt Mean_min_Salinity_ppt high_sal_stress_days low_sal_stress_days
+    ## [1,] "10.464868596882"        "25.75"               "0.96875"             "0"                  "3562"             
+    ##      frac_high_sal_stress_days frac_low_sal_stress_days Salinity_st_dev    Salinity_n Salinity_years collection_type
+    ## [1,] "0"                       "0.744098600376018"      "5.58216683742257" "246950"   "16"           "continuous"
 
 ``` r
 W2_LA_monthly_sal <- cbind(Mean_Monthly_Salinity, Min_Monthly_Salinity, Max_Monthly_Salinity)
