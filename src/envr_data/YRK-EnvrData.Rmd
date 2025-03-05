@@ -74,7 +74,7 @@ summary(raw_YRK)
 colnames(raw_YRK) <- c("datetime", "temp", "salinity")
 ```
 
-### Start with the date and time of collection. We will use the lubridate package to standardize all values into the date-time format called POSIXct. This format stores the date and time in number of seconds since a past point (1/1/1970). This makes comparisons easy and helps to standardizes values. 
+### Start with the date and time of collection. We will use the lubridate package to standardize all values into the date-time format called POSIXct. This format stores the date and time in number of seconds since a past point (01/01/1970). This makes comparisons easy and helps to standardizes values. 
 ```{r}
 
 #Convert to POSIXct format. Tell R what the current date/time format is so it knows how to convert it. Store it into a column named datetime in the data frame.
@@ -83,6 +83,10 @@ raw_YRK$datetime <- as.POSIXct(raw_YRK$datetime, "%Y-%m-%d %H:%M:%S", tz = "")
 
 #Print the new data frame and examine to make sure the new datetime column is in the correct format. 
 head(raw_YRK)
+
+#exclude time before August 1 (approximate start of field data)
+raw_YRK <- raw_YRK %>% 
+  filter(datetime >= 1690848000)
 
 #Print the new data frame and examine to make sure the new datetime column is in the correct format. 
 summary(raw_YRK$datetime)
@@ -112,8 +116,6 @@ finalyear <- 2025
 #Filter the data between the values of 0 and 40 for both salinity and temperature. 
 filtered_YRK_sal <- raw_YRK %>%
     filter(between(salinity, 0, 40)) 
-
-summary(subset_DEBY_env)
            
 filtered_YRK_env <- filtered_YRK_sal %>%
     filter(between(temp, 0, 40))
@@ -451,5 +453,4 @@ write.table(YRK_salinity, "../../data/environment/all_salinity.csv", sep = ",", 
 write.csv(YRK_salinity, "../../data/environment/YRK_salinity.csv")
 # Write all montly data to a unique new CSV file
 write.csv(YRK_monthly_sal, "../../data/environment/YRK_monthly_sal.csv")
-
 ```
