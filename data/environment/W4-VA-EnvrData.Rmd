@@ -1,0 +1,439 @@
+---
+title: "W4_W4_VA - Processed Environmental Data"
+author: "Madeline Eppley"
+date: "3/14/2025"
+output: github_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+```{r packages}
+library("dplyr") #Used for working with data frames
+library("lubridate") #Used for time-date conversions
+library("readr") #Used to read the CSV file
+library("ggplot2") 
+```
+
+### Note the date of data download and source. All available data should be used for each site regardless of year. Note from the CSV file how often the site was sampled, and if there are replicates in the data. Also describe if the sampling occurred at only low tide, only high tide, or continuously.  
+```{r}
+#Data was downloaded on 10/01/2024
+#Source - https://www.ndbc.noaa.gov/historical_data.shtml#ocean
+#The site was sampled continuously every hour from 2008-2019. When compared to data from VIMS water quality monitoring in the York River, NDBC temperature data were on average 1.4°C higher than those recorded by VIMS and NDBC salinity data were on average 12.1 ppt lower than those recorded by VIMS. The data used here are the NDBC data with corrected temperature and salinity values, with temperature values 1.4°C lower and salinity values 12.1 ppt higher than the raw file. Datetime is already in POSIXct format. The corrected data were made in the W4_VA_Envr_Data_Corrections.Rmd file.
+
+#Create text strings with metadata information that we want to include in the final data frame. 
+download_date <- ("10-01-2024")
+source_description <- ("NOAA National Buoy Data Center (NDBC), Chesapeake Bay Interpretive Buoy System with values corrected based on data from VIMS Water Quality Data")
+site_name <- ("W4_VA") 
+collection_type <- ("continuous")
+```
+
+### Use the file path name in your working directory or desktop, see example below. Or, import data set through the "Files" window in R studio. Store the file in a variable with the "raw_ID_Site" format. If salinity and temperature data are in separate files, read in both and store them with "_sal" or "_temp" in the variable names. 
+```{r}
+#The files we will be working with are from the James River, Jamestown, W4_VA. The ID_Site for this site W4_VA. 
+
+#Environmental data could only be downloaded by year, so first we need to merge the yearly data sets.
+
+#read in file
+raw_W4_VA <- read.csv("../../data/envr_of_origin/raw_envr_data/VA-corrected.csv")
+
+# View how the data are stored. Note the variable names and the format and units that the data are stored in.  
+summary(raw_W4_VA)
+
+#remove extra column X
+raw_W4_VA <- subset(raw_W4_VA, select = -c(X))
+
+#remove row with no time in the datetime column
+raw_W4_VA <- raw_W4_VA[-c(1), ]
+
+raw_W4_VA$datetime <- as.POSIXct(raw_W4_VA$datetime, "%Y-%m-%d %H:%M:%S", tz = "")
+
+colnames(raw_W4_VA) <- c("datetime", "temp", "salinity", "corrected_temp", "corrected_salinity")
+
+# we have NAs, so remove those
+raw_W4_VA <- raw_W4_VA %>%
+    filter(!is.na(datetime))
+summary(raw_W4_VA$datetime)
+```
+
+###Standardize column and variable names. We will use "lat" for latitude in degrees, and "lon" for longitude in degrees. 
+
+```{r}
+
+#Store variables that we will include in the final data frame. Lat and lon data from this site: https://www.ndbc.noaa.gov/station_history.php?station=44041
+lat <- 37.211
+lon <- -76.787
+firstyear <- 2008
+finalyear <- 2019
+```
+
+
+### Filter any of the variables that have data points outside of normal range. We will use 0-40 as the accepted range for salinity (ppt) and temperature (C) values. Note, in the summer, salinity values can sometimes exceed 40. Check to see if there are values above 40. In this case, adjust the range or notify someone that the site has particularly high salinity values. 
+```{r}
+#Filter the data between the values of 0 and 40 for both salinity and temperature. 
+filtered_W4_VA_sal <- raw_W4_VA %>%
+    filter(between(corrected_salinity, 0, 40)) 
+           
+filtered_W4_VA <- filtered_W4_VA_sal %>%
+    filter(between(corrected_temp, 0, 40))
+
+# Sanity check - print the ranges to ensure values are filtered properly. We can see that the ranges for both are now in the appropriate range.  
+print(summary(filtered_W4_VA$corrected_salinity)) 
+print(summary(filtered_W4_VA$corrected_temp))
+
+#Store our data into a variable name with just the site name. 
+W4_VA <- filtered_W4_VA
+
+#re-check for NAs
+count.nas_env <- is.na(W4_VA) # store our NAs in a variable
+summary(count.nas_env) # we have no NAs in datetime
+```
+
+#Data sets for violin plots
+```{r}
+#add site name and create new data frame with full envr data set
+W4_VA <- W4_VA %>% 
+  mutate(site_name, site_name = "W4_VA")
+
+#reorder columns with site_name first
+W4_VA <- W4_VA[, c(6, 1, 2, 3, 4, 5)]
+
+W4_VA_temp_full <-W4_VA[, c(1,2,3,5)]
+
+W4_VA_sal_full <- W4_VA[, c(1,2,4,6)]
+
+#save W4_VA as csv for future analyses
+write.csv(W4_VA_temp_full, "../../data/envr_of_origin/full_temp/W4_VA_temp_full.csv", row.names = FALSE)
+
+write.csv(W4_VA_sal_full, "../../data/envr_of_origin/full_sal/W4_VA_sal_full.csv", row.names = FALSE)
+```
+
+### Visualize the salinity, temperature, and date ranges over time. This can help us see if there are any anomalies or gaps in the data and make sure the filtering was done correctly. Sanity check - do the temperature and salinity ranges look appropriate for the geography of the site (ex. near full ocean salinity for coastal sites, lower salinity for estuaries or near rivers)?
+
+```{r salinity-plot}
+salplot <- ggplot(W4_VA, aes(x = datetime)) +
+    geom_line(aes( y = corrected_salinity, color = "Salinity (ppt)")) +
+    ylim(0,40) +
+    labs(x = "Time", y = "Salinity ppt", title = "Salinity Plot for W4_VA - James River, Jamestown Virginia") +
+    scale_color_manual(values = c("Salinity (ppt)" = "blue")) +
+    theme_minimal()
+
+salplot
+```
+
+
+```{r temperature-plot}
+tempplot <- ggplot(W4_VA, aes(x = datetime)) +
+    geom_line(aes(y = corrected_temp, color = "Temperature (C)")) +
+    ylim(0, 40) +
+    labs(x = "Time", y = "Temperature C", title = "Temperature Plot for W4_VA - James River, Jamestown, Virginia") +
+    scale_color_manual(values = c( "Temperature (C)" = "red")) +
+    theme_minimal()
+
+
+tempplot
+```
+
+### We need to calculate the mean, maximum, and minimum values for salinity and temperature per month and year. First make two data frames to contain each of the annual and monthly averages.
+```{r}
+#Calculate the mean, maximum, and minimum values for salinity and temperature for each month. 
+W4_VA_envrmonth <- W4_VA %>%
+    mutate(year = year(datetime), month = month(datetime)) %>%
+    group_by(year, month) %>%
+    summarise(
+      min_salinity = min(salinity),
+      max_salinity = max(salinity),
+      mean_salinity = mean(salinity),
+      length_salinity = length(salinity),
+      min_temp = min(temp),
+      max_temp = max(temp),
+      mean_temp = mean(temp),
+      length_temp = length(temp))
+  
+print(W4_VA_envrmonth)
+
+
+#Calculate the mean, maximum, and minimum values for salinity and temperature for each year. 
+W4_VA_envryear <- W4_VA %>%
+    mutate(year = year(datetime)) %>%
+    group_by(year) %>%
+    summarise(
+      min_salinity = min(salinity),
+      max_salinity = max(salinity),
+      mean_salinity = mean(salinity),
+      min_temp = min(temp),
+      max_temp = max(temp),
+      mean_temp = mean(temp))
+
+print(W4_VA_envryear)
+
+#Calculate the mean, maximum, and minimum values for salinity and temperature for each day. 
+W4_VA_envrday <- W4_VA %>%
+    mutate(year = year(datetime), month = month(datetime), day = day(datetime)) %>%
+    group_by(year, month, day) %>%
+    summarise(
+      min_salinity = min(salinity),
+      max_salinity = max(salinity),
+      mean_salinity = mean(salinity),
+      length_salinity = length(salinity),
+      min_temp = min(temp),
+      max_temp = max(temp),
+      mean_temp = mean(temp),
+      length_temp = length(temp))
+  
+print(W4_VA_envrday)
+
+```
+### Plot the months and years of data collection to check if there are any collection gaps in the data.
+```{r timeplot}
+timeplot <- ggplot(W4_VA_envrmonth, aes(x = year)) +
+    geom_point(aes(y = month, color = length_salinity), size = 4) +
+    labs(x = "Time", y = "Month", title = "Timeplot for W4_VA") +
+    ylim(1,12) +
+    theme_minimal()
+
+timeplot
+```
+
+# Calculate days above and below thresholds and plot
+```{r}
+# open up a blank data frame that spans all 12 months for all years of data collection for this site
+# we will merge this with the observations so that we can plot over time 
+
+complete_year_month <- expand.grid(
+  year = unique(firstyear:finalyear),
+  month = 1:12
+)
+
+```
+
+# start with low salinity stress 
+```{r low-sal-stress}
+# first calculate for low salinity
+W4_VA$low_sal_stress <- W4_VA$salinity < 12
+
+low_sal_stress_count <- W4_VA %>%
+  mutate(year = year(datetime), 
+         month = month(datetime), 
+         day = day(datetime)) %>% 
+  filter(low_sal_stress == 1) %>%  
+  distinct(year, month, day) %>%  # remove dups
+  group_by(year, month) %>%
+  summarise(low_sal_stress = n(), .groups = "drop") # group all occurrences together by month rather than by numeric day
+
+print(low_sal_stress_count)
+
+# this plots low sal stress days only, years with no observations of low salinity stress will not appear in the graph 
+ggplot(low_sal_stress_count, aes(x = factor(month), y = low_sal_stress, fill = factor(month))) +
+  geom_bar(stat = "identity", fill = "#1f77b4") +
+  facet_wrap(~ year) +
+  labs(title = "W4_VA: count of low salinity (< 12 ppt) days per month",
+       x = "month",
+       y = "count of days") +
+  theme_minimal()
+
+# Merge with the original dataset, filling missing values with 0 for low_sal_stress
+low_sal_complete_data <- complete_year_month %>%
+  left_join(low_sal_stress_count, by = c("year", "month")) %>%
+  mutate(low_sal_stress = ifelse(is.na(low_sal_stress), 0, low_sal_stress))
+
+low_sal_complete_data$month <- as.numeric(low_sal_complete_data$month)
+
+# bars
+ggplot(low_sal_complete_data, aes(x = factor(month), y = low_sal_stress)) +
+  geom_bar(stat = "identity", fill = "#1f77b4") + 
+  facet_wrap(~ year) +
+  labs(title = "W4_VA: count of low salinity (< 12 ppt) days per month",
+       x = "month",
+       y = "count of low salinity stress days") +
+  theme_minimal()
+
+# points
+ggplot(low_sal_complete_data, aes(x = factor(month), y = low_sal_stress)) +
+  geom_point(color = "#1f77b4", size = 2) + 
+  facet_wrap(~ year) +  
+  labs(title = "W4_VA: count of low salinity (< 12 ppt) days per month",
+       x = "month",
+       y = "count of low salinity stress days") +
+  theme_minimal()
+```
+
+# now calculate for high salinity stress
+```{r high-sal-stress}
+W4_VA$high_sal_stress <- W4_VA$salinity > 35
+
+high_sal_stress_count <- W4_VA %>%
+  mutate(year = year(datetime), 
+         month = month(datetime), 
+         day = day(datetime)) %>% 
+  filter(high_sal_stress == 1) %>%  
+  distinct(year, month, day) %>%  # remove dups
+  group_by(year, month) %>%
+  summarise(high_sal_stress = n(), .groups = "drop") # group all occurrences together by month rather than by numeric day
+
+print(high_sal_stress_count) # no days of high salinity stress
+
+```
+
+# high temp stress calculations
+```{r high-temp-stress}
+W4_VA$high_temp_stress <- W4_VA$temp > 28
+
+high_temp_stress_count <- W4_VA %>%
+  mutate(year = year(datetime), 
+         month = month(datetime), 
+         day = day(datetime)) %>% 
+  filter(high_temp_stress == 1) %>%  
+  distinct(year, month, day) %>%  # remove dups
+  group_by(year, month) %>%
+  summarise(high_temp_stress = n(), .groups = "drop") # group all occurrences together by month rather than by numeric day
+
+print(high_temp_stress_count)
+
+ggplot(high_temp_stress_count, aes(x = factor(month), y = high_temp_stress, fill = factor(month))) +
+  geom_bar(stat = "identity", fill = "#DD4124FF") +
+  facet_wrap(~ year) +
+  labs(title = "W4_VA: count of high temperature (> 28 C) days per month",
+       x = "month",
+       y = "count of days") +
+  theme_minimal()
+
+
+high_temp_complete_data <- complete_year_month %>%
+  left_join(high_temp_stress_count, by = c("year", "month")) %>%
+  mutate(high_temp_stress = ifelse(is.na(high_temp_stress), 0, high_temp_stress))
+
+high_temp_complete_data$month <- as.numeric(high_temp_complete_data$month)
+
+# bars
+ggplot(high_temp_complete_data, aes(x = factor(month), y = high_temp_stress)) +
+  geom_bar(stat = "identity", fill = "#DD4124FF") + 
+  facet_wrap(~ year) +
+  labs(title = "W4_VA: count of high temperature (> 28 C) days per month",
+       x = "month",
+       y = "count of days") +
+  theme_minimal()
+
+# points
+ggplot(high_temp_complete_data, aes(x = factor(month), y = high_temp_stress)) +
+  geom_point(color = "#DD4124FF", size = 2) + 
+  facet_wrap(~ year) +  
+  labs(title = "W4_VA: count of high temperature (> 28 C) days per month",
+       x = "month",
+       y = "count of days") +
+  theme_minimal()
+
+```
+
+### We can now calculate a list of variables that we will have collected for all sites. This will allow us to compare sites easily. We will calculate the number of observations from each site, the mean annual, maximum annual, and minimum annual value for all variables. 
+
+Our list of variables includes: 
+
+- Mean_Annual_Temperature_C: average of all available data
+- Mean_max_temperature_C: average of maximums for each year
+- Mean_min_temperature_C: average of minimums for each year
+- Temperature_st_dev: standard deviation of all available data
+- Temperature_n: total number of data points
+- Temperature_years: number of years in data set
+
+- Mean_Annual_Salinity_ppt: average of all available data
+- Mean_min_Salinity_ppt: average of minimums for each year
+- Mean_max_Salinity_ppt: average of maximums for each year
+- Salinity_st_dev: standard deviation of all available data
+- Salinity_n: total number of data points
+- Salinity_years: number of years in data set
+
+```{r}
+#Calculate temperature variables. 
+Mean_Annual_Temperature_C <- mean(W4_VA$temp)
+Mean_max_temperature_C <- mean(W4_VA_envryear$max_temp)
+Mean_min_temperature_C <- mean(W4_VA_envryear$min_temp)
+Temperature_st_dev <- sd(W4_VA$temp)
+Temperature_n <- nrow(W4_VA)
+Temperature_years <- nrow(W4_VA_envryear)
+high_temp_stress_days <- sum(high_temp_stress_count$high_temp_stress)
+frac_high_temp_stress_days <- high_temp_stress_days/nrow(W4_VA_envrday)
+
+Mean_Monthly_Temperature_C <- W4_VA_envrmonth %>%
+  filter(!is.na(month)) %>% 
+  group_by(month) %>%
+  summarise(Mean_Temperature = mean(mean_temp))
+
+Mean_min_Monthly_Temperature_C <- W4_VA_envrmonth %>%
+  filter(!is.na(month)) %>% 
+  group_by(month) %>%
+  summarise(Mean_min_Temperature = mean(min_temp))
+
+Mean_max_Monthly_Temperature_C <- W4_VA_envrmonth %>%
+  filter(!is.na(month)) %>% 
+  group_by(month) %>%
+  summarise(Mean_max_Temperature = mean(max_temp))
+
+#Create a data frame to store the temperature results
+W4_VA_temp <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Temperature_C, Mean_max_temperature_C, Mean_min_temperature_C, Temperature_st_dev, high_temp_stress_days, frac_high_temp_stress_days, Temperature_n, Temperature_years, collection_type)
+print(W4_VA_temp)
+
+W4_VA_monthly_temp <- cbind(Mean_Monthly_Temperature_C, Mean_min_Monthly_Temperature_C, Mean_max_Monthly_Temperature_C)
+W4_VA_monthly_temp <- W4_VA_monthly_temp[, !duplicated(names(W4_VA_monthly_temp))]
+print(W4_VA_monthly_temp)
+
+# Write to the combined file with all sites 
+write.table(W4_VA_temp, "/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/all_temperature.csv", sep = ",", append = TRUE, col.names = FALSE, row.names = FALSE) # The column names should be changed to FALSE after 1st row is added to the data frame
+
+# Write to a unique new CSV file
+write.csv(W4_VA_temp, "/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/W4_VA_temperature.csv")
+
+# Write all montly data to a unique new CSV file
+write.csv(W4_VA_monthly_temp, "/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/W4_VA_monthly_temp.csv")
+
+```
+
+```{r}
+#Calculate the salinity variables
+Mean_Annual_Salinity_ppt <- mean(W4_VA$salinity)
+Mean_max_Salinity_ppt <- mean(W4_VA_envryear$max_salinity)
+Mean_min_Salinity_ppt <- mean(W4_VA_envryear$min_salinity)
+Salinity_st_dev <- sd(W4_VA$salinity)
+Salinity_n <- nrow(W4_VA)
+Salinity_years <- nrow(W4_VA_envryear)
+high_sal_stress_days <- sum(high_sal_stress_count$high_sal_stress)
+low_sal_stress_days <- sum(low_sal_stress_count$low_sal_stress)
+frac_high_sal_stress_days <- high_sal_stress_days/nrow(W4_VA_envrday)
+frac_low_sal_stress_days <- low_sal_stress_days/nrow(W4_VA_envrday)
+
+Mean_Monthly_Salinity <- W4_VA_envrmonth %>%
+  filter(!is.na(month)) %>%
+  group_by(month) %>%
+  summarise(Mean_Salinity = mean(mean_salinity))
+
+Min_Monthly_Salinity <- W4_VA_envrmonth %>%
+  filter(!is.na(month)) %>%
+  group_by(month) %>%
+  summarise(Min_Salinity = mean(min_salinity))
+
+Max_Monthly_Salinity <- W4_VA_envrmonth %>%
+  filter(!is.na(month)) %>%
+  group_by(month) %>%
+  summarise(Max_Salinity = mean(max_salinity))
+
+#Create a data frame to store the temperature results
+W4_VA_salinity <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Salinity_ppt, Mean_max_Salinity_ppt, Mean_min_Salinity_ppt, high_sal_stress_days,low_sal_stress_days, frac_high_sal_stress_days, frac_low_sal_stress_days, Salinity_st_dev, Salinity_n, Salinity_years, collection_type)
+print(W4_VA_salinity)
+
+W4_VA_monthly_sal <- cbind(Mean_Monthly_Salinity, Min_Monthly_Salinity, Max_Monthly_Salinity)
+W4_VA_monthly_sal <- W4_VA_monthly_sal[, !duplicated(names(W4_VA_monthly_sal))]
+print(W4_VA_monthly_sal)
+
+# Write to the combined file with all sites 
+write.table(W4_VA_salinity, "/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/all_salinity.csv", sep = ",", append = TRUE, col.names = FALSE, row.names = FALSE) # The column names should be changed to FALSE after 1st row is added to the data frame
+
+# Write all year data to a unique new CSV file
+write.csv(W4_VA_salinity, "/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/W4_VA_salinity.csv")
+# Write all montly data to a unique new CSV file
+write.csv(W4_VA_monthly_sal, "/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/W4_VA_monthly_sal.csv")
+
+```
