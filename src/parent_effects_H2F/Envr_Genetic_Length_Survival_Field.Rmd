@@ -39,20 +39,17 @@ survival <- read.csv(file.path("../../data/performance_H2F/mortality_bags_022025
 #this file has summary statistics on temperature and salinity for the 8 sites (W1-TX, W2-LA, W3-FL, S1-LOLA, S2-DEBY, W4-VA, W5-NH, W6-ME)
 envr_summary <-  read.csv("../../data/envr_of_origin/envr_summary_stats.csv")
 
-#this file is a matrix of the environmental distances between each site
-envr_dist <- read.csv("../../data/envr_of_origin/envr_dist.csv")
-
 #this file contains average observed heterozygosity, average expected heterozygosity, and average allelic richness across every loci at each site
 parent_genetics <- read.csv("../../data/parent_effects_H2F/parent_genetic_effects.csv")
 ```
 
-Calculate average survival per 
+Clean survival df
 ```{r survival_cleaning}
 #Exclude any LARMIX and SEEDMIX bags, which do are crosses of oysters from different groups, and do not contain distinct environmental or genetic data
 survival <- survival %>% 
   filter(pop != "SEEDMIX" & pop != "LARMIX")
 
-#exclude add in W or S labels to group names
+#add in W or S labels to group names
 survival["pop"][survival["pop"] == "TX"] <- "W1-TX"
 survival["pop"][survival["pop"] == "LA"] <- "W2-LA"
 survival["pop"][survival["pop"] == "FL"] <- "W3-FL"
@@ -62,52 +59,60 @@ survival["pop"][survival["pop"] == "JR"] <- "W4-VA"
 survival["pop"][survival["pop"] == "NH"] <- "W5-NH"
 survival["pop"][survival["pop"] == "ME"] <- "W6-ME"
 
+#change bag_site York River to York
+survival["bag_site"][survival["bag_site"] == "YorkRiver"] <- "York"
+
 #select only site names (labeled "pop" for now), bag labels, bag field site locations, and survival at times t1, t2, and t3 (each of the field sampling sites respectively).
 survival_filter <- survival[, c("pop", "bags_label", "bag_site", "t1", "t2", "t3")]
 
 #rename columns
 colnames(survival_filter) <- c("site_name", "bag_label", "bag_site", "t1_surv", "t2_surv", "t3_surv")
 
-#find average survival for each group at each time point in each field site and save results to new table
-mean_t1surv <- aggregate(t1_surv ~ site_name + bag_site, FUN = mean, data = survival_filter)
-mean_t2surv <- aggregate(t2_surv ~ site_name + bag_site, FUN = mean, data = survival_filter)
-mean_t3surv <- aggregate(t3_surv ~ site_name + bag_site, FUN = mean, data = survival_filter)
+#reorder df by site_name
+survival_filter <- survival_filter %>% 
+  mutate(site_name = factor(site_name)) %>% 
+  mutate(site_name = fct_relevel(site_name, c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME"))) %>% 
+  arrange(site_name)
 
-#separate data for each field site at each time point into different 
 ```
 
 ##Length df organizing
 ```{r length_cleaning_means}
-#select columns with group, day, and shell length in mm
+#select columns with bag, monitoring event, length, and field site name
 length <- length[,c("bag", "monitoring_event", "length", "site")]
+#rename columns
+colnames(length) <- c("bag_label", "monitoring_event", "length", "bag_site")
 
-#add site_name column
+#change bag_site York River to York
+length["bag_site"][length["bag_site"] == "York River"] <- "York"
 
+#make string of site names with 6 replicates of each name (for each field bag) in the order they appear in the 
+site_name1 <- c(rep("S2-DEBY", 6), rep("W3-FL", 6), rep("W4-VA", 6), rep("W2-LA", 6), rep("H1-LARMIX", 6), rep("S1-LOLA", 6), rep("W6-ME", 6), rep("W5-NH", 6), rep("H2-SEEDMIX", 6), rep("W1-TX", 6))
 
-#keep only data from days 15-21
-length_21 <- length_filter %>% 
-  filter(day_an == "15-21")
+#replicate site_name1 string 3 times for the three field sampling dates
+site_name <- rep(site_name1, 3)
+#add site_name column to length df
+length$site_name <- site_name
 
-length_78 <- length_filter %>% 
-  filter(day_an == "78")
+#Now remove any rows with site names H2-SEEDMIX or H1-LARMIX, since neither of these have genetic/environment-of-origin data
+length_filter <- length %>% 
+  filter(site_name != "H1-LARMIX" & site_name != "H2-SEEDMIX")
 
-#find mean shell lengths of each group on each day
-means_mm_21 <- aggregate(shell_length_mm ~ group, FUN = mean, data = length_21)
-colnames(means_mm_21) <- c("site_name", "mean_length_mm_21")
+#reorder df by site_name
+length_filter <- length_filter %>% 
+  mutate(site_name = factor(site_name)) %>% 
+  mutate(site_name = fct_relevel(site_name, c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME"))) %>% 
+  arrange(site_name)
 
-means_mm_78 <- aggregate(shell_length_mm ~ group, FUN = mean, data = length_78)
-colnames(means_mm_78) <- c("site_name", "mean_length_mm_78")
+length_filter <- length_filter[, c(5,1,4,2,3)]
 ```
 
 ##Remove extra columns from environmental data frame and add latitude
 ```{r envr_cleaning}
-#remove extra site label and standard deviations from envr_summary
-envr <- envr_summary[,-c(1,6,10)]
+#keep only site name, mean annual temp, and mean annual salinity
+envr <- subset(envr_summary, select = c("site_name", "Mean_Annual_Temperature_C", "Mean_Annual_Salinity_ppt"))
 
 summary(envr)
-
-#rename cols
-colnames(envr) <- c("site_name", "Mean_Annual_Temperature_C", "Mean_max_temperature_C", "Mean_min_temperature_C", "Mean_Annual_Salinity_ppt", "Mean_max_Salinity_ppt", "Mean_min_Salinity_ppt")
 
 #add sampling site latitudes. Note that these latitudes ARE NOT the same as the latitudes of where environmental data came from. These latitudes, while similar, were often slightly different, and I am using our actual sampling site latitudes.
 envr$lat <- c(28.096000, 29.239925, 30.440030, 37.1501163, 37.98030, 37.249107, 43.053746, 44.01330)
@@ -119,48 +124,48 @@ envr$lat <- c(28.096000, 29.239925, 30.440030, 37.1501163, 37.98030, 37.249107, 
 colnames(parent_genetics) <- c("site_name", "avg_observed_ho", "avg_expected_hs", "avg_allelic_richness")
 ```
 
-#Join data frames
+#Join genetics and envr data frames and merge with length and survival
 ```{r join_dfs}
-surv_length_envr_gen <- left_join(envr, means_mm_21, by = "site_name") %>% 
-  left_join(means_mm_78, by = "site_name") %>% 
-  left_join(survival_filter, by = "site_name") %>% 
-  left_join(parent_genetics, by = "site_name")
+#merge genetics and envr data
+envr_gen <- left_join(envr, parent_genetics, by = "site_name")
 
-write.csv(surv_length_envr_gen, "../../data/parent_effects_H2F/Hatchery_Performance_Envr_ParentGenetics.csv", row.names = FALSE)
+#merge envr_gen with survival data and save as csv
+surv_envr_gen <- full_join(survival_filter, envr_gen, by = "site_name")
+write.csv(surv_envr_gen, "../../data/parent_effects_H2F/Field_Survival_Envr_ParentGenetics.csv", row.names = FALSE)
+
+#merge envr_gen with length data and save as csv
+length_envr_gen <- full_join(length_filter, envr_gen, by = "site_name")
+write.csv(length_envr_gen, "../../data/parent_effects_H2F/Field_Length_Envr_ParentGenetics.csv", row.names = FALSE)
+
+#split up data based on bag_site
+lew_surv_df <- surv_envr_gen %>% 
+  filter(bag_site == "Lewisetta")
+york_surv_df <- surv_envr_gen %>% 
+  filter(bag_site == "York")
+lew_length_df <- length_envr_gen %>% 
+  filter(bag_site == "Lewisetta")
+york_length_df <- length_envr_gen %>% 
+  filter(bag_site == "York")
+
+#test correlation between temperature and latitude. If they are highly correlated, one must be excluded from the upcoming multiple regression.
+temp_lat_corr <- cor.test(length_envr_gen$Mean_Annual_Temperature_C, length_envr_gen$lat)
+temp_lat_corr #significant correlation (r = -0.962, p = 0.00014) between temp and lat, cannot include both in multiple regression
 ```
 
-The next chunk includes multiple regressions testing the effects of several environmental and genetic parameters on length and survival in the hatchery/nursery. The explanatory variables are 1) mean annual temperature at the environment-of-origin (mean temp), 2) mean annual salinity at the environment of origin (mean sal), 3) mean observed heterozygosity in the parent oysters from each site (Ho), and 4) mean allelic richness (AR) in the parent oysters from each site.
+The next chunk includes multiple regressions testing the effects of several environmental and genetic parameters on length and survival in the field. Data are split up by bag_site (Lewisetta or York) The explanatory variables are 1) mean annual temperature at the environment-of-origin (mean temp), 2) mean annual salinity at the environment of origin (mean sal), 3) mean observed heterozygosity in the parent oysters from each site (Ho), and 4) mean allelic richness (AR) in the parent oysters from each site.
 
-## Multiple regressions
+## Lewisetta multiple regressions
 ```{r mult_regressions}
-#test correlation between temperature and latitude. If they are highly correlated, one must be excluded from the upcoming multiple regression.
-temp_lat_corr <- cor.test(surv_length_envr_gen$Mean_Annual_Temperature_C, surv_length_envr_gen$lat)
-temp_lat_corr #significant correlation (r = -0.962, p = 0.00014) between temp and lat, cannot include both in multiple regression
-
-#multiple regression testing effect of mean annual temp, mean annual salinity, mean Ho, and mean AR on percent survival at day 21 (end of hatchery stage)
-surv21_mr <- lm(percent_survival ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt + avg_observed_ho + avg_allelic_richness, data = surv_length_envr_gen)
-summary(surv21_mr) 
-#model p-value = 0.06075
-#model F-stat = 7.876
-#adjusted R squared = -.7971
+#multiple regression testing effect of mean annual temp, mean annual salinity, mean Ho, and mean AR on percent survival at the first field monitoring time. Assess normality of residuals with Shapiro-Wilk test 
+lew_t1surv_mr <- lm(t1_surv ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt + avg_observed_ho + avg_allelic_richness, data = lew_surv_df)
+lew_t1surv_resid <- lew_t1surv_mr$residuals
+shapiro.test(lew_t1surv_resid) #p = 0.7306, data are normal
+#plot(lew_t1surv_mr) #homoscedasticity looks fine, no outliers
+summary(lew_t1surv_mr) 
+#model p-value = 0.0059
+#model F-stat = 5.292
+#adjusted R squared = 0.45
 surv21_tidy <- tidy(surv21_mr) #save coefficients as table
-
-
-#multiple regression testing effect of mean annual temp, mean annual salinity, mean Ho, and mean AR on percent length at day 21 (end of hatchery stage)
-length21_mr <- lm(mean_length_mm_21 ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt + avg_observed_ho + avg_allelic_richness, data = surv_length_envr_gen)
-summary(length21_mr) 
-#model p-value = 0.89
-#model F-stat = 0.2551
-#Adjusted R squared = -0.74
-length21_tidy <- tidy(length21_mr) #save coefficients in table
-
-#multiple regression testing effect of mean annual temp, mean annual salinity, mean Ho, and mean AR on percent length at day 78 (end of nursery stage)
-length78_mr <- lm(mean_length_mm_78 ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt + avg_observed_ho + avg_allelic_richness, data = surv_length_envr_gen)
-summary(length78_mr) 
-#model p-value = 0.5623
-#model F-stat = 0.8865
-#adjusted R squared = -0.06934
-length78_tidy <- tidy(length78_mr) #save coefficients as table
 ```
 
 #adjust p-values
@@ -172,8 +177,4 @@ model_p_adj <- p.adjust(model_p_values, method = "BH")
 model_p_adj
 ```
 
-Adjusted model p-values
-Survival at day 21: 0.18225 
-Length at day 21: 0.89000 
-Length at day 78: 0.84345
 
