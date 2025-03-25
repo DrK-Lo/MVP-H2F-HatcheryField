@@ -84,9 +84,9 @@ raw_YRK$datetime <- as.POSIXct(raw_YRK$datetime, "%Y-%m-%d %H:%M:%S", tz = "")
 #Print the new data frame and examine to make sure the new datetime column is in the correct format. 
 head(raw_YRK)
 
-#exclude time before August 1 (approximate start of field data)
+#exclude time before 1 August 2023 (approximate start of field data) and after 31 December 2024
 raw_YRK <- raw_YRK %>% 
-  filter(datetime >= 1690848000)
+  filter(datetime >= 1690848000 & datetime <=1735689599)
 
 #Print the new data frame and examine to make sure the new datetime column is in the correct format. 
 summary(raw_YRK$datetime)

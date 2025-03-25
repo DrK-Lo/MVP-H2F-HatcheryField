@@ -108,9 +108,6 @@ summary(envr)
 
 #rename cols
 colnames(envr) <- c("site_name", "Mean_Annual_Temperature_C", "Mean_max_temperature_C", "Mean_min_temperature_C", "Mean_Annual_Salinity_ppt", "Mean_max_Salinity_ppt", "Mean_min_Salinity_ppt")
-
-#add sampling site latitudes. Note that these latitudes ARE NOT the same as the latitudes of where environmental data came from. These latitudes, while similar, were often slightly different, and I am using our actual sampling site latitudes.
-envr$lat <- c(28.096000, 29.239925, 30.440030, 37.1501163, 37.98030, 37.249107, 43.053746, 44.01330)
 ```
 
 
@@ -121,29 +118,76 @@ colnames(parent_genetics) <- c("site_name", "avg_observed_ho", "avg_expected_hs"
 
 #Join data frames
 ```{r join_dfs}
-surv_length_envr_gen <- left_join(envr, means_mm_21, by = "site_name") %>% 
+data_merge <- left_join(envr, means_mm_21, by = "site_name") %>% 
   left_join(means_mm_78, by = "site_name") %>% 
   left_join(survival_filter, by = "site_name") %>% 
   left_join(parent_genetics, by = "site_name")
 
-write.csv(surv_length_envr_gen, "../../data/parent_effects_H2F/Hatchery_Performance_Envr_ParentGenetics.csv", row.names = FALSE)
+write.csv(data_merge, "../../data/parent_effects_H2F/Hatchery_Performance_Envr_ParentGenetics.csv", row.names = FALSE)
 ```
+
+#Check for multicollinearity among explanatory variables
+```{r}
+cor_matrix2 <- cor(data_merge[,c("Mean_Annual_Temperature_C", "Mean_Annual_Salinity_ppt", "avg_observed_ho", "avg_allelic_richness")])
+plot(data_merge[,c("Mean_Annual_Temperature_C", "Mean_Annual_Salinity_ppt", "avg_observed_ho", "avg_allelic_richness")])
+#Average observed Ho and temperature are borderline collinear (r = 0.68). Let's check VIF
+
+#calculate variance inflation factor (VIF)- create VIF function
+VIF <- function(a, b, c, d){
+  1/(1-summary(lm(a ~ b + c + d))$r.squared)
+}
+
+#get VIF for mean annual temperature
+VIF(data_merge$Mean_Annual_Temperature_C, data_merge$Mean_Annual_Salinity_ppt, data_merge$avg_observed_ho, data_merge$avg_allelic_richness)
+#VIF_temp = 5.6
+
+#VIF for mean annual salinity
+VIF(data_merge$Mean_Annual_Salinity_ppt, data_merge$avg_observed_ho, data_merge$avg_allelic_richness, data_merge$Mean_Annual_Temperature_C)
+#VIF_sal = 3.82
+
+#VIF for average observed ho
+VIF(data_merge$avg_observed_ho, data_merge$avg_allelic_richness, data_merge$Mean_Annual_Temperature_C, data_merge$Mean_Annual_Salinity_ppt)
+#VIF_obs_Ho = 6.68
+
+#VIF for average allelic richness
+VIF(data_merge$avg_allelic_richness,data_merge$Mean_Annual_Temperature_C,data_merge$Mean_Annual_Salinity_ppt, data_merge$avg_observed_ho)
+#VIF_AR = 2.01
+
+#Both temperature and average observed heterozygosity have high VIFs (VIF > 5). Run lm with one of the response variables with each of them without the other. I'll use survival at day 21.
+#exclude Ho
+temp_sal_ar_lm <- lm(log10(percent_survival) ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt + avg_allelic_richness, data = data_merge)
+#exclude temperature
+sal_ho_ar_lm <- lm(log10(percent_survival) ~ Mean_Annual_Salinity_ppt + avg_allelic_richness + avg_observed_ho, data = data_merge)
+
+#plot results
+par(mfrow=c(2,2))
+plot(temp_sal_ar_lm)
+plot(sal_ho_ar_lm)
+#both models have outliers
+
+temp_sal_ar_lm1 <- lm(mean_length_mm_21 ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt + avg_allelic_richness, data = data_merge)
+#exclude temperature
+sal_ho_ar_lm2 <- lm(mean_length_mm_21 ~ Mean_Annual_Salinity_ppt + avg_allelic_richness + avg_observed_ho, data = data_merge)
+
+plot(temp_sal_ar_lm1)
+plot(sal_ho_ar_lm2)
+```
+
+
 
 The next chunk includes multiple regressions testing the effects of several environmental and genetic parameters on length and survival in the hatchery/nursery. The explanatory variables are 1) mean annual temperature at the environment-of-origin (mean temp), 2) mean annual salinity at the environment of origin (mean sal), 3) mean observed heterozygosity in the parent oysters from each site (Ho), and 4) mean allelic richness (AR) in the parent oysters from each site.
 
 ## Multiple regressions
 ```{r mult_regressions}
-#test correlation between temperature and latitude. If they are highly correlated, one must be excluded from the upcoming multiple regression.
-temp_lat_corr <- cor.test(surv_length_envr_gen$Mean_Annual_Temperature_C, surv_length_envr_gen$lat)
-temp_lat_corr #significant correlation (r = -0.962, p = 0.00014) between temp and lat, cannot include both in multiple regression
-
 #multiple regression testing effect of mean annual temp, mean annual salinity, mean Ho, and mean AR on percent survival at day 21 (end of hatchery stage)
 surv21_mr <- lm(percent_survival ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt + avg_observed_ho + avg_allelic_richness, data = surv_length_envr_gen)
-summary(surv21_mr) 
-#model p-value = 0.06075
-#model F-stat = 7.876
-#adjusted R squared = -.7971
-surv21_tidy <- tidy(surv21_mr) #save coefficients as table
+surv21_resid <- surv21_mr$residuals
+shapiro.test(surv21_resid) #p = 0.018, not normal, try log10 transforming survival
+
+logsurv21_mr <- lm(log10(percent_survival) ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt + avg_observed_ho + avg_allelic_richness, data = surv_length_envr_gen)
+logsurv21_resid <- logsurv21_mr$residuals
+shapiro.test(logsurv21_resid) #p = 0.075, data are normal
+plot(logsurv21_mr)
 
 
 #multiple regression testing effect of mean annual temp, mean annual salinity, mean Ho, and mean AR on percent length at day 21 (end of hatchery stage)
