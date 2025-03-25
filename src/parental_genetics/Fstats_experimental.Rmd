@@ -166,13 +166,17 @@ dim(fst_data) # 104959 - pop col = 104958
 ```{r}
 
 # run Fst calculation
-fst_results <- pairwise.WCfst(fst_data)
-fst_results[is.na(fst_results)] <- 0
+#fst_results <- pairwise.WCfst(fst_data)
+#fst_results[is.na(fst_results)] <- 0
 
 # view results
-print(fst_results)
+#print(fst_results)
 
-saveRDS(fst_results, file.path("..", "..", "data", "pairwise_differences_analyses", "fst_results.rds"))
+#saveRDS(fst_results, file.path("..", "..", "data", "pairwise_differences_analyses", "fst_results.rds"))
+
+# load in fst results
+fst_results <- readRDS(file.path("..", "..", "data", "pairwise_differences_analyses", "fst_results.rds"))
+
 
 # convert the matrix to a long format, and edit column names
 fst_plotting <- melt(fst_results, na.rm = TRUE)
@@ -378,7 +382,7 @@ Same steps as before but with full SNP set.
 
 ```{r}
 
-# rename for processing
+# prepare the full SNP set
 full <- full_snps
 
 dim(full)
@@ -433,7 +437,7 @@ identical(fst_labels_check, samp_labels_check) # TRUE
 
 ```{r}
 
-# add population labels to fst data
+# add population labels to outflank data
 outflank_data$ID_SiteDate <- samp_full_subset$ID_SiteDate
 
 outflank_data <- outflank_data %>%
@@ -510,66 +514,12 @@ plot(FstDataFrame$FST, FstDataFrame$FSTNoCorr) # uncorrected Fst is always large
 
 ```
 
-#### Thin for LD
-
-```{r}
-
-# following "Bonus" section of OutFLANKAnalysis.Rmd vignette
-
-# install bigstatsr and bigsnpr
-if (!("bigstatsr" %in% installed.packages())){install.packages("bigstatsr")}
-library(bigstatsr)
-if (!("bigsnpr" %in% installed.packages())){devtools::install_github("privefl/bigsnpr")}
-library(bigsnpr)
-
-# convert snp matrix to required format for bigsnpr
-G <- add_code256(big_copy(as.matrix(SNPmat), type="raw"), code=bigsnpr:::CODE_012)
-
-# data check - number of columns in SNP matrix = number of values in chromosome and position vectors
-if (ncol(SNPmat) == length(muts_outflank$Chromosome) && ncol(SNPmat) == length(muts_outflank$Position)) {
-  cat("The number of SNPs matches the lengths of chromosome and position vectors.\n")
-} else {
-  cat("Mismatch detected:\n")
-  cat("Number of SNPs: ", ncol(SNPmat), "\n")
-  cat("Length of chromosome vector: ", length(muts_outflank$Chromosome), "\n")
-  cat("Length of position vector: ", length(muts_outflank$Position), "\n")
-}
-
-# data check - order of locus names = order in SNP matrix and chromosome info
-
-# check if the lengths are the same
-if (length(muts_outflank$Affx.ID) != length(colnames(SNPmat))) {
-  cat("Mismatch detected: Number of locus names does not match the number of SNP names.\n")
-} else {
-  # check if the orders are the same
-  if (all(muts_outflank$Affx.ID == colnames(SNPmat))) {
-    cat("The order of locus names matches the order of SNP matrix column names.\n")
-  } else {
-    cat("The order of locus names does NOT match the order of SNP matrix column names.\n")
-    
-    # identify mismatches
-    mismatches <- muts_outflank$Affx.ID != colnames(SNPmat)
-    cat("Mismatched names:\n")
-    for (i in which(mismatches)) {
-      cat("Position:", i, "- Locus Name:", muts_outflank$Affx.ID[i], "- SNP Name:", colnames(SNPmat)[i], "\n")
-    }
-  }
-}
-
-# SNP trimming
-newpc <-snp_autoSVD(G=G,infos.chr =muts_outflank$Chromosome,infos.pos = muts_outflank$Position)
-which_pruned <- attr(newpc, which="subset") # indexes of remaining SNPS after pruning
-
-length(which_pruned) # 104957 - same as thinned snp set - this makes sense I think
-
-```
-
 #### Run OutFLANK
 
 ```{r}
 
-# run OutFLANK
-out_trim <- OutFLANK(FstDataFrame[which_pruned,], # using pruned SNPs
+# first, run OutFLANK on thinned SNPs
+out_trim <- OutFLANK(FstDataFrame[FstDataFrame$LocusName %in% colnames(thinned_snps), ], # using pruned SNPs
                      LeftTrimFraction = 0.05, # defaults
                      RightTrimFraction = 0.05, 
                      Hmin = 0.1, 
@@ -599,7 +549,7 @@ hist(out_trim$results$pvaluesRightTail)
 
 ```{r}
 
-# calulate p-values
+# then, calulate p-values on the full set
 P1 <- pOutlierFinderChiSqNoCorr(FstDataFrame, Fstbar = out_trim$FSTNoCorrbar, 
                                    dfInferred = out_trim$dfInferred, qthreshold = 0.05, Hmin=0.05)
 
