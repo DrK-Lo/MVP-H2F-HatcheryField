@@ -1,4 +1,4 @@
-"site_name","percent_survival","Mean_Annual_Temperature_C","Mean_max_temperature_C","Mean_min_temperature_C","Mean_Annual_Salinity_ppt","Mean_max_Salinity_ppt","Mean_min_Salinity_ppt","avg_observed_ho","avg_expected_hs","avg_allelic_richness"
+"site_name","percent_survival","mean_temp","mean_max_temp","mean_min_temp","mean_sal","mean_max_sal","mean_min_sal","ho","avg_expected_hs","ar"
 "W2-LA",3.822,22.8635853411622,33.16875,7.3125,10.464868596882,25.75,0.96875,0.419618986823175,0.30156614899435,2.39787857393932
 "W1-TX",3.844,23.1054088188906,32.0176470588235,7.98823529411765,20.8578965409594,30.2235294117647,6.36470588235294,0.419839177949065,0.302033225987785,2.40545175643359
 "W6-ME",0.419,15.3288717032758,23.46,4.02142857142857,29.4782830432469,31.5042857142857,8.74142857142857,0.376451785016721,0.278442058176205,2.31363250161347

@@ -1,4 +1,4 @@
-"site_name","day_an","shell_length_mm","avg_allelic_richness","avg_observed_ho","Mean_Annual_Temperature_C","Mean_Annual_Salinity_ppt"
+"site_name","day_an","length","ar","ho","mean_temp","mean_sal"
 "W2-LA","15-21",0.316357,2.39787857393932,0.419618986823175,22.8635853411622,10.464868596882
 "W2-LA","15-21",0.319598,2.39787857393932,0.419618986823175,22.8635853411622,10.464868596882
 "W2-LA","15-21",0.332948,2.39787857393932,0.419618986823175,22.8635853411622,10.464868596882
