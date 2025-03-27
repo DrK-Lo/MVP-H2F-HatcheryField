@@ -5,8 +5,6 @@ output: html_document
 date: "2025-02-19"
 ---
 
-Try to really understand the code in this file and restructure it a bit before producing the new graph. 
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -20,7 +18,6 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 
 library(dplyr)
-library(here)
 library(readr)
 library(grid)
 library(colorspace)
@@ -34,15 +31,16 @@ library(colorspace)
 outflank_output <- read_csv(file.path("..", "..", "data", "putative_selection", "outflank_results.csv"))
 
 # filter for outliers and SNPs with available gene info to put into ShinyGO
-outliers_only <- outflank_output %>%
-  filter(OutlierFlag == TRUE) %>%
+outliers_only <- outflank_output %>% # starts at 154608 rows
+  filter(OutlierFlag == TRUE) %>% # down to 11863
   dplyr::select(LocusName, FST, pvalues, Chromosome, Position, cust_id, cust_gene_id, cust_gene_name) %>%
-  filter(!is.na(cust_gene_id)) %>%
+  filter(!is.na(cust_gene_id)) %>% # down to 917
   filter(!is.na(cust_gene_name)) %>%
   rename(gene = cust_gene_id)
 
 # generate list for ShinyGO
-paste(outliers_only$gene, collapse = " ") # this is 917 genes
+# paste(outliers_only$gene, collapse = " ")
+length(unique(outliers_only$gene)) # this is 862 unique genes
 
 ```
 
@@ -55,7 +53,10 @@ paste(outliers_only$gene, collapse = " ") # this is 917 genes
 - On the "Enrichment" tab, download the top pathways
 - On the "Genes" tab, download the gene info table
 
-### Analysis
+### Plotting
+
+- Enriched: One row per enriched pathways. Corresponding genes in a column together, separated by spaces.
+- Genes: One row per gene. Chromosome positions and additional details.
 
 ```{r}
 
@@ -67,29 +68,26 @@ enriched <- read_csv(file.path("..", "..", "data", "putative_selection", "shinyG
 # this one is all the genes that matched the database and info about them
 genes <- read_csv(file.path("..", "..", "data", "putative_selection", "shinyGO_genes.csv"))
 
+
 ```
 
 ```{r}
 
-# regular viridis colors
-viridis_colors <- viridis::viridis(length(unique(outflank_output$Chromosome)))
-# lightened colors for non-outliers
-lightened_colors <- lighten(viridis_colors, amount = 0.4)
-
 # prepare data
 manhattan_fst <- outflank_output %>%
-  filter(He > 0.1) %>%  # filter based on heterozygosity
+  filter(He > 0.1) %>%  # filter based on heterozygosity - goes down to 151340 SNPs
   mutate(
     Chromosome = as.numeric(Chromosome),
     Position = as.numeric(Position),
     pvalues = as.numeric(pvalues),
     FST = ifelse(FST < 0, 0.00001, FST),  # assign small value to negative FST
     Outlier = ifelse(pvalues < 0.01, "outlier", "nonoutlier"),  # identify outliers
-    Color = ifelse(Outlier == "nonoutlier",  # color outliers with lightened colors
-                   viridis_colors[Chromosome],
-                   lightened_colors[Chromosome])
+    Color = ifelse(
+      Outlier == "nonoutlier",
+      ifelse(Chromosome %% 2 == 1, "#4A5763", "#6A747C"),  # base color
+      lighten(ifelse(Chromosome %% 2 == 1, "#4A5763", "#6A747C"), 0.5) # lighten for outliers
+    )
   )
-
 # compute chromosome lengths and cumulative positions
 chromosome_lengths <- manhattan_fst %>%
   group_by(Chromosome) %>%
@@ -114,8 +112,6 @@ These data need to be reshaped. The OutFLANK data product has loci in rows, and 
 
 ```{r}
 
-head(enriched)
-
 # split up the genes column so there is one row per gene
 enriched_split <- enriched %>%
   mutate(gene = strsplit(as.character(Genes), " ")) %>%
@@ -137,61 +133,106 @@ manhattan_fst <- manhattan_fst %>%
 enriched_fully_joined <- manhattan_fst %>%
   dplyr::inner_join(enriched_joined, by = "gene") %>%
   dplyr::select(LocusName, `Enrichment FDR`, nGenes, `Pathway Genes`, `Fold Enrichment`, Pathway) %>%
-  # generalize pathway types for graphing
-  mutate(gene_type = case_when(
-    grepl("ion", Pathway, ignore.case = TRUE) ~ "ion transport",
-    grepl("membrane", Pathway, ignore.case = TRUE) ~ "membrane",
-    TRUE ~ NA_character_  
-  ))
-  
+  dplyr::mutate(
+    gene_type = case_when(
+      str_extract(Pathway, "^GO:\\d+") %in% c("GO:0004806", "GO:0008083") ~ "Lipid metabolism and signaling", 
+      str_extract(Pathway, "^GO:\\d+") %in% c("GO:0043565", "GO:0003700", "GO:0006355") ~ "Gene expression and transcription",
+      str_extract(Pathway, "^GO:\\d+") %in% c("GO:0034220", "GO:0055085", "GO:0098655") ~ "Membrane and ion transport",
+      str_extract(Pathway, "^GO:\\d+") %in% c("GO:0007601", "GO:0004930", "GO:0007186") ~ "GPCR signaling and sensory",
+      str_extract(Pathway, "^GO:\\d+") %in% c("GO:0016021", "GO:0016020", "GO:0031012") ~ "Cellular structure and organization",
+      TRUE ~ "Other"
+    )
+  )
 ```
+
+#### Fst Manhattan plot
 
 ```{r}
 
+# this is all the data we need for the manhattan plot
 merged_manhattan <- manhattan_fst %>%
   left_join(enriched_fully_joined, by = "LocusName") # merge
 
 ggplot_manhattan <- ggplot(merged_manhattan, aes(x = Cumulative_Position, y = FST)) +
-  geom_point(aes(
-    color = case_when(
-      `gene_type` == "membrane" ~ "black",  # Black color for membrane
-      `gene_type` == "ion transport" ~ "black",  # Black color for ion transport
-      TRUE ~ Color  # Default viridis/lightened colors
-    ),
-    shape = case_when(
-      `gene_type` == "membrane" ~ "circle",  # Circle shape for membrane
-      `gene_type` == "ion transport" ~ "triangle",  # Triangle shape for ion transport
-      TRUE ~ "default"  # Default shape for other points
-    )
-  ), size = 1) +
+  
+  # first layer: default points (background)
+  geom_point(aes(color = Color), size = 1, shape = 1, alpha = 0.7) +  # slight transparency, open circles
+  
+  # second layer: highlighted points (foreground)
+  geom_point(data = merged_manhattan %>% filter(!is.na(gene_type) & Outlier == "outlier"), 
+             aes(color = case_when(
+               gene_type == "Membrane and ion transport" ~ "#3e4989", # color by gene type
+               gene_type == "GPCR signaling and sensory" ~ "#440154", 
+               gene_type == "Lipid metabolism and signaling" ~ "#fde725",  
+               gene_type == "Gene expression and transcription" ~ "#31688e",
+               gene_type == "Cellular structure and organization" ~ "#35b779", 
+             )), size = 2) +  # closed circles on top
+
   scale_x_continuous(breaks = chrom_ticks$center, labels = chrom_ticks$Chromosome) +
-  scale_color_identity(guide = "none") +  # Remove color guide from the legend
-  scale_shape_manual(
-    values = c(
-      "circle" = 16,   # Circle for membrane
-      "triangle" = 17, # Triangle for ion transport
-      "default" = 1    # Default shape for others
-    ),
-    breaks = c("circle", "triangle"),  # Only include "membrane" and "ion transport" in the legend
-    labels = c("Black circle = membrane", "Black triangle = ion transport")  # Custom legend labels
-  ) +
+  scale_color_identity(guide = "none") +  # remove color legend
   labs(x = "Chromosome", y = "FST") +
   theme_bw() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
-    panel.grid.major.x = element_blank(),  # Remove vertical grid lines
-    panel.grid.minor.x = element_blank()
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(), 
+    panel.grid.minor.y = element_blank(), 
   ) +
-  geom_hline(aes(yintercept = 0.45, linetype = "p < 0.01"), color = "black",
-             show.legend = TRUE) +
-  scale_linetype_manual(name = "Outlier threshold", values = c("p < 0.01" = "dashed")) +
-  guides(
-    shape = guide_legend(title = "Gene Type")  # Only show shape legend
-  )
+  geom_hline(aes(yintercept = 0.4, linetype = "p < 0.01"), color = "black", show.legend = TRUE) + # line roughly at p < 0.01
+  scale_linetype_manual(name = "Outlier threshold", values = c("p < 0.01" = "dashed"))
 
-#ggsave("fig_ggplot_manhattan_plot.jpg", ggplot_manhattan, width = 17, height = 6, dpi = 300)
+# save plot
+ggsave(file.path("..", "..", "figures", "putative_selection", "fst_manhattan_plot.jpg"), ggplot_manhattan, 
+       width = 17, height = 6, dpi = 300)
+
 ggplot_manhattan
 
+```
 
+#### Lollipop plot
+
+```{r}
+
+# assign colors
+color_mapping <- c(
+  "Membrane and ion transport" = "#3e4989",
+  "GPCR signaling and sensory" = "#440154",
+  "Lipid metabolism and signaling" = "#fde725",
+  "Gene expression and transcription" = "#31688e",
+  "Cellular structure and organization" = "#35b779"  
+)
+
+# plot
+lollipop_plot <- ggplot(enriched_fully_joined, aes(x = `Fold Enrichment`, 
+                                  y = reorder(Pathway, `Fold Enrichment`), 
+                                  color = gene_type, 
+                                  size = nGenes)) +
+  geom_segment(aes(x = 0, xend = `Fold Enrichment`,  # set lengths of the segments
+                   y = Pathway, yend = Pathway), 
+               linewidth = 0.8) +  # width of the segments
+  geom_point() +  # circles
+  scale_color_manual(values = color_mapping) +  # assign colors
+  scale_size_continuous(range = c(2, 5)) +  # adjust circle size range
+  scale_x_continuous(expand = c(0, 0), limits = c(0, max(enriched_fully_joined$`Fold Enrichment`) * 1.1)) +  # set limits of the x scale to adjust to the length of the segments
+  theme_bw() +
+  theme( # remove grid lines
+    panel.grid.major.x = element_blank(), 
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(), 
+    panel.grid.minor.y = element_blank(), 
+  ) +
+  labs(x = "Fold enrichment", y = "Pathway", size = "Number of genes", color = "Gene type") +
+  guides( # customize shapes and colors of symbols on legend with an override
+    color = guide_legend(override.aes = list(linetype = "blank", size = 3)),  
+    size = guide_legend(override.aes = list(linetype = "blank", shape = 21, fill = "slategrey",
+                                            color = "slategrey"))  
+  )
+
+# save figure
+ggsave(file.path("..", "..", "figures", "putative_selection", "GO_lollipop_plot.jpg"), 
+       lollipop_plot, width = 12, height = 6, dpi = 300)
+
+lollipop_plot
 
 ```
