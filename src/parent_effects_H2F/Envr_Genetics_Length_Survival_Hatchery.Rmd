@@ -18,14 +18,15 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 ## Load packages
 ```{r packages}
 library(tidyverse)
+library(car)
 library(ggplot2)
 library(gridExtra)
 library(multcompView) #extract significance letters from Tukey-Kramer test
-library(grid)#for ggplot arranging
 library(cowplot) #arrange ggplots
 library(ggpmisc)
 library(vegan) #for Mantel tests
 library(broom)#save lm results to tibbles
+library(outliers)
 ```
 
 ##Read in necessary files
@@ -35,9 +36,6 @@ length <- read.csv(file.path("../../data/performance_H2F/latestage_length.csv"))
 
 #this file has summary statistics on temperature and salinity for the 8 sites (W1-TX, W2-LA, W3-FL, S1-LOLA, S2-DEBY, W4-VA, W5-NH, W6-ME)
 envr_summary <-  read.csv("../../data/envr_of_origin/envr_summary_stats.csv")
-
-#this file is a matrix of the environmental distances between each site
-envr_dist <- read.csv("../../data/envr_of_origin/envr_dist.csv")
 
 #this file contains survival rate data for larval oysters up to day 21 post hatching
 survival <-  read.csv("../../data/performance_H2F/CViMVP_larvae_survival.csv")
@@ -80,9 +78,13 @@ colnames(survival_filter) <- c("site_name", "percent_survival")
 #select columns with site name, day, and shell length in mm
 length <- length[,c("site_name", "day_an", "shell_length_mm")]
 
+colnames(length) <- c("site_name", "day_an", "length")
+
 #filter out LARMIX from group
 length_filter <- length %>% 
-  filter(site_name != "LARMIX")
+  filter(site_name != "H1-LARMIX") %>% 
+  mutate(site_name = fct_relevel(site_name, c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME")))
+  
 
 #keep only data from days 15-21
 length_21 <- length_filter %>% 
@@ -90,47 +92,134 @@ length_21 <- length_filter %>%
 
 length_78 <- length_filter %>% 
   filter(day_an == "78")
-
-#find mean shell lengths of each group on each day
-means_mm_21 <- aggregate(shell_length_mm ~ site_name, FUN = mean, data = length_21)
-colnames(means_mm_21) <- c("site_name", "mean_length_mm_21")
-
-means_mm_78 <- aggregate(shell_length_mm ~ site_name, FUN = mean, data = length_78)
-colnames(means_mm_78) <- c("site_name", "mean_length_mm_78")
 ```
 
 ##Remove extra columns from environmental data frame and add latitude
 ```{r envr_cleaning}
 #remove extra site label and standard deviations from envr_summary
-envr <- envr_summary[,-c(1,6,10)]
+envr <- subset(envr_summary, select = -c(X, Temperature_st_dev, Salinity_st_dev))
 
 summary(envr)
 
 #rename cols
-colnames(envr) <- c("site_name", "Mean_Annual_Temperature_C", "Mean_max_temperature_C", "Mean_min_temperature_C", "Mean_Annual_Salinity_ppt", "Mean_max_Salinity_ppt", "Mean_min_Salinity_ppt")
+colnames(envr) <- c("site_name", "mean_temp", "mean_max_temp", "mean_min_temp", "mean_sal", "mean_max_sal", "mean_min_sal")
 ```
 
-
+#Parent genetics df cleaning
 ```{r parent_genetics_cleaning}
 #rename column names 
-colnames(parent_genetics) <- c("site_name", "avg_observed_ho", "avg_expected_hs", "avg_allelic_richness")
+colnames(parent_genetics) <- c("site_name", "ho", "avg_expected_hs", "ar")
 ```
 
-#Join data frames
-```{r join_dfs}
-data_merge <- left_join(envr, means_mm_21, by = "site_name") %>% 
-  left_join(means_mm_78, by = "site_name") %>% 
-  left_join(survival_filter, by = "site_name") %>% 
+#Join survival, genetic, and envr data frames
+```{r surv_join_dfs}
+#make df of just genetic and envr data
+envr_gen <- left_join(envr, parent_genetics, by = "site_name")
+
+#merge survival data with genetic and environmental data
+surv_merge <- left_join(survival_filter, envr, by = "site_name") %>% 
   left_join(parent_genetics, by = "site_name")
 
-write.csv(data_merge, "../../data/parent_effects_H2F/Hatchery_Performance_Envr_ParentGenetics.csv", row.names = FALSE)
+write.csv(surv_merge, "../../data/parent_effects_H2F/H_Survival_Envr_Genetics.csv", row.names = FALSE)
+```
+
+Since we want to use the full raw length data, we can't just left join the length, envr, and genetic data frames as they have different numbers of rows. We'll use for loops to subset our data for each site_name and create new columns for allelic richness, heterozygosity, mean annual temp, and mean annual salinity from there.
+
+#Join length day 21, genetic, and envr data frames
+```{r len21_join_dfs}
+#make list of site names
+site_ls <- as.character(unique(length_filter$site_name))
+#make empty list for results of joined data for length 21
+length21_join_ls <- list()
+#use for loop to merge data
+for (site in site_ls) {
+  #check if site has been processed and placed in the length21_join_ls
+	if(!(site %in% names(length21_join_ls))) {
+    
+	  # subset length, genetics, and envr dataframes for current site
+		len21_sub <- length_21 %>%
+			filter(site_name == site)
+		
+		gen_sub <- parent_genetics %>%
+			filter(site_name == site)	
+		
+		envr_sub <- envr %>% 
+		  filter(site_name == site)
+	  
+		#add columns to length subset for allelic richness, average observed heterozygosity, mean annual temp, and mean annual salinity
+		len21_sub$ar <- gen_sub$ar
+		len21_sub$ho <- gen_sub$ho
+		len21_sub$mean_temp <- envr_sub$mean_temp
+		len21_sub$mean_sal <- envr_sub$mean_sal
+		
+		#save len21_sub for the given site_name to the list and name it after the current site
+		length21_join_ls[[site]] <- len21_sub
+	}	
+}
+
+#rbind all the separate site's data frames into one data frame and remove row names
+len21_envr_gen <- do.call(rbind, length21_join_ls)
+rownames(len21_envr_gen) <- NULL
+
+#Sanity check- make sure row numbers match between the original length_21 data frame and the new one with the added columns
+nrow(len21_envr_gen) #nrow = 619
+nrow(length_21) #nrow = 619
+
+summary(len21_envr_gen)
+len21_envr_gen$site_name <- as.character(len21_envr_gen$site_name)
+
+write.csv(len21_envr_gen, "../../data/parent_effects_H2F/H_Length21_Envr_Genetics.csv", row.names = FALSE)
+```
+
+#Join length day 78, genetic, and envr data frames
+```{r len78_join_dfs}
+#make empty list for results of joined data for length 78
+length78_join_ls <- list()
+#use for loop to merge data
+for (site in site_ls) {
+  #check if site has been processed and placed in the length78_join_ls
+	if(!(site %in% names(length78_join_ls))) {
+    
+	  # subset length, genetics, and envr dataframes for current site
+		len78_sub <- length_78 %>%
+			filter(site_name == site)
+		
+		gen_sub <- parent_genetics %>%
+			filter(site_name == site)	
+		
+		envr_sub <- envr %>% 
+		  filter(site_name == site)
+	  
+		#add columns to length subset for allelic richness, average observed heterozygosity, mean annual temp, and mean annual salinity
+		len78_sub$ar <- gen_sub$ar
+		len78_sub$ho <- gen_sub$ho
+		len78_sub$mean_temp <- envr_sub$mean_temp
+		len78_sub$mean_sal <- envr_sub$mean_sal
+		
+		#save len78_sub for the given site_name to the list and name it after the current site
+		length78_join_ls[[site]] <- len78_sub
+	}	
+}
+
+#rbind all the separate site's data frames into one data frame and remove row names
+len78_envr_gen <- do.call(rbind, length78_join_ls)
+rownames(len78_envr_gen) <- NULL
+
+#Sanity check- make sure row numbers match between the original length_78 data frame and the new one with the added columns
+nrow(len78_envr_gen) #nrow = 971
+nrow(length_78) #nrow = 971
+
+summary(len78_envr_gen)
+len78_envr_gen$site_name <- as.character(len78_envr_gen$site_name)
+
+write.csv(len78_envr_gen, "../../data/parent_effects_H2F/H_Length78_Envr_Genetics.csv", row.names = FALSE)
 ```
 
 #Check for multicollinearity among explanatory variables
-```{r}
-cor_matrix2 <- cor(data_merge[,c("Mean_Annual_Temperature_C", "Mean_Annual_Salinity_ppt", "avg_observed_ho", "avg_allelic_richness")])
-plot(data_merge[,c("Mean_Annual_Temperature_C", "Mean_Annual_Salinity_ppt", "avg_observed_ho", "avg_allelic_richness")])
-#Average observed Ho and temperature are borderline collinear (r = 0.68). Let's check VIF
+```{r multicollinearity}
+cor_matrix2 <- cor(envr_gen[,c("mean_temp", "mean_sal", "ho", "ar")])
+plot(envr_gen[,c("mean_temp", "mean_sal", "ho", "ar")])
+#Average observed Ho and temperature are borderline collinear (r = 0.68).
 
 #calculate variance inflation factor (VIF)- create VIF function
 VIF <- function(a, b, c, d){
@@ -138,74 +227,118 @@ VIF <- function(a, b, c, d){
 }
 
 #get VIF for mean annual temperature
-VIF(data_merge$Mean_Annual_Temperature_C, data_merge$Mean_Annual_Salinity_ppt, data_merge$avg_observed_ho, data_merge$avg_allelic_richness)
+VIF(envr_gen$mean_temp, envr_gen$mean_sal, envr_gen$ho, envr_gen$ar)
 #VIF_temp = 5.6
 
 #VIF for mean annual salinity
-VIF(data_merge$Mean_Annual_Salinity_ppt, data_merge$avg_observed_ho, data_merge$avg_allelic_richness, data_merge$Mean_Annual_Temperature_C)
+VIF(envr_gen$mean_sal, envr_gen$ho, envr_gen$ar, envr_gen$mean_temp)
 #VIF_sal = 3.82
 
 #VIF for average observed ho
-VIF(data_merge$avg_observed_ho, data_merge$avg_allelic_richness, data_merge$Mean_Annual_Temperature_C, data_merge$Mean_Annual_Salinity_ppt)
+VIF(envr_gen$ho, envr_gen$ar, envr_gen$mean_temp, envr_gen$mean_sal)
 #VIF_obs_Ho = 6.68
 
 #VIF for average allelic richness
-VIF(data_merge$avg_allelic_richness,data_merge$Mean_Annual_Temperature_C,data_merge$Mean_Annual_Salinity_ppt, data_merge$avg_observed_ho)
+VIF(envr_gen$ar,envr_gen$mean_temp, envr_gen$mean_sal, envr_gen$ho)
 #VIF_AR = 2.01
 
-#Both temperature and average observed heterozygosity have high VIFs (VIF > 5). Run lm with one of the response variables with each of them without the other. I'll use survival at day 21.
+par(mfrow = c(1,1))
+
+#Both temperature and average observed heterozygosity have somewhat high VIFs (VIF > 5). Run lm with one of the response variables with each of them without the other. I'll use length at day 21.
 #exclude Ho
-temp_sal_ar_lm <- lm(log10(percent_survival) ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt + avg_allelic_richness, data = data_merge)
+alltemp_lm <- lm(length ~ mean_temp + mean_sal + ar, data = len21_envr_gen)
+alltemp_resid <- alltemp_lm$residuals
+shapiro.test(alltemp_resid) #p <0.001, not normal
+hist(alltemp_resid) #left-skewed
+
 #exclude temperature
-sal_ho_ar_lm <- lm(log10(percent_survival) ~ Mean_Annual_Salinity_ppt + avg_allelic_richness + avg_observed_ho, data = data_merge)
+allho_lm <- lm(length ~ ho + mean_sal + ar, data = len21_envr_gen)
+allho_resid <- allho_lm$residuals
+shapiro.test(allho_resid) #p < 0.001, not normal
+hist(allho_resid) #left-skewed
+
+#there's one exceptionally low length from the TX group that is throwing off normality, I'm going to exclude it and try the models
+len21_envr_gen_sub <- len21_envr_gen %>% 
+  filter(length > 0.22)
+
+temp_lm <- lm(length ~ mean_temp + mean_sal + ar, data = len21_envr_gen_sub)
+temp_resid <- temp_lm$residuals
+shapiro.test(temp_resid) #p = 0.013, not normal, but closer
+
+#try squaring length to fix normality
+temp_lm <- lm(length^2 ~ mean_temp + mean_sal + ar, data = len21_envr_gen_sub)
+temp_resid <- temp_lm$residuals
+shapiro.test(temp_resid) #p = 0.3059, normal
+summary(temp_lm) #every term is significant
+
+#exclude temperature
+ho_lm <- lm(length^2 ~ ho + mean_sal + ar, data = len21_envr_gen_sub)
+ho_resid <- ho_lm$residuals
+shapiro.test(ho_resid)#p = 0.2327, normal
+leveneTest()
+summary(ho_lm) #ho does not have a significant p-value here
 
 #plot results
 par(mfrow=c(2,2))
-plot(temp_sal_ar_lm)
-plot(sal_ho_ar_lm)
-#both models have outliers
-
-temp_sal_ar_lm1 <- lm(mean_length_mm_21 ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt + avg_allelic_richness, data = data_merge)
-#exclude temperature
-sal_ho_ar_lm2 <- lm(mean_length_mm_21 ~ Mean_Annual_Salinity_ppt + avg_allelic_richness + avg_observed_ho, data = data_merge)
-
-plot(temp_sal_ar_lm1)
-plot(sal_ho_ar_lm2)
+plot(temp_lm)
+plot(ho_lm)
+#both models have no outliers and are decently homoscedastic. No real difference in how well each model fits the assumptions. Keep both terms.
 ```
-
-
 
 The next chunk includes multiple regressions testing the effects of several environmental and genetic parameters on length and survival in the hatchery/nursery. The explanatory variables are 1) mean annual temperature at the environment-of-origin (mean temp), 2) mean annual salinity at the environment of origin (mean sal), 3) mean observed heterozygosity in the parent oysters from each site (Ho), and 4) mean allelic richness (AR) in the parent oysters from each site.
 
-## Multiple regressions
-```{r mult_regressions}
-#multiple regression testing effect of mean annual temp, mean annual salinity, mean Ho, and mean AR on percent survival at day 21 (end of hatchery stage)
-surv21_mr <- lm(percent_survival ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt + avg_observed_ho + avg_allelic_richness, data = surv_length_envr_gen)
-surv21_resid <- surv21_mr$residuals
-shapiro.test(surv21_resid) #p = 0.018, not normal, try log10 transforming survival
+#Day 21 Length: Multiple regression and model selection
+```{r}
+len21_lm <- lm(length^2 ~ mean_temp + mean_sal + ho + ar, data = len21_envr_gen_sub)
+len21_resid <- len21_lm$residuals
+shapiro.test(len21_resid) #p = 0.4265, normal, p = 0.003 when including all data
+summary(len21_lm) #mean temp is borderline significant (p = 0.0594), AR is significant (p = 1.98e-05)
 
-logsurv21_mr <- lm(log10(percent_survival) ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt + avg_observed_ho + avg_allelic_richness, data = surv_length_envr_gen)
-logsurv21_resid <- logsurv21_mr$residuals
-shapiro.test(logsurv21_resid) #p = 0.075, data are normal
-plot(logsurv21_mr)
+#rerun without mean_sal and ho
+len21_lm2 <- lm(length^2 ~ mean_temp + ar, data = len21_envr_gen_sub)
+len21_resid2 <- len21_lm2$residuals
+shapiro.test(len21_resid2) #p = 0.1887, normal, p = 0.001 when including all data
+summary(len21_lm2) #temp is significant (p = 0.0104), as is AR (p = 1.34e-08)
 
-
-#multiple regression testing effect of mean annual temp, mean annual salinity, mean Ho, and mean AR on percent length at day 21 (end of hatchery stage)
-length21_mr <- lm(mean_length_mm_21 ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt + avg_observed_ho + avg_allelic_richness, data = surv_length_envr_gen)
-summary(length21_mr) 
-#model p-value = 0.89
-#model F-stat = 0.2551
-#Adjusted R squared = -0.74
-length21_tidy <- tidy(length21_mr) #save coefficients in table
-
-#multiple regression testing effect of mean annual temp, mean annual salinity, mean Ho, and mean AR on percent length at day 78 (end of nursery stage)
-length78_mr <- lm(mean_length_mm_78 ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt + avg_observed_ho + avg_allelic_richness, data = surv_length_envr_gen)
-summary(length78_mr) 
-#model p-value = 0.5623
-#model F-stat = 0.8865
-#adjusted R squared = -0.06934
-length78_tidy <- tidy(length78_mr) #save coefficients as table
 ```
+
+#Day 78 Length: Multiple regression and model selection
+```{r}
+#day 78 multiple regression
+len78_lm <- lm(length ~ mean_temp + mean_sal + ho + ar, data = len78_envr_gen)
+len78_resid <- len78_lm$residuals
+shapiro.test(len78_resid) #p = 0.007, not normal, but not horrible
+hist(len78_resid) #these data are right skewed
+#plot(len78_lm)
+Anova(len78_lm) #everything is significant. All have p values of < 2.2e-16, except for AR (p = 7.851e-10)
+
+#try squaring length values to improve normality
+sq_len78_lm <- lm(length^(1/2) ~ mean_temp + mean_sal + ho + ar, data = len78_envr_gen)
+sq_len78_resid <- sq_len78_lm$residuals
+shapiro.test(sq_len78_resid) #p < 2.2e-16, not normal, much worse than raw data
+```
+
+#Model selection
+```{r}
+len21_lm <- lm(shell_length_mm ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt + avg_allelic_richness + avg_observed_ho, data = len21_envr_gen)
+len21_resid <- len21_lm$residuals
+shapiro.test(len21_resid) #p < 0.01, not normal
+
+
+qlen21_lm <- lm((shell_length_mm)^4 ~ Mean_Annual_Temperature_C + Mean_Annual_Salinity_ppt + avg_allelic_richness + avg_observed_ho, data = len21_envr_gen)
+qlen21_resid <- qlen21_lm$residuals
+shapiro.test(qlen21_resid) #p = 0.48, normal
+plot(qlen21_lm)
+summary(qlen21_lm)
+
+#rerun without salinity and avg observed ho (insigificant)
+qlen21_lm <- lm((shell_length_mm)^4 ~ Mean_Annual_Temperature_C + avg_allelic_richness, data = len21_envr_gen)
+qlen21_resid <- qlen21_lm$residuals
+shapiro.test(qlen21_resid) #p = 0.06, normal
+plot(qlen21_lm)
+summary(qlen21_lm)
+```
+
 
 #adjust p-values
 ```{r}
@@ -215,10 +348,5 @@ model_p_adj <- p.adjust(model_p_values, method = "BH")
 
 model_p_adj
 ```
-
-Adjusted model p-values
-Survival at day 21: 0.18225 
-Length at day 21: 0.89000 
-Length at day 78: 0.84345
 
 

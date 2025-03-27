@@ -126,16 +126,16 @@ colnames(se_mm) <- c("site_name", "days", "se_length_mm")
 len.lm <- lm(shell_length_mm ~ day_an*site_name, data = no_small_df) #fit to lm
 len.lm.resid <- len.lm$residuals #save residuals
 shapiro.test(len.lm.resid) #use Shapiro Wilk test to assess normality. p <2.2e-16, data is not normal
+hist(len.lm.resid)
 
-#plot(len.lm)
+plot(len.lm)
 #normality is off, definite funnel in homoscedasticity plots, but KEL said to expect that what with the range of values in this data between ages.
 
 #log10 transformation lm
 loglen.lm <- lm(log10(shell_length_mm) ~ day_an*site_name, data = no_small_df)
 loglen.lm.resid <- loglen.lm$residuals
 shapiro.test(loglen.lm.resid)#p < 2.2e-16, no change in normality
-
-#plot(loglen.lm)
+plot(loglen.lm)
 # I'm planning to use the log10 transformed data for the analysis, transformations helped get rid of some of the funneling of homoscedasticity, normality is still off, but it's not much different from non-transformed data. No outliers in either model.
 
 #run ANOVA on log transformed length data
@@ -178,13 +178,11 @@ predep <- subset(no_small_df, day_an == "78")
 
 ##ANOVA for end of hatchery (day 78) shell lengths only
 ```{r}
-#Linera model and ANOVA for predep shell lengths
+#Linear model and ANOVA for predep shell lengths
 predep$site_name <- as.factor(predep$site_name)
 
 predep.lm <- lm(shell_length_mm ~ site_name, data = predep) #fit to lm
-
 predep.lm.resid <- predep.lm$residuals #save residuals
-
 shapiro.test(predep.lm.resid) #use Shapiro Wilk test to assess normality
 # p = 0.08176, fail to reject H0, data are normal
 
@@ -198,7 +196,7 @@ shapiro.test(predep.lm.resid) #use Shapiro Wilk test to assess normality
 #Tukey-Kramer labels only allow one - per comparison label, so I will replace the - with _
 predep$site_name <- gsub("-", "_", predep$site_name)
 
-predep.anova3 <- Anova(lm(shell_length_mm ~ site_name, data = predep))
+predep.anova3 <- Anova(lm(shell_length_mm ~ site_name, data = predep), type = 3)
 predep.anova3
 
 predep.anova <- aov(lm(shell_length_mm ~ site_name, data = predep))
@@ -262,5 +260,24 @@ predep_box <- ggplot(data = predep, aes(site_name, shell_length_mm))+
   theme(plot.subtitle = element_text(size = 9), axis.title.y = element_text(size = 11), axis.title.x = element_text(size = 11), panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 predep_box
+```
+
+```{r predep_dot}
+predep_dot <- ggplot(data = predep, aes(site_name, shell_length_mm, color = site_name))+
+  geom_point(size = 0.75)+
+    scale_color_manual(values = c("#3e4989", "#31688e", "#26828e","#440154","#482878", "#1f9e89", "#35b779", "#6ece58", "#fde725"))+
+    scale_x_discrete(name = "Broodstock Group", limits = c("W1_TX", "W2_LA","W3_FL", "S1_LOLA", "S2_DEBY", "W4_VA", "W5_NH", "W6_ME", "H1_LARMIX"), labels = c("W1-TX","W2-LA","W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME", "H1-LARMIX"))+
+  stat_summary(fun.data = mean_se, geom = "errorbar", width = 0.2, linewidth = .4, color = "black")+
+  stat_summary(fun = mean, geom = "point", size = .4, color = "black", pch = 4)+
+  ylim(c(0,32))+
+  ylab("Day 78 Shell Length (mm)")+
+  xlab("Broodstock Group")+
+  labs(subtitle = "p < 0.001")+
+  geom_text(data = predep_dt, size = 3, aes(label = predep_cld, y = 29, x = site_name), vjust = -0.5, show.legend = F, color = "black")+
+  ggtitle("Pre-Field-Deployment (Day 78) Shell Lengths")+
+  theme_bw()+
+  theme(plot.subtitle = element_text(size = 9), axis.title.y = element_text(size = 11), axis.title.x = element_text(size = 11), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "none")
+
+predep_dot
 ```
 
