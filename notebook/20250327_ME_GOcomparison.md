@@ -5,9 +5,9 @@
 tldr: I think that the q-value with fdr = 0.01 is probably the best "middle-ground" option. The bonferroni line is too conservative and only returns 117 SNPs. However, it's worth noting that the q-value with fdr = 0.05 returns SNPs in quantities most similar to OutFlank (each ~9k SNPs detected as outliers, with ~800 mapping in ShinyGO). So I think it's justifiable to use q-values with fdr = 0.05 too. 
 
 tldr quants: 
-1. Bonferroni = 1570 SNPs detected as significant outliers, 117 map in ShinyGO
-2. q-value with fdr = 0.05 = 5397 SNPs detected as significant outliers, 453 map in ShinyGO
-3. q-value with fdr = 0.01 = 9192 SNPs detected as significant outliers, 893 map in ShinyGO
+1. Bonferroni: 1570 SNPs detected as significant outliers, 117 map in ShinyGO
+2. q-value with fdr = 0.05:  5397 SNPs detected as significant outliers, 453 map in ShinyGO
+3. q-value with fdr = 0.01: 9192 SNPs detected as significant outliers, 893 map in ShinyGO
 
 ## Bonferroni results
 #### 1570 SNPs detected as significant outliers, 117 map in ShinyGO
