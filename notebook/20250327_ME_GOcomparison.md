@@ -48,7 +48,10 @@ tldr quants:
 <img width="636" alt="Screenshot 2025-03-27 at 11 23 03 PM" src="https://github.com/user-attachments/assets/e768d013-23e9-41a2-a99d-4cb342e86309" />
 
 ## q-value with fdr = 0.05 results
-####
+#### 11863 SNPs detected as significant outliers, map to 861 genes in ShinyGO
+
+<img width="946" alt="Screenshot 2025-03-27 at 11 25 59 PM" src="https://github.com/user-attachments/assets/5375f779-40b5-41e6-a404-747dc8a1368b" />
+<img width="580" alt="Screenshot 2025-03-27 at 11 26 12 PM" src="https://github.com/user-attachments/assets/5a879c50-85f3-439a-acf2-dce884c6d968" />
 
 # Comparing Fst with lfmm2 results
 
