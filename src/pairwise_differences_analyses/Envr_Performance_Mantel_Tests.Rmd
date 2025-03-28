@@ -4,13 +4,13 @@ output: pdf_document
 date: "2025-01-23"
 ---
 
-*** See below for partial Mantel code *** - Kiran
-
-This code analyzes the effect of pairwise environmental distance between conditions at the environments-of-origin on pairwise differences in survival and shell length for oysters in the hatchery and nursery at VIMS ABC.
+This code analyzes the effect of pairwise environmental distance between conditions at the environments-of-origin and pairwise genetic distance between parent populations on pairwise differences in survival and shell length for juvenile oysters raised in the hatchery and nursery at VIMS ABC.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+### Packages
 
 ```{r packages}
 library(tidyverse)
@@ -28,7 +28,8 @@ library(vegan) #for Mantel tests
 #setwd("~/Desktop/MVP-H2F-HatcheryField")
 ```
 
-#read in necessary files
+### Load data
+
 ```{r}
 
 ######## File paths - we should probably store these all in the pairwise analyses data folder
@@ -37,10 +38,10 @@ library(vegan) #for Mantel tests
 length <- read.csv(file.path("..", "..", "data", "performance_H2F", "latestage_length.csv"))
 
 #this file has summary statistics on temperature and salinity for the 8 groups 
-envr_summary <-  read.csv(file.path("..", "..", "data", "envr_of_origin", "envr_for_violinplots.csv"))
+envr_summary <-  read.csv(file.path("..", "..", "data", "envr_of_origin", "envr_summary_stats.csv"))
 
 #this file is a matrix of the environmental distances between each group
-envr_dist <- read.csv(file.path("..", "..", "data", "envr_of_origin", "envr_dist.csv"))
+envr_dist <- readRDS(file.path("..", "..", "data", "envr_of_origin", "envr_dist.rds"))
 
 #this file contains survival rate data for larval oysters up to day 21 post hatching
 survival <-  read.csv(file.path("..", "..", "data", "performance_H2F", "CViMVP_larvae_survival.csv"))
@@ -50,7 +51,10 @@ fst_mat <- readRDS(file.path("..", "..", "data", "pairwise_differences_analyses"
 
 ```
 
-Extract survival rates from survival data frame, and reorganize data frame
+### Data preparation
+
+#### Survival
+
 ```{r}
 summary(survival)
 
@@ -67,14 +71,14 @@ small <- grep("small", survival_day21$Group_Day_Label, ignore.case = TRUE)
 survival_day21_sub <- survival_day21[-small, ]
 
 #exclude "MVP" from group names to shorten them
-survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-DEBY"] <- "DEBY"
-survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"]  == "MVP-FL"] <- "FL"
-survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-JR"] <- "JR"
-survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-LA"] <- "LA"
-survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-LOLA"] <- "LOLA"
-survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-ME"] <- "ME"
-survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-NH"] <- "NH"
-survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-TX"] <- "TX"
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-DEBY"] <- "S2-DEBY"
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"]  == "MVP-FL"] <- "W3-FL"
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-JR"] <- "W4-VA"
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-LA"] <- "W2-LA"
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-LOLA"] <- "S1-LOLA"
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-ME"] <- "W6-ME"
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-NH"] <- "W5-NH"
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-TX"] <- "W1-TX"
 
 #select only tank naming and survival rate columns
 survival_filter <- survival_day21_sub[, c("Tank_naming", "Survival_rate_perc")]
@@ -83,14 +87,15 @@ survival_filter <- survival_day21_sub[, c("Tank_naming", "Survival_rate_perc")]
 colnames(survival_filter) <- c("site_name", "percent_survival")
 ```
 
-#length df organizing
+#### Length
+
 ```{r}
 #select columns with group, day, and shell length in mm
-length <- length[,c("group", "day_an", "shell_length_mm")]
+length <- length[,c("site_name", "day_an", "shell_length_mm")]
 
 #filter out LARMIX from group
 length_filter <- length %>% 
-  filter(group != "LARMIX")
+  filter(site_name != "H1-LARMIX")
 
 #keep only data from days 15-21
 length_21 <- length_filter %>% 
@@ -100,22 +105,19 @@ length_78 <- length_filter %>%
   filter(day_an == "78")
 
 #find mean shell lengths of each group on each day
-means_mm_21 <- aggregate(shell_length_mm ~ group, FUN = mean, data = length_21)
+means_mm_21 <- aggregate(shell_length_mm ~ site_name, FUN = mean, data = length_21)
 colnames(means_mm_21) <- c("site_name", "mean_length_mm_21")
 
-means_mm_78 <- aggregate(shell_length_mm ~ group, FUN = mean, data = length_78)
+means_mm_78 <- aggregate(shell_length_mm ~ site_name, FUN = mean, data = length_78)
 colnames(means_mm_78) <- c("site_name", "mean_length_mm_78")
 ```
 
-#remove extra columns from environmental data frame
+#### Environmental
 ```{r}
 #remove extra site label and standard deviations from envr_summary
-envr <- envr_summary[,-c(2,6,10)]
+envr <- envr_summary %>% select(-X)
 
 summary(envr)
-
-#rename cols
-colnames(envr) <- c("site_name", "Mean_Annual_Temperature_C", "Mean_max_temperature_C", "Mean_min_temperature_C", "Mean_Annual_Salinity_ppt", "Mean_max_Salinity_ppt", "Mean_min_Salinity_ppt")
 
 #add sampling site latitudes. Note that these latitudes ARE NOT the same as the latitudes of where environmental data came from. These latitudes, while similar, were often slightly different, and I am using our actual sampling site latitudes. These latitudes are the same ones as those in table 1 in my thesis.
 envr$lat <- c(37.249107, 37.98030, 37.1501163, 28.096000, 29.239925, 30.440030, 43.053746, 44.01330)
@@ -134,14 +136,14 @@ write.csv(surv_length_envr, file.path("..", "..", "data", "parent_effects_H2F", 
 Make distance matrices for difference in mean length across groups at days 21 and 78 and difference in survival across groups at day 21
 ```{r}
 #save vector of row and column names
-rownames <- c("DEBY", "LOLA", "JR", "TX", "LA", "FL", "NH", "ME")
-colnames <- c("DEBY", "LOLA", "JR", "TX", "LA", "FL", "NH", "ME")
+population_order <- c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME")
 
-means_mm_21 <- subset(means_mm_21, select = -c(site_name))
+# if you pull things out of surv_length_envr, they are already in the right order
+day21_len <- surv_length_envr %>% select(mean_length_mm_21)
 
-day21_len_dist <- as.matrix(dist(means_mm_21$mean_length_mm_21))
-rownames(day21_len_dist) <- rownames
-colnames(day21_len_dist) <- colnames
+day21_len_dist <- as.matrix(dist(day21_len$mean_length_mm_21))
+rownames(day21_len_dist) <- population_order
+colnames(day21_len_dist) <- population_order
 
 day78_len_dist <- as.matrix(dist(means_mm_78$mean_length_mm_78))
 rownames(day78_len_dist) <- rownames
@@ -151,9 +153,6 @@ day21_surv_dist <- as.matrix(dist(survival_filter$percent_survival))
 rownames(day21_surv_dist) <- rownames
 colnames(day21_surv_dist) <- colnames
 
-#remove site_name column from envr_dist, and make it a matrix
-envr_dist <- subset(envr_dist, select = -c(X))
-envr_dist_mat <- as.matrix(envr_dist)
 ```
 
 I will run Mantel tests comparing days 21 and 78 length distance and day 21 survival distance to environmental distance. The goal is to see if more environmentally distant pairs of groups also have greater differences in length and survival. 

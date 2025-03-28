@@ -118,7 +118,7 @@ envr.df.dist <- subset(envr.df, select = -c(site_name))
 envr.dist.mat <- as.matrix(dist(envr.df.dist))
 
 #save envr distance matrix as csv
-write.csv(envr.dist.mat, "../../data/envr_of_origin/envr_dist.csv")
+saveRDS(envr.dist.mat, "../../data/envr_of_origin/envr_dist.rds")
 
 #View distance matrix
 View(envr.dist.mat)
