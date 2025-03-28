@@ -17,8 +17,8 @@ tldr: I think that the q-value with fdr = 0.01 is probably the best "middle-grou
 
 tldr quants: 
 1. Bonferroni: 1570 SNPs detected as significant outliers, 117 map in ShinyGO
-2. q-value with fdr = 0.05:  5397 SNPs detected as significant outliers, 453 map in ShinyGO
-3. q-value with fdr = 0.01: 9192 SNPs detected as significant outliers, 893 map in ShinyGO
+2. q-value with fdr = 0.01:  5397 SNPs detected as significant outliers, 453 map in ShinyGO
+3. q-value with fdr = 0.05: 9192 SNPs detected as significant outliers, 893 map in ShinyGO
 
 ## Bonferroni results
 #### 1570 SNPs detected as significant outliers, 117 map in ShinyGO
