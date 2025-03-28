@@ -1,5 +1,8 @@
 # Comparing ShinyGO analyses for genes detected as outliers in lfmm2 and outflank
 
+## Complete tldr
+![Screenshot 2025-03-28 at 11 59 39 AM](https://github.com/user-attachments/assets/b7bb48ae-126d-4dc9-891f-32b5a092a914)
+
 ## Selecting genes from lfmm2: bonferroni or q-values?
 #### Bonferroni line is more conservative, q-values fdr threshold can be set at 0.01 (middle ground) or 0.05 (most relaxed)
 tldr: I think that the q-value with fdr = 0.01 is probably the best "middle-ground" option. The bonferroni line is too conservative and only returns 117 SNPs. However, it's worth noting that the q-value with fdr = 0.05 returns SNPs in quantities most similar to OutFlank (each ~9k SNPs detected as outliers, with ~800 mapping in ShinyGO). So I think it's justifiable to use q-values with fdr = 0.05 too. 
