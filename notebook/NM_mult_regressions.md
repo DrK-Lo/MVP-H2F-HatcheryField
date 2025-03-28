@@ -20,11 +20,11 @@
 - I ran the model with survival as well, but I don't think it's worth including, too few data points (n=8), many outliers, not homoscedastic.
   
 ## Results
-**Day 21 - End of Hatchery Stage**
+#### Day 21 - End of Hatchery Stage
 - I squared length at day 21 (excluding the one low length point) to attain normality
 - All predictors were significant
 - Model stats: Adj. R squared = 0.1075, F = 15.87, p = 1.035e-14
-**Day 78: End of Nursery Stage**
+#### Day 78: End of Nursery Stage
 - No transformations of length would make model residuals normal at this time point
   - I tried log10, square root, cube root, squaring, cubing
   - Shapiro Wilk p-value was 0.025 without the transformations and orders of magnitude lower with them
