@@ -39,7 +39,8 @@ outliers_only <- outflank_output %>% # starts at 154608 rows
   rename(gene = cust_gene_id)
 
 # generate list for ShinyGO
-# paste(outliers_only$gene, collapse = " ")
+shinygo_genes <- paste(outliers_only$gene, collapse = " ")
+shinygo_genes
 length(unique(outliers_only$gene)) # this is 862 unique genes
 
 ```
@@ -173,7 +174,7 @@ ggplot_manhattan <- ggplot(merged_manhattan, aes(x = Cumulative_Position, y = FS
   labs(x = "Chromosome", y = "FST") +
   theme_bw() +
   theme(
-    axis.text.x = element_text(angle = 45, hjust = 1),
+    axis.text.x = element_text(angle = 45, hjust = 1, color = "black"),
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(), 
@@ -184,7 +185,7 @@ ggplot_manhattan <- ggplot(merged_manhattan, aes(x = Cumulative_Position, y = FS
 
 # save plot
 ggsave(file.path("..", "..", "figures", "putative_selection", "fst_manhattan_plot.jpg"), ggplot_manhattan, 
-       width = 17, height = 6, dpi = 300)
+       width = 15, height = 6, dpi = 300)
 
 ggplot_manhattan
 
@@ -216,8 +217,9 @@ lollipop_plot <- ggplot(enriched_fully_joined, aes(x = `Fold Enrichment`,
   scale_size_continuous(range = c(2, 5)) +  # adjust circle size range
   scale_x_continuous(expand = c(0, 0), limits = c(0, max(enriched_fully_joined$`Fold Enrichment`) * 1.1)) +  # set limits of the x scale to adjust to the length of the segments
   theme_bw() +
-  theme( # remove grid lines
-    panel.grid.major.x = element_blank(), 
+  theme( 
+    axis.text = element_text(color = "black"),  # make axis text black
+    panel.grid.major.x = element_blank(), # remove grid lines
     panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(), 
     panel.grid.minor.y = element_blank(), 
@@ -231,7 +233,7 @@ lollipop_plot <- ggplot(enriched_fully_joined, aes(x = `Fold Enrichment`,
 
 # save figure
 ggsave(file.path("..", "..", "figures", "putative_selection", "GO_lollipop_plot.jpg"), 
-       lollipop_plot, width = 12, height = 6, dpi = 300)
+       lollipop_plot, width = 10, height = 6, dpi = 300)
 
 lollipop_plot
 

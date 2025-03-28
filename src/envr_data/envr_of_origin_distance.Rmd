@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 #set working directory to Rmd file location
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+
 ```
 
 
@@ -31,26 +32,42 @@ All the data for each site are in separate csv files. There is one temp and one 
 
 ## Combining temp and salinity csvs respectively from each site
 ```{r}
-#set working directory to temperature files location
-setwd("../../data/envr_of_origin/Temp")
-# read in all temp files as csvs and combine into one file named "temp"
-temp <- list.files(path=".") %>% 
-  lapply(read_csv) %>% 
-  bind_rows
+
+# get all files that end in ".csv" from the Temp folder (these are all our temperature files)
+file_paths <- list.files(path = file.path("..", "..", "data", "envr_of_origin", "Temp"), 
+                         pattern = "\\.csv$", full.names = TRUE)
+
+# initialize an empty list to store data frames
+temp_list <- list()
+
+# loop through file paths and read the CSV files
+for (file in file_paths) {
+  temp_list[[file]] <- read_csv(file)
+}
+
+# bind all the data frames in the list into one
+temp <- bind_rows(temp_list)
 
 #View temp file
 View(temp)
-#set working directory to Salinity folder
-setwd("../Salinity")
-# read in all salinity files as csvs and combine into one file named "sal"
-sal <- list.files(path=".") %>% 
-  lapply(read_csv) %>% 
-  bind_rows
 
+# get all files that end in ".csv" from the Salinity folder (these are all our salinity files)
+file_paths <- list.files(path = file.path("..", "..", "data", "envr_of_origin", "Salinity"), 
+                         pattern = "\\.csv$", full.names = TRUE)
+
+# initialize an empty list to store data frames
+sal_list <- list()
+
+# loop through file paths and read the CSV files
+for (file in file_paths) {
+  sal_list[[file]] <- read_csv(file)
+}
+
+# bind all the data frames in the list into one
+sal <- bind_rows(sal_list)
+
+#View temp file
 View(sal)
-
-#set working directory to location where code is saved
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 #remove extra column at the end of each data frame
 ncol(temp) #ncol = 15
@@ -67,7 +84,7 @@ envr <-temp %>%
           left_join(sal, by = "site_name")
 
 #remove rows unnecessary for distance analysis and save into an object called "envr_sub"
-envr_sub <- subset(envr, select = -c(download_date.x, firstyear.x, finalyear.x, source_description.x, lat.x, lon.x, Temperature_n, Temperature_years, collection_type.x, download_date.y, source_description.y, lat.y, lon.y, firstyear.y, finalyear.y, Salinity_n, Salinity_years, collection_type.y))
+envr_sub <- subset(envr, select = -c(download_date.x, firstyear.x, finalyear.x, source_description.x, lat.x, lon.x, Temperature_n, Temperature_years, collection_type.x, download_date.y, source_description.y, lat.y, lon.y, firstyear.y, finalyear.y, Salinity_n, Salinity_years, collection_type.y, Mean_Annual_Temperature_C, Temperature_st_dev, Mean_Annual_Salinity_ppt, Salinity_st_dev))
 
 # make envr_sub into a data frame and save as "envr_df"
 envr.df <- data.frame(envr_sub)
