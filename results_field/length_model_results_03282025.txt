@@ -1,0 +1,30 @@
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+Response: length
+                  Chisq Df Pr(>Chisq)    
+(Intercept)    1341.066  1  < 2.2e-16 ***
+bag_site         10.653  1   0.001099 ** 
+pop             148.545  7  < 2.2e-16 ***
+t              1408.390  2  < 2.2e-16 ***
+bag_site:pop     50.512  7  1.146e-08 ***
+bag_site:t      123.958  2  < 2.2e-16 ***
+pop:t           520.844 14  < 2.2e-16 ***
+bag_site:pop:t  128.830 14  < 2.2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Anova Table (Type II tests)
+
+Response: length
+          Sum Sq   Df F value    Pr(>F)    
+popsite   185800   15  80.785 < 2.2e-16 ***
+Residuals 198100 1292                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+$popsite
+LOLA_Lewisetta   LA_Lewisetta DEBY_Lewisetta   TX_Lewisetta   VA_Lewisetta   FL_Lewisetta DEBY_YorkRiver 
+           "a"            "a"            "b"           "bc"           "cd"           "cd"           "de" 
+LOLA_YorkRiver   FL_YorkRiver   VA_YorkRiver   ME_Lewisetta   LA_YorkRiver   TX_YorkRiver   ME_YorkRiver 
+         "def"           "ef"            "f"           "fg"           "gh"           "gh"            "h" 
+  NH_Lewisetta   NH_YorkRiver 
+           "h"            "h" 
+

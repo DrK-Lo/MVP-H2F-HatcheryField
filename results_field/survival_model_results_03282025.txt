@@ -1,0 +1,53 @@
+Anova Table (Type III tests)
+
+Response: surv
+             Sum Sq  Df  F value    Pr(>F)    
+(Intercept)  3.7800   1 574.0170 < 2.2e-16 ***
+bag_site     0.0212   1   3.2142  0.075911 .  
+pop          0.8670   7  18.8090 5.188e-16 ***
+t            0.1321   2  10.0292  0.000104 ***
+bag_site:pop 0.4349   7   9.4352 5.083e-09 ***
+bag_site:t   0.5116   2  38.8468 2.512e-13 ***
+pop:t        0.3577  14   3.8803 2.690e-05 ***
+Residuals    0.6849 104                       
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Anova Table (Type III tests)
+
+Response: surv
+              Sum Sq Df F value    Pr(>F)    
+(Intercept)  1.75845  1 427.814 < 2.2e-16 ***
+bag_site     0.29823  1  72.558 1.666e-09 ***
+pop          1.54413  7  53.667 3.118e-15 ***
+bag_site:pop 0.33996  7  11.816 4.016e-07 ***
+Residuals    0.12331 30                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Anova Table (Type III tests)
+
+Response: surv
+                 Sum Sq Df  F value    Pr(>F)    
+(Intercept)     0.75326  1 183.2599 2.592e-14 ***
+bag_site        0.01769  1   4.3046   0.04668 *  
+oldpop          1.54413  7  53.6673 3.118e-15 ***
+bag_site:oldpop 0.33996  7  11.8155 4.016e-07 ***
+Residuals       0.12331 30                       
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+               letters        popsite
+Lewisetta:LA         a   Lewisetta:LA
+Lewisetta:LOLA      ab Lewisetta:LOLA
+Lewisetta:TX        ab   Lewisetta:TX
+Lewisetta:FL       abc   Lewisetta:FL
+Lewisetta:DEBY     bcd Lewisetta:DEBY
+YorkRiver:FL        cd   YorkRiver:FL
+Lewisetta:VA        cd   Lewisetta:VA
+YorkRiver:DEBY      de YorkRiver:DEBY
+YorkRiver:VA        de   YorkRiver:VA
+YorkRiver:TX        de   YorkRiver:TX
+YorkRiver:LOLA      ef YorkRiver:LOLA
+YorkRiver:LA        ef   YorkRiver:LA
+Lewisetta:ME        fg   Lewisetta:ME
+Lewisetta:NH        fg   Lewisetta:NH
+YorkRiver:NH         g   YorkRiver:NH
+YorkRiver:ME         g   YorkRiver:ME
