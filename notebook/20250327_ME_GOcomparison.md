@@ -39,6 +39,17 @@ tldr quants:
 ![compare_bonferroni_q_value05](https://github.com/user-attachments/assets/e1127502-af0f-4ede-bb76-89350443197e)
 
 
+# OutFLANK (Fst) results
+
+## q-value with fdr = 0.01 results
+#### 6817 SNPs detected as significant outliers, map to 315 genes in ShinyGO
+
+<img width="968" alt="Screenshot 2025-03-27 at 11 22 30 PM" src="https://github.com/user-attachments/assets/97b73b2a-b7d2-4686-a9bd-871e2a9bbb1c" />
+<img width="636" alt="Screenshot 2025-03-27 at 11 23 03 PM" src="https://github.com/user-attachments/assets/e768d013-23e9-41a2-a99d-4cb342e86309" />
+
+## q-value with fdr = 0.05 results
+####
+
 # Comparing Fst with lfmm2 results
 
 ## Fst vs Bonferroni SNPs
