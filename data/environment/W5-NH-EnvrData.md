@@ -251,7 +251,7 @@ salplot <- ggplot(W5_NH, aes(x = datetime)) +
 salplot
 ```
 
-![](NH1-EnvrData_files/figure-gfm/salinity-plot-1.png)<!-- -->
+![](W5-NH-EnvrData_files/figure-gfm/salinity-plot-1.png)<!-- -->
 
 ``` r
 tempplot <- ggplot(W5_NH, aes(x = datetime)) +
@@ -265,7 +265,7 @@ tempplot <- ggplot(W5_NH, aes(x = datetime)) +
 tempplot
 ```
 
-![](NH1-EnvrData_files/figure-gfm/temperature-plot-1.png)<!-- -->
+![](W5-NH-EnvrData_files/figure-gfm/temperature-plot-1.png)<!-- -->
 
 ### We need to calculate the mean, maximum, and minimum values for salinity and temperature per month and year. First make two data frames to contain each of the annual and monthly averages.
 
@@ -393,7 +393,7 @@ timeplot <- ggplot(W5_NH_envrmonth, aes(x = year)) +
 timeplot
 ```
 
-![](NH1-EnvrData_files/figure-gfm/timeplot-1.png)<!-- -->
+![](W5-NH-EnvrData_files/figure-gfm/timeplot-1.png)<!-- -->
 
 # Calculate days above and below thresholds and plot
 
@@ -451,7 +451,7 @@ ggplot(low_sal_stress_count, aes(x = factor(month), y = low_sal_stress, fill = f
   theme_minimal()
 ```
 
-![](NH1-EnvrData_files/figure-gfm/low-sal-stress-1.png)<!-- -->
+![](W5-NH-EnvrData_files/figure-gfm/low-sal-stress-1.png)<!-- -->
 
 ``` r
 # Merge with the original dataset, filling missing values with 0 for low_sal_stress
@@ -471,7 +471,7 @@ ggplot(low_sal_complete_data, aes(x = factor(month), y = low_sal_stress)) +
   theme_minimal()
 ```
 
-![](NH1-EnvrData_files/figure-gfm/low-sal-stress-2.png)<!-- -->
+![](W5-NH-EnvrData_files/figure-gfm/low-sal-stress-2.png)<!-- -->
 
 ``` r
 # points
@@ -484,7 +484,7 @@ ggplot(low_sal_complete_data, aes(x = factor(month), y = low_sal_stress)) +
   theme_minimal()
 ```
 
-![](NH1-EnvrData_files/figure-gfm/low-sal-stress-3.png)<!-- -->
+![](W5-NH-EnvrData_files/figure-gfm/low-sal-stress-3.png)<!-- -->
 
 # now calculate for high salinity stress
 
@@ -555,7 +555,7 @@ ggplot(high_temp_stress_count, aes(x = factor(month), y = high_temp_stress, fill
   theme_minimal()
 ```
 
-![](NH1-EnvrData_files/figure-gfm/high-temp-stress-1.png)<!-- -->
+![](W5-NH-EnvrData_files/figure-gfm/high-temp-stress-1.png)<!-- -->
 
 ``` r
 high_temp_complete_data <- complete_year_month %>%
@@ -574,7 +574,7 @@ ggplot(high_temp_complete_data, aes(x = factor(month), y = high_temp_stress)) +
   theme_minimal()
 ```
 
-![](NH1-EnvrData_files/figure-gfm/high-temp-stress-2.png)<!-- -->
+![](W5-NH-EnvrData_files/figure-gfm/high-temp-stress-2.png)<!-- -->
 
 ``` r
 # points
@@ -587,7 +587,7 @@ ggplot(high_temp_complete_data, aes(x = factor(month), y = high_temp_stress)) +
   theme_minimal()
 ```
 
-![](NH1-EnvrData_files/figure-gfm/high-temp-stress-3.png)<!-- -->
+![](W5-NH-EnvrData_files/figure-gfm/high-temp-stress-3.png)<!-- -->
 
 ### We can now calculate a list of variables that we will have collected for all sites. This will allow us to compare sites easily. We will calculate the number of observations from each site, the mean annual, maximum annual, and minimum annual value for all variables.
 
@@ -627,6 +627,8 @@ Temperature_n <- nrow(W5_NH)
 Temperature_years <- nrow(W5_NH_envryear)
 high_temp_stress_days <- sum(high_temp_stress_count$high_temp_stress)
 frac_high_temp_stress_days <- high_temp_stress_days/nrow(W5_NH_envrday)
+temp_quantile_10 <- quantile(W5_NH$temp, 0.1)
+temp_quantile_90 <- quantile(W5_NH$temp, 0.9)
 
 Mean_Monthly_Temperature_C <- W5_NH_envrmonth %>%
   filter(!is.na(month)) %>% 
@@ -644,22 +646,22 @@ Mean_max_Monthly_Temperature_C <- W5_NH_envrmonth %>%
   summarise(Mean_max_Temperature = mean(max_temp))
 
 #Create a data frame to store the temperature results
-W5_NH_temp <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Temperature_C, Mean_max_temperature_C, Mean_min_temperature_C, Temperature_st_dev, high_temp_stress_days, frac_high_temp_stress_days, Temperature_n, Temperature_years, collection_type)
+W5_NH_temp <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Temperature_C, Mean_max_temperature_C, Mean_min_temperature_C, temp_quantile_10, temp_quantile_90, Temperature_st_dev, high_temp_stress_days, frac_high_temp_stress_days, Temperature_n, Temperature_years, collection_type)
 print(W5_NH_temp)
 ```
 
-    ##      site_name download_date
-    ## [1,] "W5_NH"   "07-11-2023" 
-    ##      source_description                                            lat      
-    ## [1,] "NERR Centralized Data. Great Bay - Squamscott River GRBSQWQ" "43.0524"
-    ##      lon         firstyear finalyear Mean_Annual_Temperature_C
-    ## [1,] "-70.91181" "1997"    "2022"    "16.7171312400548"       
-    ##      Mean_max_temperature_C Mean_min_temperature_C Temperature_st_dev
-    ## [1,] "27.8807692307692"     "2.31923076923077"     "6.44961550527541"
-    ##      high_temp_stress_days frac_high_temp_stress_days Temperature_n
-    ## [1,] "50"                  "0.0089126559714795"       "432368"     
-    ##      Temperature_years collection_type
-    ## [1,] "26"              "continuous"
+    ##     site_name download_date
+    ## 10% "W5_NH"   "07-11-2023" 
+    ##     source_description                                            lat      
+    ## 10% "NERR Centralized Data. Great Bay - Squamscott River GRBSQWQ" "43.0524"
+    ##     lon         firstyear finalyear Mean_Annual_Temperature_C
+    ## 10% "-70.91181" "1997"    "2022"    "16.7171312400548"       
+    ##     Mean_max_temperature_C Mean_min_temperature_C temp_quantile_10
+    ## 10% "27.8807692307692"     "2.31923076923077"     "7.2"           
+    ##     temp_quantile_90 Temperature_st_dev high_temp_stress_days
+    ## 10% "24.2"           "6.44961550527541" "50"                 
+    ##     frac_high_temp_stress_days Temperature_n Temperature_years collection_type
+    ## 10% "0.0089126559714795"       "432368"      "26"              "continuous"
 
 ``` r
 W5_NH_monthly_temp <- cbind(Mean_Monthly_Temperature_C, Mean_min_Monthly_Temperature_C, Mean_max_Monthly_Temperature_C)
@@ -702,6 +704,8 @@ high_sal_stress_days <- sum(high_sal_stress_count$high_sal_stress)
 low_sal_stress_days <- sum(low_sal_stress_count$low_sal_stress)
 frac_high_sal_stress_days <- high_sal_stress_days/nrow(W5_NH_envrday)
 frac_low_sal_stress_days <- low_sal_stress_days/nrow(W5_NH_envrday)
+salinity_quantile_10 <- quantile(W5_NH$salinity, 0.1)
+salinity_quantile_90 <- quantile(W5_NH$salinity, 0.9)
 
 Mean_Monthly_Salinity <- W5_NH_envrmonth %>%
   filter(!is.na(month)) %>%
@@ -719,22 +723,24 @@ Max_Monthly_Salinity <- W5_NH_envrmonth %>%
   summarise(Max_Salinity = mean(max_salinity))
 
 #Create a data frame to store the temperature results
-W5_NH_salinity <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Salinity_ppt, Mean_max_Salinity_ppt, Mean_min_Salinity_ppt, high_sal_stress_days,low_sal_stress_days, frac_high_sal_stress_days, frac_low_sal_stress_days, Salinity_st_dev, Salinity_n, Salinity_years, collection_type)
+W5_NH_salinity <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Salinity_ppt, Mean_max_Salinity_ppt, Mean_min_Salinity_ppt, salinity_quantile_10, salinity_quantile_90, high_sal_stress_days,low_sal_stress_days, frac_high_sal_stress_days, frac_low_sal_stress_days, Salinity_st_dev, Salinity_n, Salinity_years, collection_type)
 print(W5_NH_salinity)
 ```
 
-    ##      site_name download_date
-    ## [1,] "W5_NH"   "07-11-2023" 
-    ##      source_description                                            lat      
-    ## [1,] "NERR Centralized Data. Great Bay - Squamscott River GRBSQWQ" "43.0524"
-    ##      lon         firstyear finalyear Mean_Annual_Salinity_ppt
-    ## [1,] "-70.91181" "1997"    "2022"    "18.6413680013322"      
-    ##      Mean_max_Salinity_ppt Mean_min_Salinity_ppt high_sal_stress_days
-    ## [1,] "30.2923076923077"    "0.284615384615385"   "0"                 
-    ##      low_sal_stress_days frac_high_sal_stress_days frac_low_sal_stress_days
-    ## [1,] "3383"              "0"                       "0.603030303030303"     
-    ##      Salinity_st_dev    Salinity_n Salinity_years collection_type
-    ## [1,] "8.32093836689361" "432368"   "26"           "continuous"
+    ##     site_name download_date
+    ## 10% "W5_NH"   "07-11-2023" 
+    ##     source_description                                            lat      
+    ## 10% "NERR Centralized Data. Great Bay - Squamscott River GRBSQWQ" "43.0524"
+    ##     lon         firstyear finalyear Mean_Annual_Salinity_ppt
+    ## 10% "-70.91181" "1997"    "2022"    "18.6413680013322"      
+    ##     Mean_max_Salinity_ppt Mean_min_Salinity_ppt salinity_quantile_10
+    ## 10% "30.2923076923077"    "0.284615384615385"   "5.9"               
+    ##     salinity_quantile_90 high_sal_stress_days low_sal_stress_days
+    ## 10% "28.6"               "0"                  "3383"             
+    ##     frac_high_sal_stress_days frac_low_sal_stress_days Salinity_st_dev   
+    ## 10% "0"                       "0.603030303030303"      "8.32093836689361"
+    ##     Salinity_n Salinity_years collection_type
+    ## 10% "432368"   "26"           "continuous"
 
 ``` r
 W5_NH_monthly_sal <- cbind(Mean_Monthly_Salinity, Min_Monthly_Salinity, Max_Monthly_Salinity)

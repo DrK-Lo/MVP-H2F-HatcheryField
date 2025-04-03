@@ -44,7 +44,7 @@ library("ggplot2")
 
 ``` r
 #Data was downloaded on 05/10/2024 for 2023 data, 2/26/2025 for 2024 data
-#Source - Dr. William "Willy" Reay of VIMS shared the file with Jess Small, KEL, ME, and NM via email. 
+#Source - Dr. William "Willy" Reay of VIMS shared the file with Jess Small, KEL, MGE, and NM via email. 
 #The site was sampled continuously every 15 min from May 2023 to April 2024 and for the entire 2024 year. 
 
 #Create text strings with metadata information that we want to include in the final data frame. 
@@ -617,6 +617,8 @@ Temperature_n <- nrow(LEW)
 Temperature_years <- nrow(LEW_envryear)
 high_temp_stress_days <- sum(high_temp_stress_count$high_temp_stress)
 frac_high_temp_stress_days <- high_temp_stress_days/nrow(LEW_envrday)
+temp_quantile_10 <- quantile(LEW$temp, 0.1)
+temp_quantile_90 <- quantile(LEW$temp, 0.9)
 
 Mean_Monthly_Temperature_C <- LEW_envrmonth %>%
   filter(!is.na(month)) %>% 
@@ -634,18 +636,20 @@ Mean_max_Monthly_Temperature_C <- LEW_envrmonth %>%
   summarise(Mean_max_Temperature = mean(max_temp))
 
 #Create a data frame to store the temperature results
-LEW_temp <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Temperature_C, Mean_max_temperature_C, Mean_min_temperature_C, Temperature_st_dev, high_temp_stress_days, frac_high_temp_stress_days, Temperature_n, Temperature_years, collection_type)
+LEW_temp <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Temperature_C, Mean_max_temperature_C, Mean_min_temperature_C, temp_quantile_10, temp_quantile_90, Temperature_st_dev, high_temp_stress_days, frac_high_temp_stress_days, Temperature_n, Temperature_years, collection_type)
 print(LEW_temp)
 ```
 
-    ##      site_name download_date source_description    lat       lon       
-    ## [1,] "LEW"     "02-26-2025"  "VIMS - William Reay" "37.9803" "-76.4619"
-    ##      firstyear finalyear Mean_Annual_Temperature_C Mean_max_temperature_C
-    ## [1,] "2023"    "2024"    "18.4378261973377"        "31.35"               
-    ##      Mean_min_temperature_C Temperature_st_dev high_temp_stress_days
-    ## [1,] "3.4065"               "7.85765319567894" "118"                
-    ##      frac_high_temp_stress_days Temperature_n Temperature_years collection_type
-    ## [1,] "0.19376026272578"         "58296"       "2"               "continuous"
+    ##     site_name download_date source_description    lat       lon       
+    ## 10% "LEW"     "02-26-2025"  "VIMS - William Reay" "37.9803" "-76.4619"
+    ##     firstyear finalyear Mean_Annual_Temperature_C Mean_max_temperature_C
+    ## 10% "2023"    "2024"    "18.4378261973377"        "31.35"               
+    ##     Mean_min_temperature_C temp_quantile_10 temp_quantile_90 Temperature_st_dev
+    ## 10% "3.4065"               "7.2"            "28.2"           "7.85765319567894"
+    ##     high_temp_stress_days frac_high_temp_stress_days Temperature_n
+    ## 10% "118"                 "0.19376026272578"         "58296"      
+    ##     Temperature_years collection_type
+    ## 10% "2"               "continuous"
 
 ``` r
 LEW_monthly_temp <- cbind(Mean_Monthly_Temperature_C, Mean_min_Monthly_Temperature_C, Mean_max_Monthly_Temperature_C)
@@ -690,6 +694,8 @@ high_sal_stress_days <- sum(high_sal_stress_count$high_sal_stress)
 low_sal_stress_days <- sum(low_sal_stress_count$low_sal_stress)
 frac_high_sal_stress_days <- high_sal_stress_days/nrow(LEW_envrday)
 frac_low_sal_stress_days <- low_sal_stress_days/nrow(LEW_envrday)
+salinity_quantile_10 <- quantile(LEW$salinity, 0.1)
+salinity_quantile_90 <- quantile(LEW$salinity, 0.9)
 
 Mean_Monthly_Salinity <- LEW_envrmonth %>%
   filter(!is.na(month)) %>%
@@ -707,20 +713,22 @@ Max_Monthly_Salinity <- LEW_envrmonth %>%
   summarise(Max_Salinity = mean(max_salinity))
 
 #Create a data frame to store the temperature results
-LEW_salinity <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Salinity_ppt, Mean_max_Salinity_ppt, Mean_min_Salinity_ppt, high_sal_stress_days,low_sal_stress_days, frac_high_sal_stress_days, frac_low_sal_stress_days, Salinity_st_dev, Salinity_n, Salinity_years, collection_type)
+LEW_salinity <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Salinity_ppt, Mean_max_Salinity_ppt, Mean_min_Salinity_ppt, salinity_quantile_10, salinity_quantile_90, high_sal_stress_days,low_sal_stress_days, frac_high_sal_stress_days, frac_low_sal_stress_days, Salinity_st_dev, Salinity_n, Salinity_years, collection_type)
 print(LEW_salinity)
 ```
 
-    ##      site_name download_date source_description    lat       lon       
-    ## [1,] "LEW"     "02-26-2025"  "VIMS - William Reay" "37.9803" "-76.4619"
-    ##      firstyear finalyear Mean_Annual_Salinity_ppt Mean_max_Salinity_ppt
-    ## [1,] "2023"    "2024"    "13.1104540620283"       "17.8"               
-    ##      Mean_min_Salinity_ppt high_sal_stress_days low_sal_stress_days
-    ## [1,] "9.7"                 "0"                  "239"              
-    ##      frac_high_sal_stress_days frac_low_sal_stress_days Salinity_st_dev   
-    ## [1,] "0"                       "0.392446633825944"      "2.86712352330663"
-    ##      Salinity_n Salinity_years collection_type
-    ## [1,] "58296"    "2"            "continuous"
+    ##     site_name download_date source_description    lat       lon       
+    ## 10% "LEW"     "02-26-2025"  "VIMS - William Reay" "37.9803" "-76.4619"
+    ##     firstyear finalyear Mean_Annual_Salinity_ppt Mean_max_Salinity_ppt
+    ## 10% "2023"    "2024"    "13.1104540620283"       "17.8"               
+    ##     Mean_min_Salinity_ppt salinity_quantile_10 salinity_quantile_90
+    ## 10% "9.7"                 "8.7"                "16.6"              
+    ##     high_sal_stress_days low_sal_stress_days frac_high_sal_stress_days
+    ## 10% "0"                  "239"               "0"                      
+    ##     frac_low_sal_stress_days Salinity_st_dev    Salinity_n Salinity_years
+    ## 10% "0.392446633825944"      "2.86712352330663" "58296"    "2"           
+    ##     collection_type
+    ## 10% "continuous"
 
 ``` r
 LEW_monthly_sal <- cbind(Mean_Monthly_Salinity, Min_Monthly_Salinity, Max_Monthly_Salinity)

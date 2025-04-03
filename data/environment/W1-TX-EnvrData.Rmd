@@ -90,7 +90,7 @@ finalyear <- 2021
 
 Filter any of the variables that have data points outside of normal range. We will use 0-40 as the accepted range for salinity (ppt) and temperature (C) values. Note, in the summer, salinity values can sometimes exceed 40. Check to see if there are values above 40. In this case, adjust the range or notify someone that the site has particularly high salinity values. 
 ```{r}
-#Filter the data between the values of 0 and 40 for both salinity and temperature. 
+#Filter the data between the values of 0 and 44 for both salinity (this is a high-salinity site!) and temperature. 
 filtered_W1_TX <- raw_W1_TX %>%
     filter(between(salinity, 0, 44) & between(temp, 0, 40))
 
@@ -390,6 +390,8 @@ Our list of variables includes:
 - Temperature_st_dev: standard deviation of all available data
 - Temperature_n: total number of data points
 - Temperature_years: number of years in data set
+- temp_quantile_10: 10th quantile value
+- temp_quantile_90: 90th quantile value
 
 - Mean_Annual_Salinity_ppt: average of all available data
 - Mean_min_Salinity_ppt: average of minimums for each year
@@ -397,6 +399,9 @@ Our list of variables includes:
 - Salinity_st_dev: standard deviation of all available data
 - Salinity_n: total number of data points
 - Salinity_years: number of years in data set
+- salinity_quantile_10: 10th quantile value
+- salinity_quantile_90: 90th quantile value
+
 
 ```{r}
 #Calculate temperature variables. 
@@ -408,6 +413,8 @@ Temperature_n <- nrow(W1_TX)
 Temperature_years <- nrow(W1_TX_envryear)
 high_temp_stress_days <- sum(high_temp_stress_count$high_temp_stress)
 frac_high_temp_stress_days <- high_temp_stress_days/nrow(W1_TX_envrday)
+temp_quantile_10 <- quantile(W1_TX$temp, 0.1)
+temp_quantile_90 <- quantile(W1_TX$temp, 0.9)
 
 Mean_Monthly_Temperature_C <- W1_TX_envrmonth %>%
   filter(!is.na(month)) %>% 
@@ -425,7 +432,7 @@ Mean_max_Monthly_Temperature_C <- W1_TX_envrmonth %>%
   summarise(Mean_max_Temperature = mean(max_temp))
 
 #Create a data frame to store the temperature results
-W1_TX_temp <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Temperature_C, Mean_max_temperature_C, Mean_min_temperature_C, Temperature_st_dev, high_temp_stress_days, frac_high_temp_stress_days, Temperature_n, Temperature_years, collection_type)
+W1_TX_temp <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Temperature_C, Mean_max_temperature_C, Mean_min_temperature_C, temp_quantile_10, temp_quantile_90, Temperature_st_dev, high_temp_stress_days, frac_high_temp_stress_days, Temperature_n, Temperature_years, collection_type)
 print(W1_TX_temp)
 
 W1_TX_monthly_temp <- cbind(Mean_Monthly_Temperature_C, Mean_min_Monthly_Temperature_C, Mean_max_Monthly_Temperature_C)
@@ -455,6 +462,8 @@ high_sal_stress_days <- sum(high_sal_stress_count$high_sal_stress)
 low_sal_stress_days <- sum(low_sal_stress_count$low_sal_stress)
 frac_high_sal_stress_days <- high_sal_stress_days/nrow(W1_TX_envrday)
 frac_low_sal_stress_days <- low_sal_stress_days/nrow(W1_TX_envrday)
+salinity_quantile_10 <- quantile(W1_TX$salinity, 0.1)
+salinity_quantile_90 <- quantile(W1_TX$salinity, 0.9)
 
 Mean_Monthly_Salinity <- W1_TX_envrmonth %>%
   filter(!is.na(month)) %>%
@@ -472,7 +481,7 @@ Max_Monthly_Salinity <- W1_TX_envrmonth %>%
   summarise(Max_Salinity = mean(max_salinity))
 
 #Create a data frame to store the temperature results
-W1_TX_salinity <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Salinity_ppt, Mean_max_Salinity_ppt, Mean_min_Salinity_ppt, high_sal_stress_days,low_sal_stress_days, frac_high_sal_stress_days, frac_low_sal_stress_days, Salinity_st_dev, Salinity_n, Salinity_years, collection_type)
+W1_TX_salinity <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Salinity_ppt, Mean_max_Salinity_ppt, Mean_min_Salinity_ppt, salinity_quantile_10, salinity_quantile_90, high_sal_stress_days,low_sal_stress_days, frac_high_sal_stress_days, frac_low_sal_stress_days, Salinity_st_dev, Salinity_n, Salinity_years, collection_type)
 print(W1_TX_salinity)
 
 W1_TX_monthly_sal <- cbind(Mean_Monthly_Salinity, Min_Monthly_Salinity, Max_Monthly_Salinity)

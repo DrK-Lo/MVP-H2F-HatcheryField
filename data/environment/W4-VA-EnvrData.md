@@ -561,6 +561,8 @@ Temperature_n <- nrow(W4_VA)
 Temperature_years <- nrow(W4_VA_envryear)
 high_temp_stress_days <- sum(high_temp_stress_count$high_temp_stress)
 frac_high_temp_stress_days <- high_temp_stress_days/nrow(W4_VA_envrday)
+temp_quantile_10 <- quantile(W4_VA$temp, 0.1)
+temp_quantile_90 <- quantile(W4_VA$temp, 0.9)
 
 Mean_Monthly_Temperature_C <- W4_VA_envrmonth %>%
   filter(!is.na(month)) %>% 
@@ -578,22 +580,22 @@ Mean_max_Monthly_Temperature_C <- W4_VA_envrmonth %>%
   summarise(Mean_max_Temperature = mean(max_temp))
 
 #Create a data frame to store the temperature results
-W4_VA_temp <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Temperature_C, Mean_max_temperature_C, Mean_min_temperature_C, Temperature_st_dev, high_temp_stress_days, frac_high_temp_stress_days, Temperature_n, Temperature_years, collection_type)
+W4_VA_temp <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Temperature_C, Mean_max_temperature_C, Mean_min_temperature_C, temp_quantile_10, temp_quantile_90, Temperature_st_dev, high_temp_stress_days, frac_high_temp_stress_days, Temperature_n, Temperature_years, collection_type)
 print(W4_VA_temp)
 ```
 
-    ##      site_name download_date
-    ## [1,] "W4_VA"   "10-01-2024" 
-    ##      source_description                                                                                                                               
-    ## [1,] "NOAA National Buoy Data Center (NDBC), Chesapeake Bay Interpretive Buoy System with values corrected based on data from VIMS Water Quality Data"
-    ##      lat      lon       firstyear finalyear Mean_Annual_Temperature_C
-    ## [1,] "37.211" "-76.787" "2008"    "2019"    "19.9346352267756"       
-    ##      Mean_max_temperature_C Mean_min_temperature_C Temperature_st_dev
-    ## [1,] "28.2416666666667"     "3.15833333333333"     "8.48879806824356"
-    ##      high_temp_stress_days frac_high_temp_stress_days Temperature_n
-    ## [1,] "687"                 "0.208434466019417"        "109712"     
-    ##      Temperature_years collection_type
-    ## [1,] "12"              "continuous"
+    ##     site_name download_date
+    ## 10% "W4_VA"   "10-01-2024" 
+    ##     source_description                                                                                                                               
+    ## 10% "NOAA National Buoy Data Center (NDBC), Chesapeake Bay Interpretive Buoy System with values corrected based on data from VIMS Water Quality Data"
+    ##     lat      lon       firstyear finalyear Mean_Annual_Temperature_C
+    ## 10% "37.211" "-76.787" "2008"    "2019"    "19.9346352267756"       
+    ##     Mean_max_temperature_C Mean_min_temperature_C temp_quantile_10
+    ## 10% "28.2416666666667"     "3.15833333333333"     "7.5"           
+    ##     temp_quantile_90 Temperature_st_dev high_temp_stress_days
+    ## 10% "29.5"           "8.48879806824356" "687"                
+    ##     frac_high_temp_stress_days Temperature_n Temperature_years collection_type
+    ## 10% "0.208434466019417"        "109712"      "12"              "continuous"
 
 ``` r
 W4_VA_monthly_temp <- cbind(Mean_Monthly_Temperature_C, Mean_min_Monthly_Temperature_C, Mean_max_Monthly_Temperature_C)
@@ -638,6 +640,8 @@ high_sal_stress_days <- sum(high_sal_stress_count$high_sal_stress)
 low_sal_stress_days <- sum(low_sal_stress_count$low_sal_stress)
 frac_high_sal_stress_days <- high_sal_stress_days/nrow(W4_VA_envrday)
 frac_low_sal_stress_days <- low_sal_stress_days/nrow(W4_VA_envrday)
+salinity_quantile_10 <- quantile(W4_VA$salinity, 0.1)
+salinity_quantile_90 <- quantile(W4_VA$salinity, 0.9)
 
 Mean_Monthly_Salinity <- W4_VA_envrmonth %>%
   filter(!is.na(month)) %>%
@@ -655,22 +659,24 @@ Max_Monthly_Salinity <- W4_VA_envrmonth %>%
   summarise(Max_Salinity = mean(max_salinity))
 
 #Create a data frame to store the temperature results
-W4_VA_salinity <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Salinity_ppt, Mean_max_Salinity_ppt, Mean_min_Salinity_ppt, high_sal_stress_days,low_sal_stress_days, frac_high_sal_stress_days, frac_low_sal_stress_days, Salinity_st_dev, Salinity_n, Salinity_years, collection_type)
+W4_VA_salinity <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Salinity_ppt, Mean_max_Salinity_ppt, Mean_min_Salinity_ppt, salinity_quantile_10, salinity_quantile_90, high_sal_stress_days,low_sal_stress_days, frac_high_sal_stress_days, frac_low_sal_stress_days, Salinity_st_dev, Salinity_n, Salinity_years, collection_type)
 print(W4_VA_salinity)
 ```
 
-    ##      site_name download_date
-    ## [1,] "W4_VA"   "10-01-2024" 
-    ##      source_description                                                                                                                               
-    ## [1,] "NOAA National Buoy Data Center (NDBC), Chesapeake Bay Interpretive Buoy System with values corrected based on data from VIMS Water Quality Data"
-    ##      lat      lon       firstyear finalyear Mean_Annual_Salinity_ppt
-    ## [1,] "37.211" "-76.787" "2008"    "2019"    "3.10822608283506"      
-    ##      Mean_max_Salinity_ppt Mean_min_Salinity_ppt high_sal_stress_days
-    ## [1,] "10.0833333333333"    "0.441666666666667"   "0"                 
-    ##      low_sal_stress_days frac_high_sal_stress_days frac_low_sal_stress_days
-    ## [1,] "3296"              "0"                       "1"                     
-    ##      Salinity_st_dev    Salinity_n Salinity_years collection_type
-    ## [1,] "2.70141647539953" "109712"   "12"           "continuous"
+    ##     site_name download_date
+    ## 10% "W4_VA"   "10-01-2024" 
+    ##     source_description                                                                                                                               
+    ## 10% "NOAA National Buoy Data Center (NDBC), Chesapeake Bay Interpretive Buoy System with values corrected based on data from VIMS Water Quality Data"
+    ##     lat      lon       firstyear finalyear Mean_Annual_Salinity_ppt
+    ## 10% "37.211" "-76.787" "2008"    "2019"    "3.10822608283506"      
+    ##     Mean_max_Salinity_ppt Mean_min_Salinity_ppt salinity_quantile_10
+    ## 10% "10.0833333333333"    "0.441666666666667"   "0.1"               
+    ##     salinity_quantile_90 high_sal_stress_days low_sal_stress_days
+    ## 10% "7"                  "0"                  "3296"             
+    ##     frac_high_sal_stress_days frac_low_sal_stress_days Salinity_st_dev   
+    ## 10% "0"                       "1"                      "2.70141647539953"
+    ##     Salinity_n Salinity_years collection_type
+    ## 10% "109712"   "12"           "continuous"
 
 ``` r
 W4_VA_monthly_sal <- cbind(Mean_Monthly_Salinity, Min_Monthly_Salinity, Max_Monthly_Salinity)

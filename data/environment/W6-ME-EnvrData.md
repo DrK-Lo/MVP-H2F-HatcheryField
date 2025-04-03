@@ -524,6 +524,8 @@ Temperature_n <- nrow(W6_ME)
 Temperature_years <- nrow(W6_ME_envryear)
 high_temp_stress_days <- sum(high_temp_stress_count$high_temp_stress)
 frac_high_temp_stress_days <- high_temp_stress_days/nrow(W6_ME_envrday)
+temp_quantile_10 <- quantile(W6_ME$temp, 0.1)
+temp_quantile_90 <- quantile(W6_ME$temp, 0.9)
 
 Mean_Monthly_Temperature_C <- W6_ME_envrmonth_temp %>%
   filter(!is.na(month)) %>% 
@@ -541,18 +543,20 @@ Mean_max_Monthly_Temperature_C <- W6_ME_envrmonth_temp %>%
   summarise(Mean_max_Temperature = mean(max_temp))
 
 #Create a data frame to store the temperature results
-W6_ME_temp <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Temperature_C, Mean_max_temperature_C, Mean_min_temperature_C, Temperature_st_dev, high_temp_stress_days, frac_high_temp_stress_days, Temperature_n, Temperature_years, collection_type)
+W6_ME_temp <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Temperature_C, Mean_max_temperature_C, Mean_min_temperature_C, temp_quantile_10, temp_quantile_90, Temperature_st_dev, high_temp_stress_days, frac_high_temp_stress_days, Temperature_n, Temperature_years, collection_type)
 print(W6_ME_temp)
 ```
 
-    ##      site_name download_date source_description    lat      lon      firstyear
-    ## [1,] "W6_ME"   "03-21-2024"  "University of Maine" "43.986" "-69.55" "2015"   
-    ##      finalyear Mean_Annual_Temperature_C Mean_max_temperature_C
-    ## [1,] "2023"    "15.3288717032758"        "23.46"               
-    ##      Mean_min_temperature_C Temperature_st_dev high_temp_stress_days
-    ## [1,] "4.02142857142857"     "5.22149721972098" "0"                  
-    ##      frac_high_temp_stress_days Temperature_n Temperature_years collection_type
-    ## [1,] "0"                        "26314"       "7"               "intermittent"
+    ##     site_name download_date source_description    lat      lon      firstyear
+    ## 10% "W6_ME"   "03-21-2024"  "University of Maine" "43.986" "-69.55" "2015"   
+    ##     finalyear Mean_Annual_Temperature_C Mean_max_temperature_C
+    ## 10% "2023"    "15.3288717032758"        "23.46"               
+    ##     Mean_min_temperature_C temp_quantile_10 temp_quantile_90 Temperature_st_dev
+    ## 10% "4.02142857142857"     "7.563"          "21.5"           "5.22149721972098"
+    ##     high_temp_stress_days frac_high_temp_stress_days Temperature_n
+    ## 10% "0"                   "0"                        "26314"      
+    ##     Temperature_years collection_type
+    ## 10% "7"               "intermittent"
 
 ``` r
 W6_ME_monthly_temp <- cbind(Mean_Monthly_Temperature_C, Mean_min_Monthly_Temperature_C, Mean_max_Monthly_Temperature_C)
@@ -595,6 +599,8 @@ high_sal_stress_days <- sum(high_sal_stress_count$high_sal_stress)
 low_sal_stress_days <- sum(low_sal_stress_count$low_sal_stress)
 frac_high_sal_stress_days <- high_sal_stress_days/nrow(W6_ME_envrday)
 frac_low_sal_stress_days <- low_sal_stress_days/nrow(W6_ME_envrday)
+salinity_quantile_10 <- quantile(W6_ME$salinity, 0.1)
+salinity_quantile_90 <- quantile(W6_ME$salinity, 0.9)
 
 Mean_Monthly_Salinity <- W6_ME_envrmonth_sal %>%
   filter(!is.na(month)) %>%
@@ -612,20 +618,22 @@ Max_Monthly_Salinity <- W6_ME_envrmonth_sal %>%
   summarise(Max_Salinity = mean(max_salinity))
 
 #Create a data frame to store the temperature results
-W6_ME_salinity <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Salinity_ppt, Mean_max_Salinity_ppt, Mean_min_Salinity_ppt, high_sal_stress_days,low_sal_stress_days, frac_high_sal_stress_days, frac_low_sal_stress_days, Salinity_st_dev, Salinity_n, Salinity_years, collection_type)
+W6_ME_salinity <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Salinity_ppt, Mean_max_Salinity_ppt, Mean_min_Salinity_ppt, salinity_quantile_10, salinity_quantile_90, high_sal_stress_days,low_sal_stress_days, frac_high_sal_stress_days, frac_low_sal_stress_days, Salinity_st_dev, Salinity_n, Salinity_years, collection_type)
 print(W6_ME_salinity)
 ```
 
-    ##      site_name download_date source_description    lat      lon      firstyear
-    ## [1,] "W6_ME"   "03-21-2024"  "University of Maine" "43.986" "-69.55" "2015"   
-    ##      finalyear Mean_Annual_Salinity_ppt Mean_max_Salinity_ppt
-    ## [1,] "2023"    "29.4782830432469"       "31.5042857142857"   
-    ##      Mean_min_Salinity_ppt high_sal_stress_days low_sal_stress_days
-    ## [1,] "8.74142857142857"    "0"                  "13"               
-    ##      frac_high_sal_stress_days frac_low_sal_stress_days Salinity_st_dev  
-    ## [1,] "0"                       "0.0115248226950355"     "2.2778779612237"
-    ##      Salinity_n Salinity_years collection_type
-    ## [1,] "26314"    "7"            "intermittent"
+    ##     site_name download_date source_description    lat      lon      firstyear
+    ## 10% "W6_ME"   "03-21-2024"  "University of Maine" "43.986" "-69.55" "2015"   
+    ##     finalyear Mean_Annual_Salinity_ppt Mean_max_Salinity_ppt
+    ## 10% "2023"    "29.4782830432469"       "31.5042857142857"   
+    ##     Mean_min_Salinity_ppt salinity_quantile_10 salinity_quantile_90
+    ## 10% "8.74142857142857"    "26.29"              "31.48"             
+    ##     high_sal_stress_days low_sal_stress_days frac_high_sal_stress_days
+    ## 10% "0"                  "13"                "0"                      
+    ##     frac_low_sal_stress_days Salinity_st_dev   Salinity_n Salinity_years
+    ## 10% "0.0115248226950355"     "2.2778779612237" "26314"    "7"           
+    ##     collection_type
+    ## 10% "intermittent"
 
 ``` r
 W6_ME_monthly_sal <- cbind(Mean_Monthly_Salinity, Min_Monthly_Salinity, Max_Monthly_Salinity)

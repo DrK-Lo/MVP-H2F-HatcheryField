@@ -387,6 +387,8 @@ Temperature_n <- nrow(W2_LA)
 Temperature_years <- nrow(W2_LA_envryear)
 high_temp_stress_days <- sum(high_temp_stress_count$high_temp_stress)
 frac_high_temp_stress_days <- high_temp_stress_days/nrow(W2_LA_envrday)
+temp_quantile_10 <- quantile(W2_LA$temp, 0.1)
+temp_quantile_90 <- quantile(W2_LA$temp, 0.9)
 
 Mean_Monthly_Temperature_C <- W2_LA_envrmonth %>%
   filter(!is.na(month)) %>% 
@@ -404,7 +406,7 @@ Mean_max_Monthly_Temperature_C <- W2_LA_envrmonth %>%
   summarise(Mean_max_Temperature = mean(max_temp))
 
 #Create a data frame to store the temperature results
-W2_LA_temp <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Temperature_C, Mean_max_temperature_C, Mean_min_temperature_C, Temperature_st_dev, high_temp_stress_days, frac_high_temp_stress_days, Temperature_n, Temperature_years, collection_type)
+W2_LA_temp <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Temperature_C, Mean_max_temperature_C, Mean_min_temperature_C, temp_quantile_10, temp_quantile_90, Temperature_st_dev, high_temp_stress_days, frac_high_temp_stress_days, Temperature_n, Temperature_years, collection_type)
 print(W2_LA_temp)
 
 W2_LA_monthly_temp <- cbind(Mean_Monthly_Temperature_C, Mean_min_Monthly_Temperature_C, Mean_max_Monthly_Temperature_C)
@@ -434,6 +436,8 @@ high_sal_stress_days <- sum(high_sal_stress_count$high_sal_stress)
 low_sal_stress_days <- sum(low_sal_stress_count$low_sal_stress)
 frac_high_sal_stress_days <- high_sal_stress_days/nrow(W2_LA_envrday)
 frac_low_sal_stress_days <- low_sal_stress_days/nrow(W2_LA_envrday)
+salinity_quantile_10 <- quantile(W2_LA$salinity, 0.1)
+salinity_quantile_90 <- quantile(W2_LA$salinity, 0.9)
 
 Mean_Monthly_Salinity <- W2_LA_envrmonth %>%
   filter(!is.na(month)) %>%
@@ -451,7 +455,7 @@ Max_Monthly_Salinity <- W2_LA_envrmonth %>%
   summarise(Max_Salinity = mean(max_salinity))
 
 #Create a data frame to store the temperature results
-W2_LA_salinity <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Salinity_ppt, Mean_max_Salinity_ppt, Mean_min_Salinity_ppt, high_sal_stress_days,low_sal_stress_days, frac_high_sal_stress_days, frac_low_sal_stress_days, Salinity_st_dev, Salinity_n, Salinity_years, collection_type)
+W2_LA_salinity <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Salinity_ppt, Mean_max_Salinity_ppt, Mean_min_Salinity_ppt, salinity_quantile_10, salinity_quantile_90, high_sal_stress_days,low_sal_stress_days, frac_high_sal_stress_days, frac_low_sal_stress_days, Salinity_st_dev, Salinity_n, Salinity_years, collection_type)
 print(W2_LA_salinity)
 
 W2_LA_monthly_sal <- cbind(Mean_Monthly_Salinity, Min_Monthly_Salinity, Max_Monthly_Salinity)
