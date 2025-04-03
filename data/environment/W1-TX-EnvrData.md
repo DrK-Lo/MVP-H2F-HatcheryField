@@ -11,7 +11,31 @@ setwd("/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment")
 
 ``` r
 library("dplyr") #Used for working with data frames
+```
+
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
+``` r
 library("lubridate") #Used for time-date conversions
+```
+
+    ## 
+    ## Attaching package: 'lubridate'
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     date, intersect, setdiff, union
+
+``` r
 library("readr") #Used to read the CSV file
 library("ggplot2")
 ```
@@ -37,10 +61,10 @@ raw_W1_TX <- read_csv("/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/e
 ```
 
     ## Rows: 523354 Columns: 30
-    ## ── Column specification ─────────────────────────────────────────────────────────────────────────────────────────────────────
+    ## ── Column specification ────────────────────────────────────────────────────────
     ## Delimiter: ","
-    ## chr (16): Station_Code, isSWMP, DateTimeStamp, F_Record, F_Temp, F_SpCond, F_Sal, F_DO_pct, F_DO_mgl, F_Depth, F_cDepth, ...
-    ## dbl (14): Historical, ProvisionalPlus, Temp, SpCond, Sal, DO_pct, DO_mgl, Depth, cDepth, Level, cLevel, pH, Turb, ChlFluor
+    ## chr (16): Station_Code, isSWMP, DateTimeStamp, F_Record, F_Temp, F_SpCond, F...
+    ## dbl (14): Historical, ProvisionalPlus, Temp, SpCond, Sal, DO_pct, DO_mgl, De...
     ## 
     ## ℹ Use `spec()` to retrieve the full column specification for this data.
     ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
@@ -66,10 +90,14 @@ raw_W1_TX$datetime <- as.POSIXct(raw_W1_TX$DateTimeStamp, "%m/%d/%y %H:%M", tz =
 summary(raw_W1_TX$datetime)
 ```
 
-    ##                       Min.                    1st Qu.                     Median                       Mean 
-    ## "2007-07-11 09:30:00.0000" "2011-04-04 07:18:45.0000" "2014-12-27 04:07:30.0000" "2014-12-27 03:46:17.4373" 
-    ##                    3rd Qu.                       Max.                       NA's 
-    ## "2018-09-20 01:56:15.0000" "2022-06-13 23:45:00.0000"                       "60"
+    ##                       Min.                    1st Qu. 
+    ## "2007-07-11 09:30:00.0000" "2011-04-04 07:18:45.0000" 
+    ##                     Median                       Mean 
+    ## "2014-12-27 04:07:30.0000" "2014-12-27 03:46:17.4373" 
+    ##                    3rd Qu.                       Max. 
+    ## "2018-09-20 01:56:15.0000" "2022-06-13 23:45:00.0000" 
+    ##                       NA's 
+    ##                       "60"
 
 ``` r
 # we have NAs, so remove those
@@ -78,8 +106,10 @@ raw_W1_TX <- raw_W1_TX %>%
 summary(raw_W1_TX$datetime)
 ```
 
-    ##                       Min.                    1st Qu.                     Median                       Mean 
-    ## "2007-07-11 09:30:00.0000" "2011-04-04 07:18:45.0000" "2014-12-27 04:07:30.0000" "2014-12-27 03:46:17.4373" 
+    ##                       Min.                    1st Qu. 
+    ## "2007-07-11 09:30:00.0000" "2011-04-04 07:18:45.0000" 
+    ##                     Median                       Mean 
+    ## "2014-12-27 04:07:30.0000" "2014-12-27 03:46:17.4373" 
     ##                    3rd Qu.                       Max. 
     ## "2018-09-20 01:56:15.0000" "2022-06-13 23:45:00.0000"
 
@@ -130,7 +160,7 @@ case, adjust the range or notify someone that the site has particularly
 high salinity values.
 
 ``` r
-#Filter the data between the values of 0 and 40 for both salinity and temperature. 
+#Filter the data between the values of 0 and 44 for both salinity (this is a high-salinity site!) and temperature. 
 filtered_W1_TX <- raw_W1_TX %>%
     filter(between(salinity, 0, 44) & between(temp, 0, 40))
 
@@ -201,7 +231,8 @@ W1_TX_envrmonth <- W1_TX %>%
       length_temp = length(temp))
 ```
 
-    ## `summarise()` has grouped output by 'year'. You can override using the `.groups` argument.
+    ## `summarise()` has grouped output by 'year'. You can override using the
+    ## `.groups` argument.
 
 ``` r
 print(W1_TX_envrmonth)
@@ -209,19 +240,20 @@ print(W1_TX_envrmonth)
 
     ## # A tibble: 180 × 10
     ## # Groups:   year [16]
-    ##     year month min_salinity max_salinity mean_salinity length_salinity min_temp max_temp mean_temp length_temp
-    ##    <dbl> <dbl>        <dbl>        <dbl>         <dbl>           <int>    <dbl>    <dbl>     <dbl>       <int>
-    ##  1  2007     7          0.1          2.7          1.08            1978     24.9     31.2      28.8        1978
-    ##  2  2007     8          0.2          3            1.49            2975     28.5     33.2      30.6        2975
-    ##  3  2007     9          1.3          3.5          2.49            2710     27.7     31.4      29.4        2710
-    ##  4  2007    10          2.8          3.8          3.16            2841     17.9     30        25.4        2841
-    ##  5  2007    11          3.6          6.3          4.40            2879     11.6     24.6      19.8        2879
-    ##  6  2007    12          5.3          6.7          6.06            2975     13       22.8      16.6        2975
-    ##  7  2008     1          6.5          9.6          8.37            2975      9       18.3      13.0        2975
-    ##  8  2008     2          8.5         10.2          9.39            2784     12.9     21.7      17.8        2784
-    ##  9  2008     3          9.6         12.4         10.8             2972     12.9     24.2      19.0        2972
-    ## 10  2008     4          9.9         14.6         12.9             2879     20.1     26.1      23.3        2879
+    ##     year month min_salinity max_salinity mean_salinity length_salinity min_temp
+    ##    <dbl> <dbl>        <dbl>        <dbl>         <dbl>           <int>    <dbl>
+    ##  1  2007     7          0.1          2.7          1.08            1978     24.9
+    ##  2  2007     8          0.2          3            1.49            2975     28.5
+    ##  3  2007     9          1.3          3.5          2.49            2710     27.7
+    ##  4  2007    10          2.8          3.8          3.16            2841     17.9
+    ##  5  2007    11          3.6          6.3          4.40            2879     11.6
+    ##  6  2007    12          5.3          6.7          6.06            2975     13  
+    ##  7  2008     1          6.5          9.6          8.37            2975      9  
+    ##  8  2008     2          8.5         10.2          9.39            2784     12.9
+    ##  9  2008     3          9.6         12.4         10.8             2972     12.9
+    ## 10  2008     4          9.9         14.6         12.9             2879     20.1
     ## # ℹ 170 more rows
+    ## # ℹ 3 more variables: max_temp <dbl>, mean_temp <dbl>, length_temp <int>
 
 ``` r
 #Calculate the mean, maximum, and minimum values for salinity and temperature for each year. 
@@ -275,7 +307,8 @@ W1_TX_envrday <- W1_TX %>%
       length_temp = length(temp))
 ```
 
-    ## `summarise()` has grouped output by 'year', 'month'. You can override using the `.groups` argument.
+    ## `summarise()` has grouped output by 'year', 'month'. You can override using the
+    ## `.groups` argument.
 
 ``` r
 print(W1_TX_envrday)
@@ -283,19 +316,21 @@ print(W1_TX_envrday)
 
     ## # A tibble: 5,148 × 11
     ## # Groups:   year, month [180]
-    ##     year month   day min_salinity max_salinity mean_salinity length_salinity min_temp max_temp mean_temp length_temp
-    ##    <dbl> <dbl> <int>        <dbl>        <dbl>         <dbl>           <int>    <dbl>    <dbl>     <dbl>       <int>
-    ##  1  2007     7    11          0.2          0.5         0.367              58     29.3     31        30.3          58
-    ##  2  2007     7    12          0.3          0.4         0.345              96     29.2     30.9      30.1          96
-    ##  3  2007     7    13          0.3          0.6         0.389              96     29.6     31        30.3          96
-    ##  4  2007     7    14          0.5          0.9         0.675              96     29.3     30.4      29.8          96
-    ##  5  2007     7    15          0.6          1.6         0.979              96     29.2     30.2      29.6          96
-    ##  6  2007     7    16          0.8          2.3         1.51               96     28.6     29.3      29.1          96
-    ##  7  2007     7    17          1.7          2.3         2.01               96     28.4     29.3      28.8          96
-    ##  8  2007     7    18          1.3          2           1.78               96     27.7     28.5      28.0          96
-    ##  9  2007     7    19          1.3          2.7         2.19               96     27.1     28.2      27.6          96
-    ## 10  2007     7    20          1.7          2.1         1.84               96     27.4     27.7      27.6          96
+    ##     year month   day min_salinity max_salinity mean_salinity length_salinity
+    ##    <dbl> <dbl> <int>        <dbl>        <dbl>         <dbl>           <int>
+    ##  1  2007     7    11          0.2          0.5         0.367              58
+    ##  2  2007     7    12          0.3          0.4         0.345              96
+    ##  3  2007     7    13          0.3          0.6         0.389              96
+    ##  4  2007     7    14          0.5          0.9         0.675              96
+    ##  5  2007     7    15          0.6          1.6         0.979              96
+    ##  6  2007     7    16          0.8          2.3         1.51               96
+    ##  7  2007     7    17          1.7          2.3         2.01               96
+    ##  8  2007     7    18          1.3          2           1.78               96
+    ##  9  2007     7    19          1.3          2.7         2.19               96
+    ## 10  2007     7    20          1.7          2.1         1.84               96
     ## # ℹ 5,138 more rows
+    ## # ℹ 4 more variables: min_temp <dbl>, max_temp <dbl>, mean_temp <dbl>,
+    ## #   length_temp <int>
 
 ### Plot the months and years of data collection to check if there are any collection gaps in the data.
 
@@ -600,6 +635,10 @@ Our list of variables includes:
 
 - Temperature_years: number of years in data set
 
+- temp_quantile_10: 10th quantile value
+
+- temp_quantile_90: 90th quantile value
+
 - Mean_Annual_Salinity_ppt: average of all available data
 
 - Mean_min_Salinity_ppt: average of minimums for each year
@@ -612,6 +651,10 @@ Our list of variables includes:
 
 - Salinity_years: number of years in data set
 
+- salinity_quantile_10: 10th quantile value
+
+- salinity_quantile_90: 90th quantile value
+
 ``` r
 #Calculate temperature variables. 
 Mean_Annual_Temperature_C <- mean(W1_TX$temp)
@@ -622,6 +665,8 @@ Temperature_n <- nrow(W1_TX)
 Temperature_years <- nrow(W1_TX_envryear)
 high_temp_stress_days <- sum(high_temp_stress_count$high_temp_stress)
 frac_high_temp_stress_days <- high_temp_stress_days/nrow(W1_TX_envrday)
+temp_quantile_10 <- quantile(W1_TX$temp, 0.1)
+temp_quantile_90 <- quantile(W1_TX$temp, 0.9)
 
 Mean_Monthly_Temperature_C <- W1_TX_envrmonth %>%
   filter(!is.na(month)) %>% 
@@ -639,16 +684,22 @@ Mean_max_Monthly_Temperature_C <- W1_TX_envrmonth %>%
   summarise(Mean_max_Temperature = mean(max_temp))
 
 #Create a data frame to store the temperature results
-W1_TX_temp <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Temperature_C, Mean_max_temperature_C, Mean_min_temperature_C, Temperature_st_dev, high_temp_stress_days, frac_high_temp_stress_days, Temperature_n, Temperature_years, collection_type)
+W1_TX_temp <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Temperature_C, Mean_max_temperature_C, Mean_min_temperature_C, temp_quantile_10, temp_quantile_90, Temperature_st_dev, high_temp_stress_days, frac_high_temp_stress_days, Temperature_n, Temperature_years, collection_type)
 print(W1_TX_temp)
 ```
 
-    ##      site_name download_date source_description                                                 lat       lon       
-    ## [1,] "W1_TX"   "07-07-2023"  "NERR Centralized Data. Mission Aransas - Copano Bay West MARCWWQ" "28.0841" "-97.2009"
-    ##      firstyear finalyear Mean_Annual_Temperature_C Mean_max_temperature_C Mean_min_temperature_C Temperature_st_dev
-    ## [1,] "2007"    "2021"    "23.1060500319357"        "32.61875"             "7.775"                "6.38548669115223"
-    ##      high_temp_stress_days frac_high_temp_stress_days Temperature_n Temperature_years collection_type
-    ## [1,] "1839"                "0.357226107226107"        "490047"      "16"              "continuous"
+    ##     site_name download_date
+    ## 10% "W1_TX"   "07-07-2023" 
+    ##     source_description                                                
+    ## 10% "NERR Centralized Data. Mission Aransas - Copano Bay West MARCWWQ"
+    ##     lat       lon        firstyear finalyear Mean_Annual_Temperature_C
+    ## 10% "28.0841" "-97.2009" "2007"    "2021"    "23.1060500319357"       
+    ##     Mean_max_temperature_C Mean_min_temperature_C temp_quantile_10
+    ## 10% "32.61875"             "7.775"                "13.8"          
+    ##     temp_quantile_90 Temperature_st_dev high_temp_stress_days
+    ## 10% "30.5"           "6.38548669115223" "1839"               
+    ##     frac_high_temp_stress_days Temperature_n Temperature_years collection_type
+    ## 10% "0.357226107226107"        "490047"      "16"              "continuous"
 
 ``` r
 W1_TX_monthly_temp <- cbind(Mean_Monthly_Temperature_C, Mean_min_Monthly_Temperature_C, Mean_max_Monthly_Temperature_C)
@@ -693,6 +744,8 @@ high_sal_stress_days <- sum(high_sal_stress_count$high_sal_stress)
 low_sal_stress_days <- sum(low_sal_stress_count$low_sal_stress)
 frac_high_sal_stress_days <- high_sal_stress_days/nrow(W1_TX_envrday)
 frac_low_sal_stress_days <- low_sal_stress_days/nrow(W1_TX_envrday)
+salinity_quantile_10 <- quantile(W1_TX$salinity, 0.1)
+salinity_quantile_90 <- quantile(W1_TX$salinity, 0.9)
 
 Mean_Monthly_Salinity <- W1_TX_envrmonth %>%
   filter(!is.na(month)) %>%
@@ -710,18 +763,24 @@ Max_Monthly_Salinity <- W1_TX_envrmonth %>%
   summarise(Max_Salinity = mean(max_salinity))
 
 #Create a data frame to store the temperature results
-W1_TX_salinity <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Salinity_ppt, Mean_max_Salinity_ppt, Mean_min_Salinity_ppt, high_sal_stress_days,low_sal_stress_days, frac_high_sal_stress_days, frac_low_sal_stress_days, Salinity_st_dev, Salinity_n, Salinity_years, collection_type)
+W1_TX_salinity <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Salinity_ppt, Mean_max_Salinity_ppt, Mean_min_Salinity_ppt, salinity_quantile_10, salinity_quantile_90, high_sal_stress_days,low_sal_stress_days, frac_high_sal_stress_days, frac_low_sal_stress_days, Salinity_st_dev, Salinity_n, Salinity_years, collection_type)
 print(W1_TX_salinity)
 ```
 
-    ##      site_name download_date source_description                                                 lat       lon       
-    ## [1,] "W1_TX"   "07-07-2023"  "NERR Centralized Data. Mission Aransas - Copano Bay West MARCWWQ" "28.0841" "-97.2009"
-    ##      firstyear finalyear Mean_Annual_Salinity_ppt Mean_max_Salinity_ppt Mean_min_Salinity_ppt high_sal_stress_days
-    ## [1,] "2007"    "2021"    "20.8577879264642"       "29.90625"            "6.34375"             "879"               
-    ##      low_sal_stress_days frac_high_sal_stress_days frac_low_sal_stress_days Salinity_st_dev    Salinity_n Salinity_years
-    ## [1,] "1604"              "0.170745920745921"       "0.311577311577312"      "11.6641309381336" "490047"   "16"          
-    ##      collection_type
-    ## [1,] "continuous"
+    ##     site_name download_date
+    ## 10% "W1_TX"   "07-07-2023" 
+    ##     source_description                                                
+    ## 10% "NERR Centralized Data. Mission Aransas - Copano Bay West MARCWWQ"
+    ##     lat       lon        firstyear finalyear Mean_Annual_Salinity_ppt
+    ## 10% "28.0841" "-97.2009" "2007"    "2021"    "20.8577879264642"      
+    ##     Mean_max_Salinity_ppt Mean_min_Salinity_ppt salinity_quantile_10
+    ## 10% "29.90625"            "6.34375"             "5.9"               
+    ##     salinity_quantile_90 high_sal_stress_days low_sal_stress_days
+    ## 10% "36.7"               "879"                "1604"             
+    ##     frac_high_sal_stress_days frac_low_sal_stress_days Salinity_st_dev   
+    ## 10% "0.170745920745921"       "0.311577311577312"      "11.6641309381336"
+    ##     Salinity_n Salinity_years collection_type
+    ## 10% "490047"   "16"           "continuous"
 
 ``` r
 W1_TX_monthly_sal <- cbind(Mean_Monthly_Salinity, Min_Monthly_Salinity, Max_Monthly_Salinity)
