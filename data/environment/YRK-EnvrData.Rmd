@@ -42,16 +42,13 @@ collection_type <- ("continuous")
 
 #Environmental data could only be downloaded by year, so first we need to merge the yearly data sets.
 
-#set working directory to location of files
-setwd("../../data/envr_of_origin/raw_envr_data/YRK-EnvrData_files")
 
-#merge files into one
-raw_YRK <- list.files(path=".") %>% 
-  lapply(read.csv) %>% 
-  bind_rows 
+file1 <- read.csv("YRK-2023-raw.csv")
+file2 <- read.csv("YRK-2024-raw.csv")
 
-#set working directory back to rmd file location
-setwd("../../../../src/envr_data")
+# combine using rbind
+raw_YRK <- rbind(file1, file2)
+
 
 #The metadata for these data (located at the bottom of this site: http://vecos.vims.edu/Content.aspx?idContent=44) explain the various error codes listed alongside observations that are unusable or questionable. Error codes for a certain water quality observation are listed in a column titled WATERQUALITY_A, where WATERQUALITY is whatever aspect of water quality is being measured. For example, next to the SALINITY column is SALINITY_A, which lists error codes for salinity observations if applicable. Blank or NA WATERQUALITY_A cells indicate no error code is applicable. We need to remove observations marked with these codes by keeping only data with blank cells or NA in these columns.
 
@@ -61,7 +58,7 @@ subset1_YRK_error <- YRK_error[(YRK_error$WTEMP_A %in% c("", NA)), ] #keep only 
 
 subset2_YRK_error <- subset1_YRK_error[(subset1_YRK_error$SALINITY_A %in% c("", NA)),] #keep only rows where the SALINITY_A columns are blank or NA, i.e. where there were no error codes recorded for the salinity data, and save it to a new data frame
 
-View(subset2_YRK_error)
+#View(subset2_YRK_error)
 #sorting the data frame by ascending and descending values for WTEMP_A and SALINITY_A shows only blank cells or NA for each of those columns. We have removed the data marked with error codes
 
 raw_YRK <- subset(subset2_YRK_error, select = c(SAMPLE_DATETIME, WTEMP, SALINITY)) #remove WTEMP_A and SALINITY_A from the dataframe now
@@ -242,41 +239,8 @@ low_sal_stress_count <- YRK %>%
   group_by(year, month) %>%
   summarise(low_sal_stress = n(), .groups = "drop") # group all occurrences together by month rather than by numeric day
 
-print(low_sal_stress_count)
+print(low_sal_stress_count) # 0 days of low salinity stress
 
-# this plots low sal stress days only, years with no observations of low salinity stress will not appear in the graph 
-ggplot(low_sal_stress_count, aes(x = factor(month), y = low_sal_stress, fill = factor(month))) +
-  geom_bar(stat = "identity", fill = "#1f77b4") +
-  facet_wrap(~ year) +
-  labs(title = "YRK: count of low salinity (< 12 ppt) days per month",
-       x = "month",
-       y = "count of days") +
-  theme_minimal()
-
-# Merge with the original dataset, filling missing values with 0 for low_sal_stress
-low_sal_complete_data <- complete_year_month %>%
-  left_join(low_sal_stress_count, by = c("year", "month")) %>%
-  mutate(low_sal_stress = ifelse(is.na(low_sal_stress), 0, low_sal_stress))
-
-low_sal_complete_data$month <- as.numeric(low_sal_complete_data$month)
-
-# bars
-ggplot(low_sal_complete_data, aes(x = factor(month), y = low_sal_stress)) +
-  geom_bar(stat = "identity", fill = "#1f77b4") + 
-  facet_wrap(~ year) +
-  labs(title = "YRK: count of low salinity (< 12 ppt) days per month",
-       x = "month",
-       y = "count of low salinity stress days") +
-  theme_minimal()
-
-# points
-ggplot(low_sal_complete_data, aes(x = factor(month), y = low_sal_stress)) +
-  geom_point(color = "#1f77b4", size = 2) + 
-  facet_wrap(~ year) +  
-  labs(title = "YRK: count of low salinity (< 12 ppt) days per month",
-       x = "month",
-       y = "count of low salinity stress days") +
-  theme_minimal()
 ```
 
 # now calculate for high salinity stress

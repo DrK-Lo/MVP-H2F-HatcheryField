@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd("/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment")
 ```
 
 ### Load required packages. 
@@ -40,37 +40,45 @@ collection_type <- ("continuous")
 
 #Environmental data could only be downloaded by year, so first we need to merge the yearly data sets.
 
-#set working directory to location of files
-# setwd("../../data/envr_of_origin/raw_envr_data/DEBY_York_Raw_Yearly")
+combine_york_data <- function(directory) {
+  years <- 2003:2024
+  file_names <- paste0(directory, "/York_", years, ".csv")
+  data_list <- lapply(file_names, function(f) {
+    if (file.exists(f)) {
+      read.csv(f, stringsAsFactors = FALSE, fill = TRUE)
+    } else {
+      warning(paste("File not found:", f))
+      return(NULL)
+    }
+  })
+  
+  combined_data <- do.call(rbind, data_list)
+  return(combined_data)
+}
 
-#merge files into one
-#raw_DEBY_env <- list.files(path=".") %>% 
-  #lapply(read.csv) %>% 
-  #bind_rows 
-
-#set working directory back to rmd file location
-#setwd("../../../../src/envr_data")
+# Example usage
+raw_DEBY_env <- combine_york_data("/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment") 
 
 #The metadata for these data (located at the bottom of this site: http://vecos.vims.edu/Content.aspx?idContent=44) explain the various error codes listed alongside observations that are unusable or questionable. Error codes for a certain water quality observation are listed in a column titled WATERQUALITY_A, where WATERQUALITY is whatever aspect of water quality is being measured. For example, next to the SALINITY column is SALINITY_A, which lists error codes for salinity observations if applicable. Blank or NA WATERQUALITY_A cells indicate no error code is applicable. We need to remove observations marked with these codes by keeping only data with blank cells or NA in these columns.
 
-#subset_DEBY_env_error <- subset(raw_DEBY_env, select = c(SAMPLE_DATETIME, WTEMP, WTEMP_A, SALINITY, SALINITY_A)) #subset data to include sample collection day and time, water temperature, water temperature error codes, salinity, and salinity error codes
+subset_DEBY_env_error <- subset(raw_DEBY_env, select = c(SAMPLE_DATETIME, WTEMP, WTEMP_A, SALINITY, SALINITY_A)) #subset data to include sample collection day and time, water temperature, water temperature error codes, salinity, and salinity error codes
 
-#subset1_DEBY_env <- subset_DEBY_env_error[(subset_DEBY_env_error$WTEMP_A %in% c("", NA)), ] #keep only rows where the WTEMP_A columns are blank or NA, i.e. where there were no error codes recorded for the temperature data, and save it to a new data frame
+subset1_DEBY_env <- subset_DEBY_env_error[(subset_DEBY_env_error$WTEMP_A %in% c("", NA)), ] #keep only rows where the WTEMP_A columns are blank or NA, i.e. where there were no error codes recorded for the temperature data, and save it to a new data frame
 
-#subset2_DEBY_env <- subset1_DEBY_env[(subset1_DEBY_env$SALINITY_A %in% c("", NA)),] #keep only rows where the SALINITY_A columns are blank or NA, i.e. where there were no error codes recorded for the salinity data, and save it to a new data frame
+subset2_DEBY_env <- subset1_DEBY_env[(subset1_DEBY_env$SALINITY_A %in% c("", NA)),] #keep only rows where the SALINITY_A columns are blank or NA, i.e. where there were no error codes recorded for the salinity data, and save it to a new data frame
 
 #View(subset2_DEBY_env)
 #sorting the data frame by ascending and descending values for WTEMP_A and SALINITY_A shows only blank cells or NA for each of those columns. We have removed the data marked with error codes
 
-#subset_DEBY_env <- subset(subset2_DEBY_env, select = c(SAMPLE_DATETIME, WTEMP, SALINITY)) #remove WTEMP_A and SALINITY_A from the dataframe now
+subset_DEBY_env <- subset(subset2_DEBY_env, select = c(SAMPLE_DATETIME, WTEMP, SALINITY)) #remove WTEMP_A and SALINITY_A from the dataframe now
 
 # View how the data are stored. Note the variable names and the format and units that the data are stored in.  
 
-#summary(subset_DEBY_env)
+summary(subset_DEBY_env)
 
 #rename columns. "datetime" = date and time of data collection, "temp" = water temperature in degrees C, "salinity" = water salinity in parts per thousand (ppt)
 
-#colnames(subset_DEBY_env) <- c("datetime", "temp", "salinity")
+colnames(subset_DEBY_env) <- c("datetime", "temp", "salinity")
 ```
 
 ### Start with the date and time of collection. We will use the lubridate package to standardize all values into the date-time format called POSIXct. This format stores the date and time in number of seconds since a past point (1/1/1970). This makes comparisons easy and helps to standardizes values. 
@@ -100,53 +108,53 @@ finalyear <- 2024
 ### Filter any of the variables that have data points outside of normal range. We will use 0-40 as the accepted range for salinity (ppt) and temperature (C) values. Note, in the summer, salinity values can sometimes exceed 40. Check to see if there are values above 40. In this case, adjust the range or notify someone that the site has particularly high salinity values. 
 ```{r}
 #Filter the data between the values of 0 and 40 for both salinity and temperature. 
-#filtered_DEBY_sal <- subset_DEBY_env %>%
-    #filter(between(salinity, 0, 40)) 
+filtered_DEBY_sal <- subset_DEBY_env %>%
+    filter(between(salinity, 0, 40)) 
 
-#summary(subset_DEBY_env)
+summary(subset_DEBY_env)
            
-#filtered_DEBY_env <- filtered_DEBY_sal %>%
-    #filter(between(temp, 0, 40))
+filtered_DEBY_env <- filtered_DEBY_sal %>%
+    filter(between(temp, 0, 40))
 
 # Sanity check - print the ranges to ensure values are filtered properly. We can see that the ranges for both are now in the appropriate range.  
-#print(summary(filtered_DEBY_env$salinity)) 
-#print(summary(filtered_DEBY_env$temp))
+print(summary(filtered_DEBY_env$salinity)) 
+print(summary(filtered_DEBY_env$temp))
 
 #Store our data into a variable name with just the site name. 
-#DEBY_env <- filtered_DEBY_env
+DEBY_env <- filtered_DEBY_env
 
 # we have NAs in the our data frame in the datetime column - need to remove these
-#count.nas_env <- is.na(DEBY_env$datetime) # store our NAs in a variable
-#summary(count.nas_env) # we have 152 NAs that are stored as "TRUE" in our count.nas
+count.nas_env <- is.na(DEBY_env$datetime) # store our NAs in a variable
+summary(count.nas_env) # we have 152 NAs that are stored as "TRUE" in our count.nas
 
-#nrow(DEBY_env) # figure out how many rows we have in the original df: 667345
-#which(count.nas_env == TRUE) # find the number of NA rows that we need to remove: 152
-#DEBY_env <- na.omit(DEBY_env) #remove NAs using na.omit
-#nrow(DEBY_env) #there are 667193 rows in the new data frame
-#check_env <- 667345 - 667193#the value of the check should be 152
-#check_env #we removed 152 NA rows!
+nrow(DEBY_env) # figure out how many rows we have in the original df: 667345
+which(count.nas_env == TRUE) # find the number of NA rows that we need to remove: 152
+DEBY_env <- na.omit(DEBY_env) #remove NAs using na.omit
+nrow(DEBY_env) #there are 667193 rows in the new data frame
+check_env <- 667345 - 667193#the value of the check should be 152
+check_env #we removed 152 NA rows!
 
 # check for NAs in our temperature column
-#count.nas_temp <- is.na(DEBY_env$temp) # store our NAs in temp in a variable
-#summary(count.nas_temp) # we have 0 NAs
+count.nas_temp <- is.na(DEBY_env$temp) # store our NAs in temp in a variable
+summary(count.nas_temp) # we have 0 NAs
 
 #check for NAs in our temperature column
-#count.nas_sal <- is.na(DEBY_env$salinity) #store our NAs in salinity in a variable
-#summary(count.nas_sal) #we have no NAs
+count.nas_sal <- is.na(DEBY_env$salinity) #store our NAs in salinity in a variable
+summary(count.nas_sal) #we have no NAs
 ```
 
 #Data sets for violin plots
 ```{r}
 #add site name and create new data frame with full envr data set
-#DEBY_env_full <- DEBY_env %>% 
-  #mutate(site_name, site_name = "DEBY")
+DEBY_env_full <- DEBY_env %>% 
+  mutate(site_name, site_name = "DEBY")
 
 #reorder columns with site_name first
-#DEBY_env_full <- DEBY_env_full[, c(4, 1, 2, 3)]
+DEBY_env_full <- DEBY_env_full[, c(4, 1, 2, 3)]
 
-#DEBY_temp_full <- DEBY_env_full[, c(1,2,3)]
+DEBY_temp_full <- DEBY_env_full[, c(1,2,3)]
 
-#DEBY_sal_full <- DEBY_env_full[, c(1, 2, 4)]
+DEBY_sal_full <- DEBY_env_full[, c(1, 2, 4)]
 
 #save DEBY_temp_full and DEBY_sal_full as csv files for future analyses
 write.csv(DEBY_temp_full, "../../data/envr_of_origin/full_temp/DEBY_temp_full.csv", row.names = FALSE)
@@ -159,27 +167,27 @@ write.csv(DEBY_sal_full, "../../data/envr_of_origin/full_sal/DEBY_sal_full.csv",
 
 ```{r salinity-plot}
 
-salplot <- ggplot(DEBY_env, aes(x = datetime)) +
-    geom_line(aes(y = salinity, color = "Salinity (ppt)")) +
-    ylim(0,40) +
-    labs(x = "Time", y = "Salinity ppt", title = "Salinity Plot for DEBY - Gloucester Point, Virginia") +
-    scale_color_manual(values = c("Salinity (ppt)" = "blue")) +
-    theme_minimal()
+#salplot <- ggplot(DEBY_env, aes(x = datetime)) +
+    #geom_line(aes(y = salinity, color = "Salinity (ppt)")) +
+    #ylim(0,40) +
+    #labs(x = "Time", y = "Salinity ppt", title = "Salinity Plot for DEBY - Gloucester Point, Virginia") +
+    #scale_color_manual(values = c("Salinity (ppt)" = "blue")) +
+    #theme_minimal()
 
 
-salplot
+#salplot
 ```
 
 
 ```{r temperature-plot}
-tempplot <- ggplot(DEBY_env, aes(x = datetime)) +
-    geom_line(aes(y = temp, color = "Temperature (C)")) +
-    ylim(0, 40) +
-    labs(x = "Time", y = "Temperature C", title = "Temperature Plot for DEBY - Gloucester Point, Virginia") +
-    scale_color_manual(values = c( "Temperature (C)" = "red")) +
-    theme_minimal()
+#tempplot <- ggplot(DEBY_env, aes(x = datetime)) +
+    #geom_line(aes(y = temp, color = "Temperature (C)")) +
+    #ylim(0, 40) +
+    #labs(x = "Time", y = "Temperature C", title = "Temperature Plot for DEBY - Gloucester Point, Virginia") +
+    #scale_color_manual(values = c( "Temperature (C)" = "red")) +
+    #theme_minimal()
 
-tempplot
+#tempplot
 ```
 
 ### We need to calculate the mean, maximum, and minimum values for salinity and temperature per month and year. First make two data frames to contain each of the annual and monthly averages.
@@ -230,24 +238,24 @@ print(DEBY_envryear_temp)
 ```
 ### Plot the months and years of data collection to check if there are any collection gaps in the data.
 ```{r timeplot - salinity}
-timeplot <- ggplot(DEBY_envrmonth_sal, aes(x = year)) +
-    geom_point(aes(y = month, color = length_salinity), size = 4) +
-    labs(x = "Time", y = "Month", title = "Salinity Timeplot for DEBY - Gloucester Point, Virginia") +
-    ylim(1,12) +
-    theme_minimal()
+#timeplot <- ggplot(DEBY_envrmonth_sal, aes(x = year)) +
+    #geom_point(aes(y = month, color = length_salinity), size = 4) +
+    #labs(x = "Time", y = "Month", title = "Salinity Timeplot for DEBY - Gloucester Point, Virginia") +
+    #ylim(1,12) +
+    #theme_minimal()
 
-timeplot
+#timeplot
 ```
 
 ### Plot the months and years of data collection to check if there are any collection gaps in the data.
 ```{r timeplot - temperature}
-timeplot_temp <- ggplot(DEBY_envrmonth_temp, aes(x = year)) +
-    geom_point(aes(y = month, color = length_temp), size = 4) +
-    labs(x = "Time", y = "Month", title = "Temperature Timeplot for DEBY - Gloucester Point, Virginia") +
-    ylim(1,12) +
-    theme_minimal()
+#timeplot_temp <- ggplot(DEBY_envrmonth_temp, aes(x = year)) +
+    #geom_point(aes(y = month, color = length_temp), size = 4) +
+    #labs(x = "Time", y = "Month", title = "Temperature Timeplot for DEBY - Gloucester Point, Virginia") +
+    #ylim(1,12) +
+    #theme_minimal()
 
-timeplot_temp
+#timeplot_temp
 ```
 
 We can now calculate a list of variables that we will have collected for all sites. This will allow us to compare sites easily. We will calculate the number of observations from each site, the mean annual, maximum annual, and minimum annual value for all variables. 
@@ -277,10 +285,11 @@ Mean_min_temperature_C <- mean(DEBY_envryear_temp$min_temp)
 Temperature_st_dev <- sd(DEBY_env$temp)
 Temperature_n <- nrow(DEBY_env)
 Temperature_years <- nrow(DEBY_envryear_temp)
+temp_quantile_10 <- quantile(DEBY_env$temp, 0.1)
+temp_quantile_90 <- quantile(DEBY_env$temp, 0.9)
 
 #Create a data frame to store the temperature results
-DEBY_temp <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Temperature_C, Mean_max_temperature_C, Mean_min_temperature_C, Temperature_st_dev, Temperature_n, Temperature_years, collection_type)
-print(DEBY_temp)
+DEBY_temp <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Temperature_C, Mean_max_temperature_C, Mean_min_temperature_C, temp_quantile_10, temp_quantile_90, Temperature_st_dev, high_temp_stress_days, frac_high_temp_stress_days, Temperature_n, Temperature_years, collection_type)
 
 # Write to a unique new CSV file
 write.csv(DEBY_temp, "../../data/envr_of_origin/env_summarized/Temperature/DEBY_temp_summarized.csv", row.names = FALSE)
@@ -295,10 +304,12 @@ Mean_min_Salinity_ppt <- mean(DEBY_envryear_sal$min_salinity)
 Salinity_st_dev <- sd(DEBY_env$salinity)
 Salinity_n <- nrow(DEBY_env)
 Salinity_years <- nrow(DEBY_envryear_sal)
+salinity_quantile_10 <- quantile(DEBY_env$salinity, 0.1)
+salinity_quantile_90 <- quantile(DEBY_env$salinity, 0.9)
 
 
 #Create a data frame to store the temperature results
-DEBY_salinity <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Salinity_ppt, Mean_max_Salinity_ppt, Mean_min_Salinity_ppt, Salinity_st_dev, Salinity_n, Salinity_years, collection_type)
+DEBY_salinity <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Salinity_ppt, Mean_max_Salinity_ppt, Mean_min_Salinity_ppt, salinity_quantile_10, salinity_quantile_90, high_sal_stress_days,low_sal_stress_days, frac_high_sal_stress_days, frac_low_sal_stress_days, Salinity_st_dev, Salinity_n, Salinity_years, collection_type)
 print(DEBY_salinity)
 
 # Write to the combined file with all sites 
