@@ -1,0 +1,62 @@
+---
+title: "envr_dist_quantiles.Rmd"
+output: html_document
+date: "2025-04-22"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+library(dplyr)
+library(readr)
+library(forcats)
+library(RColorBrewer)
+library(circlize)
+library(BiocManager)
+library(vegan)
+
+```
+
+This is standard deviation, 10 quantile, and 90 quantile for salinity and temperature all in one dataframe. It includes the 8 environments-of-origin and the 2 environments-of-experiment. 
+
+```{r}
+
+envr_quants_raw <- read_csv(file.path("..", "..", "data", "pairwise_differences_analyses", "H2F_envr_20250409.csv"))
+
+```
+
+### Data preparation
+
+```{r}
+
+# change _ to - in site names
+envr_quants_raw$site_name <- gsub("_", "-", envr_quants_raw$site_name)
+
+envr_quants_filtered <- envr_quants_raw %>% 
+  filter(!site_name %in% c("LEW", "YRK")) %>% # remove environments of experiment
+  arrange(factor(site_name, levels = c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME"))) # reorder
+
+# save as csv
+write.csv(envr_quants_filtered, "../../data/envr_of_origin/envr_quantiles_summary.csv")
+          
+# remove site names from data frame and save as object
+envr_quants_dist <- subset(envr_quants_filtered, select = -c(site_name))
+```
+
+### Run distance analysis 
+
+```{r}
+# run distance analysis and save to matrix
+envr_quants_mat <- as.matrix(dist(envr_quants_dist))
+rownames(envr_quants_mat) <- c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME")
+colnames(envr_quants_mat) <- c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME")
+
+# save envr distance matrix as csv
+saveRDS(envr_quants_mat, "../../data/envr_of_origin/envr_quantiles_dist.rds")
+
+View(envr_quants_mat)
+```
+```
