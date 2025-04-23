@@ -24,7 +24,6 @@ library(forcats)
 library(RColorBrewer)
 library(circlize)
 library(BiocManager)
-library(ComplexHeatmap)
 library(vegan)#for Mantel test
 ```
 

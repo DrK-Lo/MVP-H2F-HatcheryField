@@ -13,6 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ### Packages
 
 ```{r packages}
+
 library(tidyverse)
 library(ggplot2)
 library(gridExtra)
@@ -22,6 +23,8 @@ library(grid)#for ggplot arranging
 library(cowplot) #arrange ggplots
 library(ggpmisc)
 library(vegan) #for Mantel tests
+library(reshape2)
+
 ```
 
 ```{r}
@@ -38,10 +41,10 @@ library(vegan) #for Mantel tests
 length <- read.csv(file.path("..", "..", "data", "performance_H2F", "latestage_length.csv"))
 
 #this file has summary statistics on temperature and salinity for the 8 groups 
-envr_summary <-  read.csv(file.path("..", "..", "data", "envr_of_origin", "envr_summary_stats.csv"))
+envr_summary <-  read.csv(file.path("..", "..", "data", "envr_of_origin", "envr_quantiles_summary.csv"))
 
 #this file is a matrix of the environmental distances between each group
-envr_dist <- readRDS(file.path("..", "..", "data", "envr_of_origin", "envr_dist.rds"))
+envr_dist <- readRDS(file.path("..", "..", "data", "envr_of_origin", "envr_quantiles_dist.rds"))
 
 #this file contains survival rate data for larval oysters up to day 21 post hatching
 survival <-  read.csv(file.path("..", "..", "data", "performance_H2F", "CViMVP_larvae_survival.csv"))
@@ -123,7 +126,7 @@ summary(envr)
 envr$lat <- c(37.249107, 37.98030, 37.1501163, 28.096000, 29.239925, 30.440030, 43.053746, 44.01330)
 ```
 
-#Join data frames
+#### Join data frames
 ```{r}
 surv_length_envr <- left_join(envr, means_mm_21, by = "site_name") %>% 
   left_join(means_mm_78, by = "site_name") %>% 
@@ -133,172 +136,93 @@ surv_length_envr <- left_join(envr, means_mm_21, by = "site_name") %>%
 write.csv(surv_length_envr, file.path("..", "..", "data", "parent_effects_H2F", "Survival_Length_Envr_Data.csv"), row.names = FALSE)
 ```
 
-Make distance matrices for difference in mean length across groups at days 21 and 78 and difference in survival across groups at day 21
+Make distance matrices for difference in mean length across groups at days 21 and 78 and difference in survival across groups at day 21.
+
 ```{r}
 #save vector of row and column names
 population_order <- c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME")
 
-# if you pull things out of surv_length_envr, they are already in the right order
+# if you pull things out of surv_length_envr, they are already in the right order - Kiran
 day21_len <- surv_length_envr %>% select(mean_length_mm_21)
 
 day21_len_dist <- as.matrix(dist(day21_len$mean_length_mm_21))
 rownames(day21_len_dist) <- population_order
 colnames(day21_len_dist) <- population_order
 
-day78_len_dist <- as.matrix(dist(means_mm_78$mean_length_mm_78))
-rownames(day78_len_dist) <- rownames
-colnames(day78_len_dist) <- colnames
+day78_len <- surv_length_envr %>% select(mean_length_mm_78)
 
-day21_surv_dist <- as.matrix(dist(survival_filter$percent_survival))
-rownames(day21_surv_dist) <- rownames
-colnames(day21_surv_dist) <- colnames
+day78_len_dist <- as.matrix(dist(day78_len$mean_length_mm_78))
+rownames(day78_len_dist) <- population_order
+colnames(day78_len_dist) <- population_order
+
+day21_surv <- surv_length_envr %>% select(percent_survival)
+
+day21_surv_dist <- as.matrix(dist(day21_surv$percent_survival))
+rownames(day21_surv_dist) <- population_order
+colnames(day21_surv_dist) <- population_order
 
 ```
 
-I will run Mantel tests comparing days 21 and 78 length distance and day 21 survival distance to environmental distance. The goal is to see if more environmentally distant pairs of groups also have greater differences in length and survival. 
+#### Fix Fst matrix
 
-H0: There is no correlation between the environmental distance matrix values and the length or survival matrix values. Environmental distance and length/survival do not vary with each other in any predictable way
-
-#Mantel test
 ```{r}
-length21_envr = mantel(day21_len_dist, envr_dist_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
-length21_envr
-#mantel r = 0.3054, p = 0.078492. As environmental distance between a pair of sights increases, so does the distance between their mean shell length at day 21. This is not significant.
 
-length78_envr = mantel(day78_len_dist, envr_dist_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
-length78_envr 
-#mantel r = -0.1653. p = 0.73843. As environmental distance between a pair of sights increases, the distance between their mean shell length at day 78 decreases. This is not significant.
+# reorder
+fst_mat <- fst_mat[population_order, population_order]
 
-surv21_envr = mantel(day21_surv_dist, envr_dist_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
-surv21_envr
-#mantel r = -0.2299, p = 0.50545
 ```
 
-#Correct Mantel p-values
-```{r}
-mantel_p <- c(0.078492, 0.73843, 0.50545)
-
-mantel_p_adj <- p.adjust(mantel_p, method = "BH")
-
-mantel_p_adj
-
-#length21_envr corrected p = 0.235476, length78_envr corrected p = 0.738430, surv21_envr corrected p = 0.738430
-```
+#### Check order of all matrices
 
 ```{r}
-#make function to wrap title text
-wrapper <- function(x, ...) 
-{
-  paste(strwrap(x, ...), collapse = "\n")
+
+check_matrix_order <- function(matrices, population_order) {
+  all_good <- TRUE
+  for (i in seq_along(matrices)) {
+    if (!identical(rownames(matrices[[i]]), population_order)) {
+      message(sprintf("Row names do not match in matrix %d", i))
+      all_good <- FALSE
+    }
+    if (!identical(colnames(matrices[[i]]), population_order)) {
+      message(sprintf("Column names do not match in matrix %d", i))
+      all_good <- FALSE
+    }
+  }
+  if (all_good) {
+    message("All matrices have matching row and column names.")
+  }
 }
 
+check_matrix_order(list(fst_mat, envr_dist, day21_len_dist, day78_len_dist, day21_surv_dist), population_order)
+
 ```
 
-#Plot Mantel test results
-```{r}
-envr_pairwise_dist <- as.vector(envr_dist_mat)
-
-day21_pairwise_len_dist <- as.vector(day21_len_dist)
-
-day78_pairwise_len_dist <- as.vector(day78_len_dist)
-
-day21_pairwise_surv_dist <- as.vector(day21_surv_dist)
-
-pairwise_dist <- as.data.frame(cbind(envr_pairwise_dist, day21_pairwise_len_dist, day78_pairwise_len_dist, day21_pairwise_surv_dist))
-
-length21_envr_dist <- pairwise_dist %>%
-  ggplot(aes(x = envr_pairwise_dist, y = day21_pairwise_len_dist))+
-  geom_point()+
-  labs(subtitle = "A: p = 0.078, corrected p = 0.235, r = 0.31")+
-  ylab(wrapper("Difference in Day 21 Length (mm)", width = 20))+
-  theme(axis.title.y = element_text(size = 9), axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), plot.subtitle = element_text(size = 10), plot.title= element_blank())
-
-length21_envr_dist
-
-length78_envr_dist <- pairwise_dist %>%
-  ggplot(aes(x = envr_pairwise_dist, y = day78_pairwise_len_dist))+
-  geom_point()+
-  labs(subtitle = "B: p = 0.738, corrected p = 0.738, r = -0.17")+
-  ylab(wrapper("Difference in Day 78 Length (mm)", width = 20))+
-  theme(axis.title.y = element_text(size = 9), axis.title.x = element_blank(), axis.text.x = element_blank(), axis.ticks.x = element_blank(), plot.subtitle = element_text(size = 10))
-
-length78_envr_dist
-
-surv_envr_dist <- pairwise_dist %>%
-  ggplot(aes(x = envr_pairwise_dist, y = day21_pairwise_surv_dist))+
-  geom_point()+
-  labs(subtitle = "C: p = 0.505, corrected p = 0.738, r = -0.23")+
-  ylab(wrapper("Difference in Survival (%)", width = 20))+
-  xlab("Environmental Distance")+
-  theme(axis.title.y = element_text(size = 9), axis.title.x = element_text(size = 9), plot.subtitle = element_text(size = 10))
-
-surv_envr_dist
-
-mantel_plots <- plot_grid(length21_envr_dist, length78_envr_dist, surv_envr_dist, ncol = 1, align = "v")
-
-mantel_plots
-
-ggsave("mantel_plots.png",
-       plot = mantel_plots,
-       device = png,
-       path = "../figures/pairwise_differences_analyses")
-```
-
-# Partial Mantel tests
+### Partial Mantel tests
 
 Comparison between measures of genetic diversity of parents and size and survival in the hatchery of offspring.
 Comparison between genetic distance of parent populations and size and survival distance of offspring populations.
 
 To test the effect of pairwise Fst on pairwise length at day 21, length at day 78, and survival at day 21.
 
-### Assumptions
+#### Assumptions
 
 ```{r}
 
 # Linearity
 
-# plot(as.vector(as.matrix(fst_mat)), as.vector(as.matrix(envr_matrix)))
-# 
-# plot(as.vector(as.matrix(fst_mat)), as.vector(as.matrix(dist_day21_len)))
-# plot(as.vector(as.matrix(fst_mat)), as.vector(as.matrix(dist_day78_len)))
-# plot(as.vector(as.matrix(fst_mat)), as.vector(as.matrix(dist_day21_surv)))
-# 
-# plot(as.vector(as.matrix(envr_matrix)), as.vector(as.matrix(dist_day21_len)))
-# plot(as.vector(as.matrix(envr_matrix)), as.vector(as.matrix(dist_day78_len)))
-# plot(as.vector(as.matrix(envr_matrix)), as.vector(as.matrix(dist_day21_surv)))
+plot(as.vector(as.matrix(fst_mat)), as.vector(as.matrix(envr_dist)))
+
+plot(as.vector(as.matrix(fst_mat)), as.vector(as.matrix(day21_len_dist)))
+plot(as.vector(as.matrix(fst_mat)), as.vector(as.matrix(day78_len_dist)))
+plot(as.vector(as.matrix(fst_mat)), as.vector(as.matrix(day21_surv_dist)))
+
+plot(as.vector(as.matrix(envr_dist)), as.vector(as.matrix(day21_len_dist)))
+plot(as.vector(as.matrix(envr_dist)), as.vector(as.matrix(day78_len_dist)))
+plot(as.vector(as.matrix(envr_dist)), as.vector(as.matrix(day21_surv_dist)))
 
 ```
 
-### Regular tests
-
-We can probably cut these - Kiran.
-
-```{r}
-
-# length on day 21
-mantel_len_21 = mantel(day21_len_dist, fst_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
-mantel_len_21 # not significant
-
-# length on day 78
-mantel_len_78 = mantel(day78_len_dist, fst_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
-mantel_len_78 # not significant
-
-# survival on day 21
-mantel_surv_21 = mantel(day21_surv_dist, fst_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
-mantel_surv_21 # not significant
-
-# collect p-values
-mantel_p <- c(0.40866, 0.63634, 0.35296)
-
-# adjust p-vaules to correct for multiple tests
-mantel_p_adj <- p.adjust(mantel_p, method = "BH")
-
-# print results
-mantel_p_adj
-
-```
-
-### Partial tests
+#### Partial tests
 
 To test the effect of genetic distance while controlling for environmental distance.
 
@@ -307,19 +231,19 @@ To test the effect of genetic distance while controlling for environmental dista
 # test for the effect of genetic distance on size/survival, controlling for environmental distance
 
 # length on day 21
-partial_mantel_gen_len_21 <- mantel.partial(day21_len_dist, fst_mat, envr_dist_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
+partial_mantel_gen_len_21 <- mantel.partial(day21_len_dist, fst_mat, envr_dist, method = "spearman", permutations = 10000, na.rm = TRUE)
 partial_mantel_gen_len_21
 
 # length on day 78
-partial_mantel_gen_len_78 <- mantel.partial(day78_len_dist, fst_mat, envr_dist_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
+partial_mantel_gen_len_78 <- mantel.partial(day78_len_dist, fst_mat, envr_dist, method = "spearman", permutations = 10000, na.rm = TRUE)
 partial_mantel_gen_len_78
 
 # survival on day 21
-partial_mantel_gen_surv_21 <- mantel.partial(day21_surv_dist, fst_mat, envr_dist_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
+partial_mantel_gen_surv_21 <- mantel.partial(day21_surv_dist, fst_mat, envr_dist, method = "spearman", permutations = 10000, na.rm = TRUE)
 partial_mantel_gen_surv_21
 
 # collect p-values
-partial_mantel_gen_p <- c(0.39086, 0.56304, 0.38786)
+partial_mantel_gen_p <- c(0.46275, 0.44756, 0.13309)
 
 # adjust p-vaules to correct for multiple tests
 partial_mantel_gen_p_adj <- p.adjust(partial_mantel_gen_p, method = "BH")
@@ -336,19 +260,19 @@ To test the effect of environmental distance while controlling for genetic dista
 # test for the effect of environmental distance on size/survival, controlling for genetic distance
 
 # length on day 21
-partial_mantel_envr_len_21 <- mantel.partial(day21_len_dist, envr_dist_mat, fst_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
+partial_mantel_envr_len_21 <- mantel.partial(day21_len_dist, envr_dist, fst_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
 partial_mantel_envr_len_21
 
 # length on day 78
-partial_mantel_envr_len_78 <- mantel.partial(day78_len_dist, envr_dist_mat, fst_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
+partial_mantel_envr_len_78 <- mantel.partial(day78_len_dist, envr_dist, fst_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
 partial_mantel_envr_len_78
 
 # survival on day 21
-partial_mantel_envr_surv_21 <- mantel.partial(day21_surv_dist, envr_dist_mat, fst_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
+partial_mantel_envr_surv_21 <- mantel.partial(day21_surv_dist, envr_dist, fst_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
 partial_mantel_envr_surv_21
 
 # collect p-values
-partial_mantel_envr_p <- c(0.22978, 0.13719, 0.76752)
+partial_mantel_envr_p <- c(0.082192, 0.92851, 0.25207)
 
 # adjust p-vaules to correct for multiple tests
 partial_mantel_envr_p_adj <- p.adjust(partial_mantel_envr_p, method = "BH")
@@ -358,9 +282,9 @@ partial_mantel_envr_p_adj
 
 ```
 
-# Heatmaps
+### Heatmaps
 
-## Data preparation
+#### Data preparation
 
 ```{r}
 
@@ -388,7 +312,7 @@ process_matrix <- function(matrix_data, population_order) {
 population_order <- c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME")
 
 # gather all matrices
-all_data <- list(fst_mat, envr_dist_mat, day21_len_dist, day78_len_dist, day21_surv_dist)
+all_data <- list(fst_mat, envr_dist, day21_len_dist, day78_len_dist, day21_surv_dist)
 
 # apply function to each matrix
 processed_data <- lapply(all_data, process_matrix, population_order = population_order)
@@ -402,7 +326,7 @@ plot3_surv21 <- processed_data[[5]]
 
 ```
 
-## Heatmaps
+#### Heatmaps
 
 ```{r}
 
@@ -453,7 +377,7 @@ fig_heatmap_grid <- grid.arrange(
   nrow = 2  # 2 rows
 )
 
-#ggsave("fig_heatmap_grid.png", fig_heatmap_grid, width = 14, height = 8)
+ggsave("fig_heatmap_grid.png", fig_heatmap_grid, width = 14, height = 8)
 
 ```
 
