@@ -1,0 +1,417 @@
+---
+title: "EoO_Field_Envr_Figures"
+output: pdf_document
+date: "2024-10-08"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+#set working directory
+setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/envr_data")
+```
+
+### Packages
+<<<<<<< Updated upstream
+```{r}
+=======
+```{r packages}
+>>>>>>> Stashed changes
+library(dplyr) #Used for working with data frames
+library(lubridate) #Used for time-date conversions
+library(readr) #Used to read the CSV file
+library(stringr) #for relpacing parts of a string
+library(ggplot2) #plot with ggplot
+library(cowplot) #arrange ggplots
+library(ggpmisc)
+```
+
+### Load Data
+<<<<<<< Updated upstream
+```{r}
+=======
+```{r sal_files}
+>>>>>>> Stashed changes
+#Read in salinity files
+TX_sal <- read.csv("../../data/envr_of_origin/full_sal/TX_sal_full.csv")
+#remove extra empty columns
+TX_sal <- subset(TX_sal, select = c(site_name, datetime, salinity))
+
+LA_sal <- read.csv("../../data/envr_of_origin/full_sal/LA_sal_full.csv")
+
+FL_sal <- read.csv("../../data/envr_of_origin/full_sal/FL_sal_full.csv")
+
+LOLA_sal <- read.csv("../../data/envr_of_origin/full_sal/LOLA_sal_full.csv")
+
+DEBY_sal <- read.csv("../../data/envr_of_origin/full_sal/DEBY_sal_full.csv")
+
+VA_sal <- read.csv("../../data/envr_of_origin/full_sal/VA_sal_full.csv")
+#remove uncorrected salinity column and rename corrected_salinity to salinity
+VA_sal <- subset(VA_sal, select = -c(salinity))
+colnames(VA_sal) <- c("site_name", "datetime", "salinity")
+
+NH_sal <- read.csv("../../data/envr_of_origin/full_sal/NH_sal_full.csv")
+#remove extra empty columns
+NH_sal <- subset(NH_sal, select = c(site_name, datetime, salinity))
+
+ME_sal <- read.csv("../../data/envr_of_origin/full_sal/ME_sal_full.csv")
+
+#Read in quantiles csv
+quantiles <- read.csv("../../data/pairwise_differences_analyses/H2F_envr_20250409.csv")
+#Replace underscores in site names with hyphens
+quantiles$site_name <- str_replace(quantiles$site_name, "_", "-")
+```
+
+### Data preparation
+
+#### POSIXct date time
+<<<<<<< Updated upstream
+```{r}
+=======
+```{r salinity_datetime}
+>>>>>>> Stashed changes
+#convert all date times to POSIXct
+TX_sal$datetime <- as.POSIXct(TX_sal$datetime, "%m/%d/%y %H:%M", tz = "")
+
+LA_sal$datetime <- as.POSIXct(LA_sal$datetime, "%Y-%m-%d %H:%M:%S", tz = "")
+
+FL_sal$datetime <- as.POSIXct(FL_sal$datetime, "%m/%d/%y %H:%M", tz = "")
+
+LOLA_sal$datetime <- as.POSIXct(LOLA_sal$datetime, "%Y-%m-%d %H:%M:%S", tz = "")
+
+DEBY_sal$datetime <- as.POSIXct(DEBY_sal$datetime, "%Y-%m-%d %H:%M:%S", tz = "")
+
+VA_sal$datetime <- as.POSIXct(VA_sal$datetime, "%Y-%m-%d %H:%M:%S", tz = "")
+
+NH_sal$datetime <- as.POSIXct(NH_sal$datetime,"%m/%d/%y %H:%M", tz = "")
+
+ME_sal$datetime <- as.POSIXct(ME_sal$datetime, "%m/%d/%y %H:%M", tz = "")
+```
+
+#### Field environmental data
+<<<<<<< Updated upstream
+```{r}
+=======
+```{r field_data}
+>>>>>>> Stashed changes
+#S2-DEBY and the York field site use the same environmental data, but the field site data should only include the time frame of the field experiment (August 2023 - November 2024). Make a copy of the DEBY_sal df, rename it YRK_sal, and filter the time frame.
+
+YRK_sal <- DEBY_sal %>% 
+  filter(datetime>= 1690862400 & datetime <= 1732078800)
+YRK_sal["site_name"][YRK_sal["site_name"] == "DEBY"] <- "YRK"
+
+#S1-LOLA and the Lewisetta field site use the same environmental data, but the field site data should only include the time frame of the field experiment (August 2023 - November 2024). Make a copy of the LOLA_sal df, rename it LEW_sal, and filter the time frame.
+#currently subsetting dates as 08-01-2023- 11-20-2024
+LEW_sal <- LOLA_sal %>% 
+  filter(datetime>= 1690862400 & datetime <= 1732078800)
+LEW_sal["site_name"][LEW_sal["site_name"] == "LOLA"] <- "LEW"
+```
+
+#### Merge and clean data
+<<<<<<< Updated upstream
+```{r}
+=======
+```{r merge_data}
+>>>>>>> Stashed changes
+#merge data frames
+full_sal <- rbind(TX_sal, LA_sal,  FL_sal, LOLA_sal, DEBY_sal, VA_sal, NH_sal, ME_sal, LEW_sal, YRK_sal)
+
+#make all salinity variables numeric
+full_sal$salinity <- as.numeric(full_sal$salinity)
+
+#check for NAs
+na_full_sal <- is.na(full_sal) # store our NAs in a variable
+summary(na_full_sal) # we have 553 NAs in datetime and 192380 NAs in salinity that are stored as "TRUE" 
+#remove NAs using na.omit
+full_sal <- na.omit(full_sal) 
+
+#filter out salinity values below 0 and above 40
+filtered_sal <- full_sal %>%
+    filter(between(salinity, 0, 40)) 
+
+#rename wild sites to include W1-W6 label
+wild_sites <- c("TX", "LA", "FL", "VA", "NH", "ME")
+w_label <- paste(paste("W", 1:6, sep = ""), wild_sites, sep = "-")
+
+for(site in wild_sites){
+    filtered_sal["site_name"][filtered_sal["site_name"] == site] <- w_label[grep(site, w_label)]
+}
+
+#rename selection line sites to include S1-S2 labels
+sel_sites <- c("LOLA", "DEBY")
+s_label <- paste(paste("S", 1:2, sep = ""), sel_sites, sep = "-")
+
+for(site in sel_sites){
+    filtered_sal["site_name"][filtered_sal["site_name"] == site] <- s_label[grep(site, s_label)]
+}
+```
+
+#### Prepare quantile data
+<<<<<<< Updated upstream
+```{r}
+=======
+```{r quant_prep}
+>>>>>>> Stashed changes
+#calculate mean salinity and save in quantiles
+mean_sal <- filtered_sal %>% 
+  aggregate(salinity ~ site_name, FUN = mean)
+quantiles <- left_join(quantiles, mean_sal, by = "site_name")
+
+#filter out YRK and LEW from quantiles
+quant_sub1 <- quantiles %>% 
+  filter(site_name != "YRK" & site_name != "LEW")
+#quantiles for only YRK and LEW
+quant_sub2 <- quantiles %>% 
+  filter(site_name == "YRK" | site_name == "LEW")
+```
+
+### Figure: Environment of origin salinity violin plot
+<<<<<<< Updated upstream
+```{r}
+=======
+```{r sal_violin}
+>>>>>>> Stashed changes
+eoo_sal_violin <- filtered_sal %>% 
+  filter(site_name != "YRK" & site_name != "LEW") %>% 
+  ggplot(aes(site_name, salinity)) +
+  geom_violin() +
+  geom_boxplot(width = .1) +
+  geom_errorbar(data = quant_sub1, aes(ymin = salinity_quantile_10, ymax = salinity_quantile_90), width=.3, color = "blue")+
+  ggtitle("Environment-of-Origin Salinity")+
+  ylab("Salinity (ppt)")+
+  scale_x_discrete(name = "Group", limits = c("W1-TX","W2-LA","W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME"))+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+eoo_sal_violin
+
+ggsave("eoo_salinity_violin.pdf",
+       plot = eoo_sal_violin,
+       device = "pdf",
+       path = "../../figures/envr_of_origin")
+```
+
+### Figure: Common gardens salinity violin plot
+```{r}
+field_sal_violin <- filtered_sal %>% 
+  filter(site_name == "YRK" | site_name == "LEW") %>% 
+  ggplot(aes(site_name, salinity)) +
+  geom_violin() +
+  geom_boxplot(width = .1) +
+  geom_errorbar(data = quant_sub2, aes(ymin = salinity_quantile_10, ymax = salinity_quantile_90), width=.3, color = "blue")+
+  ggtitle("Common Garden Salinity")+
+  ylab("Salinity (ppt)")+
+  scale_x_discrete(name = "Group", limits = c("LEW", "YRK"))+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+field_sal_violin
+
+ggsave("field_salinity_violin.pdf",
+       plot = field_sal_violin,
+       device = "pdf",
+       path = "../../figures/envr_of_origin")
+```
+
+###Figure: EoO 0.1 temperature quantile heatmap
+<<<<<<< Updated upstream
+```{r}
+=======
+```{r temp_heatmap}
+>>>>>>> Stashed changes
+eoo_temp_10_heatmap <- ggplot(quant_sub1, aes(site_name, 1, fill = temp_quantile_10)) +
+  geom_tile()+
+  scale_fill_viridis_c(option = "D", limits = c(6.1,14.75))+  # use viridis color scale
+  scale_x_discrete(name = "Group", limits = c("W1-TX","W2-LA","W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME"))+
+  labs(title = "0.1 Temp Quantile", fill = "Temp °C") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.text.y = element_blank(), axis.title.y = element_blank(), axis.ticks.y = element_blank(), panel.grid = element_blank())
+
+eoo_temp_10_heatmap
+
+ggsave("eoo_temp10_heat.pdf",
+       plot = eoo_temp_10_heatmap,
+       device = "pdf",
+       path = "../../figures/envr_of_origin",
+       height = 2.5,
+       width = 6)
+```
+
+###Figure: EoO 0.9 temperature quantile heatmap
+```{r}
+eoo_temp_90_heatmap <- ggplot(quant_sub1, aes(site_name, 1, fill = temp_quantile_90), height = 2, width = 7) +
+  geom_tile()+
+  scale_fill_viridis_c(option = "A", limits = c(21.2,30.8)) +  # use viridis color scale
+  scale_x_discrete(name = "Group", limits = c("W1-TX","W2-LA","W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME"))+
+  labs(title  = "0.9 Temp Quantile", fill = "Temp °C") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.text.y = element_blank(), axis.title.y = element_blank(), axis.ticks.y = element_blank(), panel.grid = element_blank())
+
+eoo_temp_90_heatmap
+
+ggsave("eoo_temp_90_heat.pdf",
+       plot = eoo_temp_90_heatmap,
+       device = "pdf",
+       path = "../../figures/envr_of_origin",
+       height = 2.5,
+       width = 6)
+```
+
+###Figure: Common gardens 0.1 temperature quantile heatmap
+```{r}
+field_temp_10_heatmap <- ggplot(quant_sub2, aes(site_name, 1, fill = temp_quantile_10)) +
+  geom_tile()+
+  scale_fill_viridis_c(option = "D", limits = c(6.1,14.75)) +  # use viridis color scale
+  scale_x_discrete(name = "Group", limits = c("LEW", "YRK"))+
+  labs(title = "0.1 Temp Quantile", fill = "Temp °C") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.text.y = element_blank(), axis.title.y = element_blank(), axis.ticks.y = element_blank(), panel.grid = element_blank())
+
+field_temp_10_heatmap
+
+ggsave("field_temp10_heat.pdf",
+       plot = field_temp_10_heatmap,
+       device = "pdf",
+       path = "../../figures/envr_of_origin",
+       height = 2.5,
+       width = 6)
+```
+
+###Figure: Common gardnes 0.9 temperature quantile heatmap
+```{r}
+field_temp_90_heatmap <- ggplot(quant_sub2, aes(site_name, 1, fill = temp_quantile_90), height = 2, width = 7) +
+  geom_tile()+
+  scale_fill_viridis_c(option = "A", limits = c(21.2,30.8)) +  # use viridis color scale
+  scale_x_discrete(name = "Group", limits = c("LEW", "YRK"))+
+  labs(title  = "0.9 Temp Quantile", fill = "Temp °C") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.text.y = element_blank(), axis.title.y = element_blank(), axis.ticks.y = element_blank(), panel.grid = element_blank())
+
+field_temp_90_heatmap
+
+ggsave("field_temp_90_heat.pdf",
+       plot = field_temp_90_heatmap,
+       device = "pdf",
+       path = "../../figures/envr_of_origin",
+       height = 2.5,
+       width = 6)
+```
+
+### Disease data
+
+#### Disease data preparation
+```{r}
+#Make disease dataframe
+site_name <- quantiles$site_name
+MSX <- c("NA", "NA", "NA", 1, 1, 3, 3, 3, 3, 2)
+dermo <- c("NA", "NA", "NA", 3, 3, 3, 3, 3, 3, 3)
+disease <- as.data.frame(cbind(site_name, MSX, dermo))
+```
+
+###Figure: EoO Dermo Pressure
+```{r}
+#Make heatmap of environment-of-origin Dermo disease pressure
+eoo_dermo <- disease %>% 
+  filter(site_name != "YRK" | site_name != "LEW") %>% 
+  ggplot(aes(site_name, 1, fill = factor(dermo)), height = 2, width = 7)+
+  geom_tile(show.legend = T)+
+  scale_fill_manual(name="Pressure",
+                    limits=c("0", "1", "2", "3", "NA"),
+                    values=c("0"="#DEF5E5FF", "1"="#6CD3ADFF", "2"="#3487A6FF", "3"="#403A75FF", "NA" = "grey"))+
+  scale_x_discrete(name = "Group", limits = c("W1-TX","W2-LA","W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME"))+
+  ggtitle("Dermo")+
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.text.y = element_blank(), axis.title.y = element_blank(), axis.ticks.y = element_blank(), panel.grid = element_blank())
+
+eoo_dermo
+
+ggsave("eoo_dermo.pdf",
+       plot = eoo_dermo,
+       device = "pdf",
+       path = "../../figures/envr_of_origin",
+       height = 2.5,
+       width = 6)
+```
+
+###Figure: EoO MSX Pressure
+```{r}
+#Make heatmap of environment-of-origin MSX disease pressure
+eoo_msx <- disease %>% 
+  filter(site_name != "YRK" | site_name != "LEW") %>% 
+    ggplot(aes(site_name, 1, fill = factor(MSX)), height = 2, width = 7)+
+  geom_tile(show.legend = T)+
+  scale_fill_manual(name="Pressure",
+                    limits=c("0", "1", "2", "3", "NA"),
+                    values=c("0"="#DEF5E5FF", "1"="#6CD3ADFF", "2"="#3487A6FF", "3"="#403A75FF", "NA" = "grey"))+
+  scale_x_discrete(name = "Group", limits = c("W1-TX","W2-LA","W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME"))+
+  labs(title = "MSX", fill = "MSX Pressure") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.text.y = element_blank(), axis.title.y = element_blank(), axis.ticks.y = element_blank(), panel.grid = element_blank())
+
+eoo_msx
+
+ggsave("eoo_msx.pdf",
+       plot = eoo_msx,
+       device = "pdf",
+       path = "../../figures/envr_of_origin",
+       height = 2.5,
+       width = 6)
+```
+
+###Figure: Common Gardens Dermo Pressure
+```{r}
+#Make heatmap of field site Dermo disease pressure
+field_dermo <- disease %>% 
+  filter(site_name == "YRK" | site_name == "LEW") %>% 
+    ggplot(aes(site_name, 1, fill = factor(dermo)), height = 2, width = 7)+
+  geom_tile(show.legend = T)+
+  scale_fill_manual(name="Pressure",
+                    limits=c("0", "1", "2", "3", "NA"),
+                    values=c("0"="#DEF5E5FF", "1"="#6CD3ADFF", "2"="#3487A6FF", "3"="#403A75FF", "NA" = "grey"))+
+  scale_x_discrete(name = "Group", limits = c("LEW", "YRK"))+
+  labs(title = "Dermo", fill = "Pressure") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.text.y = element_blank(), axis.title.y = element_blank(), axis.ticks.y = element_blank(), panel.grid = element_blank())
+
+field_dermo
+
+ggsave("field_dermo.pdf",
+       plot = field_dermo,
+       device = "pdf",
+       path = "../../figures/envr_of_origin",
+       height = 2.5,
+       width = 2)
+```
+
+###Figure: Common Gardens MSX Pressure
+```{r}
+#Make heatmap of field site MSX disease pressure
+field_msx <- disease %>% 
+  filter(site_name == "YRK" | site_name == "LEW") %>% 
+    ggplot(aes(site_name, 1, fill = factor(MSX)), color = colors_df$colors, height = 2, width = 7) +
+  geom_tile(show.legend = T)+
+   scale_fill_manual(name="Pressure",
+                    limits=c("0", "1", "2", "3", "NA"),
+                    values=c("0"="#DEF5E5FF", "1"="#6CD3ADFF", "2"="#3487A6FF", "3"="#403A75FF", "NA" = "grey"))+
+  scale_x_discrete(name = "Group", limits = c("LEW", "YRK"))+
+  labs(title = "MSX", fill = "Pressure") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.text.y = element_blank(), axis.title.y = element_blank(), axis.ticks.y = element_blank(), panel.grid = element_blank())
+
+field_msx
+
+ggsave("field_msx.pdf",
+       plot = field_msx,
+       device = "pdf",
+       path = "../../figures/envr_of_origin",
+       height = 2.5,
+       width = 2)
+```
+<<<<<<< Updated upstream
+=======
+
+
+>>>>>>> Stashed changes
