@@ -10,13 +10,12 @@ This code analyzes the effect of conditions in the environments-of-origin and pa
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-##Set working directory
-```{r setwd}
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```{r}
+setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/parent_effects_H2F")
 ```
 
-## Load packages
-```{r packages}
+### Load packages
+```{r}
 library(tidyverse)
 library(car)
 library(ggplot2)
@@ -29,54 +28,64 @@ library(broom)#save lm results to tibbles
 library(outliers)
 ```
 
-##Read in necessary files
-```{r read_csvs}
+### Load data
+```{r}
 #this file contains raw lengths of all oysters aged 15-78 days
 length <- read.csv(file.path("../../data/performance_H2F/latestage_length.csv"))
 
-#this file has summary statistics on temperature and salinity for the 8 sites (W1-TX, W2-LA, W3-FL, S1-LOLA, S2-DEBY, W4-VA, W5-NH, W6-ME)
-envr_summary <-  read.csv("../../data/envr_of_origin/envr_summary_stats.csv")
+#this file has 0.1 and 0.9 quantiles for temperature and salinity for the 8 groups
+quantiles <- read.csv("../../data/pairwise_differences_analyses/H2F_envr_20250409.csv")
 
 #this file contains survival rate data for larval oysters up to day 21 post hatching
 survival <-  read.csv("../../data/performance_H2F/CViMVP_larvae_survival.csv")
 
+#this file contains data on mean heterozygosity and allelic richness in the parent populations
 parent_genetics <- read.csv("../../data/parent_effects_H2F/parent_genetic_effects.csv")
 ```
 
-Extract survival rates from survival data frame, and reorganize data frame
-```{r survival_cleaning}
-#For survival rates, we only care about survival from day 21 (marked as day_an 15-21), so filter for those day_an only. Reminder that days 15-21 were grouped for analysis because there were constant larval drops occurring during that time as individuals reached the eyed stage, but the number of drops varied by site_name. Also exclude LARMIX, since there is no environmental data for that, given that it represents oysters from multiple sites
-survival_day21 <- survival %>% 
+### Survival Data Prep
+```{r}
+#For survival rates, we only care about survival from day 21 (marked as day_an 15-21), so select those only. Reminder that days 15-21 were grouped for analysis because there were constant larval drops occurring during that time as individuals reached the eyed stage, but the number of drops varied by site_name. Exclude LARMIX, since it has no environmental data.
+surv21 <- survival %>% 
   filter(Day_analysis == "15-21") %>% 
   filter(Tank_naming != "MVP-LARMIX")
 
 #Exclude any groups with "small" in their label. The length data only considers the eyed oysters.
-small <- grep("small", survival_day21$Group_Day_Label, ignore.case = TRUE)
+small <- grep("small", surv21$Group_Day_Label, ignore.case = TRUE)
 
-#make new dataframe WITHOUT any indices saved in small, mean remaining data are everything except small larvae
-survival_day21_sub <- survival_day21[-small, ]
+#make new dataframe WITHOUT any indices saved in small
+surv21_sub <- surv21[-small, ]
+
+#replace JR with updated group name "VA"
+surv21_sub["Tank_naming"][surv21_sub["Tank_naming"] == "MVP-JR"] <- "MVP-VA"
 
 #exclude "MVP" from group names and add in W or S labels
-survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-TX"] <- "W1-TX"
-survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-LA"] <- "W2-LA"
-survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"]  == "MVP-FL"] <- "W3-FL"
-survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-LOLA"] <- "S1-LOLA"
-survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-DEBY"] <- "S2-DEBY"
-survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-JR"] <- "W4-VA"
-survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-NH"] <- "W5-NH"
-survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-ME"] <- "W6-ME"
+wild <- c("TX", "LA", "FL", "VA", "NH", "ME")
+w_label <- paste(paste("W", 1:6, sep = ""), wild, sep = "-")
+
+for(x in wild){
+    surv21_sub["Tank_naming"][surv21_sub["Tank_naming"] == paste("MVP", x, sep = "-")] <- w_label[grep(x, w_label)]
+}
+
+#rename selection line sites to include S1-S2 labels
+selection <- substring(groups[7:8], 5)
+s_label <- paste(paste("S", 1:2, sep = ""), selection, sep = "-")
+
+for(x in selection){
+    surv21_sub["Tank_naming"][surv21_sub["Tank_naming"] == paste("MVP", x, sep = "-")] <- s_label[grep(x, s_label)]
+}
 
 #select only tank naming and survival rate columns
-survival_filter <- survival_day21_sub[, c("Tank_naming", "Survival_rate_perc")]
+survival_filter <- surv21_sub[, c("Tank_naming", "Survival_rate_perc")]
 
 #rename columns
 colnames(survival_filter) <- c("site_name", "percent_survival")
 ```
 
-##Length df organizing
+### Length data prep
 ```{r length_cleaning_means}
 #select columns with site name, day, and shell length in mm
-length <- length[,c("site_name", "day_an", "shell_length_mm")]
+length <- length[,c("site_name","day_an", "shell_length_mm")]
 
 colnames(length) <- c("site_name", "day_an", "length")
 
@@ -84,40 +93,41 @@ colnames(length) <- c("site_name", "day_an", "length")
 length_filter <- length %>% 
   filter(site_name != "H1-LARMIX") %>% 
   mutate(site_name = fct_relevel(site_name, c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME")))
-  
 
-#keep only data from days 15-21
+#make data frame for day 21 length
 length_21 <- length_filter %>% 
   filter(day_an == "15-21")
 
+#make data frame for day 78 length
 length_78 <- length_filter %>% 
   filter(day_an == "78")
 ```
 
-##Remove extra columns from environmental data frame and add latitude
-```{r envr_cleaning}
-#remove extra site label, mean annual temp, mean annual salinity, and standard deviations from envr_summary
-envr <- subset(envr_summary, select = -c(X, Temperature_st_dev, Salinity_st_dev, Mean_Annual_Temperature_C, Mean_Annual_Salinity_ppt))
+### Environmental data prep
+```{r}
+#Replace underscores in site names with hyphens
+quantiles$site_name <- str_replace(quantiles$site_name, "_", "-")
 
-summary(envr)
+#filter out YRK and LEW from quantiles
+quant_sub1 <- quantiles %>% 
+  filter(site_name != "YRK" & site_name != "LEW")
 
-#rename cols
-colnames(envr) <- c("site_name", "mean_max_temp", "mean_min_temp", "mean_max_sal", "mean_min_sal")
+colnames(quant_sub1) <- c("site_name", "sal_sd", "sal10", "sal90", "temp_sd", "temp10", "temp90")
 ```
 
-#Parent genetics df cleaning
+###Genetics data prep
 ```{r parent_genetics_cleaning}
 #rename column names 
 colnames(parent_genetics) <- c("site_name", "ho", "avg_expected_hs", "ar")
 ```
 
-#Join survival, genetic, and envr data frames
+###Data product: H_Survival_Envr_Genetics.csv
 ```{r surv_join_dfs}
 #make df of just genetic and envr data
-envr_gen <- left_join(envr, parent_genetics, by = "site_name")
+envr_gen <- left_join(quant_sub1, parent_genetics, by = "site_name")
 
 #merge survival data with genetic and environmental data
-surv_merge <- left_join(survival_filter, envr, by = "site_name") %>% 
+surv_merge <- left_join(survival_filter, quant_sub1, by = "site_name") %>% 
   left_join(parent_genetics, by = "site_name")
 
 write.csv(surv_merge, "../../data/parent_effects_H2F/H_Survival_Envr_Genetics.csv", row.names = FALSE)
@@ -125,7 +135,7 @@ write.csv(surv_merge, "../../data/parent_effects_H2F/H_Survival_Envr_Genetics.cs
 
 Since we want to use the full raw length data, we can't just left join the length, envr, and genetic data frames as they have different numbers of rows. We'll use for loops to subset our data for each site_name and create new columns for allelic richness, heterozygosity, mean annual temp, and mean annual salinity from there.
 
-#Join length day 21, genetic, and envr data frames
+### Data product: H_Length21_Envr_Genetics.csv
 ```{r len21_join_dfs}
 #make list of site names
 site_ls <- as.character(unique(length_filter$site_name))
@@ -143,16 +153,16 @@ for (site in site_ls) {
 		gen_sub <- parent_genetics %>%
 			filter(site_name == site)	
 		
-		envr_sub <- envr %>% 
+		q <- quant_sub1 %>% 
 		  filter(site_name == site)
 	  
 		#add columns to length subset for allelic richness, average observed heterozygosity, mean annual temp, and mean annual salinity
 		len21_sub$ar <- gen_sub$ar
 		len21_sub$ho <- gen_sub$ho
-		len21_sub$mean_min_temp <- envr_sub$mean_min_temp
-		len21_sub$mean_max_temp <- envr_sub$mean_max_temp
-		len21_sub$mean_min_sal <- envr_sub$mean_min_sal
-		len21_sub$mean_max_sal <- envr_sub$mean_max_sal
+		len21_sub$temp10 <- q$temp10
+		len21_sub$temp90 <- q$temp90
+		len21_sub$sal10 <- q$sal10
+		len21_sub$sal90 <- q$sal90
 		
 		#save len21_sub for the given site_name to the list and name it after the current site
 		length21_join_ls[[site]] <- len21_sub
@@ -189,16 +199,16 @@ for (site in site_ls) {
 		gen_sub <- parent_genetics %>%
 			filter(site_name == site)	
 		
-		envr_sub <- envr %>% 
+		envr1 <- envr_sub %>% 
 		  filter(site_name == site)
 	  
 		#add columns to length subset for allelic richness, average observed heterozygosity, mean annual temp, and mean annual salinity
 		len78_sub$ar <- gen_sub$ar
 		len78_sub$ho <- gen_sub$ho
-		len78_sub$mean_min_temp <- envr_sub$mean_min_temp
-		len78_sub$mean_max_temp <- envr_sub$mean_max_temp
-		len78_sub$mean_min_sal <- envr_sub$mean_min_sal
-		len78_sub$mean_max_sal <- envr_sub$mean_max_sal
+		len78_sub$temp10 <- envr1$temp10
+		len78_sub$temp90 <- envr1$temp90
+		len78_sub$sal10 <- envr1$sal10
+		len78_sub$sal90 <- envr1$sal90
 		
 		#save len78_sub for the given site_name to the list and name it after the current site
 		length78_join_ls[[site]] <- len78_sub
@@ -221,194 +231,122 @@ write.csv(len78_envr_gen, "../../data/parent_effects_H2F/H_Length78_Envr_Genetic
 
 #Check for multicollinearity among explanatory variables
 ```{r multicollinearity}
-cor_matrix <- cor(envr_gen[,c("mean_min_temp", "mean_max_temp", "mean_min_sal", "mean_max_sal", "ho", "ar")])
-plot(envr_gen[,c("mean_min_temp", "mean_max_temp", "mean_min_sal", "mean_max_sal", "ho", "ar")])
-#Average observed Ho and temperature are borderline collinear (r = 0.68).
+cor_matrix <- cor(envr_gen[,c("temp10", "temp90", "sal10", "sal90", "ho", "ar")])
+plot(envr_gen[,c("temp10", "temp90", "sal10", "sal90", "ho", "ar")])
+#temp quantile 90 and ho are collinear (r = 0.805). Temp quantile 90 is also collinear with ar (r = 0.75). Everything else looks fine. Remove temp quantile 90 and check VIF.
 
 #calculate variance inflation factor (VIF)- create VIF function
-VIF <- function(a, b, c, d, e, f){
-  1/(1-summary(lm(a ~ b + c + d + e + f))$r.squared)
+VIF <- function(a, b, c, d, e){
+  1/(1-summary(lm(a ~ b + c + d + e))$r.squared)
 }
 
-#get VIF for mean minimum temperature
-VIF(envr_gen$mean_min_temp, envr_gen$mean_max_temp, envr_gen$mean_min_sal, envr_gen$mean_max_sal, envr_gen$ho, envr_gen$ar)
-#VIF_min_temp = 10.76
+#get VIF for temp quantile 10
+VIF(envr_gen$temp10, envr_gen$sal10, envr_gen$sal90,  envr_gen$ho, envr_gen$ar)
+#VIF_temp10 = 4.47
 
-#VIF for mean maximum temp
-VIF(envr_gen$mean_max_temp, envr_gen$mean_min_sal, envr_gen$mean_max_sal, envr_gen$ho, envr_gen$ar, envr_gen$mean_min_temp)
-#VIF_max_temp = 4.75
+#VIF for salinity quantile 10
+VIF(envr_gen$sal10, envr_gen$sal90,  envr_gen$ho, envr_gen$ar, envr_gen$temp10)
+#VIF_sal10 = 3.47
 
-#VIF for mean minimum salinity
-VIF(envr_gen$mean_min_sal, envr_gen$mean_max_sal, envr_gen$ho, envr_gen$ar, envr_gen$mean_min_temp, envr_gen$mean_max_temp)
-#VIF_min_sal = 2.80
+#VIF for salinity quantile 90
+VIF(envr_gen$sal90,  envr_gen$ho, envr_gen$ar, envr_gen$temp10, envr_gen$sal10)
+#VIF_min_sal = 2.95
 
-#VIF for mean maximum salinity
-VIF(envr_gen$mean_max_sal, envr_gen$ho, envr_gen$ar, envr_gen$mean_min_temp, envr_gen$mean_max_temp, envr_gen$mean_min_sal)
-#VIF_mean_max = 13.54
-
-#VIF for average observed heterozygosity
-VIF(envr_gen$ho, envr_gen$ar, envr_gen$mean_min_temp, envr_gen$mean_max_temp, envr_gen$mean_min_sal, envr_gen$mean_max_sal)
-#VIF_ho = 15.04
+#VIF for ho
+VIF(envr_gen$ho, envr_gen$ar, envr_gen$temp10, envr_gen$sal10, envr_gen$sal90)
+#VIF_ho = 3.41
 
 #VIF for average allelic richness
-VIF(envr_gen$ar, envr_gen$mean_min_temp, envr_gen$mean_max_temp, envr_gen$mean_min_sal, envr_gen$mean_max_sal, envr_gen$ho)
-#VIF_ar = 1.51
+VIF(envr_gen$ar, envr_gen$temp10, envr_gen$sal10, envr_gen$sal90, envr_gen$ho)
+#VIF_ar = 2.53
 
 par(mfrow = c(1,1))
-
-#Mean min temperature, mean max salinity, and average observed heterozygosity have somewhat high VIFs (VIF > 10). Run the lm excluding each high-VIF variable individually.
-
-#exclude mean min temperature
-no_min_temp_lm <- lm(length ~ mean_max_temp + mean_min_sal + mean_max_sal + ar + ho, data = len21_envr_gen)
-no_min_temp_resid <- no_min_temp_lm$residuals
-shapiro.test(no_min_temp_resid) #p = 2.7e-7, not normal
-hist(no_min_temp_resid) #left-skewed
-
-#exclude mean max salinity
-no_max_sal_lm <- lm(length ~ mean_min_temp + mean_max_temp + mean_min_sal + ar + ho, data = len21_envr_gen)
-no_max_sal_resid <- no_max_sal_lm$residuals
-shapiro.test(no_max_sal_resid) #p = 3.5e-8, not normal
-hist(no_max_sal_resid) #left-skewed
-
-#exclude ho
-no_ho_lm <- lm(length ~ mean_min_temp + mean_max_temp + mean_min_sal + mean_max_sal + ar, data = len21_envr_gen)
-no_ho_resid <- no_ho_lm$residuals
-shapiro.test(no_ho_resid) #p = 1.5e-8, not normal
-hist(no_ho_resid) #left-skewed
-
-par(mfrow = c(2,2))
-plot(no_min_temp_lm) #homoscedasticity looks good, no outliers
-plot(no_max_sal_lm) #homoscedasticity slightly better than no min temp, no outliers
-plot(no_ho_lm) #homoscedasticity not quite as good as no max sal, but still really even, no outliers
 ```
 
-#Model selection: outlier exclusion
-```{r outlier_exclusion}
+The next chunk includes multiple regressions testing the effects of several environmental and genetic parameters on length and survival in the hatchery/nursery. The explanatory variables are 1) temperature quantile 10, 2) salinity quantile 10, 3) salinity quantile 90, 4) mean observed heterozygosity in the parent oysters from each site (Ho), and 5) mean allelic richness (AR) in the parent oysters from each site.
+
+#Day 21 Length: Multiple regression
+```{r}
+len21_lm <- lm(length ~ temp10 + sal10+ sal90 + ho + ar, data = len21_envr_gen)
+len21_resid <- len21_lm$residuals
+shapiro.test(len21_resid) #p = 2.048e-8, data are not normal, 
+plot(len21_lm) #no outliers, homoscedasticity looks good
+summary(len21_lm) #everything is significant. Model stats: Adj. R squared = 0.2354, F = 39.05, p < 2.2e-16
+
 #there's one exceptionally low length from the TX group that is throwing off normality, I'm going to exclude it and try the models
 len21_envr_gen_sub <- len21_envr_gen %>% 
   filter(length > 0.22)
 
-#exclude mean min temperature
-no_min_temp_lm2 <- lm(length ~ mean_max_temp + mean_min_sal + mean_max_sal + ar + ho, data = len21_envr_gen_sub)
-no_min_temp_resid2 <- no_min_temp_lm2$residuals
-shapiro.test(no_min_temp_resid2) #p = 0.007, not normal, but very improved from full data set
-hist(no_min_temp_resid2) #left-skewed
+par(mfrow = c(1,1))
+#I am using the data excluding the one very low length measurement.
+len21_lm2 <- lm(length ~ temp10 + sal10+ sal90 + ho + ar, data = len21_envr_gen_sub)
+len21_resid2 <- len21_lm2$residuals
+shapiro.test(len21_resid2) #p = 1.27e-5, data are not normal, but improved, multiple regressions are pretty robust to non-normality
+#plot(len21_lm2) #no outliers, homoscedasticity looks good
+summary(len21_lm2) #everything is significant. Model stats: Adj. R squared = 0.2329, F = 38.46, p < 2.2e-16
 
-#exclude mean max salinity
-no_max_sal_lm2 <- lm(length ~ mean_min_temp + mean_max_temp + mean_min_sal + ar + ho, data = len21_envr_gen_sub)
-no_max_sal_resid2 <- no_max_sal_lm2$residuals
-shapiro.test(no_max_sal_resid2) #p = 0.001, not normal, but improved from full data set
-hist(no_max_sal_resid2) #left-skewed
-
-#exclude ho
-no_ho_lm2 <- lm(length ~ mean_min_temp + mean_max_temp + mean_min_sal + mean_max_sal + ar, data = len21_envr_gen_sub)
-no_ho_resid2 <- no_ho_lm2$residuals
-shapiro.test(no_ho_resid2) #p = 0005, not normal, but improved from full data set
-hist(no_ho_resid) #left-skewed
-
-par(mfrow = c(2,2))
-plot(no_min_temp_lm2) #homoscedasticity looks good, no outliers, best normality
-plot(no_max_sal_lm2) #homoscedasticity looks good, no outliers
-plot(no_ho_lm2) #homoscedasticity looks good, no outliers, lowest normality
-```
-
-Because the model excluding mean minimum temperature has the best normality out of all the models, I am going to recalculate multicollinearity and VIF excluding that variable.
-```{r no_mean_min_temp}
-cor_matrix2 <- cor(envr_gen[,c("mean_max_temp", "mean_min_sal", "mean_max_sal", "ho", "ar")])
-plot(envr_gen[,c("mean_max_temp", "mean_min_sal", "mean_max_sal", "ho", "ar")])
-#Average observed Ho and mean max temperature have highest correlation, but not over 0.7 threshold (r = 0.67).
-
-#calculate variance inflation factor (VIF)- create VIF function
-VIF2 <- function(a, b, c, d, e){
-  1/(1-summary(lm(a ~ b + c + d + e))$r.squared)
-}
-
-#VIF for mean maximum temp
-VIF2(envr_gen$mean_max_temp, envr_gen$mean_min_sal, envr_gen$mean_max_sal, envr_gen$ho, envr_gen$ar)
-#VIF_max_temp = 4.49
-
-#VIF for mean minimum salinity
-VIF2(envr_gen$mean_min_sal, envr_gen$mean_max_sal, envr_gen$ho, envr_gen$ar, envr_gen$mean_max_temp)
-#VIF_min_sal = 1.33
-
-#VIF for mean maximum salinity
-VIF2(envr_gen$mean_max_sal, envr_gen$ho, envr_gen$ar, envr_gen$mean_max_temp, envr_gen$mean_min_sal)
-#VIF_mean_max = 2.64
-
-#VIF for average observed heterozygosity
-VIF2(envr_gen$ho, envr_gen$ar, envr_gen$mean_max_temp, envr_gen$mean_min_sal, envr_gen$mean_max_sal)
-#VIF_ho = 4.77
-
-#VIF for average allelic richness
-VIF2(envr_gen$ar, envr_gen$mean_max_temp, envr_gen$mean_min_sal, envr_gen$mean_max_sal, envr_gen$ho)
-#VIF_ar = 1.43
-```
-
-The next chunk includes multiple regressions testing the effects of several environmental and genetic parameters on length and survival in the hatchery/nursery. The explanatory variables are 1) mean maximum temperature at the environment-of-origin (mean_max_temp), 2) mean minimum salinity at the environment of origin (mean_min_sal), 3) mean maximum salinity at the environment of origin (mean_max_sal), 4) mean observed heterozygosity in the parent oysters from each site (Ho), and 5) mean allelic richness (AR) in the parent oysters from each site.
-
-#Day 21 Length: Multiple regression
-```{r}
-#I am using the data excluding the one very low length measurement. I will square the length values to try to normalize the left-skewed residuals
-len21_lm <- lm(length^2 ~ mean_max_temp + mean_min_sal + mean_max_sal + ho + ar, data = len21_envr_gen_sub)
-len21_resid <- len21_lm$residuals
-shapiro.test(len21_resid) #p = 0.12.42, normal, p = 0.0004 when including all data
-#plot(len21_lm) #no outliers, homoscedasticity looks good
-summary(len21_lm) #everything is significant. Model stats: Adj. R squared = 0.1075, F = 15.87, p = 1.035e-14
+#model selection
+drop1(len21_lm2) #this is the model with the lowest AIC (-5135.3)
 ```
 
 #Day 78 Length: Multiple regression and model selection 
 ```{r day78_lm}
 #using all data for day 78
 #day 78 multiple regression
-len78_lm <- lm(length ~ mean_max_temp + mean_min_sal + mean_max_sal + ho + ar, data = len78_envr_gen)
+len78_lm <- lm(length ~ temp10 + sal10+ sal90 + ho + ar, data = len78_envr_gen)
 len78_resid <- len78_lm$residuals
-shapiro.test(len78_resid) #p = 0.0282 with all data
+shapiro.test(len78_resid) #p = 0.00086 
 hist(len78_resid) #these data are right skewed
 #plot(len78_lm) #no outliers, homoscedasticty is good
 
 #try log transforming length values to improve normality
-loglen78_lm <- lm(log10(length) ~ mean_max_temp + mean_min_sal + mean_max_sal + ho + ar, data = len78_envr_gen)
+loglen78_lm <- lm(log10(length) ~ temp10 + sal10+ sal90 + ho + ar, data = len78_envr_gen)
 loglen78_resid <- loglen78_lm$residuals
 shapiro.test(loglen78_resid) #p < 2.2e-16 not normal, much worse than raw data
 
 #try square root transforming length values to improve normality
-sqrtlen78_lm <- lm(length^(1/2) ~ mean_max_temp + mean_min_sal + mean_max_sal + ho + ar, data = len78_envr_gen)
+sqrtlen78_lm <- lm(length^(1/2) ~ temp10 + sal10+ sal90 + ho + ar, data = len78_envr_gen)
 sqrtlen78_resid <- sqrtlen78_lm$residuals
-shapiro.test(sqrtlen78_resid) #p = 0.00012 not normal, worse than raw data
+shapiro.test(sqrtlen78_resid) #p = 6.541e-5 not normal, worse than raw data
 
 #try cube root transforming length values to improve normality
-cu_len78_lm <- lm(length^(1/3) ~ mean_max_temp + mean_min_sal + mean_max_sal + ho + ar, data = len78_envr_gen)
+cu_len78_lm <- lm(length^(1/3) ~ temp10 + sal10+ sal90 + ho + ar, data = len78_envr_gen)
 cu_len78_resid <- cu_len78_lm$residuals
-shapiro.test(cu_len78_resid) #p = 2.42e-9 not normal, much worse than raw data
+shapiro.test(cu_len78_resid) #p = 2.07e-9 not normal, much worse than raw data
 
 #try squaring transforming length values to improve normality
-sq_len78_lm <- lm(length^(2) ~ mean_max_temp + mean_min_sal + mean_max_sal + ho + ar, data = len78_envr_gen)
+sq_len78_lm <- lm(length^(2) ~ temp10 + sal10+ sal90 + ho + ar, data = len78_envr_gen)
 sq_len78_resid <- sq_len78_lm$residuals
 shapiro.test(sq_len78_resid) #p < 2.2e-16 not normal, much worse than raw data
 
 #going to stick with the raw length for this day for now, normality isn't that off
 summary(len78_lm)
-#mean max salinity is not a significant predictor of length at day 78 (p = 0.1178). Everything else is significant
-#model stats: Adj. R squared = 0.280, F = 76.46, p < 2.2e-16
+#Everything is significant
+#model stats: Adj. R squared = 0.2302, F = 59.01, p < 2.2e-16
 
-#remove mean max salinity from model and rerun
-len78_no_max_sal_lm <- lm(length ~ mean_max_temp + mean_min_sal + ho + ar, data = len78_envr_gen)
-len78_no_max_sal_resid <- len78_no_max_sal_lm$residuals
-shapiro.test(len78_no_max_sal_resid) #p = 0.025, not normal, as expected
-#plot(len78_no_max_sal_lm) #no outliers, homoscedasticty is good
-summary(len78_no_max_sal_lm) #all variables significant, overall model stats: adj. R squared = 0.279, F = 94.82, p < 2.2e-16
+#model selection
+drop1(len78_lm) #drop nothing, but lowest AIC is 2410.2
 ```
 
 #Day 21 Survival: Multiple Regression
+I don't think this model is worth running, too few data points, many outliers, not homoscedastic, but I'll leave it here for now for reference.
 ```{r day21_surv_lm}
 #day 78 multiple regression
-surv_lm <- lm(log10(percent_survival) ~ mean_max_temp + mean_min_sal + mean_max_sal + ho + ar, data = surv_merge)
+surv_lm <- lm(percent_survival ~ temp10 + sal10+ sal90 + ho + ar, data = surv_merge)
 surv_resid <- surv_lm$residuals
-shapiro.test(surv_resid) #p = 0.37, normal
-#plot(surv_lm) #no outliers, homoscedasticty is good
-summary(surv_lm)
+shapiro.test(surv_resid) #p = 0.99, normal
+plot(surv_lm) #two outliers
+summary(surv_lm) #only sal10 is significant
 
-#I don't think this model is worth running, too few data points, many outliers, not homoscedastic
+#model selection
+drop1(surv_lm) #drop ho
+
+#rerun model without ho
+surv_lm2 <- lm(percent_survival ~ temp10 + sal10+ sal90 + ar, data = surv_merge)
+drop1(surv_lm2) #dropping nothing at this point results in the lowest AIC, stop model selection now.
+summary(surv_lm2) #now everything except sal90 is significant
+#model stats: p = 0.001406, adj. R squared = 0.9841, F = 109 on 4 and 3 DF
+
 ```
 
 Below adjusted p-values have not been updated to reflect current model p values 
