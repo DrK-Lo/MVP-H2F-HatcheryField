@@ -39,12 +39,16 @@ library(CMplot)
 
 ```{r}
 
+# SNP set thinned for LD
 thinned_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_THINNEDSNPs_exp.rds"))
 
+# full SNP set 
 full_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_FULLSNPs_exp.rds"))
 
+# SNP info
 muts_maf_filtered <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_FULLmuts_exp.rds"))
 
+# sample info
 samp_full_subset <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_samp_full_subset_exp.rds"))
 
 ```
@@ -57,18 +61,18 @@ gen <- thinned_snps
 muts <- muts_maf_filtered
 
 # check dimensions
-dim(gen) # 154 individuals and 104958 SNPs
-dim(muts) 
+dim(gen) # thinned - 154 individuals and 104958 SNPs
+dim(muts) # full mutation-level info - 154609 SNPs
 
 ```
 
-### Fst 
+### Calculating Fst 
 
 #### Data preparation
 
 ```{r}
 
-# filter SNPs that are all heterozygous (all 1s)
+# find SNPs that are NOT all heterozygous (all 1s)
 keep_snps_fst <- apply(gen, 2, function(col) !all(col == 1))
 
 # filter genotype matrix for these SNPs
@@ -83,7 +87,7 @@ colnames(gen)[col_heterozygous] #Affx-1246226248
 
 ```{r}
 
-# now filter the muts again to just retain our SNPs that are not all heterozygous
+# now filter the mutation df again to just retain SNPs that are not all heterozygous
 muts_heterozygous_filtered <- muts[muts$Affx.ID %in% colnames(GEN_filtered_fst), ]
 dim(muts_heterozygous_filtered) # goes down to 104957
 
@@ -93,7 +97,6 @@ dim(muts_heterozygous_filtered) # goes down to 104957
 
 # rename for processing
 fst_data <- GEN_filtered_fst
-head(fst_data)
 
 # make sample IDs into a real column (instead of rownames)
 sample_IDs <- rownames(fst_data)
@@ -114,7 +117,7 @@ head(fst_labels_check)
 samp_labels_check <- samp_full_subset$merge_ID_inds
 head(samp_labels_check)
 
-# check everything is all lined up # everything good
+# check that labels are still all lined up
 identical(fst_labels_check, samp_labels_check) # TRUE
 
 ```
@@ -150,14 +153,14 @@ population_counts
 
 ```{r}
 
-# remove sample ID column for Fst calculation
+# remove sample ID column (first column) for Fst calculation
 fst_data <- fst_data[, -1]
 
 # convert population to factor
 fst_data$ID_SiteDate <- as.factor(fst_data$ID_SiteDate)
 
 # check dimensions one more time
-dim(fst_data) # 104959 - pop col = 104958
+dim(fst_data) # 104959 - sample id col = 104958
 
 ```
 
@@ -165,7 +168,7 @@ dim(fst_data) # 104959 - pop col = 104958
 
 ```{r}
 
-# run Fst calculation
+# run Fst calculation - HPC only
 #fst_results <- pairwise.WCfst(fst_data)
 #fst_results[is.na(fst_results)] <- 0
 
@@ -174,16 +177,16 @@ dim(fst_data) # 104959 - pop col = 104958
 
 #saveRDS(fst_results, file.path("..", "..", "data", "pairwise_differences_analyses", "fst_results.rds"))
 
-# load in fst results
+# load in fst results - after running with HPC
 fst_results <- readRDS(file.path("..", "..", "data", "pairwise_differences_analyses", "fst_results.rds"))
 
 
-# convert the matrix to a long format, and edit column names
+# convert the matrix to a long format and edit column names
 fst_plotting <- melt(fst_results, na.rm = TRUE)
 colnames(fst_plotting) <- c("Var1", "Var2", "value")
 
 # create a vector for the desired order of populations
-population_order <- c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME")
+population_order <- c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME")
 
 # reorder the Var1 and Var2 columns based on the defined order
 fst_plotting$Var1 <- factor(fst_plotting$Var1, levels = population_order)
@@ -196,7 +199,7 @@ fst_plotting
 fig_fst_heatmap <- ggplot(fst_plotting, aes(Var1, Var2, fill = value)) +
   geom_tile(color = "white") +
   #geom_text(aes(label = round(value, 3)), color = "black") +
-  scale_fill_viridis_c(option = "D", na.value = "grey50") +  # use viridis color scale
+  scale_fill_viridis_c(option = "D", na.value = "grey50") + 
   labs(x = "Population", y = "Population", fill = "Fst") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -305,7 +308,7 @@ ggplot(avg_het_long, aes(x = factor(Population, levels = population_order), y = 
        y = "Average Heterozygosity") +
   scale_color_manual(values = c("avg_observed_ho" = "blue", "avg_expected_hs" = "orange")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # angle labels for readability
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
 
@@ -316,7 +319,7 @@ Total number of unique alleles present in a population. Results are close to who
 ```{r}
 
 # calculate allelic richness
-ar_results <- allelic.richness(hierfstat_obj, min.n=34, diploid = TRUE) # min.n = number in smallest population * 2
+ar_results <- allelic.richness(hierfstat_obj, min.n = 34, diploid = TRUE) # min.n = number in smallest population * 2
 
 # extract results
 ar_results <- ar_results$Ar # one value per SNP per population
@@ -390,6 +393,7 @@ dim(full)
 ```
 
 ```{r}
+
 # filter SNPs that are all heterozygous (all 1s)
 keep_snps_fst <- apply(full, 2, function(col) !all(col == 1))
 
@@ -399,9 +403,9 @@ dim(FULL_filtered_fst) # 1 column removed - now there are 154608 SNPs
 
 # check column name to make sure it was a real column
 col_heterozygous <- apply(full, 2, function(col) all(col == 1))
-colnames(full)[col_heterozygous] #Affx-1246226248
+colnames(full)[col_heterozygous] #Affx-1246226248 - same as before
 
-# now filter the muts again to just retain our SNPs that are not all heterozygous
+# now filter the mutation df again to just retain SNPs that are not all heterozygous
 muts_outflank <- muts[muts$Affx.ID %in% colnames(FULL_filtered_fst), ]
 dim(muts_outflank) # goes down to 154608
 
@@ -409,6 +413,7 @@ dim(muts_outflank) # goes down to 154608
 
 ```{r}
 
+# rename for processing
 outflank_data <- FULL_filtered_fst
 
 # make sample IDs into a real column (instead of rownames)
@@ -430,7 +435,7 @@ head(fst_labels_check)
 samp_labels_check <- samp_full_subset$merge_ID_inds
 head(samp_labels_check)
 
-# check everything is all lined up # everything good
+# check everything is all lined up 
 identical(fst_labels_check, samp_labels_check) # TRUE
 
 ```
@@ -440,6 +445,7 @@ identical(fst_labels_check, samp_labels_check) # TRUE
 # add population labels to outflank data
 outflank_data$ID_SiteDate <- samp_full_subset$ID_SiteDate
 
+# edit name format
 outflank_data <- outflank_data %>%
   mutate(ID_SiteDate = recode(ID_SiteDate,
                            "DEBY" = "S2-DEBY",
@@ -540,7 +546,7 @@ OutFLANKResultsPlotter(out_trim , withOutliers = TRUE,
                        NoCorr = TRUE, Hmin = 0.1, binwidth = 0.001, Zoom =
                          TRUE, RightZoomFraction = 0.15, titletext = NULL) # looks fine
 
-# check p value histogram - should look flat ish
+# check p value histogram - should look flat (not great)
 hist(out_trim$results$pvaluesRightTail)
 
 ```
@@ -573,13 +579,12 @@ hist(P1$pvaluesRightTail)
 ```{r}
 
 # separating by chromosome
-
 a = sprintf("%08d", muts_outflank$Position)
 muts_outflank$chrom_position <- paste(muts_outflank$Chromosome, a, sep = ".")
 
 # add chromosome positions to dataframe
 P1$Affx.ID <- P1$LocusName
-joined_P1 <- left_join(P1, muts_outflank, by = c("Affx.ID" = "Affx.ID")) # add order check here
+joined_P1 <- left_join(P1, muts_outflank, by = c("Affx.ID" = "Affx.ID"))
 
 write_csv(joined_P1, file.path("..", "..", "data", "putative_selection", "outflank_results.csv"))
 
