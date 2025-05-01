@@ -15,7 +15,11 @@ setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/envr_data")
 ```
 
 ### Packages
+<<<<<<< Updated upstream
 ```{r}
+=======
+```{r packages}
+>>>>>>> Stashed changes
 library(dplyr) #Used for working with data frames
 library(lubridate) #Used for time-date conversions
 library(readr) #Used to read the CSV file
@@ -26,7 +30,11 @@ library(ggpmisc)
 ```
 
 ### Load Data
+<<<<<<< Updated upstream
 ```{r}
+=======
+```{r sal_files}
+>>>>>>> Stashed changes
 #Read in salinity files
 TX_sal <- read.csv("../../data/envr_of_origin/full_sal/TX_sal_full.csv")
 #remove extra empty columns
@@ -60,7 +68,11 @@ quantiles$site_name <- str_replace(quantiles$site_name, "_", "-")
 ### Data preparation
 
 #### POSIXct date time
+<<<<<<< Updated upstream
 ```{r}
+=======
+```{r salinity_datetime}
+>>>>>>> Stashed changes
 #convert all date times to POSIXct
 TX_sal$datetime <- as.POSIXct(TX_sal$datetime, "%m/%d/%y %H:%M", tz = "")
 
@@ -80,7 +92,11 @@ ME_sal$datetime <- as.POSIXct(ME_sal$datetime, "%m/%d/%y %H:%M", tz = "")
 ```
 
 #### Field environmental data
+<<<<<<< Updated upstream
 ```{r}
+=======
+```{r field_data}
+>>>>>>> Stashed changes
 #S2-DEBY and the York field site use the same environmental data, but the field site data should only include the time frame of the field experiment (August 2023 - November 2024). Make a copy of the DEBY_sal df, rename it YRK_sal, and filter the time frame.
 
 YRK_sal <- DEBY_sal %>% 
@@ -95,7 +111,11 @@ LEW_sal["site_name"][LEW_sal["site_name"] == "LOLA"] <- "LEW"
 ```
 
 #### Merge and clean data
+<<<<<<< Updated upstream
 ```{r}
+=======
+```{r merge_data}
+>>>>>>> Stashed changes
 #merge data frames
 full_sal <- rbind(TX_sal, LA_sal,  FL_sal, LOLA_sal, DEBY_sal, VA_sal, NH_sal, ME_sal, LEW_sal, YRK_sal)
 
@@ -130,7 +150,11 @@ for(site in sel_sites){
 ```
 
 #### Prepare quantile data
+<<<<<<< Updated upstream
 ```{r}
+=======
+```{r quant_prep}
+>>>>>>> Stashed changes
 #calculate mean salinity and save in quantiles
 mean_sal <- filtered_sal %>% 
   aggregate(salinity ~ site_name, FUN = mean)
@@ -145,7 +169,11 @@ quant_sub2 <- quantiles %>%
 ```
 
 ### Figure: Environment of origin salinity violin plot
+<<<<<<< Updated upstream
 ```{r}
+=======
+```{r sal_violin}
+>>>>>>> Stashed changes
 eoo_sal_violin <- filtered_sal %>% 
   filter(site_name != "YRK" & site_name != "LEW") %>% 
   ggplot(aes(site_name, salinity)) +
@@ -189,7 +217,11 @@ ggsave("field_salinity_violin.pdf",
 ```
 
 ###Figure: EoO 0.1 temperature quantile heatmap
+<<<<<<< Updated upstream
 ```{r}
+=======
+```{r temp_heatmap}
+>>>>>>> Stashed changes
 eoo_temp_10_heatmap <- ggplot(quant_sub1, aes(site_name, 1, fill = temp_quantile_10)) +
   geom_tile()+
   scale_fill_viridis_c(option = "D", limits = c(6.1,14.75))+  # use viridis color scale
@@ -378,3 +410,8 @@ ggsave("field_msx.pdf",
        height = 2.5,
        width = 2)
 ```
+<<<<<<< Updated upstream
+=======
+
+
+>>>>>>> Stashed changes

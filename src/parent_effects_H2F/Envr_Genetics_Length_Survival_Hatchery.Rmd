@@ -10,12 +10,13 @@ This code analyzes the effect of conditions in the environments-of-origin and pa
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
-setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/parent_effects_H2F")
+##Set working directory
+```{r setwd}
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 ```
 
-### Load packages
-```{r}
+## Load packages
+```{r packages}
 library(tidyverse)
 library(car)
 library(ggplot2)
@@ -25,67 +26,59 @@ library(cowplot) #arrange ggplots
 library(ggpmisc)
 library(vegan) #for Mantel tests
 library(broom)#save lm results to tibbles
-library(outliers)
 ```
 
-### Load data
-```{r}
+##Read in necessary files
+```{r read_csvs}
 #this file contains raw lengths of all oysters aged 15-78 days
 length <- read.csv(file.path("../../data/performance_H2F/latestage_length.csv"))
 
-#this file has 0.1 and 0.9 quantiles for temperature and salinity for the 8 groups
-quantiles <- read.csv("../../data/pairwise_differences_analyses/H2F_envr_20250409.csv")
+#this file has summary statistics on salinity in the environments of origin for the 8 sites (W1-TX, W2-LA, W3-FL, S1-LOLA, S2-DEBY, W4-VA, W5-NH, W6-ME)
+sal <-  read.csv("../../data/environment/all_salinity.csv")
+
+#this file has summary statistics on temperature in the environments of origin for the 8 sites (W1-TX, W2-LA, W3-FL, S1-LOLA, S2-DEBY, W4-VA, W5-NH, W6-ME)
+temp <-  read.csv("../../data/environment/all_temperature.csv")
 
 #this file contains survival rate data for larval oysters up to day 21 post hatching
 survival <-  read.csv("../../data/performance_H2F/CViMVP_larvae_survival.csv")
 
-#this file contains data on mean heterozygosity and allelic richness in the parent populations
 parent_genetics <- read.csv("../../data/parent_effects_H2F/parent_genetic_effects.csv")
 ```
 
-### Survival Data Prep
-```{r}
-#For survival rates, we only care about survival from day 21 (marked as day_an 15-21), so select those only. Reminder that days 15-21 were grouped for analysis because there were constant larval drops occurring during that time as individuals reached the eyed stage, but the number of drops varied by site_name. Exclude LARMIX, since it has no environmental data.
-surv21 <- survival %>% 
+Extract survival rates from survival data frame, and reorganize data frame
+```{r survival_cleaning}
+#For survival rates, we only care about survival from day 21 (marked as day_an 15-21), so filter for those day_an only. Reminder that days 15-21 were grouped for analysis because there were constant larval drops occurring during that time as individuals reached the eyed stage, but the number of drops varied by site_name. Also exclude LARMIX, since there is no environmental data for that, given that it represents oysters from multiple sites
+survival_day21 <- survival %>% 
   filter(Day_analysis == "15-21") %>% 
   filter(Tank_naming != "MVP-LARMIX")
 
 #Exclude any groups with "small" in their label. The length data only considers the eyed oysters.
-small <- grep("small", surv21$Group_Day_Label, ignore.case = TRUE)
+small <- grep("small", survival_day21$Group_Day_Label, ignore.case = TRUE)
 
-#make new dataframe WITHOUT any indices saved in small
-surv21_sub <- surv21[-small, ]
-
-#replace JR with updated group name "VA"
-surv21_sub["Tank_naming"][surv21_sub["Tank_naming"] == "MVP-JR"] <- "MVP-VA"
+#make new dataframe WITHOUT any indices saved in small, mean remaining data are everything except small larvae
+survival_day21_sub <- survival_day21[-small, ]
 
 #exclude "MVP" from group names and add in W or S labels
-wild <- c("TX", "LA", "FL", "VA", "NH", "ME")
-w_label <- paste(paste("W", 1:6, sep = ""), wild, sep = "-")
-
-for(x in wild){
-    surv21_sub["Tank_naming"][surv21_sub["Tank_naming"] == paste("MVP", x, sep = "-")] <- w_label[grep(x, w_label)]
-}
-
-#rename selection line sites to include S1-S2 labels
-selection <- substring(groups[7:8], 5)
-s_label <- paste(paste("S", 1:2, sep = ""), selection, sep = "-")
-
-for(x in selection){
-    surv21_sub["Tank_naming"][surv21_sub["Tank_naming"] == paste("MVP", x, sep = "-")] <- s_label[grep(x, s_label)]
-}
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-TX"] <- "W1-TX"
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-LA"] <- "W2-LA"
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"]  == "MVP-FL"] <- "W3-FL"
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-LOLA"] <- "S1-LOLA"
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-DEBY"] <- "S2-DEBY"
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-JR"] <- "W4-VA"
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-NH"] <- "W5-NH"
+survival_day21_sub["Tank_naming"][survival_day21_sub["Tank_naming"] == "MVP-ME"] <- "W6-ME"
 
 #select only tank naming and survival rate columns
-survival_filter <- surv21_sub[, c("Tank_naming", "Survival_rate_perc")]
+survival_filter <- survival_day21_sub[, c("Tank_naming", "Survival_rate_perc")]
 
 #rename columns
 colnames(survival_filter) <- c("site_name", "percent_survival")
 ```
 
-### Length data prep
+##Length df organizing
 ```{r length_cleaning_means}
 #select columns with site name, day, and shell length in mm
-length <- length[,c("site_name","day_an", "shell_length_mm")]
+length <- length[,c("site_name", "day_an", "shell_length_mm")]
 
 colnames(length) <- c("site_name", "day_an", "length")
 
@@ -93,41 +86,53 @@ colnames(length) <- c("site_name", "day_an", "length")
 length_filter <- length %>% 
   filter(site_name != "H1-LARMIX") %>% 
   mutate(site_name = fct_relevel(site_name, c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME")))
+  
 
-#make data frame for day 21 length
+#keep only data from days 15-21
 length_21 <- length_filter %>% 
   filter(day_an == "15-21")
 
-#make data frame for day 78 length
 length_78 <- length_filter %>% 
   filter(day_an == "78")
 ```
 
-### Environmental data prep
-```{r}
-#Replace underscores in site names with hyphens
-quantiles$site_name <- str_replace(quantiles$site_name, "_", "-")
+##Remove extra columns from environmental data frames and add latitude
+```{r envr_cleaning}
+#merge temp and sal into one file
+envr <- left_join(temp, sal, by = "site_name")
+summary(envr)
 
-#filter out YRK and LEW from quantiles
-quant_sub1 <- quantiles %>% 
+#remove extra columns
+envr_sub <- subset(envr, select = c(site_name, temp_quantile_10, temp_quantile_90, Temperature_st_dev, salinity_quantile_10, salinity_quantile_90, Salinity_st_dev))
+
+#make site names standard format with the rest of the data frames
+envr_sub["site_name"][envr_sub["site_name"] == "W1_TX"] <- "W1-TX"
+envr_sub["site_name"][envr_sub["site_name"] == "W2_LA"] <- "W2-LA"
+envr_sub["site_name"][envr_sub["site_name"] == "W3_FL"] <- "W3-FL"
+envr_sub["site_name"][envr_sub["site_name"] == "W4_VA"] <- "W4-VA"
+envr_sub["site_name"][envr_sub["site_name"] == "W5_NH"] <- "W5-NH"
+envr_sub["site_name"][envr_sub["site_name"] == "W6_ME"] <- "W6-ME"
+
+#remove rows for LEW and YRK - these are field sites not analyzed in this code
+envr_sub <- envr_sub %>% 
   filter(site_name != "YRK" & site_name != "LEW")
 
-colnames(quant_sub1) <- c("site_name", "sal_sd", "sal10", "sal90", "temp_sd", "temp10", "temp90")
+colnames(envr_sub) <- c("site_name", "temp10", "temp90", "temp_st_dev", "sal10", "sal90", "sal_st_dev")
 ```
 
-###Genetics data prep
+#Parent genetics df cleaning
 ```{r parent_genetics_cleaning}
 #rename column names 
 colnames(parent_genetics) <- c("site_name", "ho", "avg_expected_hs", "ar")
 ```
 
-###Data product: H_Survival_Envr_Genetics.csv
+#Join survival, genetic, and envr data frames
 ```{r surv_join_dfs}
 #make df of just genetic and envr data
-envr_gen <- left_join(quant_sub1, parent_genetics, by = "site_name")
+envr_gen <- left_join(envr_sub, parent_genetics, by = "site_name")
 
 #merge survival data with genetic and environmental data
-surv_merge <- left_join(survival_filter, quant_sub1, by = "site_name") %>% 
+surv_merge <- left_join(survival_filter, envr_sub, by = "site_name") %>% 
   left_join(parent_genetics, by = "site_name")
 
 write.csv(surv_merge, "../../data/parent_effects_H2F/H_Survival_Envr_Genetics.csv", row.names = FALSE)
@@ -135,7 +140,7 @@ write.csv(surv_merge, "../../data/parent_effects_H2F/H_Survival_Envr_Genetics.cs
 
 Since we want to use the full raw length data, we can't just left join the length, envr, and genetic data frames as they have different numbers of rows. We'll use for loops to subset our data for each site_name and create new columns for allelic richness, heterozygosity, mean annual temp, and mean annual salinity from there.
 
-### Data product: H_Length21_Envr_Genetics.csv
+#Join length day 21, genetic, and envr data frames
 ```{r len21_join_dfs}
 #make list of site names
 site_ls <- as.character(unique(length_filter$site_name))
@@ -153,16 +158,16 @@ for (site in site_ls) {
 		gen_sub <- parent_genetics %>%
 			filter(site_name == site)	
 		
-		q <- quant_sub1 %>% 
+		envr1 <- envr_sub %>% 
 		  filter(site_name == site)
 	  
 		#add columns to length subset for allelic richness, average observed heterozygosity, mean annual temp, and mean annual salinity
 		len21_sub$ar <- gen_sub$ar
 		len21_sub$ho <- gen_sub$ho
-		len21_sub$temp10 <- q$temp10
-		len21_sub$temp90 <- q$temp90
-		len21_sub$sal10 <- q$sal10
-		len21_sub$sal90 <- q$sal90
+		len21_sub$temp10 <- envr1$temp10
+		len21_sub$temp90 <- envr1$temp90
+		len21_sub$sal10 <- envr1$sal10
+		len21_sub$sal90 <- envr1$sal90
 		
 		#save len21_sub for the given site_name to the list and name it after the current site
 		length21_join_ls[[site]] <- len21_sub
