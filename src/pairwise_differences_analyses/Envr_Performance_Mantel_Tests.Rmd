@@ -190,7 +190,7 @@ envr$lat <- c(28.096000, 29.239925, 30.440030, 37.1501163, 37.98030, 37.249107, 
 
 surv_length_envr <- left_join(envr, means_mm_21, by = "site_name") %>% 
   left_join(means_mm_78, by = "site_name") %>% 
-  left_join(survival_day21_filter, by = "site_name")
+  left_join(surv_day21, by = "site_name")
 
 # save csv for further analyses
 write.csv(surv_length_envr, file.path("..", "..", "data", "parent_effects_H2F", "Survival_Length_Envr_Data.csv"), row.names = FALSE)
@@ -216,7 +216,7 @@ Make distance matrices for all survival and length variables
 df_list <- list(
   surv_day21 = surv_day21,
   len_21 = means_mm_21,
-  len78 = means_mm_78,
+  len_78 = means_mm_78,
   len_1_lew = length_event1_lewisetta,
   len_1_york = length_event1_yorkriver,
   len_2_lew = length_event2_lewisetta,
@@ -306,34 +306,30 @@ for (name in names(dist_matrices)) {
 
 #### Partial tests
 
-Kiran - the data is all prepped. Just need to figure out a way to run these with loops and adjusting for multiple tests. Should be okay.
-
 To test the effect of genetic distance while controlling for environmental distance.
 
 ```{r}
 
-# test for the effect of genetic distance on size/survival, controlling for environmental distance
+# run partial Mantel tests
+partial_mantel_results <- lapply(dist_matrices, function(dist_mat) {
+  mantel.partial(dist_mat, fst_mat, envr_dist, method = "spearman",
+                 permutations = 10000, na.rm = TRUE)
+})
 
-# length on day 21
-partial_mantel_gen_len_21 <- mantel.partial(day21_len_dist, fst_mat, envr_dist, method = "spearman", permutations = 10000, na.rm = TRUE)
-partial_mantel_gen_len_21
+# extract p-values
+partial_mantel_p <- sapply(partial_mantel_results, function(res) res$signif)
 
-# length on day 78
-partial_mantel_gen_len_78 <- mantel.partial(day78_len_dist, fst_mat, envr_dist, method = "spearman", permutations = 10000, na.rm = TRUE)
-partial_mantel_gen_len_78
+# adjust p-values (Benjamini-Hochberg)
+partial_mantel_p_adj <- p.adjust(partial_mantel_p, method = "BH")
 
-# survival on day 21
-partial_mantel_gen_surv_21 <- mantel.partial(day21_surv_dist, fst_mat, envr_dist, method = "spearman", permutations = 10000, na.rm = TRUE)
-partial_mantel_gen_surv_21
+# output results
+results_df <- data.frame(
+  test = names(partial_mantel_results),
+  p = partial_mantel_p,
+  p_adj = partial_mantel_p_adj
+)
 
-# collect p-values
-partial_mantel_gen_p <- c(0.46275, 0.44756, 0.13309)
-
-# adjust p-vaules to correct for multiple tests
-partial_mantel_gen_p_adj <- p.adjust(partial_mantel_gen_p, method = "BH")
-
-# print results
-partial_mantel_gen_p_adj
+print(results_df)
 
 ```
 
@@ -341,80 +337,36 @@ To test the effect of environmental distance while controlling for genetic dista
 
 ```{r}
 
-# test for the effect of environmental distance on size/survival, controlling for genetic distance
+# run partial Mantel tests
+partial_mantel_results <- lapply(dist_matrices, function(dist_mat) {
+  mantel.partial(dist_mat, envr_dist, fst_mat, method = "spearman",
+                 permutations = 10000, na.rm = TRUE)
+})
 
-# length on day 21
-partial_mantel_envr_len_21 <- mantel.partial(day21_len_dist, envr_dist, fst_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
-partial_mantel_envr_len_21
+# extract p-values
+partial_mantel_p <- sapply(partial_mantel_results, function(res) res$signif)
 
-# length on day 78
-partial_mantel_envr_len_78 <- mantel.partial(day78_len_dist, envr_dist, fst_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
-partial_mantel_envr_len_78
+# adjust p-values (Benjamini-Hochberg)
+partial_mantel_p_adj <- p.adjust(partial_mantel_p, method = "BH")
 
-# survival on day 21
-partial_mantel_envr_surv_21 <- mantel.partial(day21_surv_dist, envr_dist, fst_mat, method = "spearman", permutations = 10000, na.rm = TRUE)
-partial_mantel_envr_surv_21
+# output results
+results_df <- data.frame(
+  test = names(partial_mantel_results),
+  p = partial_mantel_p,
+  p_adj = partial_mantel_p_adj
+)
 
-# collect p-values
-partial_mantel_envr_p <- c(0.082192, 0.92851, 0.25207)
-
-# adjust p-vaules to correct for multiple tests
-partial_mantel_envr_p_adj <- p.adjust(partial_mantel_envr_p, method = "BH")
-
-# print results
-partial_mantel_envr_p_adj
+print(results_df)
 
 ```
 
 ### Heatmaps
 
-#### Data preparation
-
 ```{r}
 
-# function to put all matrices in the same format
+fst_long <- as.data.frame(as.table(fst_mat))
 
-process_matrix <- function(matrix_data, population_order) {
-  # convert the matrix to long format
-  long_data <- melt(matrix_data, na.rm = TRUE)
-  
-  # edit column names
-  colnames(long_data) <- c("Var1", "Var2", "value")
-  
-  # reorder rows and columns
-  long_data <- long_data %>%
-    mutate(
-      Var1 = factor(Var1, levels = population_order),
-      Var2 = factor(Var2, levels = population_order)
-    ) %>%
-    arrange(Var1, Var2)
-  
-  return(long_data)
-}
-
-# create a vector for the desired order of populations
-population_order <- c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME")
-
-# gather all matrices
-all_data <- list(fst_mat, envr_dist, day21_len_dist, day78_len_dist, day21_surv_dist)
-
-# apply function to each matrix
-processed_data <- lapply(all_data, process_matrix, population_order = population_order)
-
-# Access individual processed data frames
-plot1_fst <- processed_data[[1]]
-plot2_envr <- processed_data[[2]]
-plot3_len21 <- processed_data[[3]]
-plot3_len78 <- processed_data[[4]]
-plot3_surv21 <- processed_data[[5]]
-
-```
-
-#### Heatmaps
-
-```{r}
-
-heatmap_fst <- ggplot(plot1_fst, aes(Var1, Var2, fill = value)) +
+heatmap_fst <- ggplot(fst_long, aes(Var1, Var2, fill = Freq)) +
   geom_tile(color = "white") +
   #geom_text(aes(label = round(value, 3)), size = 2, color = "black") +
   scale_fill_viridis_c(option = "D", na.value = "grey50") +  # Use viridis color scale
@@ -422,46 +374,20 @@ heatmap_fst <- ggplot(plot1_fst, aes(Var1, Var2, fill = value)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-heatmap_envr <- ggplot(plot2_envr, aes(Var1, Var2, fill = value)) +
+ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_fst_heatmap.png"), heatmap_fst)
+
+envr_long <- as.data.frame(as.table(envr_dist))
+
+heatmap_envr <- ggplot(envr_long, aes(Var1, Var2, fill = Freq)) +
   geom_tile(color = "white") +
   #geom_text(aes(label = round(value, 3)), size = 2, color = "black") +
   scale_fill_viridis_c(option = "D", na.value = "grey50") +  # Use viridis color scale
-  labs(title = "Environmental distance", x = "Population", y = "Population", fill = "Distance") +
+  labs(title = "Standardized Euclidean environmental distance", 
+       x = "Population", y = "Population", fill = "Distance") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-heatmap_len21 <- ggplot(plot3_len21, aes(Var1, Var2, fill = value)) +
-  geom_tile(color = "white") +
-  #geom_text(aes(label = round(value, 3)), size = 2, color = "black") +
-  scale_fill_viridis_c(option = "D", na.value = "grey50") +  # Use viridis color scale
-  labs(title = "Length (day 21)", x = "Population", y = "Population", fill = "Length (mm)") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-heatmap_len78 <- ggplot(plot3_len78, aes(Var1, Var2, fill = value)) +
-  geom_tile(color = "white") +
-  #geom_text(aes(label = round(value, 3)), size = 2, color = "black") +
-  scale_fill_viridis_c(option = "D", na.value = "grey50") +  # Use viridis color scale
-  labs(title = "Length (day 78)", x = "Population", y = "Population", fill = "Length (mm)") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-heatmap_surv21 <- ggplot(plot3_surv21, aes(Var1, Var2, fill = value)) +
-  geom_tile(color = "white") +
-  #geom_text(aes(label = round(value, 3)), size = 2, color = "black") +
-  scale_fill_viridis_c(option = "D", na.value = "grey50") +  # Use viridis color scale
-  labs(title = "Survival (day 21)", x = "Population", y = "Population", fill = "Survival (%)") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
-# arrange figures in a grid
-fig_heatmap_grid <- grid.arrange(
-  heatmap_fst, heatmap_envr,
-  heatmap_len21, heatmap_len78, heatmap_surv21,
-  nrow = 2  # 2 rows
-)
-
-ggsave("fig_heatmap_grid.png", fig_heatmap_grid, width = 14, height = 8)
+ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_envr_dist_heatmap.png"), heatmap_envr)
 
 ```
 

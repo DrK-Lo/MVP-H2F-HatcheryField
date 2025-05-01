@@ -1,4 +1,4 @@
-"site_name","Salinity_st_dev","salinity_quantile_10","salinity_quantile_90","Temperature_st_dev","temp_quantile_10","temp_quantile_90","lat","mean_length_mm_21","mean_length_mm_78","percent_survival"
+"site_name","Salinity_st_dev","salinity_quantile_10","salinity_quantile_90","Temperature_st_dev","temp_quantile_10","temp_quantile_90","lat","mean_length_mm_21","mean_length_mm_78","surv_21"
 "W1-TX",11.66413094,5.9,36.7,6.385486691,13.8,30.5,28.096,0.297362424242424,12.9298724310345,3.844
 "W2-LA",5.582166837,3,18,6.691385901,13.2,30.7,29.239925,0.316816609756098,11.8406029191176,3.822
 "W3-FL",3.715396855,27.85066428,35.97585067,5.707664316,14.559,29.279,30.44003,0.320185384615385,13.7468897297297,2.4
