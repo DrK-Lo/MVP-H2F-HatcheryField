@@ -23,6 +23,7 @@ library(tidyverse)
 library(ggplot2)
 library(grid)
 library(reshape2)
+library(vegan)
 
 ```
 
@@ -94,6 +95,7 @@ surv_day21 <- survival_day21 %>%
 
 # rename columns
 colnames(surv_day21) <- c("site_name", "surv_21")
+
 ```
 
 #### Hatchery length
@@ -452,6 +454,8 @@ heatmap_fst <- ggplot(fst_long, aes(Var1, Var2, fill = Freq)) +
 
 ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_fst_heatmap.png"), heatmap_fst)
 
+heatmap_fst
+
 envr_long <- as.data.frame(as.table(envr_dist))
 
 heatmap_envr <- ggplot(envr_long, aes(Var1, Var2, fill = Freq)) +
@@ -464,6 +468,8 @@ heatmap_envr <- ggplot(envr_long, aes(Var1, Var2, fill = Freq)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_envr_dist_heatmap.png"), heatmap_envr)
+
+heatmap_envr
 
 ```
 
