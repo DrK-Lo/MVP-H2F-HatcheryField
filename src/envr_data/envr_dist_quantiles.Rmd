@@ -1,5 +1,6 @@
 ---
 title: "envr_dist_quantiles.Rmd"
+author: "Kiran Bajaj"
 output: html_document
 date: "2025-04-22"
 ---
@@ -8,19 +9,18 @@ date: "2025-04-22"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+### Packages
+
 ```{r}
 
-library(dplyr)
+library(tidyverse)
 library(readr)
-library(forcats)
-library(RColorBrewer)
-library(circlize)
-library(BiocManager)
-library(vegan)
 
 ```
 
-This is standard deviation, 10 quantile, and 90 quantile for salinity and temperature all in one dataframe. It includes the 8 environments-of-origin and the 2 environments-of-experiment. 
+### Load data
+
+This is the standard deviation, 10th quantile, and 90th quantile for salinity and temperature all in one data frame. It includes the 8 environments-of-origin and the 2 environments-of-experiment. 
 
 ```{r}
 
@@ -32,27 +32,43 @@ envr_quants_raw <- read_csv(file.path("..", "..", "data", "pairwise_differences_
 
 ```{r}
 
-# change _ to - in site names
+# change underscore to dash in site names to match all other datasets
 envr_quants_raw$site_name <- gsub("_", "-", envr_quants_raw$site_name)
 
 envr_quants_filtered <- envr_quants_raw %>% 
   filter(!site_name %in% c("LEW", "YRK")) %>% # remove environments of experiment
-  arrange(factor(site_name, levels = c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME"))) # reorder
+  arrange(factor(site_name, levels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME"))) # reorder
 
 # save as csv
 write.csv(envr_quants_filtered, "../../data/envr_of_origin/envr_quantiles_summary.csv")
           
-# remove site names from data frame and save as object
-envr_quants_dist <- subset(envr_quants_filtered, select = -c(site_name))
 ```
 
 ### Run distance analysis 
 
 ```{r}
-# run distance analysis and save to matrix
-envr_quants_mat <- as.matrix(dist(envr_quants_dist))
-rownames(envr_quants_mat) <- c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME")
-colnames(envr_quants_mat) <- c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME")
+
+# select columns that need to be scaled for distance analysis
+envr_for_scaling <- envr_quants_filtered %>%
+  select(salinity_quantile_10, salinity_quantile_90, temp_quantile_10, temp_quantile_90)
+
+# scale
+envr_scaled <- (scale(envr_for_scaling))
+
+# calculate distances
+envr_quants_mat <- as.matrix(dist(envr_scaled))
+
+# add labels back
+rownames(envr_quants_mat) <- c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME")
+colnames(envr_quants_mat) <- c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME")
+
+```
+
+#### Data product: environmental distance matrix
+
+Scaled, using quantiles and no standard deviations. 
+
+```{r}
 
 # save envr distance matrix as csv
 saveRDS(envr_quants_mat, "../../data/envr_of_origin/envr_quantiles_dist.rds")
