@@ -7,7 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = "~/MVP_Oyster_Analysis_Camille/MVP_Oysters_Analysis_Camille")
+knitr::opts_knit$set(root.dir = "~/MVP_Oyster_Analysis_Camille/MVP-H2F-HatcheryField")
 
 # load libraries
 library(tidyverse) # for data wrangling
@@ -18,6 +18,7 @@ library(plotrix) # for std error
 library(lme4) # for lmm
 library(performance) # for lmm
 library(lmerTest) # for lmm
+library(multcompView) # for tukey
 library(car) # for avPlots(), Anova()
 ```
 
@@ -31,8 +32,8 @@ First I'll read in and process survival data
 
 ```{r}
 # read in data
-surv_long <- read.csv("results/mortality_long_bags_022025.csv")[,-1]
-bags <- read.csv("data/ooters_prelim/MVP23-FieldBags - bags.csv")
+surv_long <- read.csv("results_field/mortality_long_bags_022025.csv")[,-1]
+bags <- read.csv("data/performance_H2F/MVP23-FieldBags - bags.csv")
 
 # split bags to have more detailed bag data
 bags[,5:6] <- str_split_fixed(bags$bags_label, "-", 3)[,2:3]
@@ -81,11 +82,6 @@ TukeyHSD(aov(lmm5)) # anova doesn't use Type III SS, so use aov - look into aov 
 # add dot plot of survival at last time point for both sites - should be able to add letters
 # another way to do this, maybe in em-means package can get Tukey to letters in plot
 
-sink("results/survival_model_results_03142025.txt")
-Anova(lmm4.1, type = "III")
-Anova(lmm5, type = "III")
-sink()
-
 # dot plot survival at last time point
 surv_t3 <- surv_mod_ord_rm[surv_mod_ord_rm$t == 3,]
 
@@ -102,7 +98,7 @@ surv_t3_plot_pop <- ggplot(surv_t3, aes(x = bag_site, y = surv, fill = pop)) +
 #  geom_dotplot(binaxis='y', stackdir='center', 
 #               position=position_dodge(1.0)) +
   theme_classic()
-surv_t3_plot_pop
+surv_t3_plot_pop 
 
 #extract significant letters from TK test and store
 #require(multcompView)
@@ -141,10 +137,15 @@ surv_final_time_rename_mg <- merge(surv_t3, letters_surv_t3_df_red, by = "popsit
 (surv_final_time_rename_mg)
 
 # plot
+# site color scheme
+site_colors <- data.frame(bag_site = c("Lewisetta","YorkRiver"), site_name = c("Lewisetta","York River"), col = c("#6fffd3","#3a9dff"))
+
+# plot by site
 surv_t3_plot_site <- ggplot(surv_final_time_rename_mg, aes(x = pop, y = surv, fill = bag_site)) + 
-  geom_boxplot(position=position_dodge(1)) +
-  ggtitle("Survival at Final Time Point") +
+  geom_boxplot(width = 0.5, position=position_dodge(0.5)) +
+  labs(title = "Final Oyster Survival", x = "Population", y = "Survival") +
   geom_text(aes(label = letters, y = 1), vjust = -0.5, position=position_dodge(1)) +
+  scale_fill_manual(name = "Site", label = site_colors$site_name, values = site_colors$col)+
   theme_classic()
 surv_t3_plot_site
 
@@ -172,7 +173,7 @@ Now I'll try modeling differences in length. I'll start by reading in and proces
 
 ```{r}
 # read in and trim data
-lengths <- read.csv("results/lengths_long.csv")[,-1]
+lengths <- read.csv("results_field/lengths_long.csv")[,-1]
 head(lengths)
 lengths_mod <- lengths[,c("bag_site","pop","monitoring_event","bags_label","tags_label","length","width")]
 colnames(lengths_mod) <- c("bag_site","pop","t","bags_label","tags_label","length","width")
@@ -211,6 +212,7 @@ lengths_mod_narm_nodead[which(lengths_mod_narm_nodead$width == 465),]
 # i feel confident these are just off by an order of magnitude so i will change them
 lengths_mod_narm_nodead[which(lengths_mod_narm_nodead$length == 400),]$length <- 40.0
 lengths_mod_narm_nodead[which(lengths_mod_narm_nodead$width == 465),]$width <- 46.5
+# just remove this in a second
 
 # try again
 modtemp0.1 <- lm(length ~ pop * bag_site * t, data = lengths_mod_narm_nodead) # outlier 1174
@@ -256,7 +258,6 @@ plot(aov_len_t3) # looks good!
 (tukey_len_t3 <- TukeyHSD(aov_len_t3, conf.level = 0.95))
 
 # multcomp letters to get letters
-library(multcompView)
 anova_len_t3 <- (Anova(lm(length ~ popsite, data = lengths_final_time_rename)))
 letters_len_t3 <- multcompLetters4(aov_len_t3, tukey_len_t3)
 
@@ -279,10 +280,24 @@ letters_len_t3
 sink()
 
 # plot
+# site color scheme
+site_colors <- data.frame(bag_site = c("Lewisetta","YorkRiver"), site_name = c("Lewisetta","York River"), col = c("#6fffd3","#3a9dff"))
+
+# plot by site
+surv_t3_plot_site <- ggplot(surv_final_time_rename_mg, aes(x = pop, y = surv, fill = bag_site)) + 
+  geom_boxplot(width = 0.5, position=position_dodge(0.5)) +
+  labs(title = "Final Oyster Survival", x = "Population", y = "Survival") +
+  geom_text(aes(label = letters, y = 1), vjust = -0.5, position=position_dodge(1)) +
+  scale_fill_manual(name = "Site", label = site_colors$site_name, values = site_colors$col)+
+  theme_classic()
+surv_t3_plot_site
+
 len_t3_plot_site <- ggplot(lengths_final_time_rename_mg, aes(x = pop, y = length, fill = bag_site)) + 
-  geom_boxplot(position=position_dodge(1)) +
-  ggtitle("Length at Final Time Point") +
-  geom_text(aes(label = letters, y = 115), vjust = -0.5, position=position_dodge(1)) +
+  geom_boxplot(width = 0.5, position=position_dodge(0.5)) +
+  labs(title = "Final Oyster Sizes", x = "Population", y = "Length (cm)") +
+  scale_fill_manual(name = "Site", label = site_colors$site_name, values = site_colors$col) +
+  theme_classic()
+  geom_text(aes(label = letters, y = 115), vjust = -0.5, position=position_dodge(0.5)) +
   theme_classic()
 len_t3_plot_site
 
@@ -311,13 +326,13 @@ For the H2F paper, we want to know how environment and genetics are impacting di
 ```{r}
 # start by putting together a complete dataframe
 # genetic data
-gen_parents <- read.csv("data/parent_genetic_effects.csv")
+gen_parents <- read.csv("data/parent_effects_H2F/parent_genetic_effects.csv")
 colnames(gen_parents) <- c("pop","ho","exp_hs","ar")
 surv_mod_gen <- merge(surv_mod_ord_rm, gen_parents, by = "pop")
 
 # environmental data
-env_parents <- read.csv("data/envr_summary_stats.csv")[,-1]
-colnames(env_parents) <- c("pop","mean_temp","max_temp","min_temp","sd_temp","mean_sal","max_sal","min_sal","sd_sal")
+env_parents <- read.csv("data/envr_of_origin/envr_summary_stats.csv")[,-1]
+colnames(env_parents) <- c("pop","max_temp","min_temp","max_sal","min_sal")
 surv_mod_gen_env <- merge(surv_mod_gen, env_parents, by = c("pop"))
 ```
 
@@ -532,6 +547,7 @@ len_GE3.0.lew <- lmer(length ~ min_temp + max_sal + (1|bags_label), data = len_m
 len_GE3.0.lew
 plot(len_GE3.0.lew)
 Anova(len_GE3.0.lew, type = "III") # all signif
+summary(len_GE3.0.lew)
 step(len_GE3.0.lew) # final model
 
 # york t3
@@ -545,6 +561,7 @@ len_GE3.0.york <- lmer(length ~ ar + max_temp + min_sal + max_sal + (1|bags_labe
 len_GE3.0.york
 plot(len_GE3.0.york)
 Anova(len_GE3.0.york, type = "III") # all signif except ar
+summary(len_GE3.0.york)
 step(len_GE3.0.york) # final model
 
 sink("results/len_GE_model_results_04022025.txt")
