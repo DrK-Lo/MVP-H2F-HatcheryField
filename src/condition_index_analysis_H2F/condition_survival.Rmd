@@ -62,6 +62,8 @@ colnames(mean_CI_sub) <- c("bagID", "mean_CI")
 
 #merge survival and mean CI data
 CI_surv <- left_join(surv_sub, mean_CI_sub, by = "bagID")
+
+summary(CI_surv)
 ```
 
 ### Run ANCOVA
@@ -74,8 +76,7 @@ CI_surv_resid <- CI_surv_lm$residuals
 shapiro.test(CI_surv_resid) #p = 0.295, residuals are normal
 plot(CI_surv_lm) 
 
+#run ANCOVA
 CI_surv_ancova <- Anova(CI_surv_lm, type = 3)
-
-CI_surv_ancova
 #survival p = 0.657, bag_site p = 0.000817, interaction p = 0.0967
 ```
