@@ -1,6 +1,7 @@
 ###################
 ## Genotype Data ## ####
 ###################
+# M. Eppley (MGE) note - this script takes the globally recalled data from all CviMVP related projects and produces full + thinned genotype matrices plus genetic structure analyses for each project. 
 
 # setup
 #######
