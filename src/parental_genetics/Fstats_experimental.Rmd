@@ -39,17 +39,21 @@ library(CMplot)
 
 ```{r}
 
+full_set <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250604_experimentalmatrix.rds"))
+
+
+
 # SNP set thinned for LD
-thinned_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_THINNEDSNPs_exp.rds"))
+thinned_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250604_THINNEDSNPs_exp.rds"))
 
 # full SNP set 
-full_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_FULLSNPs_exp.rds"))
+full_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250604_FULLSNPs_exp.rds"))
 
 # SNP info
-muts_maf_filtered <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_FULLmuts_exp.rds"))
+muts_maf_filtered <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250604_FULLmuts_exp.rds"))
 
 # sample info
-samp_full_subset <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_samp_full_subset_exp.rds"))
+samp_full_subset <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250604_samp_full_subset_exp.rds"))
 
 ```
 
@@ -204,7 +208,7 @@ fig_fst_heatmap <- ggplot(fst_plotting, aes(Var1, Var2, fill = value)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_fst_heatmap.png"),  fig_fst_heatmap, width = 8, height = 6)
+ggsave("fig_fst_heatmap.png", fig_fst_heatmap, width = 8, height = 6)
 
 ```
 
@@ -212,99 +216,10 @@ ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_fs
 
 #### Data preparation
 
-Same steps as before but with full SNP set. 
-
-```{r}
-
-# prepare the full SNP set
-full <- full_snps
-
-dim(full)
-
-```
-
-```{r}
-
-# filter SNPs that are all heterozygous (all 1s)
-keep_snps_fst <- apply(full, 2, function(col) !all(col == 1))
-
-# filter genotype matrix for these SNPs
-FULL_filtered_fst <- full[, keep_snps_fst]
-dim(FULL_filtered_fst) # 1 column removed - now there are 154608 SNPs
-
-# check column name to make sure it was a real column
-col_heterozygous <- apply(full, 2, function(col) all(col == 1))
-colnames(full)[col_heterozygous] #Affx-1246226248 - same as before
-
-# now filter the mutation df again to just retain SNPs that are not all heterozygous
-muts_outflank <- muts[muts$Affx.ID %in% colnames(FULL_filtered_fst), ]
-dim(muts_outflank) # goes down to 154608
-
-```
-
 ```{r}
 
 # rename for processing
-basic_stats_data <- FULL_filtered_fst
-
-# make sample IDs into a real column (instead of rownames)
-sample_IDs <- rownames(basic_stats_data)
-basic_stats_data$merge_ID_inds <- sample_IDs # "merge_ID_inds" is the column name in samp_full_subset
-
-# reset the rownames to empty
-rownames(basic_stats_data) <- NULL
-
-# make sure labels in fst data still line up with sample data
-if(!identical((basic_stats_data$merge_ID_inds),samp_full_subset$merge_ID_inds)){
-    print("Error sample names don't line up")
-    break
-   } # passes
-
-# store data to check labels 
-fst_labels_check <- basic_stats_data$merge_ID_inds
-head(fst_labels_check)
-samp_labels_check <- samp_full_subset$merge_ID_inds
-head(samp_labels_check)
-
-# check everything is all lined up 
-identical(fst_labels_check, samp_labels_check) # TRUE
-
-```
-
-```{r}
-
-# add population labels to full snp data
-basic_stats_data$ID_SiteDate <- samp_full_subset$ID_SiteDate
-
-# edit name format
-basic_stats_data <- basic_stats_data %>%
-  mutate(ID_SiteDate = recode(ID_SiteDate,
-                           "DEBY" = "S2-DEBY",
-                           "FL-KingPlan" = "W3-FL",
-                           "LA-SisLake" = "W2-LA",
-                           "LOLA" = "S1-LOLA",
-                           "ME-HogIs" = "W6-ME",
-                           "NH-GrtBay" = "W5-NH",
-                           "TX-CapBay" = "W1-TX",
-                           "VA-DeepWatSh" = "W4-VA"))
-
-# move sample and population columns to front 
-n_cols <- ncol(basic_stats_data)
-basic_stats_data <- basic_stats_data[, c((n_cols-1):n_cols, 1:(n_cols-2))]
-
-# sanity check: number of columns 
-dim(basic_stats_data) # number of SNPs (154608) + sample col + pop col = 154610
-
-# check number of samples per population
-population_counts <- table(basic_stats_data$ID_SiteDate)
-population_counts
-
-```
-
-```{r}
-
-# remove sample ID column for Fst calculation
-basic_stats_data <- basic_stats_data[, -1]
+basic_stats_data <- fst_data
 
 # make the population column a factor
 basic_stats_data$ID_SiteDate <- as.factor(basic_stats_data$ID_SiteDate)
@@ -470,16 +385,104 @@ write_csv(parent_genetic_effects, file.path("..", "..", "data", "parent_effects_
 
 #### Data preparation
 
+Same steps as before but with full SNP set. 
+
 ```{r}
 
-# rename for processing - full SNP set already cleaned
-outflank_data <- basic_stats_data
+# prepare the full SNP set
+full <- full_snps
+
+dim(full)
 
 ```
 
 ```{r}
 
-# check dimensions
+# filter SNPs that are all heterozygous (all 1s)
+keep_snps_fst <- apply(full, 2, function(col) !all(col == 1))
+
+# filter genotype matrix for these SNPs
+FULL_filtered_fst <- full[, keep_snps_fst]
+dim(FULL_filtered_fst) # 1 column removed - now there are 154608 SNPs
+
+# check column name to make sure it was a real column
+col_heterozygous <- apply(full, 2, function(col) all(col == 1))
+colnames(full)[col_heterozygous] #Affx-1246226248 - same as before
+
+# now filter the mutation df again to just retain SNPs that are not all heterozygous
+muts_outflank <- muts[muts$Affx.ID %in% colnames(FULL_filtered_fst), ]
+dim(muts_outflank) # goes down to 154608
+
+```
+
+```{r}
+
+# rename for processing
+outflank_data <- FULL_filtered_fst
+
+# make sample IDs into a real column (instead of rownames)
+sample_IDs <- rownames(outflank_data)
+outflank_data$merge_ID_inds <- sample_IDs # "merge_ID_inds" is the column name in samp_full_subset
+
+# reset the rownames to empty
+rownames(outflank_data) <- NULL
+
+# make sure labels in fst data still line up with sample data
+if(!identical((outflank_data$merge_ID_inds),samp_full_subset$merge_ID_inds)){
+    print("Error sample names don't line up")
+    break
+   } # passes
+
+# store data to check labels 
+fst_labels_check <- outflank_data$merge_ID_inds
+head(fst_labels_check)
+samp_labels_check <- samp_full_subset$merge_ID_inds
+head(samp_labels_check)
+
+# check everything is all lined up 
+identical(fst_labels_check, samp_labels_check) # TRUE
+
+```
+
+```{r}
+
+# add population labels to outflank data
+outflank_data$ID_SiteDate <- samp_full_subset$ID_SiteDate
+
+# edit name format
+outflank_data <- outflank_data %>%
+  mutate(ID_SiteDate = recode(ID_SiteDate,
+                           "DEBY" = "S2-DEBY",
+                           "FL-KingPlan" = "W3-FL",
+                           "LA-SisLake" = "W2-LA",
+                           "LOLA" = "S1-LOLA",
+                           "ME-HogIs" = "W6-ME",
+                           "NH-GrtBay" = "W5-NH",
+                           "TX-CapBay" = "W1-TX",
+                           "VA-DeepWatSh" = "W4-VA"))
+
+# move sample and population columns to front 
+n_cols <- ncol(outflank_data)
+outflank_data <- outflank_data[, c((n_cols-1):n_cols, 1:(n_cols-2))]
+
+# sanity check: number of columns 
+dim(outflank_data) # number of SNPs (154608) + sample col + pop col = 154610
+
+# check number of samples per population
+population_counts <- table(outflank_data$ID_SiteDate)
+population_counts
+
+```
+
+```{r}
+
+# remove sample ID column for Fst calculation
+outflank_data <- outflank_data[, -1]
+
+# convert population to factor
+outflank_data$ID_SiteDate <- as.factor(outflank_data$ID_SiteDate)
+
+# check dimensions one more time
 dim(outflank_data) # 154610 - pop col = 154609
 
 ```
@@ -580,12 +583,12 @@ hist(P1$pvaluesRightTail)
 ```{r}
 
 # separating by chromosome
-a = sprintf("%08d", muts_full_filtered$Position)
-muts_full_filtered$chrom_position <- paste(muts_full_filtered$Chromosome, a, sep = ".")
+a = sprintf("%08d", muts_outflank$Position)
+muts_outflank$chrom_position <- paste(muts_outflank$Chromosome, a, sep = ".")
 
 # add chromosome positions to dataframe
 P1$Affx.ID <- P1$LocusName
-joined_P1 <- left_join(P1, muts_full_filtered, by = c("Affx.ID" = "Affx.ID"))
+joined_P1 <- left_join(P1, muts_outflank, by = c("Affx.ID" = "Affx.ID"))
 
 write_csv(joined_P1, file.path("..", "..", "data", "putative_selection", "outflank_results.csv"))
 

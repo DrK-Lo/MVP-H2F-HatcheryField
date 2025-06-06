@@ -430,13 +430,24 @@ fst_long <- as.data.frame(as.table(fst_mat))
 heatmap_fst <- ggplot(fst_long, aes(Var1, Var2, fill = Freq)) +
   geom_tile(color = "white") +
   #geom_text(aes(label = round(value, 3)), size = 2, color = "black") +
-  scale_fill_viridis_c(option = "D", na.value = "grey50") +  # Use viridis color scale
+scale_fill_viridis_c(
+    option = "D", 
+    na.value = "grey50", 
+    guide = guide_colorbar(label.theme = element_text(angle = 45, size = 12))  # legend tick labels
+  ) +
   labs(title = "", x = "Population", y = "Population", fill = expression("Pairwise " * F[ST])) + 
   theme_minimal() +
-  theme(text = element_text(color = "black")) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # x tick labels
+    axis.text.y = element_text(size = 12),                        # y tick labels
+    axis.title.x = element_text(size = 14),                       # x-axis label
+    axis.title.y = element_text(size = 14),                       # y-axis label
+    legend.title = element_text(size = 14),                       # legend title
+    text = element_text(color = "black"),
+    legend.position = "bottom"
+  )
 
-ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_fst_heatmap.pdf"), heatmap_fst)
+ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_fst_heatmap.pdf"), heatmap_fst, width = 8, height = 8, dpi = 300)
 
 heatmap_fst
 
@@ -445,14 +456,25 @@ envr_long <- as.data.frame(as.table(envr_dist))
 heatmap_envr <- ggplot(envr_long, aes(Var1, Var2, fill = Freq)) +
   geom_tile(color = "white") +
   #geom_text(aes(label = round(value, 3)), size = 2, color = "black") +
-  scale_fill_viridis_c(option = "D", na.value = "grey50") +  # Use viridis color scale
+scale_fill_viridis_c(
+    option = "D", 
+    na.value = "grey50", 
+    guide = guide_colorbar(label.theme = element_text(angle = 45, size = 12))  # legend tick labels
+  ) +
   labs(title = "", 
        x = "Population", y = "Population",   fill = "Standardized Euclidean\nenvironmental distance") +
   theme_minimal() +
-  theme(text = element_text(color = "black")) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # x tick labels
+    axis.text.y = element_text(size = 12),                        # y tick labels
+    axis.title.x = element_text(size = 14),                       # x-axis label
+    axis.title.y = element_text(size = 14),                       # y-axis label
+    legend.title = element_text(size = 14),                       # legend title
+    text = element_text(color = "black"),
+    legend.position = "bottom"
+  )
 
-ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_envr_dist_heatmap.pdf"), heatmap_envr)
+ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_envr_dist_heatmap.pdf"), heatmap_envr, width = 8, height = 8, dpi = 300)
 
 heatmap_envr
 
@@ -476,8 +498,13 @@ heatmap_len_3_lew <- ggplot(len_3_lew_long, aes(Var1, Var2, fill = Freq)) +
   scale_fill_viridis_c(option = "D", na.value = "grey50") +  # Use viridis color scale
   labs(title = "", x = "Population", y = "Population", fill = "Euclidean distance\nin shell length") + 
   theme_minimal() +
-  theme(text = element_text(color = "black")) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # x tick labels
+    axis.text.y = element_text(size = 12),                        # y tick labels
+    axis.title.x = element_text(size = 14),                       # x-axis label
+    axis.title.y = element_text(size = 14),                       # y-axis label
+    text = element_text(color = "black")
+  )
 
 heatmap_surv_3_lew <- ggplot(surv_3_lew_long, aes(Var1, Var2, fill = Freq)) +
   geom_tile(color = "white") +
@@ -486,8 +513,13 @@ heatmap_surv_3_lew <- ggplot(surv_3_lew_long, aes(Var1, Var2, fill = Freq)) +
   labs(title = "", 
        x = "Population", y = "Population",   fill = "Euclidean distance\nin survival") +
   theme_minimal() +
-  theme(text = element_text(color = "black")) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # x tick labels
+    axis.text.y = element_text(size = 12),                        # y tick labels
+    axis.title.x = element_text(size = 14),                       # x-axis label
+    axis.title.y = element_text(size = 14),                       # y-axis label
+    text = element_text(color = "black")
+  )
 
 heatmap_len_3_york <- ggplot(len_3_york_long, aes(Var1, Var2, fill = Freq)) +
   geom_tile(color = "white") +
@@ -495,8 +527,13 @@ heatmap_len_3_york <- ggplot(len_3_york_long, aes(Var1, Var2, fill = Freq)) +
   scale_fill_viridis_c(option = "D", na.value = "grey50") +  # Use viridis color scale
   labs(title = "", x = "Population", y = "Population", fill = "Euclidean distance\nin shell length") +  
   theme_minimal() +
-  theme(text = element_text(color = "black")) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # x tick labels
+    axis.text.y = element_text(size = 12),                        # y tick labels
+    axis.title.x = element_text(size = 14),                       # x-axis label
+    axis.title.y = element_text(size = 14),                       # y-axis label
+    text = element_text(color = "black")
+  )
 
 heatmap_surv_3_york <- ggplot(surv_3_york_long, aes(Var1, Var2, fill = Freq)) +
   geom_tile(color = "white") +
@@ -505,8 +542,13 @@ heatmap_surv_3_york <- ggplot(surv_3_york_long, aes(Var1, Var2, fill = Freq)) +
   labs(title = "", 
        x = "Population", y = "Population",   fill = "Euclidean distance\nin survival") +  
   theme_minimal() +
-  theme(text = element_text(color = "black")) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # x tick labels
+    axis.text.y = element_text(size = 12),                        # y tick labels
+    axis.title.x = element_text(size = 14),                       # x-axis label
+    axis.title.y = element_text(size = 14),                       # y-axis label
+    text = element_text(color = "black")
+  )
 
 stacked_len_surv_heatmap <- 
   (heatmap_len_3_lew | heatmap_len_3_york) /
