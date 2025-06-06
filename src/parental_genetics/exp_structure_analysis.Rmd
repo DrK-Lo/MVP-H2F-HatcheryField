@@ -1,0 +1,332 @@
+---
+title: "exp_structure_analysis"
+author: "Nicole Mongillo"
+date: "2025-05-23"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Loading packages
+```{r}
+library(ggplot2)
+library(LEA)
+library(scatterpie)
+library(sf)
+library(rnaturalearthdata)
+library(rnaturalearth)
+library(dplyr)
+library(stringr)
+```
+
+### Set region colors
+```{r}
+setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/parental_genetics")
+
+# can update region colors to whatever we want to see here
+region_colors <- c(
+  "W1-TX" = "#3e4989",
+  "W2-LA" = "#31688e", 
+  "W3-FL" = "#26828e",
+  "W4-VA" = "#1f9e89",
+  "S1-LOLA" = "#440154", 
+  "S2-DEBY" = "#482878",
+  "W5-NH" = "#35b779",
+  "W6-ME" = "#6ece58"
+  )
+```
+
+```{r}
+pca_data <- read.csv("../../data/parental_genetics_structure/20250203_pca_data_exp.csv")
+
+#rename values in ID_SiteDate to match naming scheme
+pca_data <- pca_data %>%
+  mutate(ID_SiteDate = recode(ID_SiteDate,
+                                   "TX-CapBay" = "W1-TX",
+                                   "LA-SisLake" = "W2-LA",
+                                   "FL-KingPlan" = "W3-FL",
+                                   "VA-DeepWatSh" = "W4-VA",
+                                   "LOLA" = "S1-LOLA",
+                                   "DEBY" = "S2-DEBY",
+                                   "NH-GrtBay" = "W5-NH",
+                                   "ME-HogIs" = "W6-ME"
+                                   ))
+
+# plot PCA by plate to check for batch effects - just see pl6 and pl7 here
+pca_plot <- ggplot(pca_data, aes(x = PC1, y = PC2, color = Plate)) +
+  geom_point(size = 1) + 
+  labs(title = "PCA - Plate Extractions, exp Dataset", x = "PC1", y = "PC2", color = "Plate") +
+  theme_minimal()
+
+pca_plot
+
+# PCs 3 and 4 checking for batch effects
+pca_plot2 <- ggplot(pca_data, aes(x = PC3, y = PC4, color = Plate)) +
+  geom_point(size = 1) + 
+  labs(title = "PCA - Plate Extractions, Whole Dataset", x = "PC3", y = "PC4", color = "Plate") +
+  theme_minimal()
+
+pca_plot2
+
+# PCA plot PCs 1 and 2
+centroids <- pca_data %>%
+  group_by(ID_SiteDate) %>%
+  summarize(PC1 = mean(PC1), PC2 = mean(PC2))
+
+pca_plot3 <- ggplot(pca_data, aes(x = PC1, y = PC2, color = ID_SiteDate)) +
+  geom_point(size = 1) +
+  stat_ellipse(aes(group = ID_SiteDate), level = 0.95) +
+  #geom_text_repel(data = centroids, aes(x = PC1, y = PC2, label = ID_SiteDate), 
+  # size = 3, fontface = "bold", box.padding = 0.5, point.padding = 0.5) +
+  labs(title = "Parental Groups Genetic PCA", x = "PC1", y = "PC2") +
+  scale_color_manual(values = region_colors) +
+  theme_minimal()+
+  theme(legend.position = "none")
+
+pca_plot3
+
+ggsave("parental_pca.pdf",
+       plot = pca_plot3,
+       device = "pdf",
+       path = "../../figures/envr_of_origin",
+       height = 4,
+       width = 5)
+```
+
+```{r}
+# now PCs 3 and 4
+centroids34 <- pca_data %>%
+  group_by(ID_SiteDate) %>%
+  summarize(PC3 = mean(PC3), PC4 = mean(PC4))
+
+pca_plot4 <- ggplot(pca_data, aes(x = PC3, y = PC4, color = ID_SiteDate)) +
+  geom_point(size = 1) +
+  stat_ellipse(aes(group = ID_SiteDate), level = 0.95) +
+  #geom_text_repel(data = centroids34, aes(x = PC3, y = PC4, label = ID_SiteDate), 
+                  #size = 3, fontface = "bold", box.padding = 0.5, point.padding = 0.5) +
+  labs(title = "PCA Plot exp Samples", x = "PC3", y = "PC4", color = "Region") +
+  theme_minimal()
+
+pca_plot4
+```
+
+
+# snmf ancestry analysis
+
+# subset the last geno matrix that we made (GEN_filtered) with our thinned SNPs list from the auto_SVD function
+gen_filtered_subset <- GEN_imputed[, thinned_snps]
+
+# now save our matrix as a .geno format to run the snmf analysis
+write.geno(gen_filtered_subset, "/Users/madelineeppley/Desktop/cvi-diploid-files/20250204geno_imputedfile_exp.geno")
+
+
+```{r}
+# now generate the snmf project for our plate
+snmf_exp <- snmf("../../data/parental_genetics_structure/20250204geno_imputedfile_exp.geno", K = 2, repetitions = 10, ploidy = 2, entropy = TRUE, project = "new")
+
+# plot cross-entropy criterion of all runs of the project
+plot(snmf_exp, cex = 1.2, col = "lightblue", pch = 19)
+
+# get the cross-entropy of the 10 runs for k=2
+ce = cross.entropy(snmf_exp, K = 2)
+
+# select the run with the lowest cross-entropy for k=2
+best = which.min(ce)
+
+# display the q-matrix
+
+my.colors <- c("lightblue", "darkblue")
+
+# plot the ancestry proportions
+bp <- barchart(snmf_exp, K = 2, run = best, 
+         border = NA, space = 0, col = my.colors, 
+         xlab = "Individuals", ylab = "Ancestry proportions", 
+         main = "Ancestry matrix for Experimental Samples",
+         sort.by.Q = T)
+
+#read in RDS file
+samp_full_subset <- readRDS("../../data/parental_genetics_structure/20250203_samp_full_subset_exp.rds")
+samp_full_subset <- samp_full_subset %>%
+  mutate(ID_SiteDate = recode(ID_SiteDate,
+                                   "TX-CapBay" = "W1-TX",
+                                   "LA-SisLake" = "W2-LA",
+                                   "FL-KingPlan" = "W3-FL",
+                                   "VA-DeepWatSh" = "W4-VA",
+                                   "LOLA" = "S1-LOLA",
+                                   "DEBY" = "S2-DEBY",
+                                   "NH-GrtBay" = "W5-NH",
+                                   "ME-HogIs" = "W6-ME"
+                                   ))
+#extract region labels
+region_labels <- samp_full_subset$ID_SiteDate
+
+reordered_labels <- region_labels[bp$order]
+
+axis(1, at = 1:length(region_labels), 
+     labels = reordered_labels, las = 3, cex.axis = .4)
+```
+
+### Create snmf plot results on map 
+```{r}
+# read in site data
+site_data <- read.csv("../../data/performance_H2F/MVP23-FieldBags - spawn_trt2.csv")
+
+site_data <- site_data %>%
+  mutate(SpawnTrt_Label = recode(SpawnTrt_Label,
+                                   "TX-CapBay" = "W1-TX",
+                                   "LA-SisLake" = "W2-LA",
+                                   "FL-KingPlan" = "W3-FL",
+                                   "VA-JR-DeepWatSh" = "W4-VA",
+                                   "LOLA" = "S1-LOLA",
+                                   "DEBY" = "S2-DEBY",
+                                   "NH-GrtBay" = "W5-NH",
+                                   "ME-HogIs" = "W6-ME"
+                                   ))
+
+# get the Q-matrix from snmf results
+geno <- read.geno("../../data/parental_genetics_structure/20250204geno_imputedfile_exp.geno")
+snmf_project <- load.snmfProject("../../data/parental_genetics_structure/20250204geno_imputedfile_exp.snmfProject")
+best_run <- which.min(cross.entropy(snmf_project, K = 2))  # choose the best run
+Q_matrix <- Q(snmf_project, K = 2, run = best_run)  # extract best run into q-matrix
+
+# pull the site and region labels and merge them with the ancestry proportions
+region_labels <- samp_full_subset$ID_SiteDate
+region_labels <- as.data.frame(region_labels)
+colnames(region_labels) <- "ID_SiteDate"
+region_labels <- samp_full_subset[, c("ID_SiteDate", "merge_ID_inds")]
+region_labels$Q1 <- Q_matrix[, 1]  # q matrix ancestry group 1
+region_labels$Q2 <- Q_matrix[, 2]  # q matrix ancestry group 2
+
+colnames(site_data)[2] = "ID_SiteDate"
+
+# Merge ancestry proportions into the full data
+merged_data <- merge(site_data, samp_full_subset, by = "ID_SiteDate")
+merged_data <- merge(region_labels, merged_data, by = "merge_ID_inds", all.x = TRUE)
+```
+
+### Make base map
+```{r}
+# load US coastline 
+coastline <- ne_coastline(scale = "medium", returnclass = "sf")
+
+# now plot on the map - create a base map with our coastline as the outline of the plot
+base_map <- ggplot(data = coastline) +
+  geom_sf() +
+  theme_minimal() +
+  labs(
+    title = "Ancestry Proportions by Parental Group",
+    x = "Longitude", y = "Latitude"
+  ) +
+  coord_sf(xlim = c(-100, -60), ylim = c(24, 50), expand = FALSE)
+
+base_map
+```
+
+```{r}
+# now make site averages of our ancestry proportions 
+site_data_averaged <- merged_data %>%
+  group_by(ID_SiteDate.x) %>%
+  summarise(Q1_avg = mean(Q1), Q2_avg = mean(Q2),
+            Longitude = first(longitudeDecimal),
+            Latitude = first(latitudeDecimal))   
+
+# we need to add some arbitrary coordinates for the VA populations or they will all plot on top of each other. let's put them in order from south to north, Deep Water Shoal, DEBY (York Riv), LOLA (Lew Riv)
+site_data_averaged[site_data_averaged$ID_SiteDate.x == "W4-VA", "Latitude"] <- 35.61813
+site_data_averaged[site_data_averaged$ID_SiteDate.x == "W4-VA", "Longitude"] <- -74.29945
+site_data_averaged[site_data_averaged$ID_SiteDate.x == "S2-DEBY", "Latitude"] <- 37.5
+site_data_averaged[site_data_averaged$ID_SiteDate.x == "S2-DEBY", "Longitude"] <- -74.95174
+site_data_averaged[site_data_averaged$ID_SiteDate.x == "S1-LOLA", "Latitude"] <- 38.8223
+site_data_averaged[site_data_averaged$ID_SiteDate.x == "S1-LOLA", "Longitude"] <- -73.19229
+36.97853
+-72.95174
+
+map_with_sites <- base_map + 
+  geom_scatterpie(
+    data = site_data_averaged,
+    aes(x = Longitude, y = Latitude, r = 0.9),  
+    cols = c("Q1_avg", "Q2_avg"), 
+    color = NA,
+    pie_scale = 1.5) +  
+  scale_fill_manual(name = "Genetic Cluster", breaks = c("Q1_avg", "Q2_avg"), labels = c("Gulf Cluster", "Atlantic Cluster"), values = c("lightblue","darkblue")) +  
+  theme(
+    legend.position = "inside",
+    legend.position.inside = c(.3,.7), 
+    legend.text = element_text(size = 10),
+    panel.grid = element_blank(), 
+    panel.background = element_blank(), 
+    axis.line = element_line(color = "black")
+  )
+
+map_with_sites
+
+ggsave("ancestry_map.pdf",
+       plot = map_with_sites,
+       device = "pdf",
+       path = "../../figures/envr_of_origin",
+       height = 4,
+       width = 5)
+```
+
+### Common garden sites inset map
+```{r}
+# load US coastline 
+coastline <- ne_coastline(scale = "medium", returnclass = "sf")
+
+# now plot on the map - create a base map with Chesapeake Bay coastline as the outline of the plot
+inset_base <- ggplot(data = coastline) +
+  geom_sf() +
+  theme_minimal() +
+  labs(
+    x = "Longitude", y = "Latitude"
+  ) +
+  coord_sf(xlim = c(-78, -74), ylim = c(36.5, 39.5), expand = FALSE)
+inset_base
+
+
+#Create list of coordinates for Lewisetta and York common garden sites
+cg_site <- c("LEW", "YRK")
+Latitude <- c(37.98030, 37.249107)
+Longitude <- c(-76.46190, -76.497032)
+
+common_garden <- as.data.frame(cbind(cg_site, Latitude, Longitude))
+
+common_garden <- common_garden %>%
+  st_as_sf(coords = c('Longitude', 'Latitude'))
+
+# set crs to 4326 for lat/lon
+common_garden$geometry <- st_set_crs(common_garden$geometry, 4326)
+
+inset_map <- inset_base +
+  geom_point(data = common_garden, aes(x = Longitude, y = Latitude, shape = cg_site, fill = cg_site), size = 3)+
+  scale_fill_manual(name = " ", breaks = c("LEW", "YRK"), 
+                    values = c("gold", "gold3"),
+                    labels = str_wrap(c("Lewisetta: low salinity, low disease", "York: mid salinity, low disease"), width = 20))+
+  scale_shape_manual(name = " ", breaks = c("LEW", "YRK"), 
+                    values = c(23, 24),
+                    labels = str_wrap(c("Lewisetta: low salinity, low disease", "York: mid salinity, low disease"), width = 20))+
+  ggtitle("Common Garden Sites")+
+  scale_x_continuous(breaks = seq(-78, -74, by =1))+
+  scale_y_continuous(breaks = seq(36.5, 39.5, by = 1))+
+  theme(
+    panel.grid = element_blank(), 
+    panel.background = element_blank(), 
+    axis.line = element_line(color = "black"),
+    axis.title = element_text(size = 12),
+    axis.text = element_text(size = 10, color = "black"),
+    legend.title = element_blank(),
+    #legend.text = element_text(size = 12),
+    legend.spacing.y = unit(1, "cm"))+
+  guides(fill = guide_legend(byrow = TRUE))
+
+inset_map
+
+ggsave("inset_map.pdf",
+       plot = inset_map,
+       device = "pdf",
+       path = "../../figures/envr_of_origin",
+       height = 3,
+       width = 4)
+```
+
