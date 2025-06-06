@@ -39,17 +39,21 @@ library(CMplot)
 
 ```{r}
 
+full_set <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250604_experimentalmatrix.rds"))
+
+
+
 # SNP set thinned for LD
-thinned_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_THINNEDSNPs_exp.rds"))
+thinned_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250604_THINNEDSNPs_exp.rds"))
 
 # full SNP set 
-full_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_FULLSNPs_exp.rds"))
+full_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250604_FULLSNPs_exp.rds"))
 
 # SNP info
-muts_maf_filtered <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_FULLmuts_exp.rds"))
+muts_maf_filtered <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250604_FULLmuts_exp.rds"))
 
 # sample info
-samp_full_subset <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250203_samp_full_subset_exp.rds"))
+samp_full_subset <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250604_samp_full_subset_exp.rds"))
 
 ```
 

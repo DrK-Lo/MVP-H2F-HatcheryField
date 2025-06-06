@@ -20,7 +20,7 @@ library(readr)
 
 ### Load data
 
-This is the standard deviation, 10th quantile, and 90th quantile for salinity and temperature all in one data frame. It includes the 8 environments-of-origin and the 2 environments-of-experiment. 
+This is the standard deviation, 10th quantile, and 90th quantile for salinity and temperature all in one data frame. It includes the 8 environments-of-origin and the 2 environments-of-experiment.
 
 ```{r}
 

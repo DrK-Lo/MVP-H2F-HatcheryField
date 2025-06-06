@@ -24,6 +24,7 @@ library(ggplot2)
 library(grid)
 library(reshape2)
 library(vegan)
+library(patchwork)
 
 ```
 
@@ -353,8 +354,6 @@ check_matrix_order(dist_matrices, population_order)
 
 ### Partial Mantel tests
 
-Effect of pairwise environmental distance when controlling for pairwise genetic difference, and vice certa. 
-
 #### Assumptions
 
 ```{r}
@@ -371,7 +370,7 @@ for (name in names(dist_matrices)) {
     ylab = paste(name, "Response variable distance")
   )
 
-  # Plot against envr_dist
+  # plot against envr_dist
   plot(
     as.vector(as.matrix(envr_dist)), as.vector(as.matrix(mat)),
     main = paste("Environment vs", name),
@@ -384,57 +383,41 @@ for (name in names(dist_matrices)) {
 
 #### Partial tests
 
-To test the effect of genetic distance while controlling for environmental distance.
+To test the effect of genetic distance while controlling for environmental distance and vice versa. 
 
 ```{r}
 
-# run partial Mantel tests
-partial_mantel_results <- lapply(dist_matrices, function(dist_mat) {
+# genetic distance controlling for environmental distance
+genetic_dist_results <- lapply(dist_matrices, function(dist_mat) {
   mantel.partial(dist_mat, fst_mat, envr_dist, method = "spearman",
                  permutations = 10000, na.rm = TRUE)
 })
+genetic_p <- sapply(genetic_dist_results, function(res) res$signif)
 
-# extract p-values
-partial_mantel_p <- sapply(partial_mantel_results, function(res) res$signif)
-
-# adjust p-values (Benjamini-Hochberg)
-partial_mantel_p_adj <- p.adjust(partial_mantel_p, method = "BH")
-
-# output results
-results_df <- data.frame(
-  test = names(partial_mantel_results),
-  p = partial_mantel_p,
-  p_adj = partial_mantel_p_adj
-)
-
-print(results_df)
-
-```
-
-To test the effect of environmental distance while controlling for genetic distance.
-
-```{r}
-
-# run partial Mantel tests
-partial_mantel_results <- lapply(dist_matrices, function(dist_mat) {
+# environmental distance controlling for genetic distance
+envr_dist_results <- lapply(dist_matrices, function(dist_mat) {
   mantel.partial(dist_mat, envr_dist, fst_mat, method = "spearman",
                  permutations = 10000, na.rm = TRUE)
 })
+envr_p <- sapply(envr_dist_results, function(res) res$signif)
 
-# extract p-values
-partial_mantel_p <- sapply(partial_mantel_results, function(res) res$signif)
+# adjust all p-values together
+all_p <- c(genetic_p, envr_p)
+all_p_adj <- p.adjust(all_p, method = "BH")
 
-# adjust p-values (Benjamini-Hochberg)
-partial_mantel_p_adj <- p.adjust(partial_mantel_p, method = "BH")
+# split adjusted p-values back
+genetic_p_adj <- all_p_adj[1:length(genetic_p)]
+envr_p_adj <- all_p_adj[(length(genetic_p) + 1):length(all_p)]
 
-# output results
-results_df <- data.frame(
-  test = names(partial_mantel_results),
-  p = partial_mantel_p,
-  p_adj = partial_mantel_p_adj
+# create results data frame
+mantel_results <- data.frame(
+  test = rep(names(dist_matrices), times = 2),
+  comparison = rep(c("Genetic|Environment", "Environment|Genetic"), each = length(dist_matrices)),
+  p = c(genetic_p, envr_p),
+  p_adj = c(genetic_p_adj, envr_p_adj)
 )
 
-print(results_df)
+print(mantel_results)
 
 ```
 
@@ -447,12 +430,24 @@ fst_long <- as.data.frame(as.table(fst_mat))
 heatmap_fst <- ggplot(fst_long, aes(Var1, Var2, fill = Freq)) +
   geom_tile(color = "white") +
   #geom_text(aes(label = round(value, 3)), size = 2, color = "black") +
-  scale_fill_viridis_c(option = "D", na.value = "grey50") +  # Use viridis color scale
-  labs(title = "Pairwise Fst", x = "Population", y = "Population", fill = "Fst") + 
+scale_fill_viridis_c(
+    option = "D", 
+    na.value = "grey50", 
+    guide = guide_colorbar(label.theme = element_text(angle = 45, size = 12))  # legend tick labels
+  ) +
+  labs(title = "", x = "Population", y = "Population", fill = expression("Pairwise " * F[ST])) + 
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # x tick labels
+    axis.text.y = element_text(size = 12),                        # y tick labels
+    axis.title.x = element_text(size = 14),                       # x-axis label
+    axis.title.y = element_text(size = 14),                       # y-axis label
+    legend.title = element_text(size = 14),                       # legend title
+    text = element_text(color = "black"),
+    legend.position = "bottom"
+  )
 
-ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_fst_heatmap.png"), heatmap_fst)
+ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_fst_heatmap.pdf"), heatmap_fst, width = 8, height = 8, dpi = 300)
 
 heatmap_fst
 
@@ -461,15 +456,107 @@ envr_long <- as.data.frame(as.table(envr_dist))
 heatmap_envr <- ggplot(envr_long, aes(Var1, Var2, fill = Freq)) +
   geom_tile(color = "white") +
   #geom_text(aes(label = round(value, 3)), size = 2, color = "black") +
-  scale_fill_viridis_c(option = "D", na.value = "grey50") +  # Use viridis color scale
-  labs(title = "Standardized Euclidean environmental distance", 
-       x = "Population", y = "Population", fill = "Distance") +
+scale_fill_viridis_c(
+    option = "D", 
+    na.value = "grey50", 
+    guide = guide_colorbar(label.theme = element_text(angle = 45, size = 12))  # legend tick labels
+  ) +
+  labs(title = "", 
+       x = "Population", y = "Population",   fill = "Standardized Euclidean\nenvironmental distance") +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # x tick labels
+    axis.text.y = element_text(size = 12),                        # y tick labels
+    axis.title.x = element_text(size = 14),                       # x-axis label
+    axis.title.y = element_text(size = 14),                       # y-axis label
+    legend.title = element_text(size = 14),                       # legend title
+    text = element_text(color = "black"),
+    legend.position = "bottom"
+  )
 
-ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_envr_dist_heatmap.png"), heatmap_envr)
+ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_envr_dist_heatmap.pdf"), heatmap_envr, width = 8, height = 8, dpi = 300)
 
 heatmap_envr
+
+stacked_envr_fst_heatmap <- heatmap_fst / heatmap_envr +
+  plot_annotation(tag_levels = "A")
+
+ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_stacked_envr_fst_heatmap.pdf"), stacked_envr_fst_heatmap, width = 8, height = 10, dpi = 300)
+
+```
+
+```{r}
+
+len_3_lew_long <- as.data.frame(as.table(dist_matrices$len_3_lew))
+surv_3_lew_long <- as.data.frame(as.table(dist_matrices$surv_3_lew))
+len_3_york_long <- as.data.frame(as.table(dist_matrices$len_3_york))
+surv_3_york_long <- as.data.frame(as.table(dist_matrices$surv_3_york))
+
+heatmap_len_3_lew <- ggplot(len_3_lew_long, aes(Var1, Var2, fill = Freq)) +
+  geom_tile(color = "white") +
+  #geom_text(aes(label = round(value, 3)), size = 2, color = "black") +
+  scale_fill_viridis_c(option = "D", na.value = "grey50") +  # Use viridis color scale
+  labs(title = "", x = "Population", y = "Population", fill = "Euclidean distance\nin shell length") + 
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # x tick labels
+    axis.text.y = element_text(size = 12),                        # y tick labels
+    axis.title.x = element_text(size = 14),                       # x-axis label
+    axis.title.y = element_text(size = 14),                       # y-axis label
+    text = element_text(color = "black")
+  )
+
+heatmap_surv_3_lew <- ggplot(surv_3_lew_long, aes(Var1, Var2, fill = Freq)) +
+  geom_tile(color = "white") +
+  #geom_text(aes(label = round(value, 3)), size = 2, color = "black") +
+  scale_fill_viridis_c(option = "D", na.value = "grey50") +  # Use viridis color scale
+  labs(title = "", 
+       x = "Population", y = "Population",   fill = "Euclidean distance\nin survival") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # x tick labels
+    axis.text.y = element_text(size = 12),                        # y tick labels
+    axis.title.x = element_text(size = 14),                       # x-axis label
+    axis.title.y = element_text(size = 14),                       # y-axis label
+    text = element_text(color = "black")
+  )
+
+heatmap_len_3_york <- ggplot(len_3_york_long, aes(Var1, Var2, fill = Freq)) +
+  geom_tile(color = "white") +
+  #geom_text(aes(label = round(value, 3)), size = 2, color = "black") +
+  scale_fill_viridis_c(option = "D", na.value = "grey50") +  # Use viridis color scale
+  labs(title = "", x = "Population", y = "Population", fill = "Euclidean distance\nin shell length") +  
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # x tick labels
+    axis.text.y = element_text(size = 12),                        # y tick labels
+    axis.title.x = element_text(size = 14),                       # x-axis label
+    axis.title.y = element_text(size = 14),                       # y-axis label
+    text = element_text(color = "black")
+  )
+
+heatmap_surv_3_york <- ggplot(surv_3_york_long, aes(Var1, Var2, fill = Freq)) +
+  geom_tile(color = "white") +
+  #geom_text(aes(label = round(value, 3)), size = 2, color = "black") +
+  scale_fill_viridis_c(option = "D", na.value = "grey50") +  # Use viridis color scale
+  labs(title = "", 
+       x = "Population", y = "Population",   fill = "Euclidean distance\nin survival") +  
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),  # x tick labels
+    axis.text.y = element_text(size = 12),                        # y tick labels
+    axis.title.x = element_text(size = 14),                       # x-axis label
+    axis.title.y = element_text(size = 14),                       # y-axis label
+    text = element_text(color = "black")
+  )
+
+stacked_len_surv_heatmap <- 
+  (heatmap_len_3_lew | heatmap_len_3_york) /
+  (heatmap_surv_3_lew | heatmap_surv_3_york) +
+  plot_annotation(tag_levels = "A")
+
+ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_stacked_len_surv_heatmap.pdf"), stacked_len_surv_heatmap, width = 18, height = 10, dpi = 300)
+
 
 ```
 
