@@ -39,15 +39,11 @@ library(CMplot)
 
 ```{r}
 
-full_set <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250604_experimentalmatrix.rds"))
-
-
+# full SNP set
+full_set <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250606_FULLSNPs_exp_labeled.rds"))
 
 # SNP set thinned for LD
-thinned_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250604_THINNEDSNPs_exp.rds"))
-
-# full SNP set 
-full_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250604_FULLSNPs_exp.rds"))
+thinned_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250606_THINNEDSNPs_exp_labeled.rds"))
 
 # SNP info
 muts_maf_filtered <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250604_FULLmuts_exp.rds"))
@@ -65,8 +61,8 @@ gen <- thinned_snps
 muts <- muts_maf_filtered
 
 # check dimensions
-dim(gen) # thinned - 154 individuals and 104958 SNPs
-dim(muts) # full mutation-level info - 154609 SNPs
+dim(gen) # thinned - 160 individuals and 105356 SNPs
+dim(muts) # full mutation-level info - 154102 SNPs
 
 ```
 
@@ -81,19 +77,7 @@ keep_snps_fst <- apply(gen, 2, function(col) !all(col == 1))
 
 # filter genotype matrix for these SNPs
 GEN_filtered_fst <- gen[, keep_snps_fst]
-dim(GEN_filtered_fst) # 1 column removed - now there are 104957 SNPs
-
-# check column name to make sure it was a real column
-col_heterozygous <- apply(gen, 2, function(col) all(col == 1))
-colnames(gen)[col_heterozygous] #Affx-1246226248
-
-```
-
-```{r}
-
-# now filter the mutation df again to just retain SNPs that are not all heterozygous
-muts_heterozygous_filtered <- muts[muts$Affx.ID %in% colnames(GEN_filtered_fst), ]
-dim(muts_heterozygous_filtered) # goes down to 104957
+dim(GEN_filtered_fst) # 0 columns removed
 
 ```
 
@@ -104,21 +88,21 @@ fst_data <- GEN_filtered_fst
 
 # make sample IDs into a real column (instead of rownames)
 sample_IDs <- rownames(fst_data)
-fst_data$merge_ID_inds <- sample_IDs # "merge_ID_inds" is the column name in samp_full_subset
+fst_data$clean_ID <- sample_IDs # "clean_ID" is the column name in samp_full_subset
 
 # reset the rownames to empty
 rownames(fst_data) <- NULL
 
 # make sure labels in fst data still line up with sample data
-if(!identical((fst_data$merge_ID_inds),samp_full_subset$merge_ID_inds)){
+if(!identical((fst_data$clean_ID),samp_full_subset$clean_ID)){
     print("Error sample names don't line up")
     break
    } # passes
 
 # store data to check labels 
-fst_labels_check <- fst_data$merge_ID_inds
+fst_labels_check <- fst_data$clean_ID
 head(fst_labels_check)
-samp_labels_check <- samp_full_subset$merge_ID_inds
+samp_labels_check <- samp_full_subset$clean_ID
 head(samp_labels_check)
 
 # check that labels are still all lined up
@@ -147,7 +131,7 @@ n_cols <- ncol(fst_data)
 fst_data <- fst_data[, c((n_cols-1):n_cols, 1:(n_cols-2))]
 
 # sanity check: number of columns 
-dim(fst_data) # number of SNPs (104957) + sample col + pop col = 104959
+dim(fst_data) # number of SNPs (105356) + sample col + pop col = 105358
 
 # check number of samples per population
 population_counts <- table(fst_data$ID_SiteDate)
@@ -164,7 +148,7 @@ fst_data <- fst_data[, -1]
 fst_data$ID_SiteDate <- as.factor(fst_data$ID_SiteDate)
 
 # check dimensions one more time
-dim(fst_data) # 104959 - sample id col = 104958
+dim(fst_data) # 105358 - sample id col = 105357
 
 ```
 
@@ -182,7 +166,7 @@ dim(fst_data) # 104959 - sample id col = 104958
 #saveRDS(fst_results, file.path("..", "..", "data", "pairwise_differences_analyses", "fst_results.rds"))
 
 # load in fst results - after running with HPC
-fst_results <- readRDS(file.path("..", "..", "data", "pairwise_differences_analyses", "fst_results.rds"))
+fst_results <- readRDS(file.path("..", "..", "data", "pairwise_differences_analyses", "20250606_fst_results.rds"))
 
 
 # convert the matrix to a long format and edit column names
@@ -208,7 +192,7 @@ fig_fst_heatmap <- ggplot(fst_plotting, aes(Var1, Var2, fill = value)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggsave("fig_fst_heatmap.png", fig_fst_heatmap, width = 8, height = 6)
+fig_fst_heatmap
 
 ```
 
