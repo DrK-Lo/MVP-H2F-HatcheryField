@@ -41,10 +41,10 @@ outflank_output <- read_csv(file.path("..", "..", "data", "putative_selection", 
 ```{r}
 
 # filter for outliers and SNPs with available gene info to put into ShinyGO
-outliers_only <- outflank_output %>% # starts at 154608 rows
-  filter(OutlierFlag == TRUE) %>% # down to 11863 flagged as outliers
+outliers_only <- outflank_output %>% # starts at 154102 rows
+  filter(OutlierFlag == TRUE) %>%  # down to 12077 flagged as outliers
   dplyr::select(LocusName, FST, pvalues, Chromosome, Position, cust_id, cust_gene_id, cust_gene_name) %>%
-  filter(!is.na(cust_gene_id)) %>% # down to 917 with gene info available
+  filter(!is.na(cust_gene_id)) %>% # down to 925 with gene info available
   filter(!is.na(cust_gene_name)) %>%
   rename(gene = cust_gene_id)
 
@@ -52,7 +52,7 @@ outliers_only <- outflank_output %>% # starts at 154608 rows
 shinygo_genes <- paste(outliers_only$gene, collapse = " ")
 shinygo_genes # print list to copy and paste into ShinyGO
 
-length(unique(outliers_only$gene)) # this is 862 unique genes
+length(unique(outliers_only$gene)) # this is 866 unique genes
 
 ```
 
@@ -200,13 +200,17 @@ ggplot_manhattan <- ggplot(merged_manhattan, aes(x = Cumulative_Position, y = FS
     panel.grid.major.x = element_blank(),
     panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(), 
-    panel.grid.minor.y = element_blank(), 
+    panel.grid.minor.y = element_blank(),
+    axis.title = element_text(size = 16),    
+    axis.text = element_text(size = 14),      
+    legend.title = element_text(size = 15),      
+    legend.text = element_text(size = 13)
   ) +
   geom_hline(aes(yintercept = threshold_fst, linetype = "q < 0.05"), color = "black") +
   scale_linetype_manual(name = "Outlier threshold", values = c("q < 0.05" = "dashed"))
 
 # save plot
-ggsave(file.path("..", "..", "figures", "putative_selection", "fst_manhattan_plot.jpg"), ggplot_manhattan, 
+ggsave(file.path("..", "..", "figures", "putative_selection", "fst_manhattan_plot.pdf"), ggplot_manhattan, 
        width = 15, height = 6, dpi = 300)
 
 ggplot_manhattan
@@ -241,11 +245,14 @@ lollipop_plot <- ggplot(enriched_fully_joined, aes(x = `Fold Enrichment`,
   scale_x_continuous(expand = c(0, 0), limits = c(0, max(enriched_fully_joined$`Fold Enrichment`) * 1.1)) +  
   theme_bw() +
   theme( 
-    axis.text = element_text(color = "black"),  # make axis text black
+    axis.text = element_text(color = "black", size = 11),  # make axis text black
     panel.grid.major.x = element_blank(), # remove grid lines
     panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(), 
     panel.grid.minor.y = element_blank(), 
+    axis.title = element_text(size = 16),    
+    legend.title = element_text(size = 14),      
+    legend.text = element_text(size = 13)
   ) +
   labs(x = "Fold enrichment", y = "Pathway", size = "Number of genes", color = "Gene type") +
   guides( # customize shapes and colors of symbols on legend with an override
@@ -255,7 +262,7 @@ lollipop_plot <- ggplot(enriched_fully_joined, aes(x = `Fold Enrichment`,
   )
 
 # save figure
-ggsave(file.path("..", "..", "figures", "putative_selection", "GO_lollipop_plot.jpg"), 
+ggsave(file.path("..", "..", "figures", "putative_selection", "GO_lollipop_plot.pdf"), 
        lollipop_plot, width = 10, height = 6, dpi = 300)
 
 lollipop_plot
