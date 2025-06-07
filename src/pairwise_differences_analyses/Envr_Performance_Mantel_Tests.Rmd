@@ -51,7 +51,7 @@ envr_summary <-  read.csv(file.path("..", "..", "data", "envr_of_origin", "envr_
 envr_dist <- readRDS(file.path("..", "..", "data", "envr_of_origin", "envr_quantiles_dist.rds"))
 
 # matrix of genetic distances between each group
-fst_mat <- readRDS(file.path("..", "..", "data", "pairwise_differences_analyses", "fst_results.rds"))
+fst_mat <- readRDS(file.path("..", "..", "data", "pairwise_differences_analyses", "20250606_fst_results.rds"))
 
 ```
 
