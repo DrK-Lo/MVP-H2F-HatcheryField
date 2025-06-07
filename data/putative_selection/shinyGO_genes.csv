@@ -1,9 +1,7 @@
 "Pasted","Symbol","Ensembl Gene ID","Entrez","Type","Species","Chr","Position (Mbp)","Description","percentage_gc_content","transcript_count","genomeSpan","cds_length","transcript_length","FiveUTR","ThreeUTR","nExons"
 "LOC111128944","LOC111128944","LOC111128944",NA,"protein_coding","Eastern oyster","NC_035780.1",0.108305,NA,NA,1,1773,1773,1773,NA,NA,1
-"LOC111101262","LOC111101262","LOC111101262",NA,"protein_coding","Eastern oyster","NC_035780.1",0.297131,"eukaryotic translation initiation factor 4 gamma 2-like",NA,1,14524,2379,14524,NA,NA,22
 "LOC111133260","LOC111133260","LOC111133260",NA,"protein_coding","Eastern oyster","NC_035780.1",0.315522,"tyrosine-protein phosphatase non-receptor type 5-like",NA,1,24740,1983,24740,NA,NA,15
 "LOC111117521","LOC111117521","LOC111117521",NA,"protein_coding","Eastern oyster","NC_035789.1",0.346793,"uncharacterized LOC111117521",NA,1,1820,399,1820,NA,NA,3
-"LOC111122149","LOC111122149","LOC111122149",NA,"protein_coding","Eastern oyster","NC_035781.1",0.355075,"tetratricopeptide repeat protein 4-like",NA,1,11270,1155,11270,NA,NA,12
 "LOC111117616","LOC111117616","LOC111117616",NA,"protein_coding","Eastern oyster","NC_035789.1",0.360188,"uncharacterized LOC111117616- transcript variant X2",NA,2,18071,1053,18070,NA,NA,3
 "LOC111119377","LOC111119377","LOC111119377",NA,"protein_coding","Eastern oyster","NC_035780.1",0.366837,"probable G-protein coupled receptor 83",NA,1,3834,1092,3834,NA,NA,2
 "LOC111116734","LOC111116734","LOC111116734",NA,"protein_coding","Eastern oyster","NC_035789.1",0.438329,"uncharacterized LOC111116734",NA,1,2832,1551,2832,NA,NA,2
@@ -19,15 +17,16 @@
 "LOC111119190","LOC111119190","LOC111119190",NA,"protein_coding","Eastern oyster","NC_035781.1",1.144874,"ornithine decarboxylase-like- transcript variant X1",NA,2,7946,1401,6238,NA,NA,12
 "LOC111104068","LOC111104068","LOC111104068",NA,"protein_coding","Eastern oyster","NC_035786.1",1.331799,"nacrein-like protein",NA,1,7120,1290,7120,NA,NA,10
 "LOC111104062","LOC111104062","LOC111104062",NA,"protein_coding","Eastern oyster","NC_035786.1",1.361663,"uncharacterized LOC111104062",NA,1,29445,3645,29445,NA,NA,6
+"LOC111108689","LOC111108689","LOC111108689",NA,"protein_coding","Eastern oyster","NC_035787.1",1.364277,"fibrinogen-like protein 1",NA,1,2761,1047,2761,NA,NA,5
 "LOC111102475","LOC111102475","LOC111102475",NA,"protein_coding","Eastern oyster","NC_035786.1",1.558587,"negative elongation factor D-like- transcript variant X3",NA,3,124856,1698,117980,NA,NA,15
 "LOC111127806","LOC111127806","LOC111127806",NA,"protein_coding","Eastern oyster","NC_035783.1",1.939659,"uncharacterized LOC111127806- transcript variant X2",NA,2,3757,1806,3756,NA,NA,2
 "LOC111121756","LOC111121756","LOC111121756",NA,"protein_coding","Eastern oyster","NC_035781.1",1.995797,"CD82 antigen-like- transcript variant X1",NA,2,6655,873,6655,NA,NA,9
 "LOC111114793","LOC111114793","LOC111114793",NA,"protein_coding","Eastern oyster","NC_035788.1",2.114636,"uncharacterized LOC111114793- transcript variant X2",NA,2,6172,772,5254,NA,NA,6
 "LOC111128106","LOC111128106","LOC111128106",NA,"protein_coding","Eastern oyster","NC_035783.1",2.145813,"uncharacterized LOC111128106- transcript variant X1",NA,2,20496,872,20496,NA,NA,12
+"LOC111137529","LOC111137529","LOC111137529",NA,"protein_coding","Eastern oyster","NC_035784.1",2.284001,"uncharacterized LOC111137529",NA,1,9709,468,9709,NA,NA,7
 "LOC111131752","LOC111131752","LOC111131752",NA,"protein_coding","Eastern oyster","NC_035780.1",2.478727,"zinc transporter 1-like- transcript variant X1",NA,3,14246,1272,14169,NA,NA,10
+"LOC111131173","LOC111131173","LOC111131173",NA,"protein_coding","Eastern oyster","NC_035783.1",2.712138,"transmembrane protein 151B-like- transcript variant X2",NA,2,11737,1698,9276,NA,NA,2
 "LOC111137334","LOC111137334","LOC111137334",NA,"protein_coding","Eastern oyster","NC_035784.1",2.721199,"uncharacterized LOC111137334",NA,1,3707,2700,3707,NA,NA,2
-"LOC111135147","LOC111135147","LOC111135147",NA,"protein_coding","Eastern oyster","NC_035784.1",2.72971,"tyrosine aminotransferase-like- transcript variant X1",NA,2,17874,1278,17574,NA,NA,11
-"LOC111131137","LOC111131137","LOC111131137",NA,"protein_coding","Eastern oyster","NC_035783.1",2.751994,"uncharacterized LOC111131137- transcript variant X2",NA,3,1982,390,1975,NA,NA,4
 "LOC111137256","LOC111137256","LOC111137256",NA,"protein_coding","Eastern oyster","NC_035784.1",2.76697,"valacyclovir hydrolase-like- transcript variant X1",NA,3,7731,867,7665,NA,NA,8
 "LOC111118840","LOC111118840","LOC111118840",NA,"protein_coding","Eastern oyster","NC_035781.1",2.846474,"collagen alpha-1(I) chain-like",NA,1,14241,1917,14241,NA,NA,12
 "LOC111119645","LOC111119645","LOC111119645",NA,"protein_coding","Eastern oyster","NC_035780.1",2.949747,"cysteine-rich motor neuron 1 protein-like",NA,1,3263,810,3263,NA,NA,9
@@ -36,8 +35,8 @@
 "LOC111135944","LOC111135944","LOC111135944",NA,"protein_coding","Eastern oyster","NC_035784.1",3.159348,"partitioning defective 6 homolog beta-like",NA,1,2473,486,2473,NA,NA,3
 "LOC111121630","LOC111121630","LOC111121630",NA,"protein_coding","Eastern oyster","NC_035781.1",3.186711,"programmed cell death protein 6-like- transcript variant X1",NA,2,10338,870,10338,NA,NA,7
 "LOC111119204","LOC111119204","LOC111119204",NA,"protein_coding","Eastern oyster","NC_035781.1",3.225621,"RNA pseudouridylate synthase domain-containing protein 1-like- transcript variant X2",NA,2,5501,726,5472,NA,NA,4
+"LOC111134570","LOC111134570","LOC111134570",NA,"protein_coding","Eastern oyster","NC_035784.1",3.263346,"kelch-like protein 24- transcript variant X2",NA,2,9587,1887,7310,NA,NA,2
 "LOC111131821","LOC111131821","LOC111131821",NA,"protein_coding","Eastern oyster","NC_035783.1",3.387095,"uncharacterized LOC111131821",NA,1,7573,1575,7573,NA,NA,2
-"LOC111133986","LOC111133986","LOC111133986",NA,"protein_coding","Eastern oyster","NC_035784.1",3.399263,NA,NA,1,1896,1257,1896,NA,NA,5
 "LOC111137602","LOC111137602","LOC111137602",NA,"protein_coding","Eastern oyster","NC_035784.1",3.426251,"uncharacterized LOC111137602- transcript variant X1",NA,5,20749,3229,19960,NA,NA,16
 "LOC111132916","LOC111132916","LOC111132916",NA,"protein_coding","Eastern oyster","NC_035784.1",3.492048,"pleckstrin homology domain-containing family B member 2-like",NA,1,5402,483,5402,NA,NA,5
 "LOC111123486","LOC111123486","LOC111123486",NA,"protein_coding","Eastern oyster","NC_035780.1",3.519458,"beta-1-3-galactosyltransferase 5-like- transcript variant X8",NA,10,3243,1042,2781,NA,NA,2
@@ -55,13 +54,13 @@
 "LOC111117426","LOC111117426","LOC111117426",NA,"protein_coding","Eastern oyster","NC_035789.1",5.068671,"kunitz-type serine protease inhibitor bitisilin-3-like",NA,1,3923,465,3923,NA,NA,4
 "LOC111127546","LOC111127546","LOC111127546",NA,"protein_coding","Eastern oyster","NC_035782.1",5.092414,"uncharacterized LOC111127546",NA,1,2808,321,2808,NA,NA,4
 "LOC111117191","LOC111117191","LOC111117191",NA,"protein_coding","Eastern oyster","NC_035789.1",5.171056,"WAP four-disulfide core domain protein 6B-like",NA,1,3561,465,3561,NA,NA,4
-"LOC111116935","LOC111116935","LOC111116935",NA,"protein_coding","Eastern oyster","NC_035789.1",5.484819,"uncharacterized LOC111116935",NA,1,13737,924,13737,NA,NA,6
 "LOC111129482","LOC111129482","LOC111129482",NA,"protein_coding","Eastern oyster","NC_035783.1",5.489691,"WD repeat-containing protein 26-like",NA,1,11640,1701,11640,NA,NA,14
 "LOC111119678","LOC111119678","LOC111119678",NA,"protein_coding","Eastern oyster","NC_035781.1",5.557334,NA,NA,1,21397,4680,21397,NA,NA,30
 "LOC111107525","LOC111107525","LOC111107525",NA,"protein_coding","Eastern oyster","NC_035787.1",5.592389,"small conductance calcium-activated potassium channel protein 2-like",NA,1,1248,1248,1248,NA,NA,1
 "LOC111135958","LOC111135958","LOC111135958",NA,"protein_coding","Eastern oyster","NC_035784.1",5.671653,"uncharacterized LOC111135958- transcript variant X2",NA,2,4503,424,4330,NA,NA,6
 "LOC111136637","LOC111136637","LOC111136637",NA,"protein_coding","Eastern oyster","NC_035784.1",5.732878,"uncharacterized LOC111136637",NA,1,1446,831,1446,NA,NA,5
 "LOC111136640","LOC111136640","LOC111136640",NA,"protein_coding","Eastern oyster","NC_035784.1",5.73499,"uncharacterized LOC111136640",NA,1,9371,3441,9371,NA,NA,21
+"LOC111128792","LOC111128792","LOC111128792",NA,"protein_coding","Eastern oyster","NC_035783.1",5.76356,"kelch-like protein 9",NA,1,10738,1080,10738,NA,NA,5
 "LOC111130231","LOC111130231","LOC111130231",NA,"protein_coding","Eastern oyster","NC_035783.1",5.779807,"transcription initiation factor IIA subunit 1-like",NA,1,6862,900,6862,NA,NA,9
 "LOC111130438","LOC111130438","LOC111130438",NA,"protein_coding","Eastern oyster","NC_035783.1",5.823315,"dynein light chain 1- axonemal-like",NA,1,2908,582,2908,NA,NA,9
 "LOC111128912","LOC111128912","LOC111128912",NA,"protein_coding","Eastern oyster","NC_035783.1",5.971289,"uncharacterized LOC111128912",NA,1,5772,1347,5772,NA,NA,3
@@ -70,21 +69,19 @@
 "LOC111127416","LOC111127416","LOC111127416",NA,"protein_coding","Eastern oyster","NC_035780.1",6.105477,"myotubularin-related protein 9-like",NA,1,10485,1701,10485,NA,NA,15
 "LOC111118292","LOC111118292","LOC111118292",NA,"protein_coding","Eastern oyster","NC_035781.1",6.525155,"uncharacterized LOC111118292- transcript variant X2",NA,2,4727,1562,4727,NA,NA,4
 "LOC111118950","LOC111118950","LOC111118950",NA,"protein_coding","Eastern oyster","NC_035781.1",6.810007,"neuronal acetylcholine receptor subunit eat-2-like",NA,1,4421,1278,4421,NA,NA,3
-"LOC111119216","LOC111119216","LOC111119216",NA,"protein_coding","Eastern oyster","NC_035781.1",6.856576,"DCN1-like protein 3",NA,1,8357,882,8357,NA,NA,2
 "LOC111128607","LOC111128607","LOC111128607",NA,"protein_coding","Eastern oyster","NC_035783.1",6.870787,"serine/Arginine-related protein 53-like- transcript variant X2",NA,4,9367,600,7653,NA,NA,6
 "LOC111137713","LOC111137713","LOC111137713",NA,"protein_coding","Eastern oyster","NC_035784.1",6.96393,"matrix metalloproteinase-14-like- transcript variant X2",NA,3,9381,1587,9380,NA,NA,12
 "LOC111134457","LOC111134457","LOC111134457",NA,"protein_coding","Eastern oyster","NC_035784.1",6.992902,"matrix metalloproteinase-2-like",NA,1,11547,1785,11547,NA,NA,9
 "LOC111110684","LOC111110684","LOC111110684",NA,"protein_coding","Eastern oyster","NC_035787.1",7.093785,"neurogenic locus notch homolog protein 1-like",NA,1,2910,531,2910,NA,NA,3
 "LOC111120744","LOC111120744","LOC111120744",NA,"protein_coding","Eastern oyster","NC_035781.1",7.256888,"uncharacterized LOC111120744",NA,1,12536,4002,12536,NA,NA,15
 "LOC111130840","LOC111130840","LOC111130840",NA,"protein_coding","Eastern oyster","NC_035780.1",7.262836,NA,NA,1,11635,1887,11635,NA,NA,15
-"LOC111127317","LOC111127317","LOC111127317",NA,"protein_coding","Eastern oyster","NC_035780.1",7.295075,NA,NA,1,11784,7329,11784,NA,NA,16
 "LOC111128784","LOC111128784","LOC111128784",NA,"protein_coding","Eastern oyster","NC_035780.1",7.349046,NA,NA,1,4920,984,4920,NA,NA,9
-"LOC111117912","LOC111117912","LOC111117912",NA,"protein_coding","Eastern oyster","NC_035781.1",7.34961,"Rieske domain-containing protein-like",NA,1,2818,444,2818,NA,NA,5
 "LOC111119491","LOC111119491","LOC111119491",NA,"protein_coding","Eastern oyster","NC_035781.1",7.718775,"uncharacterized LOC111119491",NA,1,19679,2196,19679,NA,NA,18
 "LOC111135872","LOC111135872","LOC111135872",NA,"protein_coding","Eastern oyster","NC_035784.1",7.783915,"lipoma-preferred partner homolog- transcript variant X2",NA,3,13761,1594,13687,NA,NA,11
 "LOC111132034","LOC111132034","LOC111132034",NA,"protein_coding","Eastern oyster","NC_035784.1",7.867067,"uncharacterized LOC111132034",NA,1,11787,555,11787,NA,NA,5
 "LOC111109321","LOC111109321","LOC111109321",NA,"protein_coding","Eastern oyster","NC_035780.1",7.970408,"uncharacterized LOC111109321- transcript variant X2",NA,2,4747,1248,4746,NA,NA,7
 "LOC111128509","LOC111128509","LOC111128509",NA,"protein_coding","Eastern oyster","NC_035783.1",7.983518,NA,NA,1,31289,6054,31289,NA,NA,34
+"LOC111134162","LOC111134162","LOC111134162",NA,"protein_coding","Eastern oyster","NC_035780.1",7.99366,"sulfate anion transporter 1-like",NA,1,3756,2487,3756,NA,NA,2
 "LOC111122932","LOC111122932","LOC111122932",NA,"protein_coding","Eastern oyster","NC_035782.1",8.002096,"G-protein coupled receptor daf-38-like- transcript variant X2",NA,2,38952,1305,20335,NA,NA,2
 "LOC111137407","LOC111137407","LOC111137407",NA,"protein_coding","Eastern oyster","NC_035780.1",8.052589,"mediator of RNA polymerase II transcription subunit 30-like- transcript variant X1",NA,2,3902,684,3164,NA,NA,6
 "LOC111111357","LOC111111357","LOC111111357",NA,"protein_coding","Eastern oyster","NC_035780.1",8.080367,"protein FMC1 homolog",NA,1,1326,327,1326,NA,NA,3
@@ -104,6 +101,7 @@
 "LOC111130807","LOC111130807","LOC111130807",NA,"protein_coding","Eastern oyster","NC_035783.1",8.792914,"uncharacterized LOC111130807",NA,1,3483,1071,3483,NA,NA,3
 "LOC111119934","LOC111119934","LOC111119934",NA,"protein_coding","Eastern oyster","NC_035781.1",8.873368,"uncharacterized LOC111119934",NA,1,1302,504,1302,NA,NA,4
 "LOC111137108","LOC111137108","LOC111137108",NA,"protein_coding","Eastern oyster","NC_035784.1",8.948612,NA,NA,1,19775,3321,19775,NA,NA,12
+"LOC111136107","LOC111136107","LOC111136107",NA,"protein_coding","Eastern oyster","NC_035784.1",9.027309,"uncharacterized LOC111136107- transcript variant X1",NA,3,2611,1517,2593,NA,NA,2
 "LOC111137120","LOC111137120","LOC111137120",NA,"protein_coding","Eastern oyster","NC_035784.1",9.070275,NA,NA,1,10180,1827,10180,NA,NA,15
 "LOC111137800","LOC111137800","LOC111137800",NA,"protein_coding","Eastern oyster","NC_035784.1",9.108226,"solute carrier family 15 member 4-like",NA,1,5729,1923,5729,NA,NA,8
 "LOC111117016","LOC111117016","LOC111117016",NA,"protein_coding","Eastern oyster","NC_035789.1",9.137099,"eppin-like- transcript variant X4",NA,4,29900,640,16960,NA,NA,6
@@ -114,8 +112,8 @@
 "LOC111119799","LOC111119799","LOC111119799",NA,"protein_coding","Eastern oyster","NC_035781.1",9.365907,"zinc finger protein 91-like",NA,1,6872,3849,6872,NA,NA,6
 "LOC111118051","LOC111118051","LOC111118051",NA,"protein_coding","Eastern oyster","NC_035780.1",9.429809,"G patch domain-containing protein 11-like",NA,1,1892,795,1892,NA,NA,1
 "LOC111101521","LOC111101521","LOC111101521",NA,"protein_coding","Eastern oyster","NC_035780.1",9.444244,"acetylcholine receptor subunit beta-type unc-29-like",NA,1,4993,1581,4993,NA,NA,2
+"LOC111134033","LOC111134033","LOC111134033",NA,"protein_coding","Eastern oyster","NC_035784.1",9.464642,"uncharacterized LOC111134033",NA,1,6191,903,6191,NA,NA,4
 "LOC111100849","LOC111100849","LOC111100849",NA,"protein_coding","Eastern oyster","NC_035780.1",9.489348,"lysozyme 3",NA,1,4841,564,4841,NA,NA,5
-"LOC111119712","LOC111119712","LOC111119712",NA,"protein_coding","Eastern oyster","NC_035781.1",9.490829,"ras-GEF domain-containing family member 1B-like- transcript variant X2",NA,5,35619,1688,29042,NA,NA,18
 "LOC111129939","LOC111129939","LOC111129939",NA,"protein_coding","Eastern oyster","NC_035783.1",9.513518,NA,NA,1,39747,3378,39747,NA,NA,23
 "LOC111128136","LOC111128136","LOC111128136",NA,"protein_coding","Eastern oyster","NC_035783.1",9.707517,"aldose 1-epimerase-like- transcript variant X1",NA,3,6972,1194,4925,NA,NA,9
 "LOC111101449","LOC111101449","LOC111101449",NA,"protein_coding","Eastern oyster","NC_035780.1",9.943497,"uncharacterized LOC111101449- transcript variant X2",NA,4,6099,1382,3524,NA,NA,4
@@ -131,14 +129,14 @@
 "LOC111129823","LOC111129823","LOC111129823",NA,"protein_coding","Eastern oyster","NC_035783.1",10.307159,"nuclear receptor ROR-beta-like- transcript variant X4",NA,9,24652,2042,24567,NA,NA,11
 "LOC111122680","LOC111122680","LOC111122680",NA,"protein_coding","Eastern oyster","NC_035780.1",10.467394,"nuclear transcription factor Y subunit A-1-like- transcript variant X1",NA,2,7837,1246,7837,NA,NA,7
 "LOC111119882","LOC111119882","LOC111119882",NA,"protein_coding","Eastern oyster","NC_035781.1",10.481049,"protein atonal homolog 8-like",NA,1,2241,1005,2241,NA,NA,1
+"LOC111118154","LOC111118154","LOC111118154",NA,"protein_coding","Eastern oyster","NC_035781.1",10.817411,"enkurin domain-containing protein 1-like- transcript variant X2",NA,2,4836,840,4788,NA,NA,7
 "LOC111121361","LOC111121361","LOC111121361",NA,"protein_coding","Eastern oyster","NC_035781.1",10.858845,"U7 snRNA-associated Sm-like protein LSm11",NA,1,2469,1074,2469,NA,NA,4
 "LOC111132900","LOC111132900","LOC111132900",NA,"protein_coding","Eastern oyster","NC_035784.1",10.863373,"phosphatidylinositol transfer protein alpha isoform-like- transcript variant X1",NA,2,13409,868,13409,NA,NA,10
+"LOC111125244","LOC111125244","LOC111125244",NA,"protein_coding","Eastern oyster","NC_035782.1",10.878131,"uncharacterized LOC111125244",NA,1,7549,579,7549,NA,NA,2
 "LOC111129300","LOC111129300","LOC111129300",NA,"protein_coding","Eastern oyster","NC_035783.1",10.913418,"5'-AMP-activated protein kinase subunit beta-1-like- transcript variant X2",NA,5,15984,805,15975,NA,NA,8
 "LOC111119195","LOC111119195","LOC111119195",NA,"protein_coding","Eastern oyster","NC_035781.1",10.979122,"heterogeneous nuclear ribonucleoprotein D-like- transcript variant X2",NA,2,14161,1138,9526,NA,NA,11
 "LOC111110187","LOC111110187","LOC111110187",NA,"protein_coding","Eastern oyster","NC_035787.1",11.395947,"sulfotransferase family cytosolic 1B member 1-like",NA,1,7497,885,7497,NA,NA,6
 "LOC111122166","LOC111122166","LOC111122166",NA,"protein_coding","Eastern oyster","NC_035781.1",11.702439,"cysteine-rich and transmembrane domain-containing protein 1-like",NA,1,2281,273,2281,NA,NA,3
-"LOC111130020","LOC111130020","LOC111130020",NA,"protein_coding","Eastern oyster","NC_035783.1",11.727257,"tryptophan--tRNA ligase- cytoplasmic-like",NA,1,7221,1302,7221,NA,NA,8
-"LOC111130018","LOC111130018","LOC111130018",NA,"protein_coding","Eastern oyster","NC_035783.1",11.734664,"WD repeat-containing protein 25-like- transcript variant X1",NA,2,7131,1557,6859,NA,NA,7
 "LOC111135490","LOC111135490","LOC111135490",NA,"protein_coding","Eastern oyster","NC_035784.1",11.910171,"dCTP pyrophosphatase 1-like",NA,1,9062,414,9062,NA,NA,4
 "LOC111123201","LOC111123201","LOC111123201",NA,"protein_coding","Eastern oyster","NC_035782.1",11.971948,"tryptophan 2-3-dioxygenase-like- transcript variant X1",NA,2,16081,1204,14450,NA,NA,14
 "LOC111129890","LOC111129890","LOC111129890",NA,"protein_coding","Eastern oyster","NC_035783.1",12.025526,"serine/threonine-protein phosphatase 2A 56 kDa regulatory subunit alpha isoform-like",NA,1,14415,1383,14415,NA,NA,12
@@ -146,26 +144,24 @@
 "LOC111129888","LOC111129888","LOC111129888",NA,"protein_coding","Eastern oyster","NC_035783.1",12.073747,"endoplasmic reticulum lectin 1-like- transcript variant X1",NA,2,11125,1418,11125,NA,NA,14
 "LOC111129883","LOC111129883","LOC111129883",NA,"protein_coding","Eastern oyster","NC_035783.1",12.131366,"GTP-binding protein 2-like",NA,1,10295,1806,10295,NA,NA,11
 "LOC111137562","LOC111137562","LOC111137562",NA,"protein_coding","Eastern oyster","NC_035784.1",12.168578,"ATPase family AAA domain-containing protein 3-A-like",NA,1,11601,1815,11601,NA,NA,15
-"LOC111121320","LOC111121320","LOC111121320",NA,"protein_coding","Eastern oyster","NC_035781.1",12.180934,"neuromedin-U receptor 1-like",NA,1,8729,1203,8729,NA,NA,2
 "LOC111137899","LOC111137899","LOC111137899",NA,"protein_coding","Eastern oyster","NC_035784.1",12.232201,"uncharacterized LOC111137899",NA,1,3913,444,3913,NA,NA,4
 "LOC111127964","LOC111127964","LOC111127964",NA,"protein_coding","Eastern oyster","NC_035783.1",12.285513,"NADH dehydrogenase [ubiquinone] 1 alpha subcomplex assembly factor 3-like",NA,1,6639,861,6639,NA,NA,5
 "LOC111137940","LOC111137940","LOC111137940",NA,"protein_coding","Eastern oyster","NC_035784.1",12.308443,"probable cytochrome P450 49a1",NA,1,12918,1497,12918,NA,NA,9
 "LOC111132047","LOC111132047","LOC111132047",NA,"protein_coding","Eastern oyster","NC_035784.1",12.33356,NA,NA,1,6023,1257,6023,NA,NA,9
 "LOC111127665","LOC111127665","LOC111127665",NA,"protein_coding","Eastern oyster","NC_035782.1",12.496408,"uncharacterized LOC111127665",NA,1,5994,384,5994,NA,NA,12
-"LOC111110315","LOC111110315","LOC111110315",NA,"protein_coding","Eastern oyster","NC_035787.1",12.537096,"ATP-binding cassette sub-family A member 3-like",NA,1,44842,5115,44842,NA,NA,22
 "LOC111134613","LOC111134613","LOC111134613",NA,"protein_coding","Eastern oyster","NC_035784.1",12.828339,NA,NA,1,2188,1497,2188,NA,NA,3
 "LOC111135319","LOC111135319","LOC111135319",NA,"protein_coding","Eastern oyster","NC_035784.1",12.977206,"probable ubiquitin-conjugating enzyme E2 7",NA,1,9533,507,9533,NA,NA,6
 "LOC111128723","LOC111128723","LOC111128723",NA,"protein_coding","Eastern oyster","NC_035783.1",12.992511,"uncharacterized LOC111128723",NA,1,12086,1071,12086,NA,NA,13
 "LOC111123057","LOC111123057","LOC111123057",NA,"protein_coding","Eastern oyster","NC_035782.1",13.065332,"uncharacterized LOC111123057",NA,1,832,537,832,NA,NA,3
 "LOC111113709","LOC111113709","LOC111113709",NA,"protein_coding","Eastern oyster","NC_035780.1",13.090169,NA,NA,1,11055,1473,11055,NA,NA,6
 "LOC111128147","LOC111128147","LOC111128147",NA,"protein_coding","Eastern oyster","NC_035783.1",13.12916,"prisilkin-39-like",NA,1,807,390,807,NA,NA,3
+"LOC111120783","LOC111120783","LOC111120783",NA,"protein_coding","Eastern oyster","NC_035781.1",13.174213,"charged multivesicular body protein 5-like",NA,1,1303,666,1303,NA,NA,1
 "LOC111121087","LOC111121087","LOC111121087",NA,"protein_coding","Eastern oyster","NC_035781.1",13.214655,"acyl carrier protein- mitochondrial-like",NA,1,3507,450,3507,NA,NA,5
 "LOC111104482","LOC111104482","LOC111104482",NA,"protein_coding","Eastern oyster","NC_035786.1",13.496434,"uncharacterized LOC111104482",NA,1,2736,858,2736,NA,NA,3
 "LOC111133158","LOC111133158","LOC111133158",NA,"protein_coding","Eastern oyster","NC_035784.1",13.547437,"uncharacterized LOC111133158",NA,1,7175,504,7175,NA,NA,3
 "LOC111128886","LOC111128886","LOC111128886",NA,"protein_coding","Eastern oyster","NC_035783.1",13.57449,"uncharacterized LOC111128886",NA,1,9756,735,9756,NA,NA,3
 "LOC111118004","LOC111118004","LOC111118004",NA,"protein_coding","Eastern oyster","NC_035781.1",13.791268,"MAP kinase-interacting serine/threonine-protein kinase 1-like- transcript variant X2",NA,3,6848,1441,6263,NA,NA,8
 "LOC111118010","LOC111118010","LOC111118010",NA,"protein_coding","Eastern oyster","NC_035781.1",13.873037,"apolipoprotein D-like",NA,1,1664,465,1664,NA,NA,4
-"LOC111119068","LOC111119068","LOC111119068",NA,"protein_coding","Eastern oyster","NC_035781.1",13.900711,"ficolin-2-like",NA,1,3042,1023,3042,NA,NA,6
 "LOC111130884","LOC111130884","LOC111130884",NA,"protein_coding","Eastern oyster","NC_035783.1",13.947978,"zinc transporter 5-like- transcript variant X2",NA,2,15073,2272,15073,NA,NA,16
 "LOC111130727","LOC111130727","LOC111130727",NA,"protein_coding","Eastern oyster","NC_035783.1",13.979581,"uncharacterized LOC111130727",NA,1,5347,1338,5347,NA,NA,3
 "LOC111101439","LOC111101439","LOC111101439",NA,"protein_coding","Eastern oyster","NC_035785.1",14.09988,"uncharacterized LOC111101439",NA,1,3719,1320,3719,NA,NA,2
@@ -189,18 +185,17 @@
 "LOC111121287","LOC111121287","LOC111121287",NA,"protein_coding","Eastern oyster","NC_035781.1",15.501804,"uncharacterized LOC111121287",NA,1,25474,4347,25474,NA,NA,31
 "LOC111129475","LOC111129475","LOC111129475",NA,"protein_coding","Eastern oyster","NC_035783.1",15.609932,"sex peptide receptor-like- transcript variant X1",NA,2,8480,1200,8328,NA,NA,2
 "LOC111118796","LOC111118796","LOC111118796",NA,"protein_coding","Eastern oyster","NC_035781.1",15.717987,"nucleoprotein TPR-like- transcript variant X1",NA,2,31133,7480,31131,NA,NA,62
+"LOC111105403","LOC111105403","LOC111105403",NA,"protein_coding","Eastern oyster","NC_035786.1",15.727162,"hemagglutinin/amebocyte aggregation factor-like",NA,1,4236,531,4236,NA,NA,5
 "LOC111105521","LOC111105521","LOC111105521",NA,"protein_coding","Eastern oyster","NC_035786.1",15.898103,"rho GTPase-activating protein gacII-like",NA,1,1691,870,1691,NA,NA,2
 "LOC111108691","LOC111108691","LOC111108691",NA,"protein_coding","Eastern oyster","NC_035787.1",15.903185,"inter-alpha-trypsin inhibitor heavy chain H3-like- transcript variant X1",NA,2,12440,2634,12324,NA,NA,12
 "LOC111134375","LOC111134375","LOC111134375",NA,"protein_coding","Eastern oyster","NC_035784.1",16.146705,"polyadenylate-binding protein 2-B-like",NA,1,12222,681,12222,NA,NA,7
 "LOC111121999","LOC111121999","LOC111121999",NA,"protein_coding","Eastern oyster","NC_035781.1",16.170021,"cell wall protein DAN4-like",NA,1,11550,2139,11550,NA,NA,2
 "LOC111131153","LOC111131153","LOC111131153",NA,"protein_coding","Eastern oyster","NC_035783.1",16.286962,"T-complex protein 1 subunit delta-like",NA,1,6978,1608,6978,NA,NA,14
+"LOC111128663","LOC111128663","LOC111128663",NA,"protein_coding","Eastern oyster","NC_035783.1",16.378577,"uncharacterized LOC111128663- transcript variant X1",NA,2,4060,681,2639,NA,NA,2
 "LOC111131131","LOC111131131","LOC111131131",NA,"protein_coding","Eastern oyster","NC_035783.1",16.397647,"uncharacterized LOC111131131",NA,1,1404,690,1404,NA,NA,3
-"LOC111134889","LOC111134889","LOC111134889",NA,"protein_coding","Eastern oyster","NC_035784.1",16.573728,"aspartate beta-hydroxylase domain-containing protein 2-like",NA,1,3084,939,3084,NA,NA,2
 "LOC111120685","LOC111120685","LOC111120685",NA,"protein_coding","Eastern oyster","NC_035780.1",16.622318,"MAM and LDL-receptor class A domain-containing protein 1-like",NA,1,18377,1986,18377,NA,NA,23
 "LOC111136645","LOC111136645","LOC111136645",NA,"protein_coding","Eastern oyster","NC_035784.1",16.628226,"uncharacterized LOC111136645- transcript variant X2",NA,2,3807,783,2757,NA,NA,6
-"LOC111128246","LOC111128246","LOC111128246",NA,"protein_coding","Eastern oyster","NC_035783.1",16.639999,"uncharacterized LOC111128246",NA,1,3233,2889,3233,NA,NA,2
 "LOC111129112","LOC111129112","LOC111129112",NA,"protein_coding","Eastern oyster","NC_035783.1",16.655724,"RNA-binding protein 25-like- transcript variant X2",NA,2,11036,2324,11036,NA,NA,18
-"LOC111124938","LOC111124938","LOC111124938",NA,"protein_coding","Eastern oyster","NC_035782.1",16.698823,"dynein heavy chain 7- axonemal-like- transcript variant X2",NA,9,38675,12068,38620,NA,NA,66
 "LOC111128279","LOC111128279","LOC111128279",NA,"protein_coding","Eastern oyster","NC_035783.1",16.787431,"protein prenyltransferase alpha subunit repeat-containing protein 1-like- transcript variant X1",NA,2,12892,1200,10570,NA,NA,8
 "LOC111134475","LOC111134475","LOC111134475",NA,"protein_coding","Eastern oyster","NC_035784.1",16.861832,"RNA-binding protein 8A-like",NA,1,4351,498,4351,NA,NA,6
 "LOC111129270","LOC111129270","LOC111129270",NA,"protein_coding","Eastern oyster","NC_035783.1",16.960998,"proline-rich protein PRCC-like",NA,1,22682,1230,22682,NA,NA,9
@@ -208,11 +203,9 @@
 "LOC111136085","LOC111136085","LOC111136085",NA,"protein_coding","Eastern oyster","NC_035780.1",17.123819,"CCR4-NOT transcription complex subunit 4-like- transcript variant X1",NA,3,14825,1981,14825,NA,NA,20
 "LOC111105313","LOC111105313","LOC111105313",NA,"protein_coding","Eastern oyster","NC_035780.1",17.144789,"MAM and LDL-receptor class A domain-containing protein 1-like",NA,1,4645,1665,4645,NA,NA,8
 "LOC111113014","LOC111113014","LOC111113014",NA,"protein_coding","Eastern oyster","NC_035780.1",17.150399,"cylicin-2-like",NA,1,3835,1086,3835,NA,NA,3
-"LOC111138450","LOC111138450","LOC111138450",NA,"protein_coding","Eastern oyster","NC_035784.1",17.518038,"uncharacterized LOC111138450",NA,1,13475,1281,13475,NA,NA,6
 "LOC111127605","LOC111127605","LOC111127605",NA,"protein_coding","Eastern oyster","NC_035782.1",17.525254,"erythrocyte band 7 integral membrane protein-like- transcript variant X2",NA,3,7871,857,7497,NA,NA,9
 "LOC111127581","LOC111127581","LOC111127581",NA,"protein_coding","Eastern oyster","NC_035782.1",17.602762,"organic cation transporter protein-like- transcript variant X1",NA,2,5622,1518,5622,NA,NA,9
 "LOC111135254","LOC111135254","LOC111135254",NA,"protein_coding","Eastern oyster","NC_035784.1",17.604912,"heat shock factor protein-like",NA,1,13540,1509,13540,NA,NA,14
-"LOC111099752","LOC111099752","LOC111099752",NA,"protein_coding","Eastern oyster","NC_035785.1",17.696633,"threonine-rich protein-like",NA,1,8885,570,8885,NA,NA,2
 "LOC111131651","LOC111131651","LOC111131651",NA,"protein_coding","Eastern oyster","NC_035783.1",17.707427,"gigasin-6-like- transcript variant X1",NA,2,3098,1642,3098,NA,NA,6
 "LOC111131686","LOC111131686","LOC111131686",NA,"protein_coding","Eastern oyster","NC_035783.1",17.714509,"beta-lactamase-like protein 3",NA,1,5965,1596,5965,NA,NA,5
 "LOC111133359","LOC111133359","LOC111133359",NA,"protein_coding","Eastern oyster","NC_035784.1",17.809776,"protein NipSnap-like- transcript variant X3",NA,3,14652,896,14335,NA,NA,10
@@ -221,7 +214,6 @@
 "LOC111121541","LOC111121541","LOC111121541",NA,"protein_coding","Eastern oyster","NC_035781.1",18.093162,"DNA-binding protein inhibitor ID-2-A-like",NA,1,1848,459,1848,NA,NA,4
 "LOC111127036","LOC111127036","LOC111127036",NA,"protein_coding","Eastern oyster","NC_035782.1",18.105012,"uncharacterized LOC111127036",NA,1,2621,342,2621,NA,NA,3
 "LOC111120879","LOC111120879","LOC111120879",NA,"protein_coding","Eastern oyster","NC_035781.1",18.111093,"transcription factor BTF3 homolog 4-like",NA,1,4640,465,4640,NA,NA,7
-"LOC111134446","LOC111134446","LOC111134446",NA,"protein_coding","Eastern oyster","NC_035784.1",18.198491,"nuclear envelope phosphatase-regulatory subunit 1-like",NA,1,10578,420,10578,NA,NA,6
 "LOC111123024","LOC111123024","LOC111123024",NA,"protein_coding","Eastern oyster","NC_035782.1",18.208399,NA,NA,1,30372,2301,30372,NA,NA,20
 "LOC111110860","LOC111110860","LOC111110860",NA,"protein_coding","Eastern oyster","NC_035788.1",18.402801,NA,NA,1,47143,3297,47143,NA,NA,23
 "LOC111122935","LOC111122935","LOC111122935",NA,"protein_coding","Eastern oyster","NC_035782.1",18.443356,"UPF0462 protein C4orf33 homolog",NA,1,2461,663,2461,NA,NA,6
@@ -235,21 +227,19 @@
 "LOC111128503","LOC111128503","LOC111128503",NA,"protein_coding","Eastern oyster","NC_035783.1",18.968365,"transmembrane protein 179B-like",NA,1,5937,678,5937,NA,NA,5
 "LOC111129291","LOC111129291","LOC111129291",NA,"protein_coding","Eastern oyster","NC_035783.1",18.974818,"transmembrane protein 179B-like",NA,1,5797,654,5797,NA,NA,5
 "LOC111113585","LOC111113585","LOC111113585",NA,"protein_coding","Eastern oyster","NC_035788.1",19.100705,"FMRFamide receptor-like",NA,1,7420,1584,7420,NA,NA,6
-"LOC111110820","LOC111110820","LOC111110820",NA,"protein_coding","Eastern oyster","NC_035788.1",19.126051,"uncharacterized LOC111110820- transcript variant X3",NA,4,12790,4628,10899,NA,NA,6
 "LOC111128238","LOC111128238","LOC111128238",NA,"protein_coding","Eastern oyster","NC_035783.1",19.13466,"cholecystokinin receptor type A-like",NA,1,3201,1104,3201,NA,NA,2
 "LOC111128292","LOC111128292","LOC111128292",NA,"protein_coding","Eastern oyster","NC_035783.1",19.22643,"mitogen-activated protein kinase-binding protein 1-like- transcript variant X2",NA,8,35746,5420,35100,NA,NA,34
-"LOC111122709","LOC111122709","LOC111122709",NA,"protein_coding","Eastern oyster","NC_035782.1",19.418883,"serine protease inhibitor Cvsi-2-like",NA,1,1194,252,1194,NA,NA,3
-"LOC111129345","LOC111129345","LOC111129345",NA,"protein_coding","Eastern oyster","NC_035783.1",19.46381,"egl nine homolog 1-like",NA,1,11315,1284,11315,NA,NA,5
 "LOC111128053","LOC111128053","LOC111128053",NA,"protein_coding","Eastern oyster","NC_035783.1",19.963028,"uncharacterized LOC111128053",NA,1,2054,702,2054,NA,NA,2
 "LOC111131751","LOC111131751","LOC111131751",NA,"protein_coding","Eastern oyster","NC_035783.1",19.970561,"zinc finger protein 318-like- transcript variant X3",NA,3,8909,4855,8906,NA,NA,7
 "LOC111130585","LOC111130585","LOC111130585",NA,"protein_coding","Eastern oyster","NC_035783.1",20.144602,"uncharacterized LOC111130585- transcript variant X1",NA,2,4336,1914,4058,NA,NA,2
 "LOC111128846","LOC111128846","LOC111128846",NA,"protein_coding","Eastern oyster","NC_035783.1",20.153332,"uncharacterized LOC111128846",NA,1,3846,1971,3846,NA,NA,2
 "LOC111103542","LOC111103542","LOC111103542",NA,"protein_coding","Eastern oyster","NC_035780.1",20.176218,"VWFA and cache domain-containing protein 1-like",NA,1,17179,3414,17179,NA,NA,24
+"LOC111127805","LOC111127805","LOC111127805",NA,"protein_coding","Eastern oyster","NC_035783.1",20.478654,"uncharacterized LOC111127805- transcript variant X2",NA,2,1830,765,1824,NA,NA,4
 "LOC111126343","LOC111126343","LOC111126343",NA,"protein_coding","Eastern oyster","NC_035782.1",20.511155,"CD63 antigen-like",NA,1,9352,828,9352,NA,NA,9
 "LOC111118916","LOC111118916","LOC111118916",NA,"protein_coding","Eastern oyster","NC_035781.1",20.56383,NA,NA,1,26854,5904,26854,NA,NA,40
 "LOC111127212","LOC111127212","LOC111127212",NA,"protein_coding","Eastern oyster","NC_035782.1",20.649758,"glycine-rich cell wall structural protein-like- transcript variant X1",NA,2,1861,573,1847,NA,NA,5
 "LOC111136067","LOC111136067","LOC111136067",NA,"protein_coding","Eastern oyster","NC_035780.1",20.871973,"membrane-bound O-acyltransferase domain-containing protein 2-like",NA,1,14499,1428,14499,NA,NA,12
-"LOC111135413","LOC111135413","LOC111135413",NA,"protein_coding","Eastern oyster","NC_035784.1",21.022747,NA,NA,1,10366,2031,10366,NA,NA,9
+"LOC111123830","LOC111123830","LOC111123830",NA,"protein_coding","Eastern oyster","NC_035782.1",20.96701,"ring-infected erythrocyte surface antigen-like",NA,1,1391,486,1391,NA,NA,1
 "LOC111120619","LOC111120619","LOC111120619",NA,"protein_coding","Eastern oyster","NC_035781.1",21.026211,"probable 60S ribosomal protein L37-A",NA,1,6336,306,6336,NA,NA,4
 "LOC111132210","LOC111132210","LOC111132210",NA,"protein_coding","Eastern oyster","NC_035784.1",21.066046,"transcriptional regulator ERG homolog",NA,1,5538,726,5538,NA,NA,4
 "LOC111123251","LOC111123251","LOC111123251",NA,"protein_coding","Eastern oyster","NC_035782.1",21.424273,"prion-like-(Q/N-rich) domain-bearing protein 25",NA,1,11329,855,11329,NA,NA,21
@@ -259,6 +249,7 @@
 "LOC111137411","LOC111137411","LOC111137411",NA,"protein_coding","Eastern oyster","NC_035784.1",21.654699,"ganglioside-induced differentiation-associated protein 1-like",NA,1,4704,969,4704,NA,NA,5
 "LOC111133807","LOC111133807","LOC111133807",NA,"protein_coding","Eastern oyster","NC_035784.1",21.663872,"uncharacterized protein C20orf24 homolog- transcript variant X1",NA,2,8295,356,5668,NA,NA,4
 "LOC111137552","LOC111137552","LOC111137552",NA,"protein_coding","Eastern oyster","NC_035784.1",21.673419,"DDB1- and CUL4-associated factor 11-like- transcript variant X2",NA,3,17614,1673,17605,NA,NA,19
+"LOC111120180","LOC111120180","LOC111120180",NA,"protein_coding","Eastern oyster","NC_035781.1",21.861181,"pollen-specific leucine-rich repeat extensin-like protein 1",NA,1,1924,1011,1924,NA,NA,3
 "LOC111119193","LOC111119193","LOC111119193",NA,"protein_coding","Eastern oyster","NC_035781.1",21.931416,"pancreatic triacylglycerol lipase-like- transcript variant X2",NA,2,60421,1095,60338,NA,NA,8
 "LOC111137415","LOC111137415","LOC111137415",NA,"protein_coding","Eastern oyster","NC_035784.1",22.068023,NA,NA,1,6755,2496,6755,NA,NA,8
 "LOC111119162","LOC111119162","LOC111119162",NA,"protein_coding","Eastern oyster","NC_035781.1",22.102783,"radial spoke head 10 homolog B-like- transcript variant X1",NA,3,43419,2469,38431,NA,NA,19
@@ -271,13 +262,13 @@
 "LOC111112764","LOC111112764","LOC111112764",NA,"protein_coding","Eastern oyster","NC_035780.1",22.606615,"metalloproteinase inhibitor 3-like",NA,1,3087,645,3087,NA,NA,5
 "LOC111115931","LOC111115931","LOC111115931",NA,"protein_coding","Eastern oyster","NC_035788.1",22.614929,"caveolin-1-like",NA,1,1360,399,1360,NA,NA,2
 "LOC111136474","LOC111136474","LOC111136474",NA,"protein_coding","Eastern oyster","NC_035784.1",22.625061,"receptor-transporting protein 3-like",NA,1,8878,747,8878,NA,NA,4
-"LOC111117278","LOC111117278","LOC111117278",NA,"protein_coding","Eastern oyster","NC_035789.1",22.627377,"collagen alpha-6(VI) chain-like- transcript variant X2",NA,2,23308,1887,16378,NA,NA,9
 "LOC111124121","LOC111124121","LOC111124121",NA,"protein_coding","Eastern oyster","NC_035782.1",22.668691,"uncharacterized LOC111124121",NA,1,12226,834,12226,NA,NA,7
 "LOC111118088","LOC111118088","LOC111118088",NA,"protein_coding","Eastern oyster","NC_035781.1",22.889848,"NKAP family protein CG6066-like- transcript variant X2",NA,2,6054,1146,5842,NA,NA,3
 "LOC111120513","LOC111120513","LOC111120513",NA,"protein_coding","Eastern oyster","NC_035781.1",22.942065,"rab11 family-interacting protein 4B-like- transcript variant X2",NA,5,28229,1007,24214,NA,NA,12
 "LOC111127858","LOC111127858","LOC111127858",NA,"protein_coding","Eastern oyster","NC_035783.1",23.004128,"uncharacterized LOC111127858",NA,1,16247,909,16247,NA,NA,3
 "LOC111137389","LOC111137389","LOC111137389",NA,"protein_coding","Eastern oyster","NC_035784.1",23.043412,"tyrosinase-like protein 1- transcript variant X1",NA,2,6577,2184,6352,NA,NA,4
 "LOC111118834","LOC111118834","LOC111118834",NA,"protein_coding","Eastern oyster","NC_035781.1",23.133963,"ubiquitin carboxyl-terminal hydrolase 7-like- transcript variant X2",NA,2,25767,3290,25666,NA,NA,32
+"LOC111130133","LOC111130133","LOC111130133",NA,"protein_coding","Eastern oyster","NC_035783.1",23.289685,"spidroin-2-like",NA,1,1420,711,1420,NA,NA,3
 "LOC111111824","LOC111111824","LOC111111824",NA,"protein_coding","Eastern oyster","NC_035780.1",23.677695,"ovomucoid-like",NA,1,2226,231,2226,NA,NA,3
 "LOC111129561","LOC111129561","LOC111129561",NA,"protein_coding","Eastern oyster","NC_035783.1",24.092456,"uncharacterized LOC111129561",NA,1,15594,1869,15594,NA,NA,16
 "LOC111115041","LOC111115041","LOC111115041",NA,"protein_coding","Eastern oyster","NC_035788.1",24.421108,"probable serine/threonine-protein kinase tsuA",NA,1,9017,1287,9017,NA,NA,3
@@ -289,10 +280,11 @@
 "LOC111128747","LOC111128747","LOC111128747",NA,"protein_coding","Eastern oyster","NC_035780.1",24.836054,"pyrroline-5-carboxylate reductase 2-like",NA,1,5784,930,5784,NA,NA,6
 "LOC111131533","LOC111131533","LOC111131533",NA,"protein_coding","Eastern oyster","NC_035783.1",24.904612,"universal stress protein YxiE-like",NA,1,8475,501,8475,NA,NA,4
 "LOC111106216","LOC111106216","LOC111106216",NA,"protein_coding","Eastern oyster","NC_035787.1",25.033365,"uncharacterized LOC111106216- transcript variant X1",NA,2,12536,1068,7564,NA,NA,2
+"LOC111137971","LOC111137971","LOC111137971",NA,"protein_coding","Eastern oyster","NC_035784.1",25.082208,"uncharacterized LOC111137971- transcript variant X2",NA,2,11102,1236,10434,NA,NA,9
 "LOC111109578","LOC111109578","LOC111109578",NA,"protein_coding","Eastern oyster","NC_035787.1",25.193352,"3-hydroxyacyl-CoA dehydrogenase type-2-like",NA,1,3643,783,3643,NA,NA,5
+"LOC111102058","LOC111102058","LOC111102058",NA,"protein_coding","Eastern oyster","NC_035785.1",25.56759,"myeloperoxidase-like",NA,1,9921,1788,9921,NA,NA,11
 "LOC111106643","LOC111106643","LOC111106643",NA,"protein_coding","Eastern oyster","NC_035780.1",25.603967,"MAM and LDL-receptor class A domain-containing protein 1-like",NA,1,25933,2874,25933,NA,NA,24
 "LOC111118957","LOC111118957","LOC111118957",NA,"protein_coding","Eastern oyster","NC_035781.1",25.702923,"mitotic spindle assembly checkpoint protein MAD2A-like- transcript variant X1",NA,2,11462,604,8421,NA,NA,5
-"LOC111122279","LOC111122279","LOC111122279",NA,"protein_coding","Eastern oyster","NC_035781.1",25.933357,"substance-K receptor-like",NA,1,1308,801,1308,NA,NA,2
 "LOC111138268","LOC111138268","LOC111138268",NA,"protein_coding","Eastern oyster","NC_035784.1",26.04715,"Fanconi anemia group A protein homolog",NA,1,44309,2028,44309,NA,NA,26
 "LOC111119579","LOC111119579","LOC111119579",NA,"protein_coding","Eastern oyster","NC_035781.1",26.059321,"kelch-like protein 6- transcript variant X1",NA,2,4781,1689,4686,NA,NA,3
 "LOC111120773","LOC111120773","LOC111120773",NA,"protein_coding","Eastern oyster","NC_035781.1",26.108598,"cGMP-dependent protein kinase 1-like- transcript variant X1",NA,3,37109,2349,30248,NA,NA,18
@@ -301,8 +293,8 @@
 "LOC111121369","LOC111121369","LOC111121369",NA,"protein_coding","Eastern oyster","NC_035781.1",26.246032,"rhodopsin-like- transcript variant X1",NA,2,43779,1146,27508,NA,NA,3
 "LOC111129817","LOC111129817","LOC111129817",NA,"protein_coding","Eastern oyster","NC_035783.1",26.822544,"uncharacterized LOC111129817- transcript variant X4",NA,4,16914,2654,16574,NA,NA,5
 "LOC111133570","LOC111133570","LOC111133570",NA,"protein_coding","Eastern oyster","NC_035784.1",26.852976,"A disintegrin and metalloproteinase with thrombospondin motifs 15-like",NA,1,9553,3723,9553,NA,NA,26
+"LOC111133585","LOC111133585","LOC111133585",NA,"protein_coding","Eastern oyster","NC_035784.1",26.879508,"uncharacterized LOC111133585- transcript variant X1",NA,2,8695,1498,8695,NA,NA,12
 "LOC111117935","LOC111117935","LOC111117935",NA,"protein_coding","Eastern oyster","NC_035780.1",26.986116,"uncharacterized LOC111117935- transcript variant X2",NA,2,14596,879,14596,NA,NA,8
-"LOC111133598","LOC111133598","LOC111133598",NA,"protein_coding","Eastern oyster","NC_035784.1",27.054438,NA,NA,1,6593,1365,6593,NA,NA,10
 "LOC111114996","LOC111114996","LOC111114996",NA,"protein_coding","Eastern oyster","NC_035780.1",27.063906,"two pore potassium channel protein sup-9-like- transcript variant X2",NA,2,2726,1068,2726,NA,NA,3
 "LOC111099049","LOC111099049","LOC111099049",NA,"protein_coding","Eastern oyster","NC_035780.1",27.094061,"temptin-like- transcript variant X2",NA,2,4176,480,2540,NA,NA,4
 "LOC111110289","LOC111110289","LOC111110289",NA,"protein_coding","Eastern oyster","NC_035787.1",27.132767,"uncharacterized LOC111110289",NA,1,10244,4002,10244,NA,NA,7
@@ -314,6 +306,7 @@
 "LOC111136961","LOC111136961","LOC111136961",NA,"protein_coding","Eastern oyster","NC_035780.1",27.551561,"aspartate aminotransferase-like",NA,1,9352,1296,9352,NA,NA,12
 "LOC111124684","LOC111124684","LOC111124684",NA,"protein_coding","Eastern oyster","NC_035780.1",27.797591,"kinesin-like protein KIF28P- transcript variant X1",NA,2,13620,3027,13056,NA,NA,21
 "LOC111126686","LOC111126686","LOC111126686",NA,"protein_coding","Eastern oyster","NC_035782.1",27.801197,"uncharacterized LOC111126686- transcript variant X1",NA,3,14823,1579,14551,NA,NA,9
+"LOC111101885","LOC111101885","LOC111101885",NA,"protein_coding","Eastern oyster","NC_035780.1",28.070444,"putative mediator of RNA polymerase II transcription subunit 26",NA,1,7730,1962,7730,NA,NA,7
 "LOC111103740","LOC111103740","LOC111103740",NA,"protein_coding","Eastern oyster","NC_035780.1",28.097514,"zinc transporter 2-like- transcript variant X2",NA,2,8254,1191,8254,NA,NA,10
 "LOC111105769","LOC111105769","LOC111105769",NA,"protein_coding","Eastern oyster","NC_035787.1",28.175038,"universal stress protein in QAH/OAS sulfhydrylase 3'region-like",NA,1,5509,468,5509,NA,NA,4
 "LOC111103707","LOC111103707","LOC111103707",NA,"protein_coding","Eastern oyster","NC_035786.1",28.205499,"tubulin--tyrosine ligase-like protein 12",NA,1,24387,1860,24387,NA,NA,13
@@ -327,7 +320,6 @@
 "LOC111129451","LOC111129451","LOC111129451",NA,"protein_coding","Eastern oyster","NC_035783.1",29.104805,"uncharacterized LOC111129451",NA,1,7021,303,7021,NA,NA,3
 "LOC111136504","LOC111136504","LOC111136504",NA,"protein_coding","Eastern oyster","NC_035784.1",29.106912,"NADH dehydrogenase [ubiquinone] flavoprotein 2- mitochondrial-like",NA,1,2633,795,2633,NA,NA,9
 "LOC111126052","LOC111126052","LOC111126052",NA,"protein_coding","Eastern oyster","NC_035782.1",29.220559,"inhibitor of growth protein 1-like",NA,1,1737,795,1737,NA,NA,4
-"LOC111124596","LOC111124596","LOC111124596",NA,"protein_coding","Eastern oyster","NC_035780.1",29.271584,"uncharacterized LOC111124596",NA,1,49511,7878,49511,NA,NA,55
 "LOC111137922","LOC111137922","LOC111137922",NA,"protein_coding","Eastern oyster","NC_035784.1",29.318909,"neuronal acetylcholine receptor subunit alpha-7-like",NA,1,10272,1398,10272,NA,NA,6
 "LOC111124600","LOC111124600","LOC111124600",NA,"protein_coding","Eastern oyster","NC_035780.1",29.336869,"uncharacterized LOC111124600",NA,1,3261,921,3261,NA,NA,3
 "LOC111109612","LOC111109612","LOC111109612",NA,"protein_coding","Eastern oyster","NC_035780.1",29.38534,"gigasin-2-like- transcript variant X2",NA,2,7468,1058,7305,NA,NA,10
@@ -337,6 +329,7 @@
 "LOC111131357","LOC111131357","LOC111131357",NA,"protein_coding","Eastern oyster","NC_035783.1",30.082473,"uncharacterized LOC111131357- transcript variant X2",NA,2,11601,444,7099,NA,NA,3
 "LOC111133465","LOC111133465","LOC111133465",NA,"protein_coding","Eastern oyster","NC_035784.1",30.124126,"interferon-induced transmembrane protein 1-like",NA,1,18219,456,18219,NA,NA,5
 "LOC111137810","LOC111137810","LOC111137810",NA,"protein_coding","Eastern oyster","NC_035784.1",30.22197,"forkhead box protein L2-like",NA,1,3652,1095,3652,NA,NA,2
+"LOC111105144","LOC111105144","LOC111105144",NA,"protein_coding","Eastern oyster","NC_035780.1",30.51185,"perlucin-like protein",NA,1,2644,492,2644,NA,NA,5
 "LOC111126492","LOC111126492","LOC111126492",NA,"protein_coding","Eastern oyster","NC_035782.1",30.568345,"glutamine synthetase-like",NA,1,5476,1086,5476,NA,NA,7
 "LOC111133388","LOC111133388","LOC111133388",NA,"protein_coding","Eastern oyster","NC_035780.1",30.695012,"signal transducing adapter molecule 2-like",NA,1,8276,1626,8276,NA,NA,15
 "LOC111100025","LOC111100025","LOC111100025",NA,"protein_coding","Eastern oyster","NC_035785.1",30.814906,"A disintegrin and metalloproteinase with thrombospondin motifs 18-like",NA,1,22670,1560,22670,NA,NA,14
@@ -352,12 +345,11 @@
 "LOC111128139","LOC111128139","LOC111128139",NA,"protein_coding","Eastern oyster","NC_035780.1",31.561157,"nascent polypeptide-associated complex subunit alpha-like",NA,1,4922,633,4922,NA,NA,7
 "LOC111100620","LOC111100620","LOC111100620",NA,"protein_coding","Eastern oyster","NC_035785.1",31.595711,"uncharacterized LOC111100620- transcript variant X1",NA,2,8673,441,8668,NA,NA,3
 "LOC111101052","LOC111101052","LOC111101052",NA,"protein_coding","Eastern oyster","NC_035785.1",31.620325,"uncharacterized LOC111101052",NA,1,3721,867,3721,NA,NA,4
-"LOC111101010","LOC111101010","LOC111101010",NA,"protein_coding","Eastern oyster","NC_035785.1",31.724785,"tubulin alpha-1 chain-like- transcript variant X1",NA,2,7923,1354,7866,NA,NA,4
 "LOC111128258","LOC111128258","LOC111128258",NA,"protein_coding","Eastern oyster","NC_035783.1",31.732497,"BLOC-1-related complex subunit 8-like- transcript variant X2",NA,2,5264,560,5264,NA,NA,6
+"LOC111122736","LOC111122736","LOC111122736",NA,"protein_coding","Eastern oyster","NC_035782.1",31.944477,"degenerin-like protein asic-2",NA,1,27615,1422,27615,NA,NA,12
 "LOC111134696","LOC111134696","LOC111134696",NA,"protein_coding","Eastern oyster","NC_035784.1",31.967665,"programmed cell death protein 6-like- transcript variant X4",NA,4,6347,573,6194,NA,NA,6
 "LOC111101054","LOC111101054","LOC111101054",NA,"protein_coding","Eastern oyster","NC_035785.1",31.97786,"early growth response protein 2-like",NA,1,3350,1686,3350,NA,NA,2
 "LOC111119780","LOC111119780","LOC111119780",NA,"protein_coding","Eastern oyster","NC_035780.1",32.016429,"uncharacterized LOC111119780",NA,1,19006,2781,19006,NA,NA,9
-"LOC111099547","LOC111099547","LOC111099547",NA,"protein_coding","Eastern oyster","NC_035785.1",32.12393,"uncharacterized LOC111099547",NA,1,4196,681,4196,NA,NA,3
 "LOC111101319","LOC111101319","LOC111101319",NA,"protein_coding","Eastern oyster","NC_035785.1",32.132495,"uncharacterized LOC111101319",NA,1,1604,411,1604,NA,NA,3
 "LOC111100630","LOC111100630","LOC111100630",NA,"protein_coding","Eastern oyster","NC_035785.1",32.461151,"probable sodium/potassium-transporting ATPase subunit beta-3",NA,1,6645,942,6645,NA,NA,6
 "LOC111125548","LOC111125548","LOC111125548",NA,"protein_coding","Eastern oyster","NC_035782.1",32.517114,"40S ribosomal protein S5",NA,1,11431,615,11431,NA,NA,5
@@ -368,10 +360,10 @@
 "LOC111135417","LOC111135417","LOC111135417",NA,"protein_coding","Eastern oyster","NC_035784.1",32.841647,NA,NA,1,32126,9684,32126,NA,NA,21
 "LOC111126516","LOC111126516","LOC111126516",NA,"protein_coding","Eastern oyster","NC_035782.1",32.962381,"glutamate receptor 2-like",NA,1,10142,2394,10142,NA,NA,12
 "LOC111101116","LOC111101116","LOC111101116",NA,"protein_coding","Eastern oyster","NC_035785.1",32.983917,"NF-kappa-B inhibitor epsilon-like- transcript variant X2",NA,3,1527,956,1415,NA,NA,2
-"LOC111123468","LOC111123468","LOC111123468",NA,"protein_coding","Eastern oyster","NC_035782.1",33.090824,"uncharacterized LOC111123468",NA,1,1507,525,1507,NA,NA,4
 "LOC111118711","LOC111118711","LOC111118711",NA,"protein_coding","Eastern oyster","NC_035781.1",33.179264,"uncharacterized LOC111118711- transcript variant X1",NA,2,3163,1566,3157,NA,NA,4
 "LOC111120573","LOC111120573","LOC111120573",NA,"protein_coding","Eastern oyster","NC_035781.1",33.227591,"putative 3-methyladenine DNA glycosylase",NA,1,2210,786,2210,NA,NA,3
 "LOC111119826","LOC111119826","LOC111119826",NA,"protein_coding","Eastern oyster","NC_035781.1",33.23621,"60S ribosomal protein L34-like- transcript variant X2",NA,2,25400,342,15080,NA,NA,6
+"LOC111120031","LOC111120031","LOC111120031",NA,"protein_coding","Eastern oyster","NC_035781.1",33.264502,"nucleoside diphosphate kinase homolog 5-like",NA,1,1491,645,1491,NA,NA,5
 "LOC111107500","LOC111107500","LOC111107500",NA,"protein_coding","Eastern oyster","NC_035787.1",33.281461,"elastin-like",NA,1,1394,639,1394,NA,NA,3
 "LOC111119713","LOC111119713","LOC111119713",NA,"protein_coding","Eastern oyster","NC_035781.1",33.2992,"ADP-ATP carrier protein 3- mitochondrial-like",NA,1,2062,918,2062,NA,NA,2
 "LOC111118143","LOC111118143","LOC111118143",NA,"protein_coding","Eastern oyster","NC_035781.1",33.342055,NA,NA,1,17744,4149,17744,NA,NA,34
@@ -379,7 +371,6 @@
 "LOC111102120","LOC111102120","LOC111102120",NA,"protein_coding","Eastern oyster","NC_035785.1",33.406908,"uncharacterized LOC111102120",NA,1,762,762,762,NA,NA,1
 "LOC111123544","LOC111123544","LOC111123544",NA,"protein_coding","Eastern oyster","NC_035782.1",33.407081,NA,NA,1,12450,1713,12450,NA,NA,20
 "LOC111118094","LOC111118094","LOC111118094",NA,"protein_coding","Eastern oyster","NC_035781.1",33.436814,"uncharacterized LOC111118094- transcript variant X1",NA,7,17949,1022,16615,NA,NA,10
-"LOC111125951","LOC111125951","LOC111125951",NA,"protein_coding","Eastern oyster","NC_035780.1",33.461973,"protein disulfide-isomerase A5-like- transcript variant X1",NA,2,17825,2049,17282,NA,NA,22
 "LOC111108186","LOC111108186","LOC111108186",NA,"protein_coding","Eastern oyster","NC_035787.1",33.482604,"uncharacterized LOC111108186- transcript variant X10",NA,12,56981,14313,56981,NA,NA,81
 "LOC111102235","LOC111102235","LOC111102235",NA,"protein_coding","Eastern oyster","NC_035785.1",33.565396,"aquaporin-like- transcript variant X1",NA,3,12227,856,6563,NA,NA,3
 "LOC111122413","LOC111122413","LOC111122413",NA,"protein_coding","Eastern oyster","NC_035781.1",33.57369,"ras-related protein Rap-1b-like- transcript variant X1",NA,2,7444,711,6609,NA,NA,2
@@ -393,6 +384,7 @@
 "LOC111137455","LOC111137455","LOC111137455",NA,"protein_coding","Eastern oyster","NC_035780.1",33.995805,"uncharacterized LOC111137455",NA,1,10967,1650,10967,NA,NA,8
 "LOC111137444","LOC111137444","LOC111137444",NA,"protein_coding","Eastern oyster","NC_035780.1",34.007236,"uncharacterized LOC111137444",NA,1,4214,1671,4214,NA,NA,4
 "LOC111107020","LOC111107020","LOC111107020",NA,"protein_coding","Eastern oyster","NC_035780.1",34.045281,"G-protein coupled receptor 84-like",NA,1,2964,1392,2964,NA,NA,2
+"LOC111103579","LOC111103579","LOC111103579",NA,"protein_coding","Eastern oyster","NC_035786.1",34.049615,"M-phase phosphoprotein 8-like",NA,1,16720,2439,16720,NA,NA,15
 "LOC111132115","LOC111132115","LOC111132115",NA,"protein_coding","Eastern oyster","NC_035784.1",34.219341,"loricrin-like- transcript variant X1",NA,17,17626,1742,17626,NA,NA,31
 "LOC111129313","LOC111129313","LOC111129313",NA,"protein_coding","Eastern oyster","NC_035783.1",34.645006,"serine/arginine-rich splicing factor 5-like- transcript variant X1",NA,2,10625,984,10596,NA,NA,8
 "LOC111130146","LOC111130146","LOC111130146",NA,"protein_coding","Eastern oyster","NC_035783.1",34.65836,"protein STPG4-like- transcript variant X2",NA,2,7085,840,7076,NA,NA,8
@@ -416,7 +408,6 @@
 "LOC111099584","LOC111099584","LOC111099584",NA,"protein_coding","Eastern oyster","NC_035785.1",36.144724,"protoporphyrinogen oxidase-like",NA,1,6946,1416,6946,NA,NA,11
 "LOC111109756","LOC111109756","LOC111109756",NA,"protein_coding","Eastern oyster","NC_035787.1",36.149342,"acetylcholine receptor subunit beta-like",NA,1,3657,1269,3657,NA,NA,2
 "LOC111100047","LOC111100047","LOC111100047",NA,"protein_coding","Eastern oyster","NC_035785.1",36.183113,"uncharacterized LOC111100047",NA,1,11835,4461,11835,NA,NA,4
-"LOC111107270","LOC111107270","LOC111107270",NA,"protein_coding","Eastern oyster","NC_035780.1",36.219803,"body wall muscle protein HR-29-like",NA,1,872,546,872,NA,NA,1
 "LOC111137387","LOC111137387","LOC111137387",NA,"protein_coding","Eastern oyster","NC_035780.1",36.227849,"heat shock protein 27-like",NA,1,767,510,767,NA,NA,1
 "LOC111100724","LOC111100724","LOC111100724",NA,"protein_coding","Eastern oyster","NC_035785.1",36.277413,"amine oxidase [flavin-containing] B-like",NA,1,8232,1560,8232,NA,NA,15
 "LOC111101221","LOC111101221","LOC111101221",NA,"protein_coding","Eastern oyster","NC_035785.1",36.297144,"uncharacterized LOC111101221",NA,1,5675,1953,5675,NA,NA,11
@@ -433,12 +424,14 @@
 "LOC111135484","LOC111135484","LOC111135484",NA,"protein_coding","Eastern oyster","NC_035784.1",36.823209,"uncharacterized LOC111135484",NA,1,11285,2625,11285,NA,NA,9
 "LOC111136464","LOC111136464","LOC111136464",NA,"protein_coding","Eastern oyster","NC_035784.1",36.950286,"uncharacterized protein C5orf49 homolog- transcript variant X2",NA,2,3453,422,3417,NA,NA,4
 "LOC111101608","LOC111101608","LOC111101608",NA,"protein_coding","Eastern oyster","NC_035785.1",36.959092,"uncharacterized LOC111101608- transcript variant X4",NA,4,9005,1320,5946,NA,NA,2
+"LOC111101607","LOC111101607","LOC111101607",NA,"protein_coding","Eastern oyster","NC_035785.1",36.965359,"uncharacterized LOC111101607- transcript variant X1",NA,6,5914,1521,4037,NA,NA,2
 "LOC111132883","LOC111132883","LOC111132883",NA,"protein_coding","Eastern oyster","NC_035784.1",37.127549,"protein pelota-like",NA,1,5779,1146,5779,NA,NA,12
 "LOC111101375","LOC111101375","LOC111101375",NA,"protein_coding","Eastern oyster","NC_035785.1",37.144839,"mu-type opioid receptor-like",NA,1,20495,1137,20495,NA,NA,2
 "LOC111100347","LOC111100347","LOC111100347",NA,"protein_coding","Eastern oyster","NC_035785.1",37.355458,"cytosolic phospholipase A2-like- transcript variant X1",NA,3,16456,2575,13335,NA,NA,16
 "LOC111100556","LOC111100556","LOC111100556",NA,"protein_coding","Eastern oyster","NC_035785.1",37.573874,"metallo-beta-lactamase domain-containing protein 1-like",NA,1,6060,690,6060,NA,NA,6
 "LOC111130054","LOC111130054","LOC111130054",NA,"protein_coding","Eastern oyster","NC_035783.1",37.588761,"uncharacterized LOC111130054- transcript variant X1",NA,2,20782,926,19604,NA,NA,4
 "LOC111131077","LOC111131077","LOC111131077",NA,"protein_coding","Eastern oyster","NC_035783.1",37.678512,"SKI family transcriptional corepressor 1 homolog-B-like",NA,1,3710,1812,3710,NA,NA,7
+"LOC111101225","LOC111101225","LOC111101225",NA,"protein_coding","Eastern oyster","NC_035785.1",37.87127,"uncharacterized LOC111101225- transcript variant X4",NA,5,6882,750,6434,NA,NA,10
 "LOC111137996","LOC111137996","LOC111137996",NA,"protein_coding","Eastern oyster","NC_035784.1",37.890991,"putative defense protein Hdd11-like- transcript variant X3",NA,3,12642,711,7259,NA,NA,4
 "LOC111101232","LOC111101232","LOC111101232",NA,"protein_coding","Eastern oyster","NC_035780.1",38.052872,"protein sym-1-like- transcript variant X1",NA,3,17227,583,14973,NA,NA,7
 "LOC111132853","LOC111132853","LOC111132853",NA,"protein_coding","Eastern oyster","NC_035784.1",38.053817,"PAXIP1-associated glutamate-rich protein 1-like",NA,1,2350,693,2350,NA,NA,5
@@ -458,9 +451,11 @@
 "LOC111125842","LOC111125842","LOC111125842",NA,"protein_coding","Eastern oyster","NC_035782.1",39.599491,"von Willebrand factor C domain-containing protein 2-like",NA,1,744,426,744,NA,NA,2
 "LOC111125841","LOC111125841","LOC111125841",NA,"protein_coding","Eastern oyster","NC_035782.1",39.602955,"von Willebrand factor C domain-containing protein 2-like",NA,1,819,426,819,NA,NA,2
 "LOC111123254","LOC111123254","LOC111123254",NA,"protein_coding","Eastern oyster","NC_035782.1",39.605706,"N-acetylneuraminate lyase B-like",NA,1,8263,945,8263,NA,NA,10
+"LOC111099091","LOC111099091","LOC111099091",NA,"protein_coding","Eastern oyster","NC_035784.1",39.791205,"uncharacterized LOC111099091",NA,1,5224,1185,5224,NA,NA,10
 "LOC111138080","LOC111138080","LOC111138080",NA,"protein_coding","Eastern oyster","NC_035784.1",39.810258,"proline-rich protein 11-like- transcript variant X2",NA,2,4251,1023,4251,NA,NA,10
 "LOC111133497","LOC111133497","LOC111133497",NA,"protein_coding","Eastern oyster","NC_035784.1",39.899662,"ester hydrolase C11orf54 homolog",NA,1,5316,939,5316,NA,NA,9
 "LOC111111773","LOC111111773","LOC111111773",NA,"protein_coding","Eastern oyster","NC_035780.1",40.024848,"golgin subfamily A member 6-like protein 4- transcript variant X1",NA,2,12002,1512,12002,NA,NA,13
+"LOC111104460","LOC111104460","LOC111104460",NA,"protein_coding","Eastern oyster","NC_035786.1",40.043019,NA,NA,1,1507,1188,1507,NA,NA,3
 "LOC111126799","LOC111126799","LOC111126799",NA,"protein_coding","Eastern oyster","NC_035780.1",40.129872,"adhesion G protein-coupled receptor E1-like- transcript variant X1",NA,2,16261,954,15636,NA,NA,14
 "LOC111118263","LOC111118263","LOC111118263",NA,"protein_coding","Eastern oyster","NC_035781.1",40.22469,NA,NA,1,3519,576,3519,NA,NA,8
 "LOC111119639","LOC111119639","LOC111119639",NA,"protein_coding","Eastern oyster","NC_035781.1",40.25655,NA,NA,1,7698,1344,7698,NA,NA,12
@@ -468,21 +463,27 @@
 "LOC111101782","LOC111101782","LOC111101782",NA,"protein_coding","Eastern oyster","NC_035780.1",40.43837,"uncharacterized LOC111101782",NA,1,3213,282,3213,NA,NA,3
 "LOC111119180","LOC111119180","LOC111119180",NA,"protein_coding","Eastern oyster","NC_035781.1",40.487457,"uncharacterized LOC111119180",NA,1,3439,486,3439,NA,NA,4
 "LOC111129930","LOC111129930","LOC111129930",NA,"protein_coding","Eastern oyster","NC_035783.1",40.506855,"GTPase IMAP family member 4-like- transcript variant X2",NA,3,8147,868,7532,NA,NA,3
+"LOC111134589","LOC111134589","LOC111134589",NA,"protein_coding","Eastern oyster","NC_035784.1",40.530017,"sodium- and chloride-dependent glycine transporter 1-like- transcript variant X1",NA,2,15440,1836,15440,NA,NA,14
 "LOC111134006","LOC111134006","LOC111134006",NA,"protein_coding","Eastern oyster","NC_035784.1",40.550127,"uncharacterized LOC111134006- transcript variant X5",NA,5,7160,354,4607,NA,NA,4
 "LOC111130852","LOC111130852","LOC111130852",NA,"protein_coding","Eastern oyster","NC_035783.1",40.620953,"protein max-like- transcript variant X1",NA,4,10469,466,10464,NA,NA,4
+"LOC111126747","LOC111126747","LOC111126747",NA,"protein_coding","Eastern oyster","NC_035782.1",40.703836,"insoluble matrix shell protein 5-like",NA,1,2714,429,2714,NA,NA,4
 "LOC111131316","LOC111131316","LOC111131316",NA,"protein_coding","Eastern oyster","NC_035783.1",40.705653,"cysteine proteinase inhibitor 8-like",NA,1,731,408,731,NA,NA,3
 "LOC111134031","LOC111134031","LOC111134031",NA,"protein_coding","Eastern oyster","NC_035780.1",40.765337,"RUN domain-containing protein 1-like- transcript variant X3",NA,5,124041,1853,112507,NA,NA,16
 "LOC111138214","LOC111138214","LOC111138214",NA,"protein_coding","Eastern oyster","NC_035784.1",40.765967,"venom protein 164-like",NA,1,1707,339,1707,NA,NA,4
 "LOC111136974","LOC111136974","LOC111136974",NA,"protein_coding","Eastern oyster","NC_035784.1",41.119131,"cytochrome P450 2B5-like- transcript variant X1",NA,2,4376,1464,4376,NA,NA,8
+"LOC111128425","LOC111128425","LOC111128425",NA,"protein_coding","Eastern oyster","NC_035783.1",41.469699,"tyrosyl-DNA phosphodiesterase 1-like- transcript variant X3",NA,4,6731,1986,6624,NA,NA,15
 "LOC111131332","LOC111131332","LOC111131332",NA,"protein_coding","Eastern oyster","NC_035783.1",41.480574,"uncharacterized LOC111131332",NA,1,2078,1659,2078,NA,NA,2
+"LOC111138405","LOC111138405","LOC111138405",NA,"protein_coding","Eastern oyster","NC_035784.1",41.489751,"uncharacterized LOC111138405",NA,1,7929,756,7929,NA,NA,7
 "LOC111100963","LOC111100963","LOC111100963",NA,"protein_coding","Eastern oyster","NC_035785.1",41.571391,"uncharacterized protein C11orf70 homolog",NA,1,5646,789,5646,NA,NA,7
 "LOC111124769","LOC111124769","LOC111124769",NA,"protein_coding","Eastern oyster","NC_035780.1",41.591542,"palmitoyltransferase ZDHHC17-like- transcript variant X2",NA,2,88262,1756,88262,NA,NA,14
+"LOC111132990","LOC111132990","LOC111132990",NA,"protein_coding","Eastern oyster","NC_035784.1",41.621401,"serine/arginine repetitive matrix protein 2-like- transcript variant X6",NA,7,34191,7776,28937,NA,NA,29
 "LOC111136557","LOC111136557","LOC111136557",NA,"protein_coding","Eastern oyster","NC_035784.1",41.66361,"NADPH--cytochrome P450 reductase-like",NA,1,10735,2019,10735,NA,NA,15
 "LOC111116352","LOC111116352","LOC111116352",NA,"protein_coding","Eastern oyster","NC_035780.1",41.738232,"zinc finger CCCH domain-containing protein 11A-like- transcript variant X5",NA,15,95554,2627,95499,NA,NA,20
-"LOC111130170","LOC111130170","LOC111130170",NA,"protein_coding","Eastern oyster","NC_035783.1",41.759709,"uncharacterized LOC111130170- transcript variant X3",NA,3,6070,1785,5969,NA,NA,7
 "LOC111105074","LOC111105074","LOC111105074",NA,"protein_coding","Eastern oyster","NC_035786.1",41.811242,"uncharacterized LOC111105074",NA,1,2133,1746,2133,NA,NA,2
 "LOC111131392","LOC111131392","LOC111131392",NA,"protein_coding","Eastern oyster","NC_035780.1",41.851789,"CD82 antigen-like",NA,1,34798,780,34798,NA,NA,9
 "LOC111129926","LOC111129926","LOC111129926",NA,"protein_coding","Eastern oyster","NC_035783.1",41.906023,"6-pyruvoyl tetrahydrobiopterin synthase-like",NA,1,8312,429,8312,NA,NA,6
+"LOC111136014","LOC111136014","LOC111136014",NA,"protein_coding","Eastern oyster","NC_035780.1",42.011653,"stromal cell-derived factor 2-like",NA,1,10567,669,10567,NA,NA,6
+"LOC111123451","LOC111123451","LOC111123451",NA,"protein_coding","Eastern oyster","NC_035782.1",42.132819,NA,NA,1,16173,2253,16173,NA,NA,10
 "LOC111126254","LOC111126254","LOC111126254",NA,"protein_coding","Eastern oyster","NC_035780.1",42.155469,"uncharacterized LOC111126254",NA,1,2880,399,2880,NA,NA,5
 "LOC111126222","LOC111126222","LOC111126222",NA,"protein_coding","Eastern oyster","NC_035780.1",42.178577,"zinc transporter ZIP6-like- transcript variant X2",NA,2,12796,1914,11799,NA,NA,9
 "LOC111126262","LOC111126262","LOC111126262",NA,"protein_coding","Eastern oyster","NC_035780.1",42.271663,"zinc transporter ZIP6-like",NA,1,1898,309,1898,NA,NA,2
@@ -495,7 +496,9 @@
 "LOC111130034","LOC111130034","LOC111130034",NA,"protein_coding","Eastern oyster","NC_035783.1",42.774957,NA,NA,1,68542,1680,68542,NA,NA,12
 "LOC111120320","LOC111120320","LOC111120320",NA,"protein_coding","Eastern oyster","NC_035781.1",42.97334,NA,NA,1,64198,7251,64198,NA,NA,35
 "LOC111104702","LOC111104702","LOC111104702",NA,"protein_coding","Eastern oyster","NC_035786.1",43.075398,NA,NA,1,7359,1242,7359,NA,NA,15
+"LOC111102892","LOC111102892","LOC111102892",NA,"protein_coding","Eastern oyster","NC_035786.1",43.084433,"uncharacterized LOC111102892",NA,1,5425,771,5425,NA,NA,8
 "LOC111101306","LOC111101306","LOC111101306",NA,"protein_coding","Eastern oyster","NC_035785.1",43.10551,"neuronal acetylcholine receptor subunit beta-3-like",NA,1,3249,1263,3249,NA,NA,2
+"LOC111127801","LOC111127801","LOC111127801",NA,"protein_coding","Eastern oyster","NC_035783.1",43.110723,"kelch domain-containing protein 2-like- transcript variant X2",NA,2,7521,1708,7521,NA,NA,11
 "LOC111119838","LOC111119838","LOC111119838",NA,"protein_coding","Eastern oyster","NC_035781.1",43.119401,NA,NA,1,9366,2073,9366,NA,NA,15
 "LOC111134048","LOC111134048","LOC111134048",NA,"protein_coding","Eastern oyster","NC_035784.1",43.119969,"uncharacterized LOC111134048- transcript variant X2",NA,2,2369,1046,2288,NA,NA,2
 "LOC111127848","LOC111127848","LOC111127848",NA,"protein_coding","Eastern oyster","NC_035783.1",43.148763,"steroid hormone receptor ERR2-like- transcript variant X2",NA,8,51605,1342,27637,NA,NA,7
@@ -516,14 +519,12 @@
 "LOC111133384","LOC111133384","LOC111133384",NA,"protein_coding","Eastern oyster","NC_035784.1",43.879765,"guanine nucleotide-binding protein G(s) subunit alpha-like",NA,1,22387,1137,22387,NA,NA,11
 "LOC111133386","LOC111133386","LOC111133386",NA,"protein_coding","Eastern oyster","NC_035784.1",43.94031,"putative methyltransferase DDB_G0268948",NA,1,4114,867,4114,NA,NA,6
 "LOC111133387","LOC111133387","LOC111133387",NA,"protein_coding","Eastern oyster","NC_035784.1",43.944952,"galactose-specific lectin nattectin-like",NA,1,4578,501,4578,NA,NA,5
-"LOC111132390","LOC111132390","LOC111132390",NA,"protein_coding","Eastern oyster","NC_035784.1",44.130365,"protein lin-32-like",NA,1,369,369,369,NA,NA,1
 "LOC111108559","LOC111108559","LOC111108559",NA,"protein_coding","Eastern oyster","NC_035787.1",44.199959,"GTPase IMAP family member 7-like",NA,1,2794,1143,2794,NA,NA,2
 "LOC111131275","LOC111131275","LOC111131275",NA,"protein_coding","Eastern oyster","NC_035783.1",44.247314,NA,NA,1,1939,603,1939,NA,NA,3
 "LOC111119072","LOC111119072","LOC111119072",NA,"protein_coding","Eastern oyster","NC_035781.1",44.635034,"tyrosine-protein kinase SRK2-like- transcript variant X1",NA,4,20297,1552,19337,NA,NA,12
 "LOC111134941","LOC111134941","LOC111134941",NA,"protein_coding","Eastern oyster","NC_035784.1",44.685869,"inactive pancreatic lipase-related protein 1-like",NA,1,9268,1053,9268,NA,NA,6
 "LOC111138000","LOC111138000","LOC111138000",NA,"protein_coding","Eastern oyster","NC_035784.1",44.723686,"LIM/homeobox protein Awh-like",NA,1,4290,837,4290,NA,NA,5
 "LOC111122161","LOC111122161","LOC111122161",NA,"protein_coding","Eastern oyster","NC_035781.1",44.751361,"uncharacterized LOC111122161",NA,1,6034,1332,6034,NA,NA,12
-"LOC111127732","LOC111127732","LOC111127732",NA,"protein_coding","Eastern oyster","NC_035783.1",44.81912,NA,NA,1,9230,4674,9230,NA,NA,21
 "LOC111138189","LOC111138189","LOC111138189",NA,"protein_coding","Eastern oyster","NC_035784.1",44.872841,"uncharacterized LOC111138189",NA,1,2157,387,2157,NA,NA,4
 "LOC111137299","LOC111137299","LOC111137299",NA,"protein_coding","Eastern oyster","NC_035784.1",44.875515,"b(0-+)-type amino acid transporter 1-like- transcript variant X2",NA,2,13942,1425,13941,NA,NA,12
 "LOC111121777","LOC111121777","LOC111121777",NA,"protein_coding","Eastern oyster","NC_035781.1",44.876915,"protein fem-1 homolog CG6966-like",NA,1,19597,2085,19597,NA,NA,2
@@ -534,7 +535,6 @@
 "LOC111121516","LOC111121516","LOC111121516",NA,"protein_coding","Eastern oyster","NC_035781.1",45.09276,"uncharacterized LOC111121516",NA,1,5484,1164,5484,NA,NA,8
 "LOC111120338","LOC111120338","LOC111120338",NA,"protein_coding","Eastern oyster","NC_035781.1",45.197296,"RYamide receptor-like",NA,1,17823,1098,17823,NA,NA,2
 "LOC111131050","LOC111131050","LOC111131050",NA,"protein_coding","Eastern oyster","NC_035783.1",45.203338,"protein-L-isoaspartate(D-aspartate) O-methyltransferase-like- transcript variant X3",NA,3,14512,750,14512,NA,NA,7
-"LOC111125153","LOC111125153","LOC111125153",NA,"protein_coding","Eastern oyster","NC_035782.1",45.243803,"A disintegrin and metalloproteinase with thrombospondin motifs 6-like- transcript variant X1",NA,7,15433,3097,15433,NA,NA,25
 "LOC111106650","LOC111106650","LOC111106650",NA,"protein_coding","Eastern oyster","NC_035787.1",45.25136,"AT-rich binding protein-like- transcript variant X1",NA,3,4193,766,4182,NA,NA,6
 "LOC111131783","LOC111131783","LOC111131783",NA,"protein_coding","Eastern oyster","NC_035783.1",45.254179,"uncharacterized LOC111131783",NA,1,13857,531,13857,NA,NA,4
 "LOC111131563","LOC111131563","LOC111131563",NA,"protein_coding","Eastern oyster","NC_035780.1",45.311955,"troponin T-like- transcript variant X3",NA,16,18366,985,17058,NA,NA,14
@@ -545,8 +545,8 @@
 "LOC111125164","LOC111125164","LOC111125164",NA,"protein_coding","Eastern oyster","NC_035782.1",45.67691,"heat shock 70 kDa protein 12B-like",NA,1,6450,1743,6450,NA,NA,5
 "LOC111105762","LOC111105762","LOC111105762",NA,"protein_coding","Eastern oyster","NC_035787.1",45.896562,"traB domain-containing protein-like",NA,1,7062,1143,7062,NA,NA,10
 "LOC111118626","LOC111118626","LOC111118626",NA,"protein_coding","Eastern oyster","NC_035781.1",46.149846,"bone morphogenetic protein 2-like",NA,1,2091,960,2091,NA,NA,3
+"LOC111106484","LOC111106484","LOC111106484",NA,"protein_coding","Eastern oyster","NC_035787.1",46.165706,"uncharacterized LOC111106484",NA,1,1577,450,1577,NA,NA,4
 "LOC111121247","LOC111121247","LOC111121247",NA,"protein_coding","Eastern oyster","NC_035781.1",46.17591,"uncharacterized LOC111121247- transcript variant X2",NA,2,6487,2523,6483,NA,NA,10
-"LOC111131875","LOC111131875","LOC111131875",NA,"protein_coding","Eastern oyster","NC_035783.1",46.180286,"stromelysin-1-like",NA,1,11744,1518,11744,NA,NA,11
 "LOC111122250","LOC111122250","LOC111122250",NA,"protein_coding","Eastern oyster","NC_035781.1",46.254285,"protein DEK-like",NA,1,10169,1242,10169,NA,NA,12
 "LOC111131429","LOC111131429","LOC111131429",NA,"protein_coding","Eastern oyster","NC_035783.1",46.37228,"caveolin-1-like",NA,1,964,390,964,NA,NA,2
 "LOC111137314","LOC111137314","LOC111137314",NA,"protein_coding","Eastern oyster","NC_035784.1",46.406374,"cysteine-rich secretory protein LCCL domain-containing 2-like",NA,1,8222,882,8222,NA,NA,9
@@ -570,18 +570,15 @@
 "LOC111118432","LOC111118432","LOC111118432",NA,"protein_coding","Eastern oyster","NC_035781.1",48.617318,"clusterin-associated protein 1 homolog- transcript variant X2",NA,2,8229,1200,8228,NA,NA,12
 "LOC111119634","LOC111119634","LOC111119634",NA,"protein_coding","Eastern oyster","NC_035781.1",49.106727,"sodium-coupled monocarboxylate transporter 1-like",NA,1,12274,1944,12274,NA,NA,15
 "LOC111127019","LOC111127019","LOC111127019",NA,"protein_coding","Eastern oyster","NC_035782.1",49.129374,"acetylcholine receptor subunit beta-like",NA,1,19859,549,19859,NA,NA,6
+"LOC111132422","LOC111132422","LOC111132422",NA,"protein_coding","Eastern oyster","NC_035784.1",49.401614,"uncharacterized LOC111132422",NA,1,3701,567,3701,NA,NA,5
 "LOC111128384","LOC111128384","LOC111128384",NA,"protein_coding","Eastern oyster","NC_035783.1",49.531666,"CREB-regulated transcription coactivator 3-like",NA,1,6422,372,6422,NA,NA,2
 "LOC111136737","LOC111136737","LOC111136737",NA,"protein_coding","Eastern oyster","NC_035784.1",49.570958,"uncharacterized LOC111136737",NA,1,6945,2112,6945,NA,NA,5
-"LOC111107887","LOC111107887","LOC111107887",NA,"protein_coding","Eastern oyster","NC_035780.1",49.623735,"uncharacterized LOC111107887",NA,1,4552,978,4552,NA,NA,7
 "LOC111119246","LOC111119246","LOC111119246",NA,"protein_coding","Eastern oyster","NC_035780.1",49.759636,"clumping factor A-like",NA,1,2027,987,2027,NA,NA,3
-"LOC111123896","LOC111123896","LOC111123896",NA,"protein_coding","Eastern oyster","NC_035782.1",49.823058,"electron transfer flavoprotein subunit beta-like",NA,1,4025,768,4025,NA,NA,8
 "LOC111103557","LOC111103557","LOC111103557",NA,"protein_coding","Eastern oyster","NC_035786.1",49.900463,"NADP-dependent malic enzyme-like",NA,1,7566,1827,7566,NA,NA,13
 "LOC111126803","LOC111126803","LOC111126803",NA,"protein_coding","Eastern oyster","NC_035782.1",50.025464,"actin-related protein 5-like",NA,1,11259,2142,11259,NA,NA,19
 "LOC111126804","LOC111126804","LOC111126804",NA,"protein_coding","Eastern oyster","NC_035782.1",50.048479,"influenza virus NS1A-binding protein-like- transcript variant X2",NA,5,21118,2076,15217,NA,NA,12
-"LOC111106130","LOC111106130","LOC111106130",NA,"protein_coding","Eastern oyster","NC_035787.1",50.099516,"uncharacterized protein C1orf194 homolog",NA,1,2523,501,2523,NA,NA,4
 "LOC111120927","LOC111120927","LOC111120927",NA,"protein_coding","Eastern oyster","NC_035781.1",50.162055,"mitochondrial amidoxime-reducing component 1-like",NA,1,2823,948,2823,NA,NA,7
 "LOC111118622","LOC111118622","LOC111118622",NA,"protein_coding","Eastern oyster","NC_035781.1",50.168839,"uncharacterized LOC111118622- transcript variant X1",NA,3,2335,1107,2185,NA,NA,3
-"LOC111105103","LOC111105103","LOC111105103",NA,"protein_coding","Eastern oyster","NC_035780.1",50.278916,"uncharacterized LOC111105103",NA,1,2219,516,2219,NA,NA,5
 "LOC111123090","LOC111123090","LOC111123090",NA,"protein_coding","Eastern oyster","NC_035782.1",50.487818,"sushi domain-containing protein 2-like- transcript variant X2",NA,2,15364,3231,15314,NA,NA,18
 "LOC111122957","LOC111122957","LOC111122957",NA,"protein_coding","Eastern oyster","NC_035782.1",50.503623,"5-hydroxytryptamine receptor 1D-like",NA,1,2773,1434,2773,NA,NA,2
 "LOC111124655","LOC111124655","LOC111124655",NA,"protein_coding","Eastern oyster","NC_035782.1",50.535904,"glutamate receptor 2-like",NA,1,8988,2823,8988,NA,NA,17
@@ -590,6 +587,7 @@
 "LOC111119516","LOC111119516","LOC111119516",NA,"protein_coding","Eastern oyster","NC_035781.1",50.736624,"uncharacterized LOC111119516- transcript variant X2",NA,2,12198,1434,12198,NA,NA,12
 "LOC111122409","LOC111122409","LOC111122409",NA,"protein_coding","Eastern oyster","NC_035781.1",50.832312,"Ig-like V-type domain-containing protein FAM187A",NA,1,1965,1395,1965,NA,NA,2
 "LOC111121921","LOC111121921","LOC111121921",NA,"protein_coding","Eastern oyster","NC_035781.1",50.838852,"protein rhomboid-like- transcript variant X2",NA,4,8784,912,5857,NA,NA,7
+"LOC111126736","LOC111126736","LOC111126736",NA,"protein_coding","Eastern oyster","NC_035782.1",50.856712,"oligosaccharyltransferase complex subunit OSTC-like",NA,1,1312,447,1312,NA,NA,4
 "LOC111128945","LOC111128945","LOC111128945",NA,"protein_coding","Eastern oyster","NC_035783.1",50.954922,"peripherin-2-like",NA,1,3316,1164,3316,NA,NA,5
 "LOC111130416","LOC111130416","LOC111130416",NA,"protein_coding","Eastern oyster","NC_035783.1",50.980998,"SNW domain-containing protein 1-like",NA,1,4714,1605,4714,NA,NA,13
 "LOC111102954","LOC111102954","LOC111102954",NA,"protein_coding","Eastern oyster","NC_035786.1",50.988883,"synaptotagmin-9-like",NA,1,17504,1401,17504,NA,NA,5
@@ -604,6 +602,8 @@
 "LOC111121028","LOC111121028","LOC111121028",NA,"protein_coding","Eastern oyster","NC_035781.1",51.659219,"F-box/LRR-repeat protein 15-like- transcript variant X1",NA,3,5421,857,4960,NA,NA,6
 "LOC111123883","LOC111123883","LOC111123883",NA,"protein_coding","Eastern oyster","NC_035782.1",51.783771,"peroxidase-like protein- transcript variant X2",NA,2,6128,1857,6128,NA,NA,13
 "LOC111124300","LOC111124300","LOC111124300",NA,"protein_coding","Eastern oyster","NC_035782.1",51.811898,"uncharacterized LOC111124300",NA,1,46903,6207,46903,NA,NA,36
+"LOC111108110","LOC111108110","LOC111108110",NA,"protein_coding","Eastern oyster","NC_035787.1",52.062126,"uncharacterized LOC111108110",NA,1,19645,7137,19645,NA,NA,21
+"LOC111103990","LOC111103990","LOC111103990",NA,"protein_coding","Eastern oyster","NC_035786.1",52.091774,"enoyl-[acyl-carrier-protein] reductase- mitochondrial-like",NA,1,1331,1119,1331,NA,NA,1
 "LOC111126375","LOC111126375","LOC111126375",NA,"protein_coding","Eastern oyster","NC_035782.1",52.117964,"chymotrypsinogen B-like",NA,1,5048,825,5048,NA,NA,6
 "LOC111131344","LOC111131344","LOC111131344",NA,"protein_coding","Eastern oyster","NC_035783.1",52.235508,"uncharacterized LOC111131344- transcript variant X5",NA,8,27764,1605,19716,NA,NA,5
 "LOC111131025","LOC111131025","LOC111131025",NA,"protein_coding","Eastern oyster","NC_035783.1",52.570263,"leucine-rich repeat-containing protein 74A-like",NA,1,11798,1377,11798,NA,NA,14
@@ -616,6 +616,7 @@
 "LOC111120077","LOC111120077","LOC111120077",NA,"protein_coding","Eastern oyster","NC_035781.1",52.947002,"TNFAIP3-interacting protein 1-like- transcript variant X3",NA,4,10667,2238,9546,NA,NA,18
 "LOC111124575","LOC111124575","LOC111124575",NA,"protein_coding","Eastern oyster","NC_035782.1",53.022672,"uncharacterized LOC111124575- transcript variant X2",NA,4,16331,3323,16327,NA,NA,9
 "LOC111123151","LOC111123151","LOC111123151",NA,"protein_coding","Eastern oyster","NC_035782.1",53.184042,"cholecystokinin receptor type A-like- transcript variant X5",NA,5,14655,1167,9576,NA,NA,3
+"LOC111119338","LOC111119338","LOC111119338",NA,"protein_coding","Eastern oyster","NC_035781.1",53.185164,"ankyrin repeat domain-containing protein 40-like",NA,1,3901,735,3901,NA,NA,4
 "LOC111131367","LOC111131367","LOC111131367",NA,"protein_coding","Eastern oyster","NC_035783.1",53.20559,"proton-coupled folate transporter-like",NA,1,2827,1398,2827,NA,NA,4
 "LOC111120660","LOC111120660","LOC111120660",NA,"protein_coding","Eastern oyster","NC_035781.1",53.243436,"heterochromatin protein 1-binding protein 3-like- transcript variant X1",NA,2,9966,1743,9949,NA,NA,11
 "LOC111128273","LOC111128273","LOC111128273",NA,"protein_coding","Eastern oyster","NC_035783.1",53.248716,"proton-coupled folate transporter-like- transcript variant X1",NA,3,24283,1404,11577,NA,NA,5
@@ -647,7 +648,6 @@
 "LOC111120701","LOC111120701","LOC111120701",NA,"protein_coding","Eastern oyster","NC_035781.1",55.259201,"sodium/glucose cotransporter 4-like",NA,1,12454,1962,12454,NA,NA,14
 "LOC111126942","LOC111126942","LOC111126942",NA,"protein_coding","Eastern oyster","NC_035782.1",55.326959,NA,NA,1,11574,999,11574,NA,NA,12
 "LOC111122645","LOC111122645","LOC111122645",NA,"protein_coding","Eastern oyster","NC_035782.1",55.447583,"roquin-1-like",NA,1,26439,3372,26439,NA,NA,19
-"LOC111105865","LOC111105865","LOC111105865",NA,"protein_coding","Eastern oyster","NC_035787.1",55.631393,"EF-hand calcium-binding domain-containing protein 10-like",NA,1,2060,426,2060,NA,NA,4
 "LOC111131793","LOC111131793","LOC111131793",NA,"protein_coding","Eastern oyster","NC_035783.1",55.841331,"ectin-like- transcript variant X2",NA,2,7706,550,7702,NA,NA,4
 "LOC111122700","LOC111122700","LOC111122700",NA,"protein_coding","Eastern oyster","NC_035782.1",55.880315,"dnaJ homolog subfamily C member 7-like",NA,1,10210,1494,10210,NA,NA,13
 "LOC111127855","LOC111127855","LOC111127855",NA,"protein_coding","Eastern oyster","NC_035783.1",55.896892,"glycine-rich protein 23-like- transcript variant X4",NA,4,1806,778,1806,NA,NA,4
@@ -679,6 +679,7 @@
 "LOC111114174","LOC111114174","LOC111114174",NA,"protein_coding","Eastern oyster","NC_035780.1",58.301011,"epidermal retinol dehydrogenase 2-like- transcript variant X1",NA,2,7104,924,7104,NA,NA,6
 "LOC111126735","LOC111126735","LOC111126735",NA,"protein_coding","Eastern oyster","NC_035782.1",58.322038,"vascular endothelial growth factor C-like- transcript variant X1",NA,2,8279,980,8202,NA,NA,6
 "LOC111101877","LOC111101877","LOC111101877",NA,"protein_coding","Eastern oyster","NC_035780.1",58.600125,"uncharacterized LOC111101877",NA,1,3099,891,3099,NA,NA,8
+"LOC111125210","LOC111125210","LOC111125210",NA,"protein_coding","Eastern oyster","NC_035782.1",58.628083,"serum paraoxonase/arylesterase 1-like",NA,1,20562,1062,20562,NA,NA,9
 "LOC111132859","LOC111132859","LOC111132859",NA,"protein_coding","Eastern oyster","NC_035780.1",58.736252,NA,NA,1,11997,3822,11997,NA,NA,28
 "LOC111109856","LOC111109856","LOC111109856",NA,"protein_coding","Eastern oyster","NC_035780.1",58.831844,"leucine-rich repeat-containing protein 1-like",NA,1,1986,1719,1986,NA,NA,1
 "LOC111099219","LOC111099219","LOC111099219",NA,"protein_coding","Eastern oyster","NC_035784.1",58.885069,"lysophospholipid acyltransferase 5-like",NA,1,7928,1431,7928,NA,NA,13
@@ -686,6 +687,7 @@
 "LOC111122815","LOC111122815","LOC111122815",NA,"protein_coding","Eastern oyster","NC_035782.1",59.034637,"flotillin-1-like- transcript variant X6",NA,6,24410,1320,24410,NA,NA,14
 "LOC111122817","LOC111122817","LOC111122817",NA,"protein_coding","Eastern oyster","NC_035782.1",59.072649,"nuclear pore complex protein DDB_G0274915-like",NA,1,5233,561,5233,NA,NA,8
 "LOC111123527","LOC111123527","LOC111123527",NA,"protein_coding","Eastern oyster","NC_035782.1",59.424272,"sperm receptor for egg jelly-like",NA,1,31765,993,31765,NA,NA,8
+"LOC111136496","LOC111136496","LOC111136496",NA,"protein_coding","Eastern oyster","NC_035784.1",59.525038,"uncharacterized LOC111136496- transcript variant X1",NA,2,10447,1128,6974,NA,NA,2
 "LOC111136773","LOC111136773","LOC111136773",NA,"protein_coding","Eastern oyster","NC_035784.1",59.925375,"uncharacterized LOC111136773",NA,1,4508,3147,4508,NA,NA,1
 "LOC111105745","LOC111105745","LOC111105745",NA,"protein_coding","Eastern oyster","NC_035787.1",60.227646,"uncharacterized LOC111105745- transcript variant X2",NA,2,3877,522,3412,NA,NA,2
 "LOC111110712","LOC111110712","LOC111110712",NA,"protein_coding","Eastern oyster","NC_035780.1",60.315257,"vacuolar protein sorting-associated protein 18 homolog",NA,1,21134,2934,21134,NA,NA,30
@@ -693,20 +695,23 @@
 "LOC111121960","LOC111121960","LOC111121960",NA,"protein_coding","Eastern oyster","NC_035781.1",60.527345,"serine protease 44-like",NA,1,9245,1416,9245,NA,NA,4
 "LOC111108142","LOC111108142","LOC111108142",NA,"protein_coding","Eastern oyster","NC_035787.1",60.567849,"nitrilase homolog 1-like",NA,1,18004,1422,18004,NA,NA,10
 "LOC111115492","LOC111115492","LOC111115492",NA,"protein_coding","Eastern oyster","NC_035780.1",60.569526,"growth hormone secretagogue receptor type 1-like",NA,1,6664,1068,6664,NA,NA,2
+"LOC111109254","LOC111109254","LOC111109254",NA,"protein_coding","Eastern oyster","NC_035787.1",60.68084,"dihydrolipoyl dehydrogenase- mitochondrial-like",NA,1,15551,837,15551,NA,NA,8
 "LOC111135003","LOC111135003","LOC111135003",NA,"protein_coding","Eastern oyster","NC_035780.1",61.10409,"transcription factor CP2-like- transcript variant X1",NA,2,21536,1484,21186,NA,NA,16
 "LOC111108359","LOC111108359","LOC111108359",NA,"protein_coding","Eastern oyster","NC_035787.1",61.140288,"dihydrolipoyl dehydrogenase- mitochondrial-like",NA,1,22566,1503,22566,NA,NA,14
 "LOC111108281","LOC111108281","LOC111108281",NA,"protein_coding","Eastern oyster","NC_035787.1",61.16765,"uncharacterized LOC111108281",NA,1,15447,3177,15447,NA,NA,14
-"LOC111134707","LOC111134707","LOC111134707",NA,"protein_coding","Eastern oyster","NC_035784.1",61.183734,"apoptotic chromatin condensation inducer in the nucleus-like",NA,1,15796,3300,15796,NA,NA,21
 "LOC111137410","LOC111137410","LOC111137410",NA,"protein_coding","Eastern oyster","NC_035784.1",61.226831,"peptidyl-prolyl cis-trans isomerase B-like",NA,1,5129,702,5129,NA,NA,4
 "LOC111112225","LOC111112225","LOC111112225",NA,"protein_coding","Eastern oyster","NC_035788.1",61.43978,"glycoprotein 3-alpha-L-fucosyltransferase A-like",NA,1,12305,1116,12305,NA,NA,2
 "LOC111124019","LOC111124019","LOC111124019",NA,"protein_coding","Eastern oyster","NC_035782.1",61.469199,"DNA-directed RNA polymerases I- II- and III subunit RPABC3-like",NA,1,13829,450,13829,NA,NA,4
 "LOC111108183","LOC111108183","LOC111108183",NA,"protein_coding","Eastern oyster","NC_035787.1",61.566458,"ubiquitin carboxyl-terminal hydrolase 15-like",NA,1,15373,2799,15373,NA,NA,20
 "LOC111133033","LOC111133033","LOC111133033",NA,"protein_coding","Eastern oyster","NC_035784.1",61.68851,"eukaryotic translation initiation factor 2A-like",NA,1,9315,1725,9315,NA,NA,17
 "LOC111122571","LOC111122571","LOC111122571",NA,"protein_coding","Eastern oyster","NC_035782.1",61.744506,"uncharacterized LOC111122571",NA,1,3148,402,3148,NA,NA,4
+"LOC111135401","LOC111135401","LOC111135401",NA,"protein_coding","Eastern oyster","NC_035784.1",61.758319,"zinc finger protein 445-like",NA,1,3976,2121,3976,NA,NA,2
 "LOC111122572","LOC111122572","LOC111122572",NA,"protein_coding","Eastern oyster","NC_035782.1",61.77643,"uncharacterized LOC111122572",NA,1,2061,366,2061,NA,NA,4
 "LOC111138423","LOC111138423","LOC111138423",NA,"protein_coding","Eastern oyster","NC_035784.1",61.815418,"putative uncharacterized protein CXorf58- transcript variant X1",NA,2,7236,1298,7236,NA,NA,10
-"LOC111137699","LOC111137699","LOC111137699",NA,"protein_coding","Eastern oyster","NC_035784.1",61.929922,"prolactin-releasing peptide receptor-like",NA,1,12584,1242,12584,NA,NA,3
+"LOC111125129","LOC111125129","LOC111125129",NA,"protein_coding","Eastern oyster","NC_035782.1",61.954584,NA,NA,1,17194,4596,17194,NA,NA,34
+"LOC111123155","LOC111123155","LOC111123155",NA,"protein_coding","Eastern oyster","NC_035782.1",61.971804,"ubiquitin-conjugating enzyme E2 G2-like",NA,1,4952,498,4952,NA,NA,5
 "LOC111124479","LOC111124479","LOC111124479",NA,"protein_coding","Eastern oyster","NC_035782.1",61.979976,"mitogen-activated protein kinase kinase kinase 13-like- transcript variant X1",NA,4,26886,2758,20579,NA,NA,14
+"LOC111124009","LOC111124009","LOC111124009",NA,"protein_coding","Eastern oyster","NC_035782.1",62.012299,"uncharacterized LOC111124009",NA,1,2076,420,2076,NA,NA,4
 "LOC111126891","LOC111126891","LOC111126891",NA,"protein_coding","Eastern oyster","NC_035782.1",62.06196,"acetylcholine receptor subunit gamma-like- transcript variant X2",NA,2,6146,540,6146,NA,NA,6
 "LOC111129455","LOC111129455","LOC111129455",NA,"protein_coding","Eastern oyster","NC_035780.1",62.13821,"VWFA and cache domain-containing protein 1-like",NA,1,16528,3414,16528,NA,NA,24
 "LOC111126865","LOC111126865","LOC111126865",NA,"protein_coding","Eastern oyster","NC_035782.1",62.159675,"dnaJ homolog subfamily C member 10-like- transcript variant X1",NA,2,15215,2379,15210,NA,NA,21
@@ -724,6 +729,7 @@
 "LOC111107369","LOC111107369","LOC111107369",NA,"protein_coding","Eastern oyster","NC_035787.1",63.312002,"cysteine and tyrosine-rich protein 1-like",NA,1,2550,465,2550,NA,NA,4
 "LOC111107338","LOC111107338","LOC111107338",NA,"protein_coding","Eastern oyster","NC_035787.1",63.315218,NA,NA,1,9817,3183,9817,NA,NA,24
 "LOC111112551","LOC111112551","LOC111112551",NA,"protein_coding","Eastern oyster","NC_035788.1",63.378706,"T-box transcription factor mls-1-like- transcript variant X2",NA,2,11389,1032,11389,NA,NA,8
+"LOC111127323","LOC111127323","LOC111127323",NA,"protein_coding","Eastern oyster","NC_035780.1",63.435189,NA,NA,1,7523,1524,7523,NA,NA,14
 "LOC111135893","LOC111135893","LOC111135893",NA,"protein_coding","Eastern oyster","NC_035784.1",63.465976,"uncharacterized LOC111135893",NA,1,16212,2298,16212,NA,NA,4
 "LOC111107351","LOC111107351","LOC111107351",NA,"protein_coding","Eastern oyster","NC_035787.1",63.520391,"UDP-N-acetylglucosamine transporter-like- transcript variant X1",NA,2,12977,1184,9332,NA,NA,4
 "LOC111127016","LOC111127016","LOC111127016",NA,"protein_coding","Eastern oyster","NC_035782.1",63.543027,"toll-like receptor 13",NA,1,9090,2136,9090,NA,NA,2
@@ -736,42 +742,41 @@
 "LOC111134721","LOC111134721","LOC111134721",NA,"protein_coding","Eastern oyster","NC_035784.1",63.895679,"collagen alpha-2(IV) chain-like",NA,1,30004,5403,30004,NA,NA,39
 "LOC111137277","LOC111137277","LOC111137277",NA,"protein_coding","Eastern oyster","NC_035784.1",63.929143,"solute carrier family 22 member 4-like- transcript variant X2",NA,3,10233,1584,9746,NA,NA,9
 "LOC111122555","LOC111122555","LOC111122555",NA,"protein_coding","Eastern oyster","NC_035782.1",64.002831,"ankyrin-1-like",NA,1,1785,1455,1785,NA,NA,2
+"LOC111122686","LOC111122686","LOC111122686",NA,"protein_coding","Eastern oyster","NC_035782.1",64.043904,"rRNA 2'-O-methyltransferase fibrillarin-like- transcript variant X1",NA,2,5666,910,5666,NA,NA,10
 "LOC111113431","LOC111113431","LOC111113431",NA,"protein_coding","Eastern oyster","NC_035780.1",64.087264,"uncharacterized LOC111113431",NA,1,19587,1749,19587,NA,NA,22
 "LOC111108533","LOC111108533","LOC111108533",NA,"protein_coding","Eastern oyster","NC_035780.1",64.118702,"uncharacterized LOC111108533",NA,1,26861,7578,26861,NA,NA,23
 "LOC111108233","LOC111108233","LOC111108233",NA,"protein_coding","Eastern oyster","NC_035787.1",64.34579,"GRAM domain-containing protein 4-like",NA,1,12759,1845,12759,NA,NA,18
 "LOC111136922","LOC111136922","LOC111136922",NA,"protein_coding","Eastern oyster","NC_035784.1",64.376767,"spermatogenesis-associated protein 24-like",NA,1,5680,729,5680,NA,NA,6
 "LOC111135363","LOC111135363","LOC111135363",NA,"protein_coding","Eastern oyster","NC_035784.1",64.480417,"5-hydroxytryptamine receptor 4-like- transcript variant X1",NA,11,17901,1140,7690,NA,NA,2
 "LOC111125358","LOC111125358","LOC111125358",NA,"protein_coding","Eastern oyster","NC_035782.1",64.504494,NA,NA,1,30903,9795,30903,NA,NA,41
+"LOC111134752","LOC111134752","LOC111134752",NA,"protein_coding","Eastern oyster","NC_035784.1",65.141206,"uncharacterized LOC111134752- transcript variant X2",NA,3,14583,3469,14583,NA,NA,18
 "LOC111123751","LOC111123751","LOC111123751",NA,"protein_coding","Eastern oyster","NC_035782.1",65.380264,"ubiquitin-conjugating enzyme E2-22 kDa-like",NA,1,8214,600,8214,NA,NA,6
 "LOC111124380","LOC111124380","LOC111124380",NA,"protein_coding","Eastern oyster","NC_035782.1",65.504322,NA,NA,1,1053,648,1053,NA,NA,4
 "LOC111137543","LOC111137543","LOC111137543",NA,"protein_coding","Eastern oyster","NC_035784.1",65.699379,"LRP2-binding protein-like",NA,1,11850,1038,11850,NA,NA,8
 "LOC111113393","LOC111113393","LOC111113393",NA,"protein_coding","Eastern oyster","NC_035788.1",65.738489,"uncharacterized LOC111113393",NA,1,3861,342,3861,NA,NA,6
-"LOC111113391","LOC111113391","LOC111113391",NA,"protein_coding","Eastern oyster","NC_035788.1",65.760762,"tripartite motif-containing protein 45-like",NA,1,4831,2073,4831,NA,NA,4
 "LOC111136669","LOC111136669","LOC111136669",NA,"protein_coding","Eastern oyster","NC_035784.1",65.824048,"myosin-IIIb-like- transcript variant X10",NA,11,48423,6379,47173,NA,NA,40
+"LOC111132923","LOC111132923","LOC111132923",NA,"protein_coding","Eastern oyster","NC_035784.1",65.875749,"membrane progestin receptor alpha-B-like",NA,1,4763,990,4763,NA,NA,2
 "LOC111134680","LOC111134680","LOC111134680",NA,"protein_coding","Eastern oyster","NC_035784.1",65.883046,"endoplasmic reticulum-Golgi intermediate compartment protein 1-like",NA,1,6949,873,6949,NA,NA,9
-"LOC111134834","LOC111134834","LOC111134834",NA,"protein_coding","Eastern oyster","NC_035784.1",65.926996,"galactoside 2-alpha-L-fucosyltransferase 2-like- transcript variant X2",NA,2,7739,957,7559,NA,NA,2
 "LOC111135911","LOC111135911","LOC111135911",NA,"protein_coding","Eastern oyster","NC_035784.1",66.325187,"myoferlin-like- transcript variant X16",NA,19,46834,6324,46406,NA,NA,56
 "LOC111136074","LOC111136074","LOC111136074",NA,"protein_coding","Eastern oyster","NC_035784.1",66.54286,"heparan-sulfate 6-O-sulfotransferase 2-like",NA,1,8717,1083,8717,NA,NA,2
 "LOC111135346","LOC111135346","LOC111135346",NA,"protein_coding","Eastern oyster","NC_035784.1",66.565492,"leucine-rich repeat-containing protein 63-like- transcript variant X1",NA,2,5179,1920,5094,NA,NA,11
 "LOC111127332","LOC111127332","LOC111127332",NA,"protein_coding","Eastern oyster","NC_035782.1",66.648611,"temptin-like",NA,1,1526,411,1526,NA,NA,3
-"LOC111134548","LOC111134548","LOC111134548",NA,"protein_coding","Eastern oyster","NC_035784.1",66.996484,"zinc finger protein 648-like",NA,1,3955,888,3955,NA,NA,2
 "LOC111123077","LOC111123077","LOC111123077",NA,"protein_coding","Eastern oyster","NC_035782.1",67.01653,NA,NA,1,9268,1395,9268,NA,NA,20
 "LOC111134529","LOC111134529","LOC111134529",NA,"protein_coding","Eastern oyster","NC_035784.1",67.04403,"transient receptor potential cation channel subfamily M member 8-like",NA,1,24622,4455,24622,NA,NA,32
 "LOC111134531","LOC111134531","LOC111134531",NA,"protein_coding","Eastern oyster","NC_035784.1",67.071501,"transcription elongation regulator 1-like",NA,1,11719,2946,11719,NA,NA,21
 "LOC111134544","LOC111134544","LOC111134544",NA,"protein_coding","Eastern oyster","NC_035784.1",67.083392,"phosphatidylinositol 4-kinase type 2-alpha-like- transcript variant X1",NA,3,13835,1280,12663,NA,NA,9
 "LOC111134546","LOC111134546","LOC111134546",NA,"protein_coding","Eastern oyster","NC_035784.1",67.160099,"serine/threonine-protein phosphatase 6 regulatory ankyrin repeat subunit C-like",NA,1,8009,1011,8009,NA,NA,5
-"LOC111136616","LOC111136616","LOC111136616",NA,"protein_coding","Eastern oyster","NC_035784.1",67.190078,"cilia- and flagella-associated protein 99-like- transcript variant X2",NA,4,24089,1936,23602,NA,NA,19
+"LOC111132192","LOC111132192","LOC111132192",NA,"protein_coding","Eastern oyster","NC_035784.1",67.216127,"uncharacterized protein ZK1073.1-like- transcript variant X1",NA,5,28041,1073,27738,NA,NA,14
 "LOC111122825","LOC111122825","LOC111122825",NA,"protein_coding","Eastern oyster","NC_035782.1",67.216551,NA,NA,1,1137,324,1137,NA,NA,2
 "LOC111133448","LOC111133448","LOC111133448",NA,"protein_coding","Eastern oyster","NC_035784.1",67.403668,"uncharacterized LOC111133448",NA,1,1670,405,1670,NA,NA,3
 "LOC111126900","LOC111126900","LOC111126900",NA,"protein_coding","Eastern oyster","NC_035782.1",67.413428,"retinoblastoma-binding protein 5-like- transcript variant X1",NA,2,9608,1522,9608,NA,NA,16
 "LOC111137012","LOC111137012","LOC111137012",NA,"protein_coding","Eastern oyster","NC_035784.1",67.448096,"allantoicase-like- transcript variant X1",NA,2,14490,1260,14474,NA,NA,15
 "LOC111115092","LOC111115092","LOC111115092",NA,"protein_coding","Eastern oyster","NC_035788.1",67.491621,"uncharacterized LOC111115092- transcript variant X3",NA,5,7089,998,7089,NA,NA,11
-"LOC111125145","LOC111125145","LOC111125145",NA,"protein_coding","Eastern oyster","NC_035782.1",67.533218,"innexin unc-9-like",NA,1,4826,1212,4826,NA,NA,2
 "LOC111134435","LOC111134435","LOC111134435",NA,"protein_coding","Eastern oyster","NC_035784.1",67.609953,"uncharacterized transporter slc-17.2-like",NA,1,10277,1596,10277,NA,NA,10
+"LOC111124637","LOC111124637","LOC111124637",NA,"protein_coding","Eastern oyster","NC_035782.1",67.867553,"nuclear receptor subfamily 1 group I member 2-like- transcript variant X1",NA,5,35944,1591,28551,NA,NA,5
 "LOC111124398","LOC111124398","LOC111124398",NA,"protein_coding","Eastern oyster","NC_035782.1",67.91468,"uncharacterized LOC111124398",NA,1,4254,837,4254,NA,NA,3
 "LOC111134575","LOC111134575","LOC111134575",NA,"protein_coding","Eastern oyster","NC_035784.1",67.971337,"dnaJ homolog subfamily C member 3-like",NA,1,6379,1497,6379,NA,NA,11
 "LOC111133778","LOC111133778","LOC111133778",NA,"protein_coding","Eastern oyster","NC_035784.1",68.055382,"uncharacterized LOC111133778",NA,1,6930,672,6930,NA,NA,5
-"LOC111126671","LOC111126671","LOC111126671",NA,"protein_coding","Eastern oyster","NC_035782.1",68.064617,"zinc metalloproteinase nas-14-like- transcript variant X2",NA,2,6100,1215,5800,NA,NA,16
 "LOC111134203","LOC111134203","LOC111134203",NA,"protein_coding","Eastern oyster","NC_035784.1",68.140226,"monocarboxylate transporter 12-like- transcript variant X2",NA,3,23029,1770,21000,NA,NA,7
 "LOC111123912","LOC111123912","LOC111123912",NA,"protein_coding","Eastern oyster","NC_035782.1",68.384726,"histone-lysine N-methyltransferase EZH2-like- transcript variant X2",NA,3,10846,1993,10540,NA,NA,18
 "LOC111125067","LOC111125067","LOC111125067",NA,"protein_coding","Eastern oyster","NC_035782.1",68.855287,"uncharacterized LOC111125067",NA,1,5386,417,5386,NA,NA,6
@@ -785,7 +790,7 @@
 "LOC111124853","LOC111124853","LOC111124853",NA,"protein_coding","Eastern oyster","NC_035782.1",69.802602,NA,NA,1,23894,3297,23894,NA,NA,31
 "LOC111108364","LOC111108364","LOC111108364",NA,"protein_coding","Eastern oyster","NC_035787.1",69.858402,"uncharacterized LOC111108364",NA,1,8521,708,8521,NA,NA,5
 "LOC111113264","LOC111113264","LOC111113264",NA,"protein_coding","Eastern oyster","NC_035788.1",70.401694,NA,NA,1,88207,1944,88207,NA,NA,15
-"LOC111134422","LOC111134422","LOC111134422",NA,"protein_coding","Eastern oyster","NC_035784.1",71.011412,"uncharacterized LOC111134422",NA,1,8861,3192,8861,NA,NA,11
+"LOC111135189","LOC111135189","LOC111135189",NA,"protein_coding","Eastern oyster","NC_035784.1",70.529532,"uncharacterized LOC111135189- transcript variant X1",NA,2,31019,3062,29280,NA,NA,11
 "LOC111132821","LOC111132821","LOC111132821",NA,"protein_coding","Eastern oyster","NC_035784.1",71.026371,"sepiapterin reductase-like- transcript variant X2",NA,4,8010,854,5809,NA,NA,4
 "LOC111136831","LOC111136831","LOC111136831",NA,"protein_coding","Eastern oyster","NC_035784.1",71.054425,"uncharacterized LOC111136831",NA,1,7626,3255,7626,NA,NA,8
 "LOC111138366","LOC111138366","LOC111138366",NA,"protein_coding","Eastern oyster","NC_035784.1",71.252437,"SET and MYND domain-containing protein 5-like",NA,1,15067,1176,15067,NA,NA,12
@@ -831,8 +836,8 @@
 "LOC111110873","LOC111110873","LOC111110873",NA,"protein_coding","Eastern oyster","NC_035788.1",78.778801,"opsin-VA-like",NA,1,6125,951,6125,NA,NA,3
 "LOC111136198","LOC111136198","LOC111136198",NA,"protein_coding","Eastern oyster","NC_035784.1",79.088251,"deleted in malignant brain tumors 1 protein-like- transcript variant X2",NA,3,49368,3455,49367,NA,NA,29
 "LOC111115973","LOC111115973","LOC111115973",NA,"protein_coding","Eastern oyster","NC_035788.1",79.126124,"polycomb complex protein BMI-1-A-like- transcript variant X1",NA,4,11351,1270,10626,NA,NA,10
-"LOC111137205","LOC111137205","LOC111137205",NA,"protein_coding","Eastern oyster","NC_035784.1",79.248104,"uncharacterized LOC111137205",NA,1,3635,1275,3635,NA,NA,2
 "LOC111132668","LOC111132668","LOC111132668",NA,"protein_coding","Eastern oyster","NC_035784.1",81.938658,"monocarboxylate transporter 5-like",NA,1,21051,1674,21051,NA,NA,7
+"LOC111135677","LOC111135677","LOC111135677",NA,"protein_coding","Eastern oyster","NC_035784.1",85.443957,"beta-arrestin-1-like- transcript variant X1",NA,3,22379,1227,20055,NA,NA,13
 "LOC111136260","LOC111136260","LOC111136260",NA,"protein_coding","Eastern oyster","NC_035784.1",85.93161,"protein PTCD3 homolog- mitochondrial-like- transcript variant X2",NA,2,81962,2008,81959,NA,NA,25
 "LOC111138373","LOC111138373","LOC111138373",NA,"protein_coding","Eastern oyster","NC_035784.1",86.050096,"uncharacterized LOC111138373- transcript variant X2",NA,2,12899,1308,12899,NA,NA,8
 "LOC111112943","LOC111112943","LOC111112943",NA,"protein_coding","Eastern oyster","NC_035788.1",86.612419,"DNA mismatch repair protein Mlh1-like- transcript variant X1",NA,3,52810,2091,52546,NA,NA,20
@@ -841,14 +846,13 @@
 "LOC111133424","LOC111133424","LOC111133424",NA,"protein_coding","Eastern oyster","NC_035784.1",86.949371,"uncharacterized LOC111133424",NA,1,6100,423,6100,NA,NA,4
 "LOC111132796","LOC111132796","LOC111132796",NA,"protein_coding","Eastern oyster","NC_035784.1",87.085543,"mid1-interacting protein 1A-like",NA,1,1155,504,1155,NA,NA,1
 "LOC111111339","LOC111111339","LOC111111339",NA,"protein_coding","Eastern oyster","NC_035788.1",87.299975,"membrane progestin receptor beta-like",NA,1,15673,993,15673,NA,NA,2
-"LOC111133878","LOC111133878","LOC111133878",NA,"protein_coding","Eastern oyster","NC_035784.1",87.609487,"APGW-amide-related neuropeptide-like- transcript variant X2",NA,2,10079,729,10078,NA,NA,3
 "LOC111111834","LOC111111834","LOC111111834",NA,"protein_coding","Eastern oyster","NC_035788.1",88.048756,"extensin-like- transcript variant X2",NA,2,14290,2157,10688,NA,NA,4
-"LOC111099124","LOC111099124","LOC111099124",NA,"protein_coding","Eastern oyster","NC_035784.1",88.502885,"uncharacterized LOC111099124",NA,1,1475,786,1475,NA,NA,4
 "LOC111133339","LOC111133339","LOC111133339",NA,"protein_coding","Eastern oyster","NC_035784.1",89.174062,"glycine-rich cell wall structural protein 1-like",NA,1,1940,1134,1940,NA,NA,3
 "LOC111135494","LOC111135494","LOC111135494",NA,"protein_coding","Eastern oyster","NC_035784.1",89.576549,"WD repeat-containing protein 11-like- transcript variant X1",NA,2,32295,3822,32295,NA,NA,30
 "LOC111111696","LOC111111696","LOC111111696",NA,"protein_coding","Eastern oyster","NC_035788.1",89.805044,"uncharacterized LOC111111696- transcript variant X1",NA,2,21822,1616,15644,NA,NA,10
 "LOC111111669","LOC111111669","LOC111111669",NA,"protein_coding","Eastern oyster","NC_035788.1",89.827057,NA,NA,1,18269,2505,18269,NA,NA,18
 "LOC111115451","LOC111115451","LOC111115451",NA,"protein_coding","Eastern oyster","NC_035788.1",90.289269,"calponin homology domain-containing protein DDB_G0272472-like- transcript variant X2",NA,2,6422,1078,6422,NA,NA,8
+"LOC111113328","LOC111113328","LOC111113328",NA,"protein_coding","Eastern oyster","NC_035788.1",90.887976,"extracellular superoxide dismutase [Cu-Zn]-like",NA,1,2551,651,2551,NA,NA,6
 "LOC111114304","LOC111114304","LOC111114304",NA,"protein_coding","Eastern oyster","NC_035788.1",91.534992,"adrenocorticotropic hormone receptor-like",NA,1,705,705,705,NA,NA,1
 "LOC111114598","LOC111114598","LOC111114598",NA,"protein_coding","Eastern oyster","NC_035788.1",91.874983,NA,NA,1,26428,2844,26428,NA,NA,17
 "LOC111112160","LOC111112160","LOC111112160",NA,"protein_coding","Eastern oyster","NC_035788.1",91.902547,NA,NA,1,23190,1911,23190,NA,NA,14
