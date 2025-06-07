@@ -254,7 +254,7 @@ lollipop_plot <- ggplot(enriched_fully_joined, aes(x = `Fold Enrichment`,
     legend.title = element_text(size = 14),      
     legend.text = element_text(size = 13)
   ) +
-  labs(x = "Fold enrichment", y = "Pathway", size = "Number of genes", color = "Gene type") +
+  labs(x = "Fold enrichment", y = "Pathway", size = "Number of genes", color = "Pathway type") +
   guides( # customize shapes and colors of symbols on legend with an override
     color = guide_legend(override.aes = list(linetype = "blank", size = 3)),  
     size = guide_legend(override.aes = list(linetype = "blank", shape = 21, fill = "slategrey",
