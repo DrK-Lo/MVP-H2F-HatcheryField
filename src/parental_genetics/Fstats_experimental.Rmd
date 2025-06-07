@@ -455,17 +455,14 @@ write_csv(parent_genetic_effects, file.path("..", "..", "data", "parent_effects_
 
 ```{r}
 
-# rename fo processing
+# rename for processing
 outflank_data <- basic_stats_data
-
-# remove sample ID column for Fst calculation
-outflank_data <- outflank_data[, -1]
 
 # convert population to factor
 outflank_data$ID_SiteDate <- as.factor(outflank_data$ID_SiteDate)
 
 # check dimensions one more time
-dim(outflank_data) # 154610 - pop col = 154609
+dim(outflank_data) # 154103
 
 ```
 
