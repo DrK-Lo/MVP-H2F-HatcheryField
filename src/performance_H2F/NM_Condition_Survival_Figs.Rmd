@@ -30,12 +30,14 @@ library(readr)
 ```
 
 ```{r}
-setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/parent_effects_H2F")
+setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/performance_H2F")
 ```
 
-### Data preparation
+### Condition Index
+
+#### Data preparation
 ```{r}
-# load in dataset 
+# load in condition index dataset 
 MVP_phenotyping_final <- read_csv("../../data/condition_index_H2F/MVP_phenotyping_final.csv", show_col_types = FALSE)
 
 # put the populations in correct factor order
@@ -63,13 +65,14 @@ data202405$population <- factor(data202405$population, levels = c("W1-TX", "W2-L
 data202411$population <- factor(data202411$population, levels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY",  "W5-NH", "W6-ME", "H1-LARMIX", "H2-SEEDMIX"))
 ```
 
-### Create linear mixed-effects models 
+#### Create linear mixed-effects models 
 ```{r}
 mixed.model.3 <- lmer(CI ~ site*population + (1 | bagID), data = data202411)
 mixed.model.3.site.pop = lmer(CI ~ site.pop + (1 | bagID), data = data202411) # build this as well to be able to compute pairwise differences between every site.pop combination 
 ```
 
-post-hoc testing. Use emmeans to find and pairwise compare means of every population. 
+#### p=Post-hoc testing. 
+Use emmeans to find and pairwise compare means of every population. 
 ```{r}
 #pairwise comparisons of every site-population combination ex. LEW.TX etc. - only for Nov 2024 because site is not significant at May 2024
 mm3.site.pop.emmeans = emmeans(mixed.model.3.site.pop, pairwise ~ site.pop, adjust = "tukey")
@@ -91,7 +94,7 @@ site_pop1 <- site_pop %>%
 mm3.cld_letters1 <- left_join(mm3.cld_letters, site_pop1, by = "site.pop")
 ```
 
-### Model with time inclusion
+#### Model with time inclusion
 ```{r}
 mixed.model.4 = lmer(CI ~ site*population*samplingTimePoint + (1 | bagID), data = MVP_phenotyping_final %>% filter(samplingTimePoint == "2024-05" | samplingTimePoint == "2024-11"))
 anova(mixed.model.4)
@@ -99,7 +102,7 @@ step(mixed.model.4)
 ### confirms that current model is the best one 
 ```
 
-### Plot the data 
+### Figure product: Condition index vs parental group
 This creates boxplots of the condition index by population, with unique colors for LEW and YR. 
 ```{r}
 # Nov 2024
@@ -126,3 +129,34 @@ ggsave("field_ci.pdf",
        height = 4,
        width = 6)
 ```
+
+### Survival
+```{r}
+#final field time-point survival analyses were conducted in len_surv_modeling_ooters.Rmd
+survival <- read.csv("../../data/performance_H2F/field_surv_final_time_results.csv")[,-c(1:2, 8)]
+
+#rename columns
+colnames(survival) <- c("site", "population", "bag_label", "t", "survival", "letters")
+
+survival$population <- factor(survival$population, levels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY",  "W5-NH", "W6-ME"))
+```
+
+```{r}
+surv_t3_plot_site <- ggplot(survival, aes(x = population, y = survival, fill = site)) + 
+  geom_boxplot(position=position_dodge(width = 0.8)) +
+  ggtitle("Survival at Final Time Point") +
+  scale_x_discrete() +  
+  labs(x = "Parental Group", y = "Survival", title = "Survival vs. Parental Group", subtitle = "Final Field Time Point", fill = "Site") +   scale_fill_manual(values = c("Lewisetta" = "#FFC107", "YorkRiver" = "#025BA9"), labels = c("LEW" = "Lewisetta", "YR" = "York River")) + 
+  geom_text(aes(label = letters, y = mean(survival)), size = 3, angle = 60, position=position_dodge(1)) +
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, color = "black", size = 10),
+        axis.title = element_text(size = 12),
+        axis.text.y = element_text(color = "black", size = 10),
+        legend.text = element_text(size = 10),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+
+surv_t3_plot_site
+```
+
+
