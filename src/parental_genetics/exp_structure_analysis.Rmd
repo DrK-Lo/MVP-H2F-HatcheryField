@@ -43,15 +43,15 @@ pca_data <- read.csv("../../data/parental_genetics_structure/20250203_pca_data_e
 
 #rename values in ID_SiteDate to match naming scheme
 pca_data <- pca_data %>%
-  mutate(ID_SiteDate = recode(ID_SiteDate,
-                                   "TX-CapBay" = "W1-TX",
-                                   "LA-SisLake" = "W2-LA",
-                                   "FL-KingPlan" = "W3-FL",
-                                   "VA-DeepWatSh" = "W4-VA",
-                                   "LOLA" = "S1-LOLA",
-                                   "DEBY" = "S2-DEBY",
-                                   "NH-GrtBay" = "W5-NH",
-                                   "ME-HogIs" = "W6-ME"
+  mutate(ID_SiteDate = case_match(ID_SiteDate,
+                                   "TX-CapBay" ~ "W1-TX",
+                                   "LA-SisLake" ~ "W2-LA",
+                                   "FL-KingPlan" ~ "W3-FL",
+                                   "VA-DeepWatSh" ~ "W4-VA",
+                                   "LOLA" ~ "S1-LOLA",
+                                   "DEBY" ~ "S2-DEBY",
+                                   "NH-GrtBay" ~ "W5-NH",
+                                   "ME-HogIs" ~ "W6-ME"
                                    ))
 
 # plot PCA by plate to check for batch effects - just see pl6 and pl7 here
@@ -127,7 +127,7 @@ write.geno(gen_filtered_subset, "/Users/madelineeppley/Desktop/cvi-diploid-files
 snmf_exp <- snmf("../../data/parental_genetics_structure/20250204geno_imputedfile_exp.geno", K = 2, repetitions = 10, ploidy = 2, entropy = TRUE, project = "new")
 
 # plot cross-entropy criterion of all runs of the project
-plot(snmf_exp, cex = 1.2, col = "lightblue", pch = 19)
+plot(snmf_exp, cex = 1.2, col = "#1565C0", pch = 19)
 
 # get the cross-entropy of the 10 runs for k=2
 ce = cross.entropy(snmf_exp, K = 2)
@@ -137,7 +137,7 @@ best = which.min(ce)
 
 # display the q-matrix
 
-my.colors <- c("lightblue", "darkblue")
+my.colors <- c("#81C784", "#1565C0")
 
 # plot the ancestry proportions
 bp <- barchart(snmf_exp, K = 2, run = best, 
@@ -149,15 +149,15 @@ bp <- barchart(snmf_exp, K = 2, run = best,
 #read in RDS file
 samp_full_subset <- readRDS("../../data/parental_genetics_structure/20250203_samp_full_subset_exp.rds")
 samp_full_subset <- samp_full_subset %>%
-  mutate(ID_SiteDate = recode(ID_SiteDate,
-                                   "TX-CapBay" = "W1-TX",
-                                   "LA-SisLake" = "W2-LA",
-                                   "FL-KingPlan" = "W3-FL",
-                                   "VA-DeepWatSh" = "W4-VA",
-                                   "LOLA" = "S1-LOLA",
-                                   "DEBY" = "S2-DEBY",
-                                   "NH-GrtBay" = "W5-NH",
-                                   "ME-HogIs" = "W6-ME"
+  mutate(ID_SiteDate = case_match(ID_SiteDate,
+                                   "TX-CapBay" ~ "W1-TX",
+                                   "LA-SisLake" ~ "W2-LA",
+                                   "FL-KingPlan" ~ "W3-FL",
+                                   "VA-DeepWatSh" ~ "W4-VA",
+                                   "LOLA" ~ "S1-LOLA",
+                                   "DEBY" ~ "S2-DEBY",
+                                   "NH-GrtBay" ~ "W5-NH",
+                                   "ME-HogIs" ~ "W6-ME"
                                    ))
 #extract region labels
 region_labels <- samp_full_subset$ID_SiteDate
@@ -174,15 +174,15 @@ axis(1, at = 1:length(region_labels),
 site_data <- read.csv("../../data/performance_H2F/MVP23-FieldBags - spawn_trt2.csv")
 
 site_data <- site_data %>%
-  mutate(SpawnTrt_Label = recode(SpawnTrt_Label,
-                                   "TX-CapBay" = "W1-TX",
-                                   "LA-SisLake" = "W2-LA",
-                                   "FL-KingPlan" = "W3-FL",
-                                   "VA-JR-DeepWatSh" = "W4-VA",
-                                   "LOLA" = "S1-LOLA",
-                                   "DEBY" = "S2-DEBY",
-                                   "NH-GrtBay" = "W5-NH",
-                                   "ME-HogIs" = "W6-ME"
+  mutate(SpawnTrt_Label = case_match(SpawnTrt_Label,
+                                   "TX-CapBay" ~ "W1-TX",
+                                   "LA-SisLake" ~ "W2-LA",
+                                   "FL-KingPlan" ~ "W3-FL",
+                                   "VA-DeepWatSh" ~ "W4-VA",
+                                   "LOLA" ~ "S1-LOLA",
+                                   "DEBY" ~ "S2-DEBY",
+                                   "NH-GrtBay" ~ "W5-NH",
+                                   "ME-HogIs" ~ "W6-ME"
                                    ))
 
 # get the Q-matrix from snmf results
@@ -239,8 +239,6 @@ site_data_averaged[site_data_averaged$ID_SiteDate.x == "S2-DEBY", "Latitude"] <-
 site_data_averaged[site_data_averaged$ID_SiteDate.x == "S2-DEBY", "Longitude"] <- -74.95174
 site_data_averaged[site_data_averaged$ID_SiteDate.x == "S1-LOLA", "Latitude"] <- 38.8223
 site_data_averaged[site_data_averaged$ID_SiteDate.x == "S1-LOLA", "Longitude"] <- -73.19229
-36.97853
--72.95174
 
 map_with_sites <- base_map + 
   geom_scatterpie(
@@ -249,14 +247,15 @@ map_with_sites <- base_map +
     cols = c("Q1_avg", "Q2_avg"), 
     color = NA,
     pie_scale = 1.5) +  
-  scale_fill_manual(name = "Genetic Cluster", breaks = c("Q1_avg", "Q2_avg"), labels = c("Gulf Cluster", "Atlantic Cluster"), values = c("lightblue","darkblue")) +  
+  scale_fill_manual(name = "Genetic Cluster", breaks = c("Q1_avg", "Q2_avg"), labels = c("Gulf Cluster", "Atlantic Cluster"), values = c("#1565C0", "#81C784")) +  
   theme(
     legend.position = "inside",
     legend.position.inside = c(.3,.7), 
     legend.text = element_text(size = 10),
     panel.grid = element_blank(), 
     panel.background = element_blank(), 
-    axis.line = element_line(color = "black")
+    axis.line = element_line(color = "black"),
+    axis.text = element_text(color = "black")
   )
 
 map_with_sites
@@ -265,8 +264,8 @@ ggsave("ancestry_map.pdf",
        plot = map_with_sites,
        device = "pdf",
        path = "../../figures/envr_of_origin",
-       height = 4,
-       width = 5)
+       height = 4.2,
+       width = 6)
 ```
 
 ### Common garden sites inset map
@@ -278,10 +277,10 @@ coastline <- ne_coastline(scale = "medium", returnclass = "sf")
 inset_base <- ggplot(data = coastline) +
   geom_sf() +
   theme_minimal() +
-  labs(
-    x = "Longitude", y = "Latitude"
-  ) +
-  coord_sf(xlim = c(-78, -74), ylim = c(36.5, 39.5), expand = FALSE)
+  coord_sf(xlim = c(-78, -74), ylim = c(36.5, 39.5), expand = FALSE)+
+  theme(panel.grid = element_blank(),
+        axis.title = element_blank(),
+        axis.text = element_blank())
 inset_base
 
 
@@ -299,26 +298,20 @@ common_garden <- common_garden %>%
 common_garden$geometry <- st_set_crs(common_garden$geometry, 4326)
 
 inset_map <- inset_base +
-  geom_point(data = common_garden, aes(x = Longitude, y = Latitude, shape = cg_site, fill = cg_site), size = 3)+
+  geom_point(data = common_garden, aes(x = Longitude, y = Latitude, shape = cg_site, fill = cg_site), size = 4)+
   scale_fill_manual(name = " ", breaks = c("LEW", "YRK"), 
-                    values = c("gold", "gold3"),
-                    labels = str_wrap(c("Lewisetta: low salinity, low disease", "York: mid salinity, low disease"), width = 20))+
+                    values = c("#F06292", "#880E4F"),
+                    labels = c("Lewisetta (LEW): low salinity and disease", "York (YRK): higher salinity and disease"))+
   scale_shape_manual(name = " ", breaks = c("LEW", "YRK"), 
                     values = c(23, 24),
-                    labels = str_wrap(c("Lewisetta: low salinity, low disease", "York: mid salinity, low disease"), width = 20))+
+                    labels = c("Lewisetta (LEW): low salinity and disease", "York (YRK): higher salinity and disease"))+
   ggtitle("Common Garden Sites")+
   scale_x_continuous(breaks = seq(-78, -74, by =1))+
   scale_y_continuous(breaks = seq(36.5, 39.5, by = 1))+
-  theme(
-    panel.grid = element_blank(), 
-    panel.background = element_blank(), 
-    axis.line = element_line(color = "black"),
-    axis.title = element_text(size = 12),
-    axis.text = element_text(size = 10, color = "black"),
-    legend.title = element_blank(),
-    #legend.text = element_text(size = 12),
-    legend.spacing.y = unit(1, "cm"))+
-  guides(fill = guide_legend(byrow = TRUE))
+  theme(legend.position = "right",
+        legend.direction = "vertical",
+        legend.text = element_text(size = 11),
+        plot.title = element_text(size = 11))
 
 inset_map
 

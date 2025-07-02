@@ -2,52 +2,56 @@ Anova Table (Type III tests)
 
 Response: surv
              Sum Sq  Df  F value    Pr(>F)    
-(Intercept)  3.7800   1 574.0170 < 2.2e-16 ***
-bag_site     0.0212   1   3.2142  0.075911 .  
-pop          0.8670   7  18.8090 5.188e-16 ***
-t            0.1321   2  10.0292  0.000104 ***
-bag_site:pop 0.4349   7   9.4352 5.083e-09 ***
-bag_site:t   0.5116   2  38.8468 2.512e-13 ***
-pop:t        0.3577  14   3.8803 2.690e-05 ***
-Residuals    0.6849 104                       
+(Intercept)  3.2841   1 550.6413 < 2.2e-16 ***
+bag_site     0.0013   1   0.2176    0.6417    
+pop          0.9025   9  16.8136 < 2.2e-16 ***
+t            0.2021   2  16.9409 2.826e-07 ***
+bag_site:pop 0.4609   9   8.5865 4.663e-10 ***
+bag_site:t   0.5709   2  47.8596 2.342e-16 ***
+pop:t        0.3687  18   3.4345 2.085e-05 ***
+Residuals    0.7873 132                       
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 Anova Table (Type III tests)
 
 Response: surv
               Sum Sq Df F value    Pr(>F)    
-(Intercept)  1.75845  1 427.814 < 2.2e-16 ***
-bag_site     0.29823  1  72.558 1.666e-09 ***
-pop          1.54413  7  53.667 3.118e-15 ***
-bag_site:pop 0.33996  7  11.816 4.016e-07 ***
-Residuals    0.12331 30                      
+(Intercept)  1.07279  1 286.550 < 2.2e-16 ***
+bag_site     0.10500  1  28.047 5.250e-06 ***
+pop          1.55414  9  46.124 < 2.2e-16 ***
+bag_site:pop 0.34114  9  10.125 9.721e-08 ***
+Residuals    0.14227 38                      
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 Anova Table (Type III tests)
 
 Response: surv
-                 Sum Sq Df  F value    Pr(>F)    
-(Intercept)     0.75326  1 183.2599 2.592e-14 ***
-bag_site        0.01769  1   4.3046   0.04668 *  
-oldpop          1.54413  7  53.6673 3.118e-15 ***
-bag_site:oldpop 0.33996  7  11.8155 4.016e-07 ***
-Residuals       0.12331 30                       
+                 Sum Sq Df F value    Pr(>F)    
+(Intercept)     0.75326  1 201.200 < 2.2e-16 ***
+bag_site        0.01769  1   4.726   0.03601 *  
+oldpop          1.55414  9  46.124 < 2.2e-16 ***
+bag_site:oldpop 0.34114  9  10.125 9.721e-08 ***
+Residuals       0.14227 38                      
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-               letters        popsite
-Lewisetta:LA         a   Lewisetta:LA
-Lewisetta:LOLA      ab Lewisetta:LOLA
-Lewisetta:TX        ab   Lewisetta:TX
-Lewisetta:FL       abc   Lewisetta:FL
-Lewisetta:DEBY     bcd Lewisetta:DEBY
-YorkRiver:FL        cd   YorkRiver:FL
-Lewisetta:VA        cd   Lewisetta:VA
-YorkRiver:DEBY      de YorkRiver:DEBY
-YorkRiver:VA        de   YorkRiver:VA
-YorkRiver:TX        de   YorkRiver:TX
-YorkRiver:LOLA      ef YorkRiver:LOLA
-YorkRiver:LA        ef   YorkRiver:LA
-Lewisetta:ME        fg   Lewisetta:ME
-Lewisetta:NH        fg   Lewisetta:NH
-YorkRiver:NH         g   YorkRiver:NH
-YorkRiver:ME         g   YorkRiver:ME
+                    letters             popsite
+Lewisetta:LA              a        Lewisetta:LA
+Lewisetta:LOLA           ab      Lewisetta:LOLA
+Lewisetta:TX             ab        Lewisetta:TX
+Lewisetta:FL            abc        Lewisetta:FL
+Lewisetta:DEBY          bcd      Lewisetta:DEBY
+Lewisetta:SEEDMIX       bcd   Lewisetta:SEEDMIX
+Lewisetta:HYBRIDMIX     bcd Lewisetta:HYBRIDMIX
+YorkRiver:FL            cde        YorkRiver:FL
+Lewisetta:VA            cde        Lewisetta:VA
+YorkRiver:DEBY          def      YorkRiver:DEBY
+YorkRiver:VA            def        YorkRiver:VA
+YorkRiver:TX            def        YorkRiver:TX
+YorkRiver:SEEDMIX        ef   YorkRiver:SEEDMIX
+YorkRiver:HYBRIDMIX      fg YorkRiver:HYBRIDMIX
+YorkRiver:LOLA          fgh      YorkRiver:LOLA
+YorkRiver:LA            fgh        YorkRiver:LA
+Lewisetta:ME            ghi        Lewisetta:ME
+Lewisetta:NH             hi        Lewisetta:NH
+YorkRiver:NH              i        YorkRiver:NH
+YorkRiver:ME              i        YorkRiver:ME
