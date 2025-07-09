@@ -1,8 +1,5 @@
 # Comparing ShinyGO analyses for genes detected as outliers in lfmm2 and outflank
 
-## Complete tldr
-![Screenshot 2025-03-28 at 11 59 39 AM](https://github.com/user-attachments/assets/b7bb48ae-126d-4dc9-891f-32b5a092a914)
-
 ## relevant papers/citations
 
 1. (Griffiths 2021)[https://royalsocietypublishing.org/doi/full/10.1098/rspb.2020.3118]
