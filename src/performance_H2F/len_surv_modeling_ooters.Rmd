@@ -315,120 +315,180 @@ vif(surv_GE1.lew) # crazy vif, use sd?
 surv_GE1.lew.0 <- lm(surv ~ ho + ar + Salinity_st_dev + Temperature_st_dev, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",]) # way better vif here
 
 surv_GE1.lew
-plot(surv_GE1.lew) # qq looks kind of bad
-plot(surv_GE1.lew.0)
+#plot(surv_GE1.lew)
+#plot(surv_GE1.lew.0)
 summary(surv_GE1.lew) # none signif
 summary(surv_GE1.lew.0) # all but sal sd signif
 drop1(surv_GE1.lew) # get rid of temp_quantile_90
 drop1(surv_GE1.lew.0) # get rid of Salinity_st_dev
 
-surv_GE1.0.lew <- lm(surv ~ ho + ar + min_temp + max_sal + min_sal, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",])
-plot(surv_GE1.0.lew) # qq still ugly
+surv_GE1.0.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",])
+#plot(surv_GE1.0.lew)
 summary(surv_GE1.0.lew) # none signif
-drop1(surv_GE1.0.lew) # get rid of ar
+drop1(surv_GE1.0.lew) # get rid of temp quantile 10
 
+surv_GE1.1.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",])
+#plot(surv_GE1.1.lew)
+summary(surv_GE1.1.lew) # ho signif
+drop1(surv_GE1.1.lew) # get rid of sal quantile 90
+
+surv_GE1.2.lew <- lm(surv ~ ho + ar + salinity_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",])
+#plot(surv_GE1.2.lew)
+summary(surv_GE1.2.lew) # all but ar signif
+drop1(surv_GE1.2.lew) # final model
+
+# sd model version
 surv_GE1.0.lew.0 <- lm(surv ~ ho + ar + Temperature_st_dev, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",])
-plot(surv_GE1.0.lew.0) # qq still ugly
+#plot(surv_GE1.0.lew.0)
 summary(surv_GE1.0.lew.0) # all signif
 drop1(surv_GE1.0.lew.0) # final model
 
-surv_GE1.1.lew <- lm(surv ~ ho + min_temp + max_sal + min_sal, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",])
-plot(surv_GE1.1.lew)
-summary(surv_GE1.1.lew) # none signif
-drop1(surv_GE1.1.lew) # get rid of min_sal
-
-surv_GE1.2.lew <- lm(surv ~ ho + min_temp + max_sal, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",])
-plot(surv_GE1.2.lew)
-summary(surv_GE1.2.lew) # min temp, max_sal signif
-drop1(surv_GE1.2.lew) # get rid of ho
-
-surv_GE1.3.lew <- lm(surv ~ min_temp + max_sal , data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",])
-plot(surv_GE1.3.lew)
-summary(surv_GE1.3.lew) # all signif
-drop1(surv_GE1.3.lew) # this is final model
 
 # now we go to york
-surv_GE1.york <- lm(surv ~ ho + ar + max_temp + min_temp + max_sal + min_sal, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "YorkRiver",])
-plot(surv_GE1.york)
-summary(surv_GE1.york) # min_sal signif
-drop1(surv_GE1.york) # drop ar
+surv_GE1.york <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "YorkRiver",])
+#plot(surv_GE1.york)
+summary(surv_GE1.york) # ho, sal_quantile_10 signif
+drop1(surv_GE1.york) # drop sal_quantile_90
 
-surv_GE1.0.york <- lm(surv ~ ho + max_temp + min_temp + max_sal + min_sal, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "YorkRiver",])
-plot(surv_GE1.0.york)
-summary(surv_GE1.0.york) # min_sal signif
-drop1(surv_GE1.0.york) # drop max_temp
+surv_GE1.0.york <- lm(surv ~ ho + ar + salinity_quantile_10 + temp_quantile_10 + temp_quantile_90, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "YorkRiver",])
+#plot(surv_GE1.0.york)
+summary(surv_GE1.0.york) # ho, sal_quantile_10 signif
+drop1(surv_GE1.0.york) # drop temp_quantile_90
 
-surv_GE1.1.york <- lm(surv ~ ho + min_temp + max_sal + min_sal, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "YorkRiver",])
-plot(surv_GE1.1.york)
-summary(surv_GE1.1.york) # min_sal, min_temp signif
-drop1(surv_GE1.1.york) # drop ho
+surv_GE1.1.york <- lm(surv ~ ho + ar + salinity_quantile_10 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "YorkRiver",])
+#plot(surv_GE1.1.york)
+summary(surv_GE1.1.york) # all signif
+drop1(surv_GE1.1.york) # final model
 
-surv_GE1.2.york <- lm(surv ~ min_temp + max_sal + min_sal, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "YorkRiver",])
-plot(surv_GE1.2.york)
-summary(surv_GE1.2.york) # all signif
-drop1(surv_GE1.2.york) # final model
+# sd version
+surv_GE1.york.0 <- lm(surv ~ ho + ar + Salinity_st_dev + Temperature_st_dev, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "YorkRiver",])
+#plot(surv_GE1.york.0)
+summary(surv_GE1.york.0) # intercept, ar, temp sd signif
+drop1(surv_GE1.york.0) # drop ho
+
+surv_GE1.0.york.0 <- lm(surv ~ ar + Salinity_st_dev + Temperature_st_dev, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "YorkRiver",])
+#plot(surv_GE1.0.york.0)
+summary(surv_GE1.0.york.0) # only sal sd not signif
+drop1(surv_GE1.0.york.0) # final model
+
 
 # lew t2
-surv_GE2.lew <- lm(surv ~ ho + ar + min_temp + max_sal + min_sal, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta",])
-plot(surv_GE2.lew) # qq still ugly
-summary(surv_GE2.lew) # none signif
-drop1(surv_GE2.lew) # get rid of ar
+surv_GE2.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta",])
+#plot(surv_GE2.lew)
+summary(surv_GE2.lew) # ho signif
+drop1(surv_GE2.lew) # get rid of temp_quantile_90
 
-surv_GE2.0.lew <- lm(surv ~ ho + min_temp + max_sal + min_sal, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta",])
-plot(surv_GE2.0.lew) # qq uggly
-summary(surv_GE2.0.lew) # min_temp signif
-drop1(surv_GE2.0.lew) # get rid of min_sal
+surv_GE2.0.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta",])
+#plot(surv_GE2.0.lew)
+summary(surv_GE2.0.lew) # intercept, ho signif
+drop1(surv_GE2.0.lew) # get rid of salinity_quantile_90
 
-surv_GE2.1.lew <- lm(surv ~ ho + min_temp + max_sal, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta",])
-plot(surv_GE2.1.lew) # qq uggly
-summary(surv_GE2.1.lew) # min_temp, max_sal signif
+surv_GE2.1.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta",])
+#plot(surv_GE2.1.lew)
+summary(surv_GE2.1.lew) # intercept, ho, ar signif
 drop1(surv_GE2.1.lew) # final model
 
-# york t2
-surv_GE2.york <- lm(surv ~ ho + ar + min_temp + max_sal + min_sal, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "YorkRiver",])
-plot(surv_GE2.york) # qq still ugly
-summary(surv_GE2.york) # min_temp, min_sal signif
-drop1(surv_GE2.york) # get rid of ho
+# sd model
+surv_GE2.lew.0 <- lm(surv ~ ho + ar + Salinity_st_dev + Temperature_st_dev, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta",])
+summary(surv_GE2.lew.0) # all except salinity sd signif
+drop1(surv_GE2.lew.0) # final model
 
-surv_GE2.0.york <- lm(surv ~ ar + min_temp + max_sal + min_sal, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "YorkRiver",])
-plot(surv_GE2.0.york) 
-summary(surv_GE2.0.york) # min_temp, max_sal, min_sal signif
-drop1(surv_GE2.0.york) # final model
+
+# york t2
+surv_GE2.york <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "YorkRiver",])
+#plot(surv_GE2.york)
+summary(surv_GE2.york) # salinity_quantile_10 signif
+drop1(surv_GE2.york) # get rid of temp_quantile_90
+
+surv_GE2.0.york <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "YorkRiver",])
+#plot(surv_GE2.0.york) 
+summary(surv_GE2.0.york) # intercept, ar, salinity_quantile_10, temp_quantile_10 signif
+drop1(surv_GE2.0.york) # drop salinity_quantile_90
+
+surv_GE2.1.york <- lm(surv ~ ho + ar + salinity_quantile_10 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "YorkRiver",])
+#plot(surv_GE2.0.york) 
+summary(surv_GE2.1.york) # all except ho signif
+drop1(surv_GE2.1.york) # final model
+
+# sd model
+surv_GE2.york.0 <- lm(surv ~ ho + ar + Salinity_st_dev + Temperature_st_dev, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "YorkRiver",])
+summary(surv_GE2.york.0) # intercept, ar, temp sd signif
+drop1(surv_GE2.york.0) # get rid of ho
+
+surv_GE2.0.york.0 <- lm(surv ~ ar + Salinity_st_dev + Temperature_st_dev, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "YorkRiver",])
+summary(surv_GE2.0.york.0) # intercept, ar, temp sd signif
+drop1(surv_GE2.0.york.0) # final model
+
 
 # lew t3
-surv_GE3.lew <- lm(surv ~ ho + ar + min_temp + max_sal + min_sal, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "Lewisetta",])
-plot(surv_GE3.lew)
-summary(surv_GE3.lew) # min_temp, max_sal signif
-drop1(surv_GE3.lew) # get rid of ho
+surv_GE3.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "Lewisetta",])
+#plot(surv_GE3.lew)
+summary(surv_GE3.lew) # ho, salinity_quantile_10, salinity_quantile_90 signif
+drop1(surv_GE3.lew) # get rid of ar
 
-surv_GE3.0.lew <- lm(surv ~ ar + min_temp + max_sal + min_sal, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "Lewisetta",])
-plot(surv_GE3.0.lew)
-summary(surv_GE3.0.lew) # ar, min_temp, max_sal signif
-drop1(surv_GE3.0.lew) # get rid of min_sal
+surv_GE3.0.lew <- lm(surv ~ ho + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "Lewisetta",])
+#plot(surv_GE3.0.lew)
+summary(surv_GE3.0.lew) # all except temp_quantile_10 signif
+drop1(surv_GE3.0.lew) # get rid of temp_quantile_10
 
-surv_GE3.1.lew <- lm(surv ~ ar + min_temp + max_sal, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "Lewisetta",])
-plot(surv_GE3.1.lew)
-summary(surv_GE3.1.lew) # ar, min_temp, max_sal signif
+surv_GE3.1.lew <- lm(surv ~ ho + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_90, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "Lewisetta",])
+#plot(surv_GE3.1.lew)
+summary(surv_GE3.1.lew) # all signif
 drop1(surv_GE3.1.lew) # final model
 
-# york t3
-surv_GE3.york <- lm(surv ~ ar + ho + min_temp + max_temp + min_sal + max_sal, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "YorkRiver",])
-plot(surv_GE3.york)
-summary(surv_GE3.york) # ar, max_temp, min_sal, intercept signif
-drop1(surv_GE3.york) # get rid of max_sal
+# sd model
+surv_GE3.lew.0 <- lm(surv ~ ho + ar + Salinity_st_dev + Temperature_st_dev, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "Lewisetta",])
+summary(surv_GE3.lew.0) # all signif
+drop1(surv_GE3.lew.0) # final model
 
-surv_GE3.0.york <- lm(surv ~ ar + ho + min_temp + max_temp + min_sal, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "YorkRiver",])
-plot(surv_GE3.0.york)
-summary(surv_GE3.0.york) # ar, ho, min_sal, max_temp, intercept signif
+
+# york t3
+surv_GE3.york <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "YorkRiver",])
+#plot(surv_GE3.york)
+summary(surv_GE3.york) # all environmental quantiles signif
+drop1(surv_GE3.york) # get rid of ho
+
+surv_GE3.0.york <- lm(surv ~ ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "YorkRiver",])
+#plot(surv_GE3.0.york)
+summary(surv_GE3.0.york) # all environmental quantiles signif
 drop1(surv_GE3.0.york) # final model
 
-sink("results/survival_GE_model_results_04022025.txt")
-summary(surv_GE1.3.lew)
-summary(surv_GE1.2.york)
+# sd model
+surv_GE3.york.0 <- lm(surv ~ ho + ar + Salinity_st_dev + Temperature_st_dev, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "YorkRiver",])
+summary(surv_GE3.york.0) # intercept, ar, temp sd signif
+drop1(surv_GE3.york.0) # get rid of sal sd
+
+surv_GE3.0.york.0 <- lm(surv ~ ho + ar + Temperature_st_dev, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "YorkRiver",])
+summary(surv_GE3.0.york.0) # all signif
+drop1(surv_GE3.0.york.0) # final model
+
+
+# save everything
+sink(paste0("results_field/survival_GE_model_results_",Sys.Date(),".txt"))
+cat("\nLEWt1 quants\n")
+summary(surv_GE1.2.lew)
+cat("\nLEWt1 sd\n")
+summary(surv_GE1.0.lew.0)
+cat("\nYRKt1 quants\n")
+summary(surv_GE1.1.york)
+cat("\nYRKt1 sd\n")
+summary(surv_GE1.0.york.0)
+cat("\nLEWt2 quants\n")
 summary(surv_GE2.1.lew)
-summary(surv_GE2.0.york)
+cat("\nLEWt2 sd\n")
+summary(surv_GE2.lew.0)
+cat("\nYRKt2 quants\n")
+summary(surv_GE2.1.york)
+cat("\nYRKt2 sd\n")
+summary(surv_GE2.0.york.0)
+cat("\nLEWt3 quants\n")
 summary(surv_GE3.1.lew)
+cat("\nLEWt3 sd\n")
+summary(surv_GE3.lew.0)
+cat("\nYRKt3 quants\n")
 summary(surv_GE3.0.york)
+cat("\nYRKt3 sd\n")
+summary(surv_GE3.0.york.0)
 sink()
 ```
 
