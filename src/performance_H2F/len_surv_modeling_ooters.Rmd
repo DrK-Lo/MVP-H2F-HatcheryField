@@ -20,6 +20,7 @@ library(performance) # for lmm
 library(lmerTest) # for lmm
 library(car) # for avPlots(), Anova()
 library(emmeans) # for signif testing
+library(car)
 library(multcompView)
 ```
 
@@ -497,8 +498,6 @@ sink()
 
 
 ```{r}
-library(car)
-
 # start by putting together a complete dataframe
 # genetic data
 len_mod_gen <- merge(lengths_mod_rm_nodead, gen_parents, by = "pop")
@@ -506,103 +505,173 @@ len_mod_gen_env <- merge(len_mod_gen, env_parents, by = c("pop"))
 (len_mod_gen_env)
 
 # fixed effects
-(anova(lm(length ~ ho + ar + max_temp + min_temp + max_sal + min_sal, data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "Lewisetta",]))) # all signif
-(anova(lm(length ~ ho + ar + max_temp + min_temp + max_sal + min_sal, data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "Lewisetta",]))) # ho, max_sal, min_sal signif
-(anova(lm(length ~ ho + ar + max_temp + min_temp + max_sal + min_sal, data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "Lewisetta",]))) # ho, max_temp, max_sal, min_sal signif
+(anova(lm(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90, data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "Lewisetta",]))) # ho, ar, salinity_quantile_10, temp_quantile_90 signif
+(anova(lm(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90, data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "Lewisetta",]))) # ho, ar, salinity_quantile_10 signif
+(anova(lm(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90, data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "Lewisetta",]))) # ho, ar, salinity_quantile_10, salinity_quantile_90 signif
 
-anova(lm(length ~ ho + ar + max_temp + min_temp + max_sal + min_sal, data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "YorkRiver",])) # all but ho & ar signif
-anova(lm(length ~ ho + ar + max_temp + min_temp + max_sal + min_sal, data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "YorkRiver",])) # ar, min_temp, max_sal, min_sal signif
-anova(lm(length ~ ho + ar + max_temp + min_temp + max_sal + min_sal, data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "YorkRiver",])) # ho, min_temp, max_sal, min_sal signif
+anova(lm(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90, data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "YorkRiver",])) # all but ho & salinity_quantile_90 signif
+anova(lm(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90, data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "YorkRiver",])) # all but ho & salinity_quantile_90 signif
+anova(lm(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90, data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "YorkRiver",])) # all but ho & temp_quantile_90 signif
 
 # full model time point 1 - lew
-len_GE1.lew <- lmerTest::lmer(length ~ ho + ar + max_temp + min_temp + max_sal + min_sal + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "Lewisetta",]) 
-len_GE1.lew
-plot(len_GE1.lew) 
-Anova(len_GE1.lew, type = "III") # max_temp, min_temp, min_sal signif
+len_GE1.lew <- lmerTest::lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "Lewisetta",]) 
+#plot(len_GE1.lew) 
+Anova(len_GE1.lew, type = "III") # all but salinity_quantile_90 signif
 summary(len_GE1.lew) # gives just min_temp & min_sal
-drop1lenge1lew <- drop1(len_GE1.lew) # this isn't giving what we expect, double check this
-step(len_GE1.lew) # trying different model selection method
+step(len_GE1.lew) # drop salinity_quantile_90
 
-len_GE1.0.lew <- lmerTest::lmer(length ~ max_temp + min_temp + max_sal + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "Lewisetta",]) 
-plot(len_GE1.0.lew) 
+len_GE1.0.lew <- lmerTest::lmer(length ~ ho + ar + salinity_quantile_10 + temp_quantile_10 + temp_quantile_90 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "Lewisetta",]) 
+#plot(len_GE1.0.lew) 
 Anova(len_GE1.0.lew, type = "III") # all signif
 summary(len_GE1.0.lew)
 step(len_GE1.0.lew) # final model
 
-# york t1
-len_GE1.york <- lmerTest::lmer(length ~ ho + ar + max_temp + min_temp + max_sal + min_sal + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "YorkRiver",]) 
-len_GE1.york
-plot(len_GE1.york) 
-Anova(len_GE1.york, type = "III") # max_temp, min_temp, min_sal signif
-summary(len_GE1.york) # safe signif
-step(len_GE1.york) # get rid of ho and ar
+# sd model
+len_GE1.lew.0 <- lmerTest::lmer(length ~ ho + ar + Salinity_st_dev + Temperature_st_dev + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "Lewisetta",]) 
+Anova(len_GE1.lew.0, type = "III") # all signif
+summary(len_GE1.lew.0)
+step(len_GE1.lew.0) # final model
 
-len_GE1.0.york <- lmerTest::lmer(length ~ max_temp + min_temp + max_sal + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "YorkRiver",]) 
-plot(len_GE1.0.york) 
+# york t1
+len_GE1.york <- lmerTest::lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "YorkRiver",]) 
+#plot(len_GE1.york) 
+Anova(len_GE1.york, type = "III") # all but sal90 signif
+summary(len_GE1.york)
+step(len_GE1.york) # get rid of salinity_quantile_90
+
+len_GE1.0.york <- lmerTest::lmer(length ~ ho + ar + salinity_quantile_10 + temp_quantile_10 + temp_quantile_90 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "YorkRiver",]) 
+#plot(len_GE1.0.york) 
 Anova(len_GE1.0.york, type = "III") # all signif
 summary(len_GE1.0.york)
 step(len_GE1.0.york) # final model
 
+# sd version
+len_GE1.york.0 <- lmerTest::lmer(length ~ ho + ar + Salinity_st_dev + Temperature_st_dev + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "YorkRiver",]) 
+Anova(len_GE1.york.0, type = "III") # all but ho signif
+summary(len_GE1.york.0)
+step(len_GE1.york.0) # get rid of ho
+
+len_GE1.0.york.0 <- lmerTest::lmer(length ~ ar + Salinity_st_dev + Temperature_st_dev + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "YorkRiver",]) 
+Anova(len_GE1.0.york.0, type = "III") # all signif
+summary(len_GE1.0.york.0)
+step(len_GE1.0.york.0) # final model
+
 # full model time point 2
 # lew t2
-len_GE2.lew <- lmer(length ~ ho + ar + max_temp + min_temp + max_sal + min_sal + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "Lewisetta",])
-len_GE2.lew
-plot(len_GE2.lew)
-Anova(len_GE2.lew, type = "III") # min sal
-step(len_GE2.lew) # drop min_temp, max_sal, ar, max_temp
+len_GE2.lew <- lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "Lewisetta",])
+#plot(len_GE2.lew)
+Anova(len_GE2.lew, type = "III") # ho and sal10 signif
+summary(len_GE2.lew)
+step(len_GE2.lew) # drop temp90, sal90, temp10
 
-len_GE2.0.lew <- lmer(length ~ ho + min_sal + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "Lewisetta",])
-len_GE2.0.lew
-plot(len_GE2.0.lew)
+len_GE2.0.lew <- lmer(length ~ ho + ar + salinity_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "Lewisetta",])
+#plot(len_GE2.0.lew)
 Anova(len_GE2.0.lew, type = "III") # all signif
+summary(len_GE2.0.lew)
 step(len_GE2.0.lew) # final model
 
-# york t2
-len_GE2.york <- lmer(length ~ ho + ar + max_temp + min_temp + max_sal + min_sal + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "YorkRiver",])
-len_GE2.york
-plot(len_GE2.york)
-Anova(len_GE2.york, type = "III") # max_temp, min_temp, min_sal signif
-step(len_GE2.york) # drop max_sal, ar
+# sd model
+len_GE2.lew.0 <- lmer(length ~ ho + ar + Salinity_st_dev + Temperature_st_dev + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "Lewisetta",])
+Anova(len_GE2.lew.0, type = "III") # intercept, ho, ar signif
+summary(len_GE2.lew.0)
+step(len_GE2.lew.0) # drop sal and temp
 
-len_GE2.0.york <- lmer(length ~ ho + max_temp + min_temp + min_sal + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "YorkRiver",])
+len_GE2.0.lew.0 <- lmer(length ~ ho + ar + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "Lewisetta",])
+Anova(len_GE2.0.lew.0, type = "III") # ho, ar signif
+summary(len_GE2.0.lew.0)
+step(len_GE2.0.lew.0) # final model
+
+# york t2
+len_GE2.york <- lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "YorkRiver",])
+#plot(len_GE2.york)
+Anova(len_GE2.york, type = "III") # all except salinity_quantile_90 signif
+summary(len_GE2.york)
+step(len_GE2.york) # drop salinity_quantile_90
+
+len_GE2.0.york <- lmer(length ~ ho + ar + salinity_quantile_10 + temp_quantile_10 + temp_quantile_90 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "YorkRiver",])
 len_GE2.0.york
-plot(len_GE2.0.york)
-Anova(len_GE2.0.york, type = "III") # all signif except intercept
+#plot(len_GE2.0.york)
+Anova(len_GE2.0.york, type = "III") # all signif 
+summary(len_GE2.0.york)
 step(len_GE2.0.york) # final model
+
+# sd version
+len_GE2.york.0 <- lmer(length ~ ho + ar + Salinity_st_dev + Temperature_st_dev + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "YorkRiver",])
+Anova(len_GE2.york.0, type = "III") # all signif except ho
+summary(len_GE2.york.0)
+step(len_GE2.york.0) # drop ho
+
+len_GE2.0.york.0 <- lmer(length ~ ar + Salinity_st_dev + Temperature_st_dev + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "YorkRiver",])
+Anova(len_GE2.0.york.0, type = "III") # all signif
+summary(len_GE2.0.york.0)
+step(len_GE2.0.york.0) # final model
+
 
 # full model time point 3
 # lew t3
-len_GE3.lew <- lmer(length ~ ho + ar + max_temp + min_temp + max_sal + min_sal + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "Lewisetta",])
-len_GE3.lew
-plot(len_GE3.lew)
-Anova(len_GE3.lew, type = "III") # intercept, min_temp, max_sal signif
-step(len_GE3.lew) # drop everything except min_temp, max_sal
+len_GE3.lew <- lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "Lewisetta",])
+#plot(len_GE3.lew)
+Anova(len_GE3.lew, type = "III") # ho and salinity vars signif
+summary(len_GE3.lew)
+step(len_GE3.lew) # drop temp variables
 
-len_GE3.0.lew <- lmer(length ~ min_temp + max_sal + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "Lewisetta",])
-len_GE3.0.lew
-plot(len_GE3.0.lew)
+len_GE3.0.lew <- lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "Lewisetta",])
 Anova(len_GE3.0.lew, type = "III") # all signif
+summary(len_GE3.0.lew)
 step(len_GE3.0.lew) # final model
 
-# york t3
-len_GE3.york <- lmer(length ~ ho + ar + max_temp + min_temp + max_sal + min_sal + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "YorkRiver",])
-len_GE3.york
-plot(len_GE3.york)
-Anova(len_GE3.york, type = "III") # intercept, max_temp, max_sal, min_sal signif
-step(len_GE3.york) # drop ho, min_temp
+# sd version
+len_GE3.lew.0 <- lmer(length ~ ho + ar + Salinity_st_dev + Temperature_st_dev + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "Lewisetta",])
+Anova(len_GE3.lew.0, type = "III") # all signif
+summary(len_GE3.lew.0)
+step(len_GE3.lew.0) # final model
 
-len_GE3.0.york <- lmer(length ~ ar + max_temp + min_sal + max_sal + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "YorkRiver",])
-len_GE3.0.york
-plot(len_GE3.0.york)
-Anova(len_GE3.0.york, type = "III") # all signif except ar
+# york t3
+len_GE3.york <- lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "YorkRiver",])
+#plot(len_GE3.york)
+Anova(len_GE3.york, type = "III") # ho, sal10, temp10, temp90 signif
+step(len_GE3.york) # drop sal90 and ar
+
+len_GE3.0.york <- lmer(length ~ ho + salinity_quantile_10 + temp_quantile_10 + temp_quantile_90 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "YorkRiver",])
+Anova(len_GE3.0.york, type = "III") # all signif
+summary(len_GE3.0.york)
 step(len_GE3.0.york) # final model
 
-sink("results/len_GE_model_results_04022025.txt")
+# sd version
+len_GE3.york.0 <- lmer(length ~ ho + ar + Salinity_st_dev + Temperature_st_dev + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "YorkRiver",])
+Anova(len_GE3.york.0, type = "III") # intercept, ar, sal signif
+summary(len_GE3.york.0)
+step(len_GE3.york.0) # drop temp and ho
+
+len_GE3.0.york.0 <- lmer(length ~ ar + Salinity_st_dev + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "YorkRiver",])
+Anova(len_GE3.0.york.0, type = "III") # all signif
+summary(len_GE3.0.york.0)
+step(len_GE3.0.york.0) # final model
+
+sink(paste0("results_field/len_GE_model_results_",Sys.Date(),".txt"))
+cat("\nLEWt1 quants\n")
 Anova(len_GE1.0.lew, type = "III")
+cat("\nLEWt1 sd\n")
+Anova(len_GE1.lew.0, type = "III")
+cat("\nYRKt1 quants\n")
 Anova(len_GE1.0.york, type = "III")
+cat("\nYRKt1 sd\n")
+Anova(len_GE1.0.york.0, type = "III")
+cat("\nLEWt2 quants\n")
 Anova(len_GE2.0.lew, type = "III")
+cat("\nLEWt2 sd\n")
+Anova(len_GE2.0.lew.0, type = "III")
+cat("\nYRKt2 quants\n")
 Anova(len_GE2.0.york, type = "III")
+cat("\nYRKt2 sd\n")
+Anova(len_GE2.0.york.0, type = "III")
+cat("\nLEWt3 quants\n")
 Anova(len_GE3.0.lew, type = "III")
+cat("\nLEWt3 sd\n")
+Anova(len_GE3.lew.0, type = "III")
+cat("\nYRKt3 quants\n")
 Anova(len_GE3.0.york, type = "III")
+cat("\nYRKt3 sd\n")
+Anova(len_GE3.0.york.0, type = "III")
 sink()
 ```
