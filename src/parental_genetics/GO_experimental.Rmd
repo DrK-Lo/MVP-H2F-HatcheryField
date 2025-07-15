@@ -42,9 +42,9 @@ outflank_output <- read_csv(file.path("..", "..", "data", "putative_selection", 
 
 # filter for outliers and SNPs with available gene info to put into ShinyGO
 outliers_only <- outflank_output %>% # starts at 154102 rows
-  filter(OutlierFlag == TRUE) %>%  # down to 12077 flagged as outliers
+  filter(OutlierFlag == TRUE) %>% # down to 6928 flagged as outliers
   dplyr::select(LocusName, FST, pvalues, Chromosome, Position, cust_id, cust_gene_id, cust_gene_name) %>%
-  filter(!is.na(cust_gene_id)) %>% # down to 925 with gene info available
+  filter(!is.na(cust_gene_id)) %>% # down to 333 with gene info available
   filter(!is.na(cust_gene_name)) %>%
   rename(gene = cust_gene_id)
 
@@ -52,7 +52,7 @@ outliers_only <- outflank_output %>% # starts at 154102 rows
 shinygo_genes <- paste(outliers_only$gene, collapse = " ")
 shinygo_genes # print list to copy and paste into ShinyGO
 
-length(unique(outliers_only$gene)) # this is 866 unique genes
+length(unique(outliers_only$gene)) # this is 310 unique genes
 
 ```
 
