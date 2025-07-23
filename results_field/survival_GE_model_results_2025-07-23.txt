@@ -1,0 +1,305 @@
+
+LEWt1 quants
+
+Call:
+lm(formula = surv ~ ho + ar + salinity_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 
+    1 & surv_mod_gen_env$bag_site == "Lewisetta", ])
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.253067 -0.041088 -0.006458  0.061328  0.216297 
+
+Coefficients:
+                     Estimate Std. Error t value Pr(>|t|)    
+(Intercept)          -2.77340    1.14424  -2.424  0.02496 *  
+ho                    3.69904    0.89940   4.113  0.00054 ***
+ar                    0.81288    0.50682   1.604  0.12442    
+salinity_quantile_10  0.00828    0.00373   2.220  0.03815 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.116 on 20 degrees of freedom
+Multiple R-squared:  0.6144,	Adjusted R-squared:  0.5566 
+F-statistic: 10.62 on 3 and 20 DF,  p-value: 0.0002167
+
+
+LEWt1 sd
+
+Call:
+lm(formula = surv ~ ho + ar + Temperature_st_dev, data = surv_mod_gen_env[surv_mod_gen_env$t == 
+    1 & surv_mod_gen_env$bag_site == "Lewisetta", ])
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.201874 -0.064383  0.007343  0.039747  0.275654 
+
+Coefficients:
+                   Estimate Std. Error t value Pr(>|t|)   
+(Intercept)        -5.41441    1.83686  -2.948  0.00796 **
+ho                  1.83648    0.74924   2.451  0.02356 * 
+ar                  2.55157    0.93188   2.738  0.01267 * 
+Temperature_st_dev -0.09507    0.04132  -2.301  0.03227 * 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.1152 on 20 degrees of freedom
+Multiple R-squared:   0.62,	Adjusted R-squared:  0.563 
+F-statistic: 10.88 on 3 and 20 DF,  p-value: 0.0001879
+
+
+YRKt1 quants
+
+Call:
+lm(formula = surv ~ ho + ar + salinity_quantile_10 + temp_quantile_10, 
+    data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == 
+        "YorkRiver", ])
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.094890 -0.041209  0.000313  0.024861  0.126692 
+
+Coefficients:
+                      Estimate Std. Error t value Pr(>|t|)    
+(Intercept)          -2.344721   0.566266  -4.141 0.000556 ***
+ho                    1.544516   0.570786   2.706 0.014008 *  
+ar                    0.978630   0.261144   3.747 0.001364 ** 
+salinity_quantile_10  0.008456   0.002058   4.110 0.000596 ***
+temp_quantile_10      0.011693   0.004421   2.645 0.015969 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.05693 on 19 degrees of freedom
+Multiple R-squared:  0.7892,	Adjusted R-squared:  0.7448 
+F-statistic: 17.78 on 4 and 19 DF,  p-value: 3.211e-06
+
+
+YRKt1 sd
+
+Call:
+lm(formula = surv ~ ar + Salinity_st_dev + Temperature_st_dev, 
+    data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == 
+        "YorkRiver", ])
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.15288 -0.02825  0.01344  0.04015  0.09823 
+
+Coefficients:
+                    Estimate Std. Error t value Pr(>|t|)    
+(Intercept)        -5.486139   1.016161  -5.399 2.77e-05 ***
+ar                  3.019163   0.485842   6.214 4.54e-06 ***
+Salinity_st_dev    -0.007407   0.004858  -1.525    0.143    
+Temperature_st_dev -0.124266   0.025181  -4.935 7.99e-05 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.07042 on 20 degrees of freedom
+Multiple R-squared:  0.6605,	Adjusted R-squared:  0.6096 
+F-statistic: 12.97 on 3 and 20 DF,  p-value: 6.258e-05
+
+
+LEWt2 quants
+
+Call:
+lm(formula = surv ~ ho + ar + salinity_quantile_10 + temp_quantile_10, 
+    data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == 
+        "Lewisetta", ])
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.179198 -0.030831  0.004108  0.030338  0.168924 
+
+Coefficients:
+                      Estimate Std. Error t value Pr(>|t|)    
+(Intercept)          -3.111400   0.873106  -3.564 0.002073 ** 
+ho                    3.584314   0.880076   4.073 0.000649 ***
+ar                    0.912661   0.402650   2.267 0.035278 *  
+salinity_quantile_10  0.005973   0.003173   1.883 0.075121 .  
+temp_quantile_10      0.013335   0.006816   1.956 0.065283 .  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.08778 on 19 degrees of freedom
+Multiple R-squared:  0.8177,	Adjusted R-squared:  0.7794 
+F-statistic: 21.31 on 4 and 19 DF,  p-value: 8.312e-07
+
+
+LEWt2 sd
+
+Call:
+lm(formula = surv ~ ho + ar + Salinity_st_dev + Temperature_st_dev, 
+    data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == 
+        "Lewisetta", ])
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.18958 -0.04087 -0.01625  0.05477  0.15855 
+
+Coefficients:
+                    Estimate Std. Error t value Pr(>|t|)    
+(Intercept)        -5.506156   1.413671  -3.895 0.000974 ***
+ho                  3.291793   0.661940   4.973 8.45e-05 ***
+ar                  2.393598   0.718206   3.333 0.003497 ** 
+Salinity_st_dev    -0.012602   0.007019  -1.795 0.088518 .  
+Temperature_st_dev -0.110820   0.032378  -3.423 0.002854 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.08851 on 19 degrees of freedom
+Multiple R-squared:  0.8147,	Adjusted R-squared:  0.7757 
+F-statistic: 20.88 on 4 and 19 DF,  p-value: 9.697e-07
+
+
+YRKt2 quants
+
+Call:
+lm(formula = surv ~ ho + ar + salinity_quantile_10 + temp_quantile_10, 
+    data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == 
+        "YorkRiver", ])
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.146324 -0.020717  0.006446  0.026865  0.113005 
+
+Coefficients:
+                      Estimate Std. Error t value Pr(>|t|)    
+(Intercept)          -3.287000   0.557720  -5.894 1.13e-05 ***
+ho                    1.097189   0.562172   1.952 0.065874 .  
+ar                    1.355424   0.257203   5.270 4.37e-05 ***
+salinity_quantile_10  0.008626   0.002027   4.256 0.000427 ***
+temp_quantile_10      0.015072   0.004354   3.462 0.002613 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.05607 on 19 degrees of freedom
+Multiple R-squared:  0.8263,	Adjusted R-squared:  0.7898 
+F-statistic:  22.6 on 4 and 19 DF,  p-value: 5.299e-07
+
+
+YRKt2 sd
+
+Call:
+lm(formula = surv ~ ar + Salinity_st_dev + Temperature_st_dev, 
+    data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == 
+        "YorkRiver", ])
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.19686 -0.02157  0.01015  0.04128  0.07452 
+
+Coefficients:
+                    Estimate Std. Error t value Pr(>|t|)    
+(Intercept)        -6.600775   0.966057  -6.833 1.22e-06 ***
+ar                  3.452994   0.461886   7.476 3.27e-07 ***
+Salinity_st_dev    -0.009152   0.004618  -1.982   0.0614 .  
+Temperature_st_dev -0.139216   0.023940  -5.815 1.09e-05 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.06694 on 20 degrees of freedom
+Multiple R-squared:  0.7394,	Adjusted R-squared:  0.7003 
+F-statistic: 18.92 on 3 and 20 DF,  p-value: 4.663e-06
+
+
+LEWt3 quants
+
+Call:
+lm(formula = surv ~ ho + salinity_quantile_10 + salinity_quantile_90 + 
+    temp_quantile_90, data = surv_mod_gen_env[surv_mod_gen_env$t == 
+    3 & surv_mod_gen_env$bag_site == "Lewisetta", ])
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.117935 -0.036950  0.002835  0.040614  0.144097 
+
+Coefficients:
+                      Estimate Std. Error t value Pr(>|t|)    
+(Intercept)          -2.582910   0.246841 -10.464 2.52e-09 ***
+ho                    3.627331   0.743530   4.879 0.000104 ***
+salinity_quantile_10  0.014390   0.002626   5.480 2.75e-05 ***
+salinity_quantile_90 -0.008470   0.002258  -3.750 0.001355 ** 
+temp_quantile_90      0.062703   0.007815   8.023 1.60e-07 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.07517 on 19 degrees of freedom
+Multiple R-squared:  0.9408,	Adjusted R-squared:  0.9284 
+F-statistic: 75.54 on 4 and 19 DF,  p-value: 2.145e-11
+
+
+LEWt3 sd
+
+Call:
+lm(formula = surv ~ ho + ar + Salinity_st_dev + Temperature_st_dev, 
+    data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == 
+        "Lewisetta", ])
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.15851 -0.08665  0.00423  0.06103  0.18303 
+
+Coefficients:
+                     Estimate Std. Error t value Pr(>|t|)    
+(Intercept)        -11.459320   1.682252  -6.812 1.67e-06 ***
+ho                   3.997661   0.787701   5.075 6.72e-05 ***
+ar                   4.932888   0.854658   5.772 1.46e-05 ***
+Salinity_st_dev     -0.026531   0.008353  -3.176 0.004971 ** 
+Temperature_st_dev  -0.181847   0.038530  -4.720 0.000149 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.1053 on 19 degrees of freedom
+Multiple R-squared:  0.8839,	Adjusted R-squared:  0.8594 
+F-statistic: 36.15 on 4 and 19 DF,  p-value: 1.232e-08
+
+
+YRKt3 quants
+
+Call:
+lm(formula = surv ~ ar + salinity_quantile_10 + salinity_quantile_90 + 
+    temp_quantile_10 + temp_quantile_90, data = surv_mod_gen_env[surv_mod_gen_env$t == 
+    3 & surv_mod_gen_env$bag_site == "YorkRiver", ])
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.084239 -0.020531 -0.006131  0.013819  0.075611 
+
+Coefficients:
+                      Estimate Std. Error t value Pr(>|t|)    
+(Intercept)           1.365662   1.808209   0.755 0.459864    
+ar                   -2.080319   1.000175  -2.080 0.052093 .  
+salinity_quantile_10  0.014591   0.001604   9.094 3.77e-08 ***
+salinity_quantile_90  0.009754   0.002055   4.746 0.000161 ***
+temp_quantile_10     -0.073923   0.015459  -4.782 0.000149 ***
+temp_quantile_90      0.152744   0.026221   5.825 1.62e-05 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.04516 on 18 degrees of freedom
+Multiple R-squared:  0.9585,	Adjusted R-squared:  0.947 
+F-statistic: 83.15 on 5 and 18 DF,  p-value: 8.503e-12
+
+
+YRKt3 sd
+
+Call:
+lm(formula = surv ~ ho + ar + Temperature_st_dev, data = surv_mod_gen_env[surv_mod_gen_env$t == 
+    3 & surv_mod_gen_env$bag_site == "YorkRiver", ])
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.189442 -0.065807  0.000665  0.064038  0.181952 
+
+Coefficients:
+                    Estimate Std. Error t value Pr(>|t|)    
+(Intercept)        -11.07085    1.75950  -6.292 3.84e-06 ***
+ho                  -1.52958    0.71769  -2.131  0.04566 *  
+ar                   5.41641    0.89263   6.068 6.24e-06 ***
+Temperature_st_dev  -0.13548    0.03958  -3.423  0.00269 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.1103 on 20 degrees of freedom
+Multiple R-squared:  0.7248,	Adjusted R-squared:  0.6836 
+F-statistic: 17.56 on 3 and 20 DF,  p-value: 7.973e-06
+
