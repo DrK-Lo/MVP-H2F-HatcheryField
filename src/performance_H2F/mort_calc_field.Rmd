@@ -89,12 +89,9 @@ merge4[merge4$event == 2 & merge4$bags_label == "MVP-LA-3",]$alive_count - merge
 which(merge4[merge4$event == 3,]$alive_count > merge4[merge4$event == 2,]$alive_returned)
 # all good!
 
-# remove the funky bags from analysis
-merge4_rm <- merge4[!merge4$bags_label == "MVP-DEBY-3",]
-merge4_rm <- merge4_rm[!merge4_rm$bags_label == "MVP-LA-3",]
-
 # add pop to df
-merge4_rm$pop <- str_split_fixed(merge4_rm$bags_label, "-", 3)[,2]
+merge4_narm$pop <- str_split_fixed(merge4_narm$bags_label, "-", 3)[,2]
+#merge4_rm$pop <- str_split_fixed(merge4_rm2$bags_label, "-", 3)[,2]
 ```
 
 
