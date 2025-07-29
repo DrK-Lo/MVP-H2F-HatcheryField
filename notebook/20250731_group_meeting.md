@@ -6,4 +6,5 @@
 - Review methods for the same, if time
 - Decide how/if to present disease data
     - KEB note: I think the quasi-quantitative presentation of disease in Figure 1 is not adequate and will get flagged by reviewers. Madeline's qPCR data is much more informative but would be somewhat ad hoc to include now. I think we should consider removing what we have now in Figure 1.
+- If you know the answer to anything in yellow, fill it in
 - Sign up for your CRediT contributions
