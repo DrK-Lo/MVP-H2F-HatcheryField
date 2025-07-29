@@ -1,0 +1,470 @@
+---
+title: "Q2_Envr_Distance_Modeling"
+author: "Nicole Mongillo"
+date: "2025-07-29"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "~/MVP-H2F-HatcheryField")
+
+# load libraries
+library(tidyverse) # for data wrangling
+library(stringr) # for splitting strings
+library(lubridate) # for dates
+library(ggplot2) # for plotting
+library(plotrix) # for std error
+library(lme4) # for lmm
+library(performance) # for lmm
+library(lmerTest) # for lmm
+library(car) # for avPlots(), Anova()
+library(emmeans) # for signif testing
+library(car)
+library(multcompView)
+library(corrplot)
+library(broom) #save lm results as tables
+library(ggstance) #vertical position.dodge function
+library(broom.mixed) #save lmer results as tables
+```
+
+This script is for modeling differences in survival and length amongst bags/populations/sites/time points in the MVP Field Experiment based on genetics and environmental distance between environments of origin and the common garden sites. 
+
+I intend to use linear (mixed) models to examine how survival and length vary by group and how genetics and environmental history drive these differences in performance. 
+
+## Modeling differences in survival
+
+First I'll read in and process the data
+
+```{r}
+setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/parent_effects_H2F")
+
+#survival data
+surv_mod_ord_rename <- read.csv("../../data/performance_H2F/field_surv_all_times2025-07-24.csv")[, -1]
+
+#length data
+lengths_mod_narm_nodead <- read.csv("../../data/performance_H2F/field_length_all_times_2025-07-24.csv")[ ,-1]
+
+#parent genetics
+gen_parents <- read.csv("../../data/parent_effects_H2F/parent_genetic_effects.csv")
+
+#environmental distance based on scaled envr quantiles
+env_dist <- read.csv("../../data/envr_of_origin/envr_quantiles_dist_all.csv")
+```
+
+## Data preparation
+```{r}
+# start by putting together a complete dataframe
+# genetic data
+colnames(gen_parents) <- c("pop","ho","exp_hs","ar")
+surv_mod_gen <- merge(surv_mod_ord_rename, gen_parents, by = "pop")
+
+#clean env_dist. Remove all columns except distance to Lewisetta and distance to York and remove rows for LEW and YRK.
+env_dist_filter <- env_dist[c(1:8), c("X", "LEW", "YRK")]
+colnames(env_dist_filter) <- c("pop", "dist_LEW", "dist_YRK")
+
+#add environmental data to df
+surv_mod_gen_dist <- merge(surv_mod_gen, env_dist_filter, by = c("pop"))
+```
+
+## Assess multicollinearity
+```{r}
+cor_matrix_lew <- cor(surv_mod_gen_dist[,c("dist_LEW", "ho", "ar")])
+
+#rename rows and columns
+colnames(cor_matrix_lew) <- c("Distance to LEW","Heterozygosity","Allelic Richness")
+
+rownames(cor_matrix_lew) <- c("Distance to LEW","Heterozygosity","Allelic Richness")
+
+#pdf(file = "../../figures/supplement/EOO_Envr_Genetics_Corrplot.pdf")
+
+corrplot_lew <- corrplot(cor_matrix_lew,
+         method = "color",
+         type = "upper",
+         tl.col = "black",
+         tl.srt = 45,
+         title = "Envr Genetics Variable Multicollinearity",
+         addCoef.col = 'black',
+         mar=c(0,0,2,0))
+#dev.off()
+#borderline collinearity with distance to Lew and ar
+
+cor_matrix_yrk <- cor(surv_mod_gen_dist[,c("dist_YRK", "ho", "ar")])
+
+colnames(cor_matrix_yrk) <- c("Distance to YRK","Heterozygosity","Allelic Richness")
+
+rownames(cor_matrix_yrk) <- c("Distance to YRK","Heterozygosity","Allelic Richness")
+
+corrplot_yrk <- corrplot(cor_matrix_yrk,
+         method = "color",
+         type = "upper",
+         tl.col = "black",
+         tl.srt = 45,
+         title = "Envr Genetics Variable Multicollinearity",
+         addCoef.col = 'black',
+         mar=c(0,0,2,0))
+
+#nothing collinear
+```
+
+## Assess VIF - Lewisetta
+```{r}
+VIF <- function(a, b, c){
+  1/(1-summary(lm(a ~ b + c))$r.squared)
+}
+
+VIF(surv_mod_gen_dist$ho, surv_mod_gen_dist$ar, surv_mod_gen_dist$dist_LEW)
+#VIF ho = 1.41
+
+VIF(surv_mod_gen_dist$ar, surv_mod_gen_dist$dist_LEW, surv_mod_gen_dist$ho)
+#VIF ar = 2.48
+
+VIF(surv_mod_gen_dist$dist_LEW, surv_mod_gen_dist$ho, surv_mod_gen_dist$ar)
+#VIF dist_LEW = 1.93
+```
+VIF is low enough for all remaining variables that I'm not super worried about the borderline collinearity between distance to LEW and AR.
+
+## Assess VIF - York
+```{r}
+VIF <- function(a, b, c){
+  1/(1-summary(lm(a ~ b + c))$r.squared)
+}
+
+VIF(surv_mod_gen_dist$ho, surv_mod_gen_dist$ar, surv_mod_gen_dist$dist_YRK)
+#VIF ho = 1.75
+
+VIF(surv_mod_gen_dist$ar, surv_mod_gen_dist$dist_YRK, surv_mod_gen_dist$ho)
+#VIF ar = 2.39
+
+VIF(surv_mod_gen_dist$dist_YRK, surv_mod_gen_dist$ho, surv_mod_gen_dist$ar)
+#VIF dist_LEW = 1.75
+```
+VIF is low for all.
+
+Now look at how survival changes with genetics/environment at each time point.
+
+## T1 survival, Lewisetta
+```{r t1_surv_lew}
+# RUN ON SITES SEPARATELY
+
+# full model time point 1
+# start with lew
+surv_lew_t1.0 <- lm(surv ~ ho + ar + dist_LEW, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 1 & surv_mod_gen_dist$bag_site == "Lewisetta",]) 
+vif(surv_lew_t1.0) # double check vif, vif looks good
+
+#plot(surv_lew_t1.0)
+summary(surv_lew_t1.0) # ar, ho significant
+drop1(surv_lew_t1.0) # final model
+
+#make scaled version of final model for plotting
+surv_t1_lew_s <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(dist_LEW), data = surv_mod_gen_dist[surv_mod_gen_dist$t == 1 & surv_mod_gen_dist$bag_site == "Lewisetta",])
+```
+
+## T2 survival, Lewisetta
+```{r t1_surv_lew}
+surv_lew_t2.0 <- lm(surv ~ ho + ar + dist_LEW, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 2 & surv_mod_gen_dist$bag_site == "Lewisetta",]) 
+
+#plot(surv_lew_t2.0)
+summary(surv_lew_t2.0) # all significant
+drop1(surv_lew_t2.0) # final model
+
+#make scaled version of final model for plotting
+surv_t2_lew_s <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(dist_LEW), data = surv_mod_gen_dist[surv_mod_gen_dist$t == 2 & surv_mod_gen_dist$bag_site == "Lewisetta",])
+```
+
+## T3 survival, Lewisetta
+```{r t1_surv_lew}
+surv_lew_t3.0 <- lm(surv ~ ho + ar + dist_LEW, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 3 & surv_mod_gen_dist$bag_site == "Lewisetta",]) 
+
+#plot(surv_lew_t3.0)
+summary(surv_lew_t3.0) # all significant
+drop1(surv_lew_t3.0) # final model
+
+#make scaled version of final model for plotting
+surv_t3_lew_s <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(dist_LEW), data = surv_mod_gen_dist[surv_mod_gen_dist$t == 3 & surv_mod_gen_dist$bag_site == "Lewisetta",])
+```
+
+Onto York!
+
+## T1 survival, York
+```{r t1_surv_lew}
+surv_yrk_t1.0 <- lm(surv ~ ho + ar + dist_YRK, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 1 & surv_mod_gen_dist$bag_site == "YorkRiver",]) 
+#plot(surv_yrk_t1.0)
+summary(surv_yrk_t1.0) # ar, dist_YRK significant
+drop1(surv_yrk_t1.0) # drop ho
+
+surv_yrk_t1.1 <- lm(surv ~ ar + dist_YRK, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 1 & surv_mod_gen_dist$bag_site == "YorkRiver",]) 
+#plot(surv_yrk_t1.1)
+summary(surv_yrk_t1.1) # ar, dist_YRK significant
+drop1(surv_yrk_t1.1) #final model
+
+#make scaled version of final model for plotting
+surv_t1_yrk_s <- lm(scale(surv) ~ scale(ar) + scale(dist_YRK), data = surv_mod_gen_dist[surv_mod_gen_dist$t == 1 & surv_mod_gen_dist$bag_site == "YorkRiver",])
+
+summary(surv_t1_yrk_s)
+```
+
+## T2 survival, York
+```{r t1_surv_lew}
+surv_yrk_t2.0 <- lm(surv ~ ho + ar + dist_YRK, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 2 & surv_mod_gen_dist$bag_site == "YorkRiver",]) 
+#plot(surv_yrk_t2.0)
+summary(surv_yrk_t2.0) # ar, dist_YRK significant
+drop1(surv_yrk_t2.0) # drop ho
+
+surv_yrk_t2.1 <- lm(surv ~ ar + dist_YRK, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 2 & surv_mod_gen_dist$bag_site == "YorkRiver",]) 
+#plot(surv_yrk_t2.1)
+summary(surv_yrk_t2.1) # ar, dist_YRK significant
+drop1(surv_yrk_t2.1) #final model
+
+#make scaled version of final model for plotting
+surv_t2_yrk_s <- lm(scale(surv) ~ scale(ar) + scale(dist_YRK), data = surv_mod_gen_dist[surv_mod_gen_dist$t == 2 & surv_mod_gen_dist$bag_site == "YorkRiver",])
+```
+
+## T3 survival, York
+```{r t1_surv_lew}
+surv_yrk_t3.0 <- lm(surv ~ ho + ar + dist_YRK, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 3 & surv_mod_gen_dist$bag_site == "YorkRiver",]) 
+#plot(surv_yrk_t3.0)
+summary(surv_yrk_t3.0) # all significant
+drop1(surv_yrk_t3.0) # final model
+
+#make scaled version of final model for plotting
+surv_t3_yrk_s <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(dist_YRK), data = surv_mod_gen_dist[surv_mod_gen_dist$t == 3 & surv_mod_gen_dist$bag_site == "YorkRiver",])
+
+# save everything
+sink(paste0("../../results_field/survival_GEdistance_model_results_",Sys.Date(),".txt"))
+cat("\nLEWt1 quants\n")
+summary(surv_lew_t1.0)
+cat("\nYRKt1 quants\n")
+summary(surv_yrk_t1.1)
+cat("\nLEWt2 quants\n")
+summary(surv_lew_t2.0)
+cat("\nYRKt2 quants\n")
+summary(surv_yrk_t2.1)
+cat("\nLEWt3 quants\n")
+summary(surv_lew_t3.0)
+cat("\nYRKt3 quants\n")
+summary(surv_yrk_t3.0)
+sink()
+```
+
+## Modeling drivers of differences in length
+
+```{r}
+# start by putting together a complete data frame
+# genetic data
+len_mod_gen <- merge(lengths_mod_narm_nodead, gen_parents, by = "pop")
+len_mod_gen_dist <- merge(len_mod_gen, env_dist_filter, by = c("pop"))
+```
+
+## T1 Length, Lewisetta
+```{r t1_len_lew}
+len_lew_t1.0 <- lmerTest::lmer(length ~ ho + ar + dist_LEW + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "Lewisetta",]) 
+#plot(len_lew_t1.0) 
+Anova(len_lew_t1.0, type = "III") # ho signif
+summary(len_lew_t1.0)
+step(len_lew_t1.0) # drop ar, dist_LEW
+
+len_lew_t1.1 <- lmerTest::lmer(length ~ ho + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "Lewisetta",]) 
+#plot(len_lew_t1.1) 
+Anova(len_lew_t1.1, type = "III") # ho signif
+summary(len_lew_t1.1)
+step(len_lew_t1.1) # final model
+
+len_t1_lew_s <- lmerTest::lmer(scale(length) ~ scale(ho) + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "Lewisetta",]) 
+```
+
+## T2 Length, Lewisetta
+```{r t1_len_lew}
+len_lew_t2.0 <- lmerTest::lmer(length ~ ho + ar + dist_LEW + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "Lewisetta",]) 
+#plot(len_lew_t2.0) #one weird outlier here
+Anova(len_lew_t2.0, type = "III") # ho, ar signif
+summary(len_lew_t2.0)
+step(len_lew_t2.0) # drop dist_LEW
+
+len_lew_t2.1 <- lmerTest::lmer(length ~ ho + ar + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "Lewisetta",]) 
+#plot(len_lew_t2.1) #still one weird outlier
+Anova(len_lew_t2.1, type = "III") # ho and ar signif
+summary(len_lew_t2.1)
+step(len_lew_t2.1) # final model
+
+len_t2_lew_s <- lmerTest::lmer(scale(length) ~ scale(ho) + scale(ar) + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "Lewisetta",]) 
+```
+
+## T3 Length, Lewisetta
+```{r t1_len_lew}
+len_lew_t3.0 <- lmerTest::lmer(length ~ ho + ar + dist_LEW + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site == "Lewisetta",]) 
+#plot(len_lew_t3.0) 
+Anova(len_lew_t3.0, type = "III") # ho, ar signif
+summary(len_lew_t3.0)
+step(len_lew_t3.0) # drop dist_LEW
+
+len_lew_t3.1 <- lmerTest::lmer(length ~ ho + ar + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site == "Lewisetta",]) 
+#plot(len_lew_t3.1) 
+Anova(len_lew_t3.1, type = "III") # ho, ar signif
+summary(len_lew_t3.1)
+step(len_lew_t3.1) # final model
+
+len_t3_lew_s <- lmerTest::lmer(scale(length) ~ scale(ho) + scale(ar) + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site == "Lewisetta",]) 
+```
+
+## T1 Length, York
+```{r t1_len_lew}
+len_yrk_t1.0 <- lmerTest::lmer(length ~ ho + ar + dist_YRK + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
+#plot(len_yrk_t1.0) 
+Anova(len_yrk_t1.0, type = "III") # ar signif
+summary(len_yrk_t1.0)
+step(len_yrk_t1.0) # drop everything except bags label?
+
+
+len_yrk_t1.1 <- lmerTest::lmer(length ~ (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
+#plot(len_lew_t1.1) 
+Anova(len_yrk_t1.1, type = "III") 
+summary(len_yrk_t1.1)
+step(len_yrk_t1.1) # final model
+
+len_t1_yrk_s <- lmerTest::lmer(scale(length) ~ (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
+```
+
+## T2 Length, York
+```{r t2_len_yrk}
+len_yrk_t2.0 <- lmerTest::lmer(length ~ ho + ar + dist_YRK + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
+#plot(len_yrk_t2.0) 
+Anova(len_yrk_t2.0, type = "III") # all signif
+summary(len_yrk_t2.0)
+step(len_yrk_t2.0) # drop everything except bags label? I am ignoring this for now
+
+len_t2_yrk_s <- lmerTest::lmer(scale(length) ~ scale(ho) + scale(ar) + scale(dist_YRK) + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
+```
+
+## T3 Length, York
+```{r t3_len_yrk}
+len_yrk_t3.0 <- lmerTest::lmer(length ~ ho + ar + dist_YRK + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
+#plot(len_yrk_t3.0) 
+Anova(len_yrk_t3.0, type = "III") # ar signif
+summary(len_yrk_t3.0)
+step(len_yrk_t3.0) # drop dist_YRK
+
+len_yrk_t3.1 <- lmerTest::lmer(length ~ ho + ar + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
+#plot(len_yrk_t3.1) 
+Anova(len_yrk_t3.1, type = "III") # ar, ho signif
+summary(len_yrk_t3.1)
+step(len_yrk_t3.1) # final model
+
+len_t3_yrk_s <- lmerTest::lmer(scale(length) ~ scale(ho) + scale(ar)  + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
+
+#save results
+sink(paste0("../../results_field/length_GEdistance_model_results_",Sys.Date(),".txt"))
+cat("\nLEWt1 quants\n")
+summary(len_lew_t1.1)
+cat("\nYRKt1 quants\n")
+summary(len_yrk_t1.1)
+cat("\nLEWt2 quants\n")
+summary(len_lew_t2.1)
+cat("\nYRKt2 quants\n")
+summary(len_yrk_t2.0)
+cat("\nLEWt3 quants\n")
+summary(len_lew_t3.1)
+cat("\nYRKt3 quants\n")
+summary(len_yrk_t3.1)
+sink()
+```
+
+##Figure product - Lewisetta survival
+```{r}
+#save Lewisetta survival lm results as one data frame
+lew_surv_dist_df <- rbind(tidy(surv_t1_lew_s), tidy(surv_t2_lew_s), tidy(surv_t3_lew_s))
+
+#add column for sampling time
+lew_surv_dist_df$t <- c(rep(c("t1"), 4), rep(c("t2"), 4), rep(c("t3"), 4))
+
+#rename columns
+colnames(lew_surv_dist_df) <- c("explanatory", "slope", "se", "tval", "pval", "t")
+
+#remove rows with Intercept slopes
+lew_surv_dist_df <- lew_surv_dist_df %>% 
+  filter(explanatory != "(Intercept)")
+
+#plot
+lew_surv_dist_plot <- lew_surv_dist_df %>% 
+  ggplot(aes(x = slope, y = explanatory))+
+  geom_point(aes(alpha = t, shape = t), color = "#F06292", size = 3.5, position = position_dodge2v(height = .85, reverse = T, preserve = "total"))+
+  geom_errorbarh(aes(xmax = slope + 2*se, xmin = slope - 2*se, alpha= t), color = "#F06292", height = 0, size = 1.2, position = position_dodgev(height = -.85, preserve = "total"))+
+  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
+  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
+  xlim(c(-1,2))+
+  xlab("Slope on Scaled Data")+
+  ylab("Variable")+
+  geom_vline(xintercept = 0, linetype = "dashed")+
+  scale_y_discrete(name = "Explanatory Variable", 
+                   limits = c("scale(dist_LEW)", "scale(ho)", "scale(ar)"),
+                   labels = c(str_wrap(c("Env. Distance to Lewisetta"), width = 20), "Heterozygosity", "Allelic Richness"))+
+  theme_classic()+
+    theme(axis.text = element_text(color = "black", size = 14),
+        axis.title = element_text(size = 15),
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15))
+
+lew_surv_dist_plot
+
+#save plot as pdf
+ggsave("lew_surv_dist.pdf",
+       plot = lew_surv_dist_plot,
+       device = "pdf",
+       path = "../../figures/parent_effects_H2F",
+       height = 4,
+       width = 7)
+```
+
+##Figure product - York survival
+```{r}
+#save York survival lm results as one dataframe
+yrk_surv_dist_df <- rbind(tidy(surv_t1_yrk_s), tidy(surv_t2_yrk_s), tidy(surv_t3_yrk_s))
+
+#add column for sampling time
+yrk_surv_dist_df$t <- c(rep(c("t1"), 3), rep(c("t2"), 3), rep(c("t3"), 4))
+
+#add dummy rows for time points lacking variables so that position_dodge v plots each data point in the same time point at consistent vertical positions for each y axis variable
+yrk_surv_dist_df[nrow(yrk_surv_dist_df) + 1,] = list("scale(ho)", -.4, 0, NA, NA, "t1")
+yrk_surv_dist_df[nrow(yrk_surv_dist_df) + 1,] = list("scale(ho)", -.4, 0, NA, NA, "t2")
+
+
+colnames(yrk_surv_dist_df) <- c("explanatory", "slope", "se", "tval", "pval", "t")
+#remove rows with Intercept slopes
+yrk_surv_dist_df <- yrk_surv_dist_df %>% 
+  filter(explanatory != "(Intercept)")
+
+#plot
+yrk_surv_dist_plot <- yrk_surv_dist_df %>% 
+  ggplot(aes(x = slope, y = explanatory))+
+  geom_point(aes(alpha = t, shape = t), color = "#880E4F", size = 3.5, position = position_dodgev(height = -.85, preserve = "total"))+
+  geom_errorbarh(aes(xmax = slope + 2*se, xmin = slope - 2*se, alpha= t), color = "#880E4F", height = 0, size = 1.2, position = position_dodgev(height = -.85, preserve = "total"))+
+  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
+  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
+  xlim(c(-1, 2))+
+  xlab("Slope on Scaled Data")+
+  ylab("Variable")+
+  geom_vline(xintercept = 0, linetype = "dashed")+
+  scale_y_discrete(name = "Explanatory Variable", 
+                   limits = c("scale(dist_YRK)", "scale(ho)", "scale(ar)"),
+                   labels = c(str_wrap(c("Env. Distance to York River"), width = 20), "Heterozygosity", "Allelic Richness"))+
+  theme_classic()+ 
+    theme(axis.text = element_text(color = "black", size = 14),
+        axis.title = element_text(size = 15),
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15))
+
+yrk_surv_dist_plot
+
+#save plot as pdf
+ggsave("yrk_surv_dist.pdf",
+       plot = yrk_surv_dist_plot,
+       device = "pdf",
+       path = "../../figures/parent_effects_H2F",
+       height = 4,
+       width = 7)
+```

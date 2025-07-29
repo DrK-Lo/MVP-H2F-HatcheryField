@@ -33,9 +33,10 @@ I intend to use linear (mixed) models to examine how survival and length vary by
 First I'll read in and process survival data
 
 ```{r}
+setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/performance_H2F")
 # read in data
-surv_long <- read.csv("data/performance_H2F/mortality_long_bags_h2f_2025-07-23.csv")[,-1]
-bags <- read.csv("data/performance_H2F/MVP23-FieldBags-bags.csv")
+surv_long <- read.csv("../../data/performance_H2F/mortality_long_bags_h2f_2025-07-23.csv")[,-1]
+bags <- read.csv("../../data/performance_H2F/MVP23-FieldBags-bags.csv")
 
 # split bags to have more detailed bag data
 bags[,5:6] <- str_split_fixed(bags$bags_label, "-", 3)[,2:3]
@@ -61,6 +62,7 @@ Now I can use LMMs to look at differences in survival by group.
 ```{r}
 # ensure correct coding of explanatory variables
 surv_mod_ord_rename$t <- as.factor(surv_mod_ord_rename$t)
+write.csv(surv_mod_ord_rename, paste0("../../data/performance_H2F/field_surv_all_times",Sys.Date(),".csv"))
 
 # analysis of fixed effects
 anova(lm(surv ~ pop + bag_site + t, data = surv_mod_ord_rename)) # all significant
@@ -82,7 +84,7 @@ drop1(lmm2)
 TukeyHSD(aov(lmm2))
 # another way to do this, in em-means package can get Tukey to letters in plot
 
-sink(paste0("results_field/survival_model_results_",Sys.Date(),".txt"))
+sink(paste0("../../results_field/survival_model_results_",Sys.Date(),".txt"))
 Anova(lmm1.1, type = "III")
 Anova(lmm2, type = "III")
 sink()
@@ -126,7 +128,7 @@ letters_surv_t3_df_red <- letters_surv_t3_df[,c("letters.Letters","popsite")]
 colnames(letters_surv_t3_df_red) <- c("letters","popsite")
 
 # save these outputs too
-sink(paste0("results_field/survival_model_results_",Sys.Date(),".txt"))
+sink(paste0("../../results_field/survival_model_results_",Sys.Date(),".txt"))
 Anova(lmm1.1, type = "III")
 Anova(lmm2, type = "III")
 Anova(lmm2.1, type = "III")
@@ -136,7 +138,7 @@ sink()
 # merge
 surv_final_time_rename_mg <- merge(surv_t3, letters_surv_t3_df_red, by = "popsite")
 
-write.csv(surv_final_time_rename_mg, paste0("data/performance_H2F/field_surv_final_time",Sys.Date(),".csv"))
+write.csv(surv_final_time_rename_mg, paste0("../../data/performance_H2F/field_surv_final_time",Sys.Date(),".csv"))
 
 # plot
 # pop color scheme
@@ -153,7 +155,7 @@ surv_t3_plot_pop <- ggplot(surv_final_time_plotting, aes(x = bag_site, y = surv,
   theme_classic()
 surv_t3_plot_pop
 
-ggsave(paste0("figures/performance_H2F/survival_t3_h2f_",Sys.Date(),".pdf"), plot = surv_t3_plot_pop, width = 10, height = 6, dpi = 300)
+#ggsave(paste0("../../figures/performance_H2F/survival_t3_h2f_",Sys.Date(),".pdf"), plot = surv_t3_plot_pop, width = 10, height = 6, dpi = 300)
 ```
 
 
@@ -163,7 +165,7 @@ Now I'll try modeling differences in length. I'll start by reading in and proces
 
 ```{r}
 # read in and trim data
-lengths <- read.csv("results_field/lengths_long.csv")[,-1]
+lengths <- read.csv("../../results_field/lengths_long.csv")[,-1]
 head(lengths)
 lengths_mod <- lengths[,c("bag_site","pop","monitoring_event","bags_label","tags_label","length","width")]
 colnames(lengths_mod) <- c("bag_site","pop","t","bags_label","tags_label","length","width")
@@ -187,6 +189,8 @@ lengths_mod_rm_nodead[which(is.na(lengths_mod_rm_nodead$width)),]
 lengths_mod_narm_nodead <- lengths_mod_rm_nodead[!(is.na(lengths_mod_rm_nodead$width)),]
 
 unique(lengths_mod_narm_nodead$pop)
+
+write.csv(lengths_mod_narm_nodead, paste0("../../data/performance_H2F/field_length_all_times_",Sys.Date(),".csv"))
 ```
 
 I will now use LMMs to look at differences in length by grouping.
@@ -260,16 +264,16 @@ summary_len_t3 <- lengths_final_time_rename_mg %>%
   arrange()
 
 # save all this 
-sink(paste0("results_field/length_model_results_",Sys.Date(),".txt"))
+sink(paste0("../../results_field/length_model_results_",Sys.Date(),".txt"))
 Anova(lmm3, type = "III")
 Anova(lmm4, type = "III")
 anova_len_t3
 letters_len_t3
 sink()
 
-write.csv(lengths_final_time_rename_mg, paste0("data/performance_H2F/field_length_final_time_",Sys.Date(),".csv"))
+write.csv(lengths_final_time_rename_mg, paste0("../../data/performance_H2F/field_length_final_time_",Sys.Date(),".csv"))
 
-write.csv(letters_len_t3_df, paste0("data/performance_H2F/field_length_letters_",Sys.Date(),".csv"))
+write.csv(letters_len_t3_df, paste0("../../data/performance_H2F/field_length_letters_",Sys.Date(),".csv"))
 
 len_final_time_plotting <- merge(lengths_final_time_rename_mg, pop_colors, by = "pop")
 
@@ -282,7 +286,7 @@ len_t3_plot_pop <- ggplot(len_final_time_plotting, aes(x = bag_site, y = length,
   theme_classic()
 len_t3_plot_pop
 
-ggsave(paste0("figures/performance_H2F/length_t3_h2f_",Sys.Date(),".pdf"), plot = len_t3_plot_pop, width = 10, height = 6, dpi = 300)
+ggsave(paste0("../../figures/performance_H2F/length_t3_h2f_",Sys.Date(),".pdf"), plot = len_t3_plot_pop, width = 10, height = 6, dpi = 300)
 ```
 
 
@@ -293,20 +297,70 @@ For the H2F paper, we want to know how environment and genetics are impacting di
 ```{r}
 # start by putting together a complete dataframe
 # genetic data
-gen_parents <- read.csv("data/parent_effects_H2F/parent_genetic_effects.csv")
+gen_parents <- read.csv("../../data/parent_effects_H2F/parent_genetic_effects.csv")
 colnames(gen_parents) <- c("pop","ho","exp_hs","ar")
 surv_mod_gen <- merge(surv_mod_ord_rename, gen_parents, by = "pop")
 
 # environmental data
-env_parents <- read.csv("data/environment/quantiles_05232025.csv")[,-1]
+env_parents <- read.csv("../../data/environment/quantiles_05232025.csv")[,-1]
 colnames(env_parents) <- c("pop","salinity_quantile_10","salinity_quantile_90","Salinity_st_dev","temp_quantile_10","temp_quantile_90","Temperature_st_dev","salinity")
 env_parents_trim <- env_parents[,!names(env_parents) %in% c("salinity")]
 surv_mod_gen_env <- merge(surv_mod_gen, env_parents_trim, by = c("pop"))
 ```
 
+## Assess multicollinearity
+```{r}
+cor_matrix_all <- cor(surv_mod_gen_env[,c("salinity_quantile_10","salinity_quantile_90","Salinity_st_dev","temp_quantile_10","temp_quantile_90","Temperature_st_dev", "ho", "ar")])
+
+#rename rows and columns
+colnames(cor_matrix_all) <- c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Salinity SD", "Temp 0.1 quantile", "Temp 0.9 quantile", "Temperature SD","Heterozygosity","Allelic Richness")
+
+rownames(cor_matrix_all) <- c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Salinity SD", "Temp 0.1 quantile", "Temp 0.9 quantile", "Temperature SD","Heterozygosity","Allelic Richness")
+#for supplemental material, rename variables for a cleaner graph (temp 0.1 quantile, temp 0.9 quantile, salinity 0.1 quantile, salinity ..., heterozygosity, allelic richness)
+
+#pdf(file = "../../figures/supplement/EOO_Envr_Genetics_Corrplot.pdf")
+
+corrplot_all <- corrplot(cor_matrix_all,
+         method = "color",
+         type = "upper",
+         tl.col = "black",
+         tl.srt = 45,
+         title = "Envr Genetics Variable Multicollinearity",
+         addCoef.col = 'black',
+         mar=c(0,0,2,0))
+#dev.off()
+
+cor_matrix_quant <- cor(surv_mod_gen_env[,c("salinity_quantile_10","salinity_quantile_90","temp_quantile_10","temp_quantile_90","ho", "ar")])
+
+corrplot_quant <- corrplot(cor_matrix_quant,
+         method = "color",
+         type = "upper",
+         tl.col = "black",
+         tl.srt = 45,
+         title = "Envr Genetics Variable Multicollinearity",
+         addCoef.col = 'black',
+         mar=c(0,0,2,0))
+
+#temp quantile 90 is collinear with Ho (r = 0.74) and ar (r = 0.76). Salinity quantile 10 is borderline collinear with ho (-0.69).
+
+cor_matrix_sd <- cor(surv_mod_gen_env[,c("Salinity_st_dev", "Temperature_st_dev","ho", "ar")])
+
+corrplot_sd <- corrplot(cor_matrix_sd,
+         method = "color",
+         type = "upper",
+         tl.col = "black",
+         tl.srt = 45,
+         title = "SD Envr Genetics Variable Multicollinearity",
+         addCoef.col = 'black',
+         mar=c(0,0,2,0))
+
+#temp st dev is collinear with ar (r = 0.83). Everything else is fine.
+```
+
 Now look at how survival changes with genetics/environment at each time point.
 
-```{r}
+## T1 survival, Lewisetta
+```{r t1_surv_lew}
 # RUN ON SITES SEPARATELY
 
 # full model time point 1
@@ -314,25 +368,32 @@ Now look at how survival changes with genetics/environment at each time point.
 surv_GE1.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",]) 
 vif(surv_GE1.lew) # crazy vif, use sd?
 
-surv_GE1.lew.0 <- lm(surv ~ ho + ar + Salinity_st_dev + Temperature_st_dev, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",]) # way better vif here
+test2 <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",]) 
+vif(test2) #all VIFs under 5, max is ho with 4.03
+
+surv_GE1.lew.0 <- lm(surv ~ ho + ar + Salinity_st_dev + Temperature_st_dev, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",]) 
+vif(surv_GE1.lew.0)# way better vif here
+
+test <- lm(surv ~ ho + Salinity_st_dev + Temperature_st_dev, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",]) 
+vif(test)# all VIFs below 2,max is salinity st. dev with 1.51
 
 surv_GE1.lew
 #plot(surv_GE1.lew)
 #plot(surv_GE1.lew.0)
-summary(surv_GE1.lew) # none signif
+summary(surv_GE1.lew) # ar signif
 summary(surv_GE1.lew.0) # all but sal sd signif
-drop1(surv_GE1.lew) # get rid of temp_quantile_90
+drop1(surv_GE1.lew) # get rid of salinity_quantile_90
 drop1(surv_GE1.lew.0) # get rid of Salinity_st_dev
 
-surv_GE1.0.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",])
+surv_GE1.0.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + temp_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",])
 #plot(surv_GE1.0.lew)
-summary(surv_GE1.0.lew) # none signif
-drop1(surv_GE1.0.lew) # get rid of temp quantile 10
+summary(surv_GE1.0.lew) # ar signif
+drop1(surv_GE1.0.lew) # get rid of temp quantile 90
 
-surv_GE1.1.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",])
+surv_GE1.1.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",])
 #plot(surv_GE1.1.lew)
-summary(surv_GE1.1.lew) # ho signif
-drop1(surv_GE1.1.lew) # get rid of sal quantile 90
+summary(surv_GE1.1.lew) # ho, ar signif
+drop1(surv_GE1.1.lew) # get rid of temp quantile 10
 
 surv_GE1.2.lew <- lm(surv ~ ho + ar + salinity_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",])
 #plot(surv_GE1.2.lew)
@@ -344,8 +405,10 @@ surv_GE1.0.lew.0 <- lm(surv ~ ho + ar + Temperature_st_dev, data = surv_mod_gen_
 #plot(surv_GE1.0.lew.0)
 summary(surv_GE1.0.lew.0) # all signif
 drop1(surv_GE1.0.lew.0) # final model
+```
 
-
+## T1 survival, York
+```{r t1_surv_yrk}
 # now we go to york
 surv_GE1.york <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "YorkRiver",])
 #plot(surv_GE1.york)
@@ -372,8 +435,10 @@ surv_GE1.0.york.0 <- lm(surv ~ ar + Salinity_st_dev + Temperature_st_dev, data =
 #plot(surv_GE1.0.york.0)
 summary(surv_GE1.0.york.0) # only sal sd not signif
 drop1(surv_GE1.0.york.0) # final model
+```
 
-
+## T2 Survival, Lewisetta
+```{r t2_surv_lew}
 # lew t2
 surv_GE2.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta",])
 #plot(surv_GE2.lew)
@@ -382,7 +447,7 @@ drop1(surv_GE2.lew) # get rid of temp_quantile_90
 
 surv_GE2.0.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta",])
 #plot(surv_GE2.0.lew)
-summary(surv_GE2.0.lew) # intercept, ho signif
+summary(surv_GE2.0.lew) # intercept, ho, temp_quantile_10 signif
 drop1(surv_GE2.0.lew) # get rid of salinity_quantile_90
 
 surv_GE2.1.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta",])
@@ -394,8 +459,10 @@ drop1(surv_GE2.1.lew) # final model
 surv_GE2.lew.0 <- lm(surv ~ ho + ar + Salinity_st_dev + Temperature_st_dev, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta",])
 summary(surv_GE2.lew.0) # all except salinity sd signif
 drop1(surv_GE2.lew.0) # final model
+```
 
-
+## T2 Survival, York
+```{r t2_surv_yrk}
 # york t2
 surv_GE2.york <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "YorkRiver",])
 #plot(surv_GE2.york)
@@ -420,30 +487,35 @@ drop1(surv_GE2.york.0) # get rid of ho
 surv_GE2.0.york.0 <- lm(surv ~ ar + Salinity_st_dev + Temperature_st_dev, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "YorkRiver",])
 summary(surv_GE2.0.york.0) # intercept, ar, temp sd signif
 drop1(surv_GE2.0.york.0) # final model
+```
 
-
+## T3 survival, Lewisetta
+```{r t3_surv_lew}
 # lew t3
 surv_GE3.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "Lewisetta",])
 #plot(surv_GE3.lew)
 summary(surv_GE3.lew) # ho, salinity_quantile_10, salinity_quantile_90 signif
-drop1(surv_GE3.lew) # get rid of ar
+drop1(surv_GE3.lew) # get rid of temp_quantile10
 
-surv_GE3.0.lew <- lm(surv ~ ho + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "Lewisetta",])
+surv_GE3.0.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90  + temp_quantile_90, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "Lewisetta",])
 #plot(surv_GE3.0.lew)
-summary(surv_GE3.0.lew) # all except temp_quantile_10 signif
-drop1(surv_GE3.0.lew) # get rid of temp_quantile_10
+summary(surv_GE3.0.lew) # all except ar signif
+drop1(surv_GE3.0.lew) # get rid of ar
 
 surv_GE3.1.lew <- lm(surv ~ ho + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_90, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "Lewisetta",])
 #plot(surv_GE3.1.lew)
 summary(surv_GE3.1.lew) # all signif
 drop1(surv_GE3.1.lew) # final model
+vif(surv_GE3.1.lew)
 
 # sd model
 surv_GE3.lew.0 <- lm(surv ~ ho + ar + Salinity_st_dev + Temperature_st_dev, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "Lewisetta",])
 summary(surv_GE3.lew.0) # all signif
 drop1(surv_GE3.lew.0) # final model
+```
 
-
+## T3 Survival, York
+```{r t3_surv_yrk}
 # york t3
 surv_GE3.york <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + temp_quantile_90, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "YorkRiver",])
 #plot(surv_GE3.york)
@@ -466,7 +538,7 @@ drop1(surv_GE3.0.york.0) # final model
 
 
 # save everything
-sink(paste0("results_field/survival_GE_model_results_",Sys.Date(),".txt"))
+sink(paste0("../../results_field/survival_GE_model_results_",Sys.Date(),".txt"))
 cat("\nLEWt1 quants\n")
 summary(surv_GE1.2.lew)
 cat("\nLEWt1 sd\n")
@@ -496,7 +568,6 @@ sink()
 
 
 ## Modeling drivers of differences in length
-
 
 ```{r}
 # start by putting together a complete dataframe

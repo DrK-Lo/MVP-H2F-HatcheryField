@@ -1,0 +1,606 @@
+---
+title: "F_Surv_Length_Gen_Env"
+author: "Nicole Mongillo"
+date: "2025-07-24"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "~/MVP-H2F-HatcheryField")
+
+# load libraries
+library(tidyverse) # for data wrangling
+library(stringr) # for splitting strings
+library(lubridate) # for dates
+library(ggplot2) # for plotting
+library(plotrix) # for std error
+library(lme4) # for lmm
+library(performance) # for lmm
+library(lmerTest) # for lmm
+library(car) # for avPlots(), Anova()
+library(emmeans) # for signif testing
+library(car)
+library(multcompView)
+library(corrplot)
+library(broom) #save lm results as tables
+library(ggstance) #vertical position.dodge function
+library(broom.mixed) #save lmer results as tables
+```
+
+This script is for modeling differences in survival and length amongst bags/populations/sites/time points in the MVP Field Experiment. 
+
+I intend to use linear (mixed) models to examine how survival and length vary by group and how genetics and environmental history drive these differences in performance. 
+
+## Modeling differences in survival
+
+First I'll read in and process survival data
+
+```{r}
+setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/parent_effects_H2F")
+# read in data
+surv_mod_ord_rename <- read.csv("../../data/performance_H2F/field_surv_all_times2025-07-24.csv")[, -1]
+
+lengths_mod_narm_nodead <- read.csv("../../data/performance_H2F/field_length_all_times_2025-07-24.csv")[ ,-1]
+
+#parent genetics
+gen_parents <- read.csv("../../data/parent_effects_H2F/parent_genetic_effects.csv")
+
+#environment of origin quantiles
+env_parents <- read.csv("../../data/environment/quantiles_05232025.csv")[,-c(1, 9)]
+
+#environmental distance based on scaled envr quantiles
+env_dist <- read.csv("../../data/envr_of_origin/envr_quantiles_dist_all.csv")
+```
+## Modeling drivers of differences in survival
+
+For the H2F paper, we want to know how environment and genetics are impacting differential survival. I'll start by putting together the complete dataframe.
+
+REMINDER: Because the H1-HYBRIDMIX and H2-SEEDMIX groups have mixed genetic make-ups and therefore no data on parent HO/AR, those groups are excluded from these analyses.
+
+```{r}
+# start by putting together a complete dataframe
+# genetic data
+colnames(gen_parents) <- c("pop","ho","exp_hs","ar")
+surv_mod_gen <- merge(surv_mod_ord_rename, gen_parents, by = "pop")
+
+#clean env_parents
+colnames(env_parents) <- c("pop","salinity_quantile_10","salinity_quantile_90","Salinity_st_dev","temp_quantile_10","temp_quantile_90","Temperature_st_dev")
+
+#add environmental data to df
+surv_mod_gen_env <- merge(surv_mod_gen, env_parents, by = c("pop"))
+```
+
+## Assess multicollinearity
+```{r}
+cor_matrix_all <- cor(surv_mod_gen_env[,c("salinity_quantile_10","salinity_quantile_90","Salinity_st_dev","temp_quantile_10","temp_quantile_90","Temperature_st_dev", "ho", "ar")])
+
+#rename rows and columns
+colnames(cor_matrix_all) <- c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Salinity SD", "Temp 0.1 quantile", "Temp 0.9 quantile", "Temperature SD","Heterozygosity","Allelic Richness")
+
+rownames(cor_matrix_all) <- c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Salinity SD", "Temp 0.1 quantile", "Temp 0.9 quantile", "Temperature SD","Heterozygosity","Allelic Richness")
+
+#pdf(file = "../../figures/supplement/EOO_Envr_Genetics_Corrplot.pdf")
+
+corrplot_all <- corrplot(cor_matrix_all,
+         method = "color",
+         type = "upper",
+         tl.col = "black",
+         tl.srt = 45,
+         title = "Envr Genetics Variable Multicollinearity",
+         addCoef.col = 'black',
+         mar=c(0,0,2,0))
+#dev.off()
+
+cor_matrix_quant <- cor(surv_mod_gen_env[,c("salinity_quantile_10","salinity_quantile_90","temp_quantile_10","temp_quantile_90","ho", "ar")])
+
+colnames(cor_matrix_quant) <- c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Temp 0.1 quantile", "Temp 0.9 quantile", "Heterozygosity","Allelic Richness")
+
+rownames(cor_matrix_quant) <- c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Temp 0.1 quantile", "Temp 0.9 quantile", "Heterozygosity","Allelic Richness")
+
+corrplot_quant <- corrplot(cor_matrix_quant,
+         method = "color",
+         type = "upper",
+         tl.col = "black",
+         tl.srt = 45,
+         title = "Envr Genetics Variable Multicollinearity",
+         addCoef.col = 'black',
+         mar=c(0,0,2,0))
+
+#temp quantile 90 is collinear with Ho (r = 0.74) and ar (r = 0.76). Salinity quantile 10 is borderline collinear with ho (-0.69).
+```
+
+## Assess VIF
+```{r}
+#remove temp quantile 90, and see how VIFs look
+VIF <- function(a, b, c, d, e){
+  1/(1-summary(lm(a ~ b + c + d + e))$r.squared)
+}
+#get VIF for temp quantile 10
+VIF(surv_mod_gen_env$temp_quantile_10, surv_mod_gen_env$salinity_quantile_10, surv_mod_gen_env$salinity_quantile_90, surv_mod_gen_env$ho, surv_mod_gen_env$ar)
+#VIF temp10 = 2.82
+
+VIF(surv_mod_gen_env$salinity_quantile_10, surv_mod_gen_env$salinity_quantile_90, surv_mod_gen_env$ho, surv_mod_gen_env$ar, surv_mod_gen_env$temp_quantile_10)
+#VIF sal10 = 2.47
+
+#VIF for salinity quantile 90
+VIF(surv_mod_gen_env$salinity_quantile_90, surv_mod_gen_env$ho, surv_mod_gen_env$ar, surv_mod_gen_env$temp_quantile_10, surv_mod_gen_env$salinity_quantile_10)
+#VIF_sal90 = 2.78
+
+#VIF for ho
+VIF(surv_mod_gen_env$ho, surv_mod_gen_env$ar, surv_mod_gen_env$temp_quantile_10, surv_mod_gen_env$salinity_quantile_10,  surv_mod_gen_env$salinity_quantile_90)
+#VIF_ho = 4.04
+
+#VIF for average allelic richness
+VIF(surv_mod_gen_env$ar, surv_mod_gen_env$temp_quantile_10, surv_mod_gen_env$salinity_quantile_10,  surv_mod_gen_env$salinity_quantile_90, surv_mod_gen_env$ho)
+#VIF_ar = 1.81
+```
+VIF is low enough for all remaining variables that I'm not super worried about the borderline collinearity between salinity 0.1 quantile and ho.
+
+Now look at how survival changes with genetics/environment at each time point.
+
+## T1 survival, Lewisetta
+```{r t1_surv_lew}
+# RUN ON SITES SEPARATELY
+
+# full model time point 1
+# start with lew
+surv_GE1.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",]) 
+vif(surv_GE1.lew) # double check vif, vif looks good
+
+#plot(surv_GE1.lew)
+summary(surv_GE1.lew) # ar signif
+drop1(surv_GE1.lew) # get rid of salinity_quantile_90
+
+surv_GE1.0.lew <- lm(surv ~ ho + ar + salinity_quantile_10 +  temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",])
+#plot(surv_GE1.0.lew)
+summary(surv_GE1.0.lew) # ho signif
+drop1(surv_GE1.0.lew) # get rid of temp quantile 10
+
+surv_GE1.1.lew <- lm(surv ~ ho + ar + salinity_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",])
+#plot(surv_GE1.1.lew)
+summary(surv_GE1.1.lew) # ho, sal quant 10 signif
+drop1(surv_GE1.1.lew) #final model
+
+#make scaled version of final model for plotting
+surv_t1_lew_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10), data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",])
+
+```
+
+## T1 survival, York
+```{r t1_surv_yrk}
+# now we go to york
+surv_GE1.york <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "YorkRiver",])
+#plot(surv_GE1.york)
+summary(surv_GE1.york) # ho, ar, sal_quantile_10 signif
+drop1(surv_GE1.york) # drop sal_quantile_90
+
+surv_GE1.0.york <- lm(surv ~ ho + ar + salinity_quantile_10 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "YorkRiver",])
+#plot(surv_GE1.0.york)
+summary(surv_GE1.0.york) # everything signif
+drop1(surv_GE1.0.york) # final model
+
+#make scaled version of final model for plotting
+surv_t1_yrk_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + scale(temp_quantile_10), data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "YorkRiver",])
+```
+
+## T2 Survival, Lewisetta
+```{r t2_surv_lew}
+surv_GE2.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta",])
+#plot(surv_GE2.lew)
+summary(surv_GE2.lew) # ho, temp_quantile_10 signif
+drop1(surv_GE2.lew) # get rid of salinity_quantile_90
+
+surv_GE2.0.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta",])
+#plot(surv_GE2.0.lew)
+summary(surv_GE2.0.lew) # intercept, ho, ar
+drop1(surv_GE2.0.lew) # final model
+
+#make scaled model for plotting
+surv_t2_lew_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + scale(temp_quantile_10), data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta",])
+```
+
+## T2 Survival, York
+```{r t2_surv_yrk}
+# york t2
+surv_GE2.york <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "YorkRiver",])
+#plot(surv_GE2.york)
+summary(surv_GE2.york) # ar, salinity_quantile_10, temp_quantile_10 signif
+drop1(surv_GE2.york) # get rid of salinity_quantile_90
+
+surv_GE2.0.york <- lm(surv ~ ho + ar + salinity_quantile_10 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "YorkRiver",])
+#plot(surv_GE2.0.york) 
+summary(surv_GE2.0.york) # intercept, ar, salinity_quantile_10, temp_quantile_10 signif
+drop1(surv_GE2.0.york) # final model
+
+#make scaled version for plotting
+surv_t2_yrk_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + scale(temp_quantile_10), data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "YorkRiver",])
+```
+
+## T3 survival, Lewisetta
+```{r t3_surv_lew}
+# lew t3
+surv_GE3.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "Lewisetta",])
+#plot(surv_GE3.lew)
+summary(surv_GE3.lew) # everything signif
+drop1(surv_GE3.lew) # final model
+
+#make scaled version for plotting
+surv_t3_lew_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + scale(salinity_quantile_90) + scale(temp_quantile_10), data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "Lewisetta",])
+```
+
+## T3 Survival, York
+```{r t3_surv_yrk}
+# york t3
+surv_GE3.york <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "YorkRiver",])
+#plot(surv_GE3.york)
+summary(surv_GE3.york) # intercept, ar, salinity_quantile_10 signif
+drop1(surv_GE3.york) # get rid of ho
+
+surv_GE3.0.york <- lm(surv ~ ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "YorkRiver",])
+#plot(surv_GE3.0.york)
+summary(surv_GE3.0.york) # all except sal_quantile_90 signif
+drop1(surv_GE3.0.york) # final model
+
+#make scaled version for plotting
+surv_t3_yrk_scaled <- lm(scale(surv) ~ scale(ar) + scale(salinity_quantile_10) + scale(salinity_quantile_90) + scale(temp_quantile_10), data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "YorkRiver",])
+
+# save everything
+sink(paste0("../../results_field/survival_GE_model_results_",Sys.Date(),".txt"))
+cat("\nLEWt1 quants\n")
+summary(surv_GE1.1.lew)
+cat("\nYRKt1 quants\n")
+summary(surv_GE1.0.york)
+cat("\nLEWt2 quants\n")
+summary(surv_GE2.0.lew)
+cat("\nYRKt2 quants\n")
+summary(surv_GE2.0.york)
+cat("\nLEWt3 quants\n")
+summary(surv_GE3.lew)
+cat("\nYRKt3 quants\n")
+summary(surv_GE3.0.york)
+sink()
+```
+
+## Modeling drivers of differences in length
+
+```{r}
+# start by putting together a complete data frame
+# genetic data
+len_mod_gen <- merge(lengths_mod_narm_nodead, gen_parents, by = "pop")
+len_mod_gen_env <- merge(len_mod_gen, env_parents, by = c("pop"))
+```
+
+## T1 Length, Lewisetta
+```{r t1_len_lew}
+len_GE1.lew <- lmerTest::lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "Lewisetta",]) 
+#plot(len_GE1.lew) 
+Anova(len_GE1.lew, type = "III") # ho and sal10 signif
+summary(len_GE1.lew)
+step(len_GE1.lew) # drop temp_quantile_10, salinity_quantile_90, ar
+
+len_GE1.0.lew <- lmerTest::lmer(length ~ ho +  salinity_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "Lewisetta",]) 
+#plot(len_GE1.0.lew) 
+Anova(len_GE1.0.lew, type = "III") # all signif
+summary(len_GE1.0.lew)
+step(len_GE1.0.lew) # final model
+
+len_t1_lew_scaled <- lmerTest::lmer(scale(length) ~ scale(ho) +  scale(salinity_quantile_10) + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "Lewisetta",]) 
+```
+
+## T1 length, York
+```{r t1_len_yrk}
+# york t1
+len_GE1.york <- lmerTest::lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "YorkRiver",]) 
+#plot(len_GE1.york) 
+Anova(len_GE1.york, type = "III") # all but sal90 and temp 10 signif
+summary(len_GE1.york)
+step(len_GE1.york) # get rid of salinity_quantile_90 and temp10
+
+len_GE1.0.york <- lmerTest::lmer(length ~ ho + ar + salinity_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "YorkRiver",]) 
+#plot(len_GE1.0.york) 
+Anova(len_GE1.0.york, type = "III") # all signif
+summary(len_GE1.0.york)
+step(len_GE1.0.york) # final model
+
+len_t1_yrk_scaled <- lmerTest::lmer(scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "YorkRiver",]) 
+
+```
+
+## T2 Length, Lewisetta
+```{r t2_len_lew}
+len_GE2.lew <- lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "Lewisetta",])
+#plot(len_GE2.lew)
+Anova(len_GE2.lew, type = "III") # ho, ar, sal10 signif
+summary(len_GE2.lew)
+step(len_GE2.lew) # drop sal90, temp10
+
+len_GE2.0.lew <- lmer(length ~ ho + ar + salinity_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "Lewisetta",])
+#plot(len_GE2.0.lew)
+Anova(len_GE2.0.lew, type = "III") # all signif
+summary(len_GE2.0.lew)
+step(len_GE2.0.lew) # final model
+
+#make scaled version for plotting
+len_t2_lew_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "Lewisetta",])
+```
+
+## T2 Length, York
+```{r}
+len_GE2.york <- lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "YorkRiver",])
+#plot(len_GE2.york)
+Anova(len_GE2.york, type = "III") # all except salinity_quantile_90 and temp quant 10 signif
+summary(len_GE2.york)
+step(len_GE2.york) # drop salinity_quantile_90 and temp10
+
+len_GE2.0.york <- lmer(length ~ ho + ar + salinity_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "YorkRiver",])
+len_GE2.0.york
+#plot(len_GE2.0.york)
+Anova(len_GE2.0.york, type = "III") # all signif 
+summary(len_GE2.0.york)
+step(len_GE2.0.york) # final model
+
+#make scaled version for plotting
+len_t2_yrk_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "YorkRiver",])
+len_t2_yrk_scaled
+```
+
+## T3 Length, Lewisetta
+```{r t3_len_lew}
+len_GE3.lew <- lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "Lewisetta",])
+#plot(len_GE3.lew)
+Anova(len_GE3.lew, type = "III") # everything except temp10 signif
+summary(len_GE3.lew)
+step(len_GE3.lew) # drop temp variable
+
+len_GE3.0.lew <- lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "Lewisetta",])
+Anova(len_GE3.0.lew, type = "III") # all signif
+summary(len_GE3.0.lew)
+step(len_GE3.0.lew) # final model
+
+#make scaled version
+len_t3_lew_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + scale(salinity_quantile_90) + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "Lewisetta",])
+```
+
+## T3 Length, York
+```{r t3_len_yrk}
+# york t3
+len_GE3.york <- lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "YorkRiver",])
+#plot(len_GE3.york)
+Anova(len_GE3.york, type = "III") # everything except sal90 signif
+step(len_GE3.york) # drop sal90 
+
+len_GE3.0.york <- lmer(length ~ ho + ar + salinity_quantile_10 + temp_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "YorkRiver",])
+Anova(len_GE3.0.york, type = "III") # all signif
+summary(len_GE3.0.york)
+step(len_GE3.0.york) # final model
+
+summary(len_GE3.0.york)
+
+len_t3_yrk_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + scale(temp_quantile_10) + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "YorkRiver",])
+
+Anova(len_t3_yrk_scaled, type = "III")
+
+sink(paste0("../../results_field/len_GE_model_results_",Sys.Date(),".txt"))
+cat("\nLEWt1 quants\n")
+Anova(len_GE1.0.lew, type = "III")
+cat("\nYRKt1 quants\n")
+Anova(len_GE1.0.york, type = "III")
+cat("\nLEWt2 quants\n")
+Anova(len_GE2.0.lew, type = "III")
+cat("\nYRKt2 quants\n")
+Anova(len_GE2.0.york, type = "III")
+cat("\nLEWt3 quants\n")
+Anova(len_GE3.0.lew, type = "III")
+cat("\nYRKt3 quants\n")
+Anova(len_GE3.0.york, type = "III")
+sink()
+```
+
+##Figure product - Lewisetta survival
+```{r}
+lew_surv_df <- rbind(tidy(surv_t1_lew_scaled), tidy(surv_t2_lew_scaled), tidy(surv_t3_lew_scaled))
+lew_surv_df$t <- c(rep(c("t1"), 4), rep(c("t2"), 5), rep(c("t3"), 6))
+
+colnames(lew_surv_df) <- c("explanatory", "slope", "se", "tval", "pval", "t")
+#remove rows with Intercept slopes
+lew_surv_df <- lew_surv_df %>% 
+  filter(explanatory != "(Intercept)")
+
+#add dummy rows for time points lacking variables so that position_dodge v plots each data point in the same time point at consistent vertical positions for each y axis variable
+lew_surv_df[nrow(lew_surv_df) + 1,] = list("scale(temp_quantile_10)", -.4, .01, NA, NA, "t1")
+lew_surv_df[nrow(lew_surv_df) + 1,] = list("scale(salinity_quantile_90)", -.4, .01, NA, NA, "t1")
+lew_surv_df[nrow(lew_surv_df) + 1,] = list("scale(salinity_quantile_90)", -.4, .01, NA, NA, "t2")
+
+
+lew_surv_plot <- lew_surv_df %>% 
+  ggplot(aes(x = slope, y = explanatory))+
+  geom_point(aes(alpha = t, shape = t), color = "#F06292", size = 3.5, position = position_dodge2v(height = .85, reverse = T, preserve = "total"))+
+  geom_errorbarh(aes(xmax = slope + 2*se, xmin = slope - 2*se, alpha= t), color = "#F06292", height = 0, size = 1.2, position = position_dodgev(height = -.85, preserve = "total"))+
+  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
+  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
+  xlim(c(-1,2))+
+  xlab("Slope on Scaled Data")+
+  ylab("Variable")+
+  geom_vline(xintercept = 0, linetype = "dashed")+
+  scale_y_discrete(name = "Explanatory Variable", 
+                   limits = c("scale(salinity_quantile_10)", "scale(salinity_quantile_90)", "scale(temp_quantile_10)", "scale(ho)", "scale(ar)"), 
+                   labels = c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Temp 0.1 quantile",  str_wrap(c("Heterozygosity/ Temp 0.9 quantile"), width = 17), str_wrap(c("Allelic richness/ Temp 0.9 quantile"), width = 20)))+
+  theme_classic()+
+    theme(axis.text = element_text(color = "black", size = 14),
+        axis.title = element_text(size = 15),
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15))
+
+lew_surv_plot
+
+ggsave("lew_surv.pdf",
+       plot = lew_surv_plot,
+       device = "pdf",
+       path = "../../figures/parent_effects_H2F",
+       height = 4,
+       width = 7)
+```
+
+#Plotting slopes - York survival
+```{r}
+yrk_surv_df <- rbind(tidy(surv_t1_yrk_scaled), tidy(surv_t2_yrk_scaled), tidy(surv_t3_yrk_scaled))
+yrk_surv_df$t <- c(rep(c("t1"), 5), rep(c("t2"), 5), rep(c("t3"), 5))
+
+colnames(yrk_surv_df) <- c("explanatory", "slope", "se", "tval", "pval", "t")
+#remove rows with Intercept slopes
+yrk_surv_df <- yrk_surv_df %>% 
+  filter(explanatory != "(Intercept)")
+
+#add dummy rows for time points lacking variables so that position_dodge v plots each data point in the same time point at consistent vertical positions for each y axis variable
+yrk_surv_df[nrow(yrk_surv_df) + 1,] = list("scale(ho)", -.5, .01, NA, NA, "t3")
+yrk_surv_df[nrow(yrk_surv_df) + 1,] = list("scale(salinity_quantile_90)", -.5, .01, NA, NA, "t1")
+yrk_surv_df[nrow(yrk_surv_df) + 1,] = list("scale(salinity_quantile_90)", -.5, .01, NA, NA, "t2")
+
+yrk_surv_plot <- yrk_surv_df %>% 
+  ggplot(aes(x = slope, y = explanatory))+
+  geom_point(aes(alpha = t, shape = t), color = "#880E4F", size = 3.5, position = position_dodge2v(height = .85, reverse = T, preserve = "total"))+
+  geom_errorbarh(aes(xmax = slope + 2*se, xmin = slope - 2*se, alpha= t), color = "#880E4F", height = 0, size = 1.2, position = position_dodgev(height = -.85, preserve = "total"))+
+  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .4, "t2" = .7, "t3" = 1), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
+  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
+  xlim(c(-1,2))+
+  xlab("Slope on Scaled Data")+
+  ylab("Variable")+
+  geom_vline(xintercept = 0, linetype = "dashed")+
+  scale_y_discrete(name = "Explanatory Variable", 
+                   limits = c("scale(salinity_quantile_10)", "scale(salinity_quantile_90)", "scale(temp_quantile_10)", "scale(ho)", "scale(ar)"), 
+                   labels = c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Temp 0.1 quantile",  str_wrap(c("Heterozygosity/ Temp 0.9 quantile"), width = 17), str_wrap(c("Allelic richness/ Temp 0.9 quantile"), width = 20)))+
+  theme_classic()+
+    theme(axis.text = element_text(color = "black", size = 14),
+        axis.title = element_text(size = 15),
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15))
+
+yrk_surv_plot
+
+ggsave("yrk_surv.pdf",
+       plot = yrk_surv_plot,
+       device = "pdf",
+       path = "../../figures/parent_effects_H2F",
+       height = 4,
+       width = 7)
+```
+
+
+#Plotting slopes - T1 length
+```{r}
+t1_len_df <- rbind(broom.mixed::tidy(len_t1_lew_scaled), broom.mixed::tidy(len_t1_yrk_scaled))
+t1_len_df$field_site <- c(rep(c("Lewisetta"), 5), rep(c("York"), 6))
+
+colnames(t1_len_df) <- c("effect", "group", "explanatory", "slope", "se", "Fstat", "df", "pval", "field_site")
+#remove rows with Intercept slopes
+t1_len_df <- t1_len_df %>% 
+  filter(explanatory != "(Intercept)") %>% 
+  filter(effect != "ran_pars")
+
+t1_len_plot <- t1_len_df %>% 
+  ggplot(aes(x = slope, y = explanatory, color = field_site))+
+  geom_point(position = position_dodge2v(height = .5, reverse = T))+
+  geom_errorbarh(aes(xmax = slope + 2*se, xmin = slope - 2*se), height = 0, position = position_dodgev(height = -.5))+
+scale_color_manual(name = "Field Site", na.translate = F, values = c("Lewisetta" = "#F06292", "York" = "#880E4F"), labels = c("Lewisetta" = "Lewisetta", "York" = "York River"))+
+  #ggtitle(c("Effects of EOO and Parent Genetics on Offspring Survival"))+
+  labs(subtitle = "Field T1 (May 2023)")+
+  xlab("Scaled Slope")+
+  ylab("Variable")+
+  geom_vline(xintercept = 0, linetype = "dashed")+
+  scale_y_discrete(name = "Explanatory Variable", 
+                   limits = c("scale(salinity_quantile_10)", "scale(salinity_quantile_90)", "scale(temp_quantile_10)", "scale(ho)", "scale(ar)"), 
+                   labels = c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Temp 0.1 quantile",  str_wrap(c("Heterozygosity/ Temp 0.9 quantile"), width = 17), str_wrap(c("Allelic richness/ Temp 0.9 quantile"), width = 20)))+
+  theme_classic()+
+  theme(axis.text = element_text(color = "black"))
+
+t1_len_plot
+
+ggsave("t1_len.pdf",
+       plot = t1_len_plot,
+       device = "pdf",
+       path = "../../figures/parent_effects_H2F",
+       height = 4,
+       width = 6)
+```
+
+#Plotting slopes - T2 length
+```{r}
+t2_len_df <- rbind(broom.mixed::tidy(len_t2_lew_scaled), broom.mixed::tidy(len_t2_yrk_scaled))
+t2_len_df$field_site <- c(rep(c("Lewisetta"), 6), rep(c("York"), 6))
+
+colnames(t2_len_df) <- c("effect", "group", "explanatory", "slope", "se", "Fstat", "df", "pval", "field_site")
+#remove rows with Intercept slopes
+t2_len_df <- t2_len_df %>% 
+  filter(explanatory != "(Intercept)") %>% 
+  filter(effect != "ran_pars")
+
+t2_len_plot <- t2_len_df %>% 
+  ggplot(aes(x = slope, y = explanatory, color = field_site))+
+  geom_point(position = position_dodge2v(height = .5, reverse = T))+
+  geom_errorbarh(aes(xmax = slope + 2*se, xmin = slope - 2*se), height = 0, position = position_dodgev(height = -.5))+
+scale_color_manual(name = "Field Site", na.translate = F, values = c("Lewisetta" = "#F06292", "York" = "#880E4F"), labels = c("Lewisetta" = "Lewisetta", "York" = "York River"))+
+  #ggtitle(c("Effects of EOO and Parent Genetics on Offspring Survival"))+
+  labs(subtitle = "Field T2 (Nov. 2023)")+
+  xlab("Scaled Slope")+
+  ylab("Variable")+
+  geom_vline(xintercept = 0, linetype = "dashed")+
+  scale_y_discrete(name = "Explanatory Variable", 
+                   limits = c("scale(salinity_quantile_10)", "scale(salinity_quantile_90)", "scale(temp_quantile_10)", "scale(ho)", "scale(ar)"), 
+                   labels = c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Temp 0.1 quantile",  str_wrap(c("Heterozygosity/ Temp 0.9 quantile"), width = 17), str_wrap(c("Allelic richness/ Temp 0.9 quantile"), width = 20)))+
+  theme_classic()+
+  theme(axis.text = element_text(color = "black"))
+
+t2_len_plot
+
+
+ggsave("t2_len.pdf",
+       plot = t2_len_plot,
+       device = "pdf",
+       path = "../../figures/parent_effects_H2F",
+       height = 4,
+       width = 6)
+```
+
+#Plotting slopes - T3 length
+```{r}
+
+t3_len_df <- rbind(broom.mixed::tidy(len_t3_lew_scaled), broom.mixed::tidy(len_t3_yrk_scaled))
+t3_len_df$field_site <- c(rep(c("Lewisetta"), 7), rep(c("York"), 7))
+
+colnames(t3_len_df) <- c("effect", "group", "explanatory", "slope", "se", "Fstat", "df", "pval", "field_site")
+#remove rows with Intercept slopes
+t3_len_df <- t3_len_df %>% 
+  filter(explanatory != "(Intercept)") %>% 
+  filter(effect != "ran_pars")
+
+t3_len_plot <- t3_len_df %>% 
+  ggplot(aes(x = slope, y = explanatory, color = field_site))+
+  geom_point(position = position_dodge2v(height = .5, reverse = T))+
+  geom_errorbarh(aes(xmax = slope + 2*se, xmin = slope - 2*se), height = 0, position = position_dodgev(height = -.5))+
+scale_color_manual(name = "Field Site", na.translate = F, values = c("Lewisetta" = "#F06292", "York" = "#880E4F"), labels = c("Lewisetta" = "Lewisetta", "York" = "York River"))+
+  #ggtitle(c("Effects of EOO and Parent Genetics on Offspring Survival"))+
+  labs(subtitle = "Field T3 (May 2024)")+
+  xlab("Scaled Slope")+
+  ylab("Variable")+
+  geom_vline(xintercept = 0, linetype = "dashed")+
+  scale_y_discrete(name = "Explanatory Variable", 
+                   limits = c("scale(salinity_quantile_10)", "scale(salinity_quantile_90)", "scale(temp_quantile_10)", "scale(ho)", "scale(ar)"), 
+                   labels = c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Temp 0.1 quantile",  str_wrap(c("Heterozygosity/ Temp 0.9 quantile"), width = 17), str_wrap(c("Allelic richness/ Temp 0.9 quantile"), width = 20)))+
+  theme_classic()+
+  theme(axis.text = element_text(color = "black", size = 10),
+        axis.title = element_text(size = 12),
+        legend.text = element_text(size = 10),
+        legend.title = element_text(size = 12))
+
+t3_len_plot
+
+ggsave("t3_len.pdf",
+       plot = t3_len_plot,
+       device = "pdf",
+       path = "../../figures/parent_effects_H2F",
+       height = 4,
+       width = 6)
+```
+
+

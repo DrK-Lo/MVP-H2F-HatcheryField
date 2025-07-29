@@ -177,7 +177,7 @@ ggsave("field_ci.pdf",
 ### Survival
 ```{r}
 #final field time-point survival analyses were conducted in len_surv_modeling_ooters.Rmd
-survival <- read.csv("../../data/performance_H2F/field_surv_final_time.csv")[,-c(1, 8)]
+survival <- read.csv("../../data/performance_H2F/field_surv_final_time2025-07-24.csv")[,-c(1, 8)]
 
 #rename columns
 colnames(survival) <- c("pop_site", "site", "population", "bag_label", "t", "survival", "letters")

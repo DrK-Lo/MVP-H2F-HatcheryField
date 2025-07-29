@@ -36,7 +36,7 @@ library(viridis)
 length <- read.csv(file.path("../../data/performance_H2F/latestage_length.csv"))
 
 #this file has 0.1 and 0.9 quantiles for temperature and salinity for the 8 groups
-quantiles <- read.csv("../../data/pairwise_differences_analyses/H2F_envr_20250409.csv")
+quantiles <- read.csv("../../data/environment/quantiles_05232025.csv")[, -c(1,9)]
 
 #this file contains survival rate data for larval oysters up to day 21 post hatching
 survival <-  read.csv("../../data/performance_H2F/CViMVP_larvae_survival.csv")
@@ -94,7 +94,7 @@ colnames(length_sub) <- c("site_name", "day_an", "length")
 
 #filter out LARMIX from group
 length_filter <- length_sub %>% 
-  filter(site_name != "H1-LARMIX") %>% 
+  filter(site_name != "H1-HYBRIDMIX") %>% 
   mutate(site_name = fct_relevel(site_name, c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME")))
 
 #make data frame for day 21 length
@@ -111,7 +111,7 @@ length_78 <- length_filter %>%
 #Replace underscores in site names with hyphens
 quantiles$site_name <- str_replace(quantiles$site_name, "_", "-")
 
-colnames(quantiles) <- c("site_name", "sal_sd", "sal10", "sal90", "temp_sd", "temp10", "temp90")
+colnames(quantiles) <- c("site_name", "sal10", "sal90", "sal_sd", "temp10", "temp90", "temp_sd")
 
 #filter out YRK and LEW from quantiles
 quant_eoo <- quantiles %>% 
@@ -140,95 +140,34 @@ write.csv(surv_merge, "../../data/parent_effects_H2F/H_Survival_Envr_Genetics.cs
 
 #Join length day 21, genetic, and envr data frames
 ```{r len21_join_dfs}
-#make list of site names
-site_ls <- as.character(unique(length_filter$site_name))
-#make empty list for results of joined data for length 21
-length21_join_ls <- list()
-#use for loop to merge data
-for (site in site_ls) {
-  #check if site has been processed and placed in the length21_join_ls
-	if(!(site %in% names(length21_join_ls))) {
-    
-	  # subset length, genetics, and envr dataframes for current site
-		len21_sub <- length_21 %>%
-			filter(site_name == site)
-		
-		envr_gen_sub <- envr_gen %>%
-			filter(site_name == site)	
-	  
-		#add columns to length subset for allelic richness, average observed heterozygosity, mean annual temp, and mean annual salinity
-		len21_sub$ar <- envr_gen_sub$ar
-		len21_sub$ho <- envr_gen_sub$ho
-		len21_sub$temp10 <- envr_gen_sub$temp10
-		len21_sub$temp90 <- envr_gen_sub$temp90
-		len21_sub$sal10 <- envr_gen_sub$sal10
-		len21_sub$sal90 <- envr_gen_sub$sal90
-		
-		#save len21_sub for the given site_name to the list and name it after the current site
-		length21_join_ls[[site]] <- len21_sub
-	}	
-}
+len_envr_gen <- merge(envr_gen, length_filter, by = c("site_name"))
 
-#rbind all the separate site's data frames into one data frame and remove row names
-len21_envr_gen <- do.call(rbind, length21_join_ls)
-rownames(len21_envr_gen) <- NULL
+len21_envr_gen <- len_envr_gen %>% 
+  filter(day_an == "15-21")
 
-#Sanity check- make sure row numbers match between the original length_21 data frame and the new one with the added columns
+len78_envr_gen <- len_envr_gen %>% 
+  filter(day_an == "78")
+
+#Sanity check- make sure row numbers match between the original length_21 and length_78 data frames and the new ones with the added columns
 nrow(len21_envr_gen) #nrow = 619
 nrow(length_21) #nrow = 619
-
-summary(len21_envr_gen)
-len21_envr_gen$site_name <- as.character(len21_envr_gen$site_name)
-
-write.csv(len21_envr_gen, "../../data/parent_effects_H2F/H_Length21_Envr_Genetics.csv", row.names = FALSE)
-```
-
-#Join length day 78, genetic, and envr data frames
-```{r len78_join_dfs}
-#make empty list for results of joined data for length 78
-length78_join_ls <- list()
-#use for loop to merge data
-for (site in site_ls) {
-  #check if site has been processed and placed in the length78_join_ls
-	if(!(site %in% names(length78_join_ls))) {
-    
-	  # subset length, genetics, and envr dataframes for current site
-		len78_sub <- length_78 %>%
-			filter(site_name == site)
-		
-		envr_gen_sub2 <- envr_gen %>%
-			filter(site_name == site)	
-	  
-		#add columns to length subset for allelic richness, average observed heterozygosity, mean annual temp, and mean annual salinity
-		len78_sub$ar <- envr_gen_sub2$ar
-		len78_sub$ho <- envr_gen_sub2$ho
-		len78_sub$temp10 <- envr_gen_sub2$temp10
-		len78_sub$temp90 <- envr_gen_sub2$temp90
-		len78_sub$sal10 <- envr_gen_sub2$sal10
-		len78_sub$sal90 <- envr_gen_sub2$sal90
-		
-		#save len78_sub for the given site_name to the list and name it after the current site
-		length78_join_ls[[site]] <- len78_sub
-	}	
-}
-
-#rbind all the separate site's data frames into one data frame and remove row names
-len78_envr_gen <- do.call(rbind, length78_join_ls)
-rownames(len78_envr_gen) <- NULL
-
-#Sanity check- make sure row numbers match between the original length_78 data frame and the new one with the added columns
 nrow(len78_envr_gen) #nrow = 971
 nrow(length_78) #nrow = 971
 
-summary(len78_envr_gen)
+#make site_name a character
+len21_envr_gen$site_name <- as.character(len21_envr_gen$site_name)
 len78_envr_gen$site_name <- as.character(len78_envr_gen$site_name)
+
+write.csv(len21_envr_gen, "../../data/parent_effects_H2F/H_Length21_Envr_Genetics.csv", row.names = FALSE)
 
 write.csv(len78_envr_gen, "../../data/parent_effects_H2F/H_Length78_Envr_Genetics.csv", row.names = FALSE)
 ```
 
 #Check for multicollinearity among explanatory variables
 ```{r multicollinearity}
+par(mfrow = c(1,1))
 cor_matrix <- cor(envr_gen[,c("temp10", "temp90", "sal10", "sal90", "ho", "ar")])
+
 #rename rows and columns
 colnames(cor_matrix) <- c("Temp 0.1 quantile", "Temp 0.9 quantile", "Salinity 0.1 quantile", "Salinity 0.9 quantile", "Heterozygosity", "Allelic Richness")
 rownames(cor_matrix) <- c("Temp 0.1 quantile", "Temp 0.9 quantile", "Salinity 0.1 quantile", "Salinity 0.9 quantile", "Heterozygosity", "Allelic Richness")
@@ -244,7 +183,9 @@ corrplot_eoo <- corrplot(cor_matrix,
          addCoef.col = 'black',
          mar=c(0,0,2,0))
 dev.off()
-#temp quantile 90 and ho are collinear (r = 0.805). Temp quantile 90 is also collinear with ar (r = 0.75). Everything else looks fine. Remove temp quantile 90 and check VIF.
+
+corrplot_eoo
+#temp quantile 90 is collinear with Ho (r = 0.74) and ar (r = 0.76). Temp quantile 10 is borderline collinear with sal1inity quantile 10 (-0.76) and ar (r = 0.83). Remove temp quantile 90 and check VIF.
 
 #calculate variance inflation factor (VIF)- create VIF function
 VIF <- function(a, b, c, d, e){
@@ -252,109 +193,76 @@ VIF <- function(a, b, c, d, e){
 }
 
 #get VIF for temp quantile 10
-VIF(envr_gen$temp10, envr_gen$sal10, envr_gen$sal90,  envr_gen$ho, envr_gen$ar)
-#VIF_temp10 = 4.47
+VIF(envr_gen$temp10, envr_gen$sal10, envr_gen$sal90, envr_gen$ho, envr_gen$ar)
+#VIF temp10 = 2.82
 
-#VIF for salinity quantile 10
-VIF(envr_gen$sal10, envr_gen$sal90,  envr_gen$ho, envr_gen$ar, envr_gen$temp10)
-#VIF_sal10 = 3.47
+VIF(envr_gen$sal10, envr_gen$sal90, envr_gen$ho, envr_gen$ar, envr_gen$temp10)
+#VIF sal10 = 2.47
 
 #VIF for salinity quantile 90
-VIF(envr_gen$sal90,  envr_gen$ho, envr_gen$ar, envr_gen$temp10, envr_gen$sal10)
-#VIF_min_sal = 2.95
+VIF(envr_gen$sal90, envr_gen$ho, envr_gen$ar, envr_gen$temp10, envr_gen$sal10)
+#VIF_sal90 = 2.78
 
 #VIF for ho
 VIF(envr_gen$ho, envr_gen$ar, envr_gen$temp10, envr_gen$sal10, envr_gen$sal90)
-#VIF_ho = 3.41
+#VIF_ho = 4.04
 
 #VIF for average allelic richness
 VIF(envr_gen$ar, envr_gen$temp10, envr_gen$sal10, envr_gen$sal90, envr_gen$ho)
-#VIF_ar = 2.53
-
-par(mfrow = c(1,1))
+#VIF_ar = 1.81
 ```
 
-The next chunk includes multiple regressions testing the effects of several environmental and genetic parameters on length and survival in the hatchery/nursery. The explanatory variables are 1) temperature quantile 10, 2) salinity quantile 10, 3) salinity quantile 90, 4) mean observed heterozygosity in the parent oysters from each site (Ho), and 5) mean allelic richness (AR) in the parent oysters from each site.
+The next chunk includes multiple regressions testing the effects of several environmental and genetic parameters on length and survival in the hatchery/nursery. The explanatory variables are 1) salinity quantile 10, 2) salinity quantile 90, 3) mean observed heterozygosity in the parent oysters from each site (Ho), and 3) mean allelic richness (AR) in the parent oysters from each site.
 
 #Day 21 Length: Multiple regression
 ```{r}
-len21_lm <- lm(length ~ temp10 + sal10+ sal90 + ho + ar, data = len21_envr_gen)
+len21_lm <- lm(length ~ sal10+ sal90 + ho + ar, data = len21_envr_gen)
 len21_resid <- len21_lm$residuals
-shapiro.test(len21_resid) #p = 2.05e-8, data are not normal, 
-plot(len21_lm) #no outliers, homoscedasticity looks good
+shapiro.test(len21_resid) #p = 1.9e-8, data are not normal, 
+#plot(len21_lm) #no outliers, homoscedasticity looks good
 summary(len21_lm) #everything is significant. Model stats: Adj. R squared = 0.2354, F = 39.05, p < 2.2e-16
 
-#take slopes out of summary, save as vector, create matrix of slopes for heat map
+#take slopes out of summary, save as vector
 
 #there's one exceptionally low length from the TX group that is throwing off normality, I'm going to exclude it and try the models
 len21_envr_gen_sub <- len21_envr_gen %>% 
   filter(length > 0.22)
 
-
-
 #I am using the data excluding the one very low length measurement.
-len21_lm2 <- lm(length ~ temp10 + sal10+ sal90 + ho + ar, data = len21_envr_gen_sub)
+len21_lm2 <- lm(length ~ sal10+ sal90 + ho + ar, data = len21_envr_gen_sub)
 len21_resid2 <- len21_lm2$residuals
-shapiro.test(len21_resid2) #p = 1.27e-5, data are not normal, but improved, multiple regressions are pretty robust to non-normality
+shapiro.test(len21_resid2) #p = 2.14e-5, data are not normal, but improved, multiple regressions are pretty robust to non-normality
 #plot(len21_lm2) #no outliers, homoscedasticity looks good
-summary(len21_lm2) #everything is significant. Model stats: Adj. R squared = 0.2329, F = 38.46 on 5 and 612 DF, p < 2.2e-16
+summary(len21_lm2) #everything is significant. Model stats: Adj. R squared = 0.22, F = 45.49 on 4 and 613 DF, p < 2.2e-16
 
 #model selection
 drop1(len21_lm2) #this is the model with the lowest AIC (-5135.3)
 
 slopes <- as.data.frame(len21_lm2$coefficients)
 
-len21_lm2_scaled <- lm(scale(length) ~ temp10 + sal10+ sal90 + ho + ar, data = len21_envr_gen_sub)
+len21_lm2_scaled <- lm(scale(length) ~ sal10 + sal90 + ho + ar, data = len21_envr_gen_sub)
 summary(len21_lm2_scaled)
 ```
-
-
 
 #Day 78 Length: Multiple regression and model selection 
 ```{r day78_lm}
 #using all data for day 78
 #day 78 multiple regression
-len78_lm <- lm(length ~ temp10 + sal10+ sal90 + ho + ar, data = len78_envr_gen)
+len78_lm <- lm(length ~ sal10+ sal90 + ho + ar, data = len78_envr_gen)
 len78_resid <- len78_lm$residuals
-shapiro.test(len78_resid) #p = 0.00086, data not normal
-plot(len78_lm) #no outliers, homoscedasticty is good
-
-len78_lm_scaled <- lm(scale(length) ~ temp10 + sal10+ sal90 + ho + ar, data = len78_envr_gen)
-summary(len78_lm_scaled)
-
-#try log transforming length values to improve normality
-loglen78_lm <- lm(log10(length) ~ temp10 + sal10+ sal90 + ho + ar, data = len78_envr_gen)
-loglen78_resid <- loglen78_lm$residuals
-shapiro.test(loglen78_resid) #p < 2.2e-16 not normal, much worse than raw data
-
-#try square root transforming length values to improve normality
-sqrtlen78_lm <- lm(length^(1/2) ~ temp10 + sal10+ sal90 + ho + ar, data = len78_envr_gen)
-sqrtlen78_resid <- sqrtlen78_lm$residuals
-shapiro.test(sqrtlen78_resid) #p = 6.541e-5 not normal, worse than raw data
-
-#try cube root transforming length values to improve normality
-cu_len78_lm <- lm(length^(1/3) ~ temp10 + sal10+ sal90 + ho + ar, data = len78_envr_gen)
-cu_len78_resid <- cu_len78_lm$residuals
-shapiro.test(cu_len78_resid) #p = 2.07e-9 not normal, much worse than raw data
-
-#try squaring transforming length values to improve normality
-sq_len78_lm <- lm(length^(2) ~ temp10 + sal10+ sal90 + ho + ar, data = len78_envr_gen)
-sq_len78_resid <- sq_len78_lm$residuals
-shapiro.test(sq_len78_resid) #p < 2.2e-16 not normal, much worse than raw data
-
-#going to stick with the raw length for this day for now, normality isn't that off
+shapiro.test(len78_resid) #p = 0.00048, data not normal
+#plot(len78_lm) #no outliers, homoscedasticty is good
 summary(len78_lm)
 #Everything is significant
-#model stats: Adj. R squared = 0.2302, F = 59.01, p < 2.2e-16
+#model stats: Adj. R squared = 0.2194, F = 69.18, p < 2.2e-16
 
-ggplot(data = len78_envr_gen, aes(x = ho, y = length))+
-  geom_point()
+len78_lm_scaled <- lm(scale(length) ~ sal10+ sal90 + ho + ar, data = len78_envr_gen)
+summary(len78_lm_scaled)
 
+summary(len78_lm)$coefficients[,2]
 
 #model selection
-drop1(len78_lm) #drop nothing, but lowest AIC is 2410.2
-
-
+drop1(len78_lm) #drop nothing, this is the best model
 ```
 
 #Day 21 Survival: Multiple Regression
@@ -364,7 +272,7 @@ I don't think this model is worth running, too few data points, many outliers, n
 surv_lm <- lm(percent_survival ~ temp10 + sal10+ sal90 + ho + ar, data = surv_merge)
 surv_resid <- surv_lm$residuals
 shapiro.test(surv_resid) #p = 0.99, normal
-plot(surv_lm) #two outliers
+#plot(surv_lm) #two outliers
 summary(surv_lm) #only sal10 is significant
 
 #model selection
@@ -382,43 +290,43 @@ summary(surv_lm2) #now everything except sal90 is significant
 #save slopes from each model to one data frame
 len21slopes <- data.frame(
   response = c("length_21"),
-  slope = len21_lm2$coefficients)
+  slope = len21_lm2$coefficients,
+  se = summary(len21_lm)$coefficients[,2] )
 
 len78slopes <- data.frame(
   response = c("length_78"),
-  slope = len78_lm$coefficients)
-
-#add row for ho and put slope value as NA in survival lm
-surv_slopes <- as.data.frame(surv_lm2$coefficients)
-survslopes <- data.frame(
-  response = c("survival_21"),
-  slope = c(surv_slopes[1:4,], "NA", surv_slopes[5,]))
+  slope = len78_lm$coefficients,
+  se = summary(len78_lm)$coefficients[,2])
 
 #merge slopes and add column for explanatory variable name
-slopes <- rbind(len21slopes, len78slopes, survslopes)
-slopes$explanatory <- rep(c("Intercept", "temp10", "sal10", "sal90", "ho", "ar"), 3)
-slopes$slope <- as.numeric(slopes$slope)
+slopes_df <- rbind(len21slopes, len78slopes)
+slopes_df$explanatory <- rep(c("Intercept","sal10", "sal90", "ho", "ar"), 2)
+slopes_df$slope <- as.numeric(slopes_df$slope)
+slopes_df$scale_slope <- scale(slopes_df$slope)
+slopes_df <- slopes_df[, c(1,4,2,3,5)]
+colnames(slopes_df) <- c("response", "explanatory", "slope", "se", "scaled_slope")
 
 #remove rows with Intercept slopes
-slopes <- slopes %>% 
+slopes_df <- slopes_df %>% 
   filter(explanatory != "Intercept")
-  
-slopes_heat <- ggplot(slopes, aes(explanatory, response, fill = slope))+
-  geom_tile()+
-  scale_fill_viridis(option = "D", limits = c(-20, 200))+
-  scale_x_discrete(name = "Explanatory Variable", limits = c("temp10", "sal10", "sal90", "ho", "ar"), labels = c("Temp 0.1 quantile", "Salinity 0.1 quantile", "Salinity 0.9 quantile", "Heterozygosity", "Allelic richness"))+
-  scale_y_discrete(name = "Response Variable", limits = c("length_78","length_21", "survival_21"), labels = c("End Nursery Length", "End Hatchery Length", "End Hatchery Survival"))+
-  ggtitle("Multiple Regression Slopes")+
-  theme_minimal()+
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1.1), panel.grid.minor = element_blank(), panel.grid.major = element_blank())
 
-slopes_heat 
+slopes_hatchery <- slopes_df %>% 
+  filter(response == "length_21") %>% 
+  ggplot(aes(x = slope, y = explanatory))+
+  geom_point()+
+  geom_errorbarh(aes(xmax = slope + 2*se, xmin = slope - 2*se), height = 0)+
+  ggtitle("Slopes of Environmental and Genetic Predictors vs. Length")+
+  labs(subtitle = "End of Hatchery (Day 21)")+
+  xlab("Slope")+
+  ylab("Explanatory Variable")+
+  geom_vline(xintercept = 0, linetype = "dashed")+
+  scale_y_discrete(name = "Explanatory Variable", breaks = c("sal10", "sal90", "ho", "ar"), labels = c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Heterozygosity", "Allelic richness"))+
+  theme_classic()
 
-ggsave("slope_heatmap.pdf",
-       plot = slopes_heat,
+slopes_hatchery
+
+ggsave("slope_hatchery.pdf",
+       plot = slopes_hatchery,
        device = "pdf",
        path = "../../figures/parent_effects_H2F")
 ```
-
-
-
