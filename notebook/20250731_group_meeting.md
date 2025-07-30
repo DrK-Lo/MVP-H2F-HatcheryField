@@ -1,10 +1,18 @@
 ### Agenda
+- NM question for Madeline - can you point me in the direction of the updated genetic data? The PCA and the introgression map in the EOO-Genetics figure are based on the old data.
 - Q1 and Q2 methods and results - filling in gaps (Nicole, Camille, and Zea)
-    - Ensure alignment between Camille, Nicole, and Zea's code for things like VIF and collinearity
+    - Q1 analyses/figures have all been done and most recent versions are in the manuscript.     
+    - NM updated VIF and collinearity assessments for Q2 (genetics and environmental quantiles/ genetics and environmental distance to common garden sites), and updated CR's and ZS's analyses as needed.
+    -  Q2 analyses (model 1 with envr quantiles and model 2 with envr distance) and figures (both main and supplemental) have been created.
+        - Main manuscript: plots of slopes from model 1 field survival, plots of slopes from model 2 field survival
+        - Supplement: Plot of slopes from model 1 hatchery/nursery length, plot of slopes from model 1 field length, plot of slopes from model 1 field condition, plot of slopes from model 2 field condition (CI plots are in the works, but should be done by tomorrow-NM)
+        - NM did not make plots for length in the field vs. environmental distance because envr distance variables got dropped from all models.
     - Ensure the methods accurately describe Camille, Nicole, and Zea's code
 - Review results for logical flow, emphasis on the right points, clarity, and conciseness
+    - Review contents of the supplement as they come up during the results review 
 - Review methods for the same, if time
 - Decide how/if to present disease data
     - KEB note: I think the quasi-quantitative presentation of disease in Figure 1 is not adequate and will get flagged by reviewers. Madeline's qPCR data is much more informative but would be somewhat ad hoc to include now. I think we should consider removing what we have now in Figure 1.
 - If you know the answer to anything in yellow, fill it in
 - Sign up for your CRediT contributions
+- Please add ORCIDs to top of paper
