@@ -1,5 +1,4 @@
 ### Agenda
-- NM question for Madeline - can you point me in the direction of the updated genetic data? The PCA and the introgression map in the EOO-Genetics figure are based on the old data.
 - Q1 and Q2 methods and results - filling in gaps (Nicole, Camille, and Zea)
     - Q1 analyses/figures have all been done and most recent versions are in the manuscript.     
     - NM updated VIF and collinearity assessments for Q2 (genetics and environmental quantiles/ genetics and environmental distance to common garden sites), and updated CR's and ZS's analyses as needed.
