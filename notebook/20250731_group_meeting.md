@@ -14,6 +14,7 @@
 - Fill in anything in yellow highlighter!
 - Sign up for your CRediT contributions
 - Please add ORCIDs to top of paper
+- Possibly revisit figure colors - they have gotten a bit all over the place
 
 ### If time (most likely not):
 - Review methods for logical flow, clarity, and conciseness
