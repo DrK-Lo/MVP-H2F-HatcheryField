@@ -12,7 +12,7 @@
     - Review contents of the supplement as they come up during the results review 
 - Review methods for the same, if time
 - Decide how/if to present disease data
-    - KEB note: I think the quasi-quantitative presentation of disease in Figure 1 is not adequate and will get flagged by reviewers. Madeline's qPCR data is much more informative but would be somewhat ad hoc to include now. I think we should consider removing what we have now in Figure 1.
-- If you know the answer to anything in yellow, fill it in
+    - KEB note: I think the quasi-quantitative presentation of disease in Figure 1 is not adequate and will get flagged by reviewers. Madeline's qPCR data is obviously very informative but maybe somewhat ad hoc to include now? I think we should consider removing what we have now in Figure 1.
+- Fill in anything in yellow highlighter!
 - Sign up for your CRediT contributions
 - Please add ORCIDs to top of paper
