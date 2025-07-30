@@ -10,9 +10,14 @@
     - Ensure the methods accurately describe Camille, Nicole, and Zea's code
 - Review results for logical flow, emphasis on the right points, clarity, and conciseness
     - Review contents of the supplement as they come up during the results review 
-- Review methods for the same, if time
 - Decide how/if to present disease data
     - KEB note: I think the quasi-quantitative presentation of disease in Figure 1 is not adequate and will get flagged by reviewers. Madeline's qPCR data is obviously very informative but maybe somewhat ad hoc to include now? I think we should consider removing what we have now in Figure 1.
 - Fill in anything in yellow highlighter!
 - Sign up for your CRediT contributions
 - Please add ORCIDs to top of paper
+
+### If time (most likely not):
+- Review methods for logical flow, clarity, and conciseness
+- Review structure of introduction and use of the literature
+- Brainstorm points for discussion
+
