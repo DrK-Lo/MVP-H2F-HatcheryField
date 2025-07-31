@@ -21,3 +21,26 @@
 - Review structure of introduction and use of the literature
 - Brainstorm points for discussion
 
+### Notes
+- Figure 1 - Do we have all the Lewisetta data for the experiment (through December 2024). Need to check.
+- Figure disease/survival/condition - instead of significance lines, show significance between Lewisetta and York only. Don't show significant differences between populations.
+- Disease
+      - Do we have data for the period of the experiment?
+      - Disease data is complete with some 2023, all of 2024
+      - Unable to plot it yet due to data format - this will take some work
+      - What samples are we waiting for from Ryan?
+      - This manuscript: disease data maximum in each year
+- Scaling
+    - Makes the slopes comparable, does not affect p-value. No need to scale survival data. Only the explanatory variable should be scaled.
+- Figure survival/gen/env/slopes
+    - Heterozygosity in panel D is potentially hard to explain
+    - Bigger question: why is environmental distance positively correlated with survival?
+    -  Environmental distance vs. survival between just the Gulf and everything else. Southern sites seem to be bringing it up.
+    -  Similar plot for condition for supplement
+Rationale for the paper
+- Local is better, local isn't better. Use local, or use more similar environmental distance. Are you missing something if you don't have diversity? Do you need diversity or should you prioritize local?
+- Word count is suitable for submission to a letters journal
+- Switch PCA to FST
+- Diseases are more prevalent in higher salinity - this could be why 0.1 salinity slope is positive
+- Outstanding data: historical Lewisetta data for LOLA
+
