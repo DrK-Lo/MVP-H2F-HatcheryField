@@ -1,5 +1,5 @@
 ---
-title: "Q2_Envr_Distance_Modeling"
+title: "Q2_Envr_Distance_Len_Surv"
 author: "Nicole Mongillo"
 date: "2025-07-29"
 output: pdf_document
@@ -33,13 +33,10 @@ library(ggstance) #vertical position.dodge function
 library(broom.mixed) #save lmer results as tables
 ```
 
-This script is for modeling differences in survival and length amongst bags/populations/sites/time points in the MVP Field Experiment based on genetics and environmental distance between environments of origin and the common garden sites. 
-
-I intend to use linear (mixed) models to examine how survival and length vary by group and how genetics and environmental history drive these differences in performance. 
-
 ## Modeling differences in survival
 
-First I'll read in and process the data
+### Read in data
+Environmental distance calculations done by KB.
 
 ```{r}
 setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/parent_effects_H2F")
@@ -77,38 +74,38 @@ surv_mod_gen_dist <- merge(surv_mod_gen, env_dist_filter, by = c("pop"))
 cor_matrix_lew <- cor(surv_mod_gen_dist[,c("dist_LEW", "ho", "ar")])
 
 #rename rows and columns
-colnames(cor_matrix_lew) <- c("Distance to LEW","Heterozygosity","Allelic Richness")
+colnames(cor_matrix_lew) <- c("Distance to Lewisetta","Heterozygosity","Allelic Richness")
 
-rownames(cor_matrix_lew) <- c("Distance to LEW","Heterozygosity","Allelic Richness")
+rownames(cor_matrix_lew) <- c("Distance to Lewisetta","Heterozygosity","Allelic Richness")
 
-#pdf(file = "../../figures/supplement/EOO_Envr_Genetics_Corrplot.pdf")
-
+pdf(file = "../../figures/parent_effects_H2F/Lew_EnvrDist_Genetics_Corrplot.pdf")
 corrplot_lew <- corrplot(cor_matrix_lew,
          method = "color",
          type = "upper",
          tl.col = "black",
          tl.srt = 45,
-         title = "Envr Genetics Variable Multicollinearity",
+         title = "Lewisetta: Genetics Variables and Envr. Distance Multicollinearity",
          addCoef.col = 'black',
          mar=c(0,0,2,0))
-#dev.off()
+dev.off()
 #borderline collinearity with distance to Lew and ar
 
 cor_matrix_yrk <- cor(surv_mod_gen_dist[,c("dist_YRK", "ho", "ar")])
 
-colnames(cor_matrix_yrk) <- c("Distance to YRK","Heterozygosity","Allelic Richness")
+colnames(cor_matrix_yrk) <- c("Distance to York","Heterozygosity","Allelic Richness")
 
-rownames(cor_matrix_yrk) <- c("Distance to YRK","Heterozygosity","Allelic Richness")
+rownames(cor_matrix_yrk) <- c("Distance to York","Heterozygosity","Allelic Richness")
 
+pdf(file = "../../figures/parent_effects_H2F/Yrk-EnvrDist_Genetics_Corrplot.pdf")
 corrplot_yrk <- corrplot(cor_matrix_yrk,
          method = "color",
          type = "upper",
          tl.col = "black",
          tl.srt = 45,
-         title = "Envr Genetics Variable Multicollinearity",
+         title = "York River: Genetics Variables and Envr. Distance Multicollinearity",
          addCoef.col = 'black',
          mar=c(0,0,2,0))
-
+dev.off()
 #nothing collinear
 ```
 
@@ -146,7 +143,7 @@ VIF(surv_mod_gen_dist$dist_YRK, surv_mod_gen_dist$ho, surv_mod_gen_dist$ar)
 ```
 VIF is low for all.
 
-Now look at how survival changes with genetics/environment at each time point.
+Now look at how survival changes with genetics/environment at each time point. Modeling chunks below are based on those by CR with variables switched out as needed.
 
 ## T1 survival, Lewisetta
 ```{r t1_surv_lew}
@@ -188,8 +185,6 @@ drop1(surv_lew_t3.0) # final model
 #make scaled version of final model for plotting
 surv_t3_lew_s <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(dist_LEW), data = surv_mod_gen_dist[surv_mod_gen_dist$t == 3 & surv_mod_gen_dist$bag_site == "Lewisetta",])
 ```
-
-Onto York!
 
 ## T1 survival, York
 ```{r t1_surv_lew}
@@ -236,19 +231,31 @@ drop1(surv_yrk_t3.0) # final model
 surv_t3_yrk_s <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(dist_YRK), data = surv_mod_gen_dist[surv_mod_gen_dist$t == 3 & surv_mod_gen_dist$bag_site == "YorkRiver",])
 
 # save everything
-sink(paste0("../../results_field/survival_GEdistance_model_results_",Sys.Date(),".txt"))
-cat("\nLEWt1 quants\n")
+sink(paste0("../../results_field/survival_GEdistance_model2_results_",Sys.Date(),".txt"))
+cat("\nLEW t1 (May 2023) modeling approach 2\n")
 summary(surv_lew_t1.0)
-cat("\nYRKt1 quants\n")
-summary(surv_yrk_t1.1)
-cat("\nLEWt2 quants\n")
+cat("\nLEW t1 (May 2023) scaled modeling approach 2\n")
+summary(surv_t1_lew_s)
+cat("\nLEW t2 (Nov. 2023) modeling approach 2\n")
 summary(surv_lew_t2.0)
-cat("\nYRKt2 quants\n")
-summary(surv_yrk_t2.1)
-cat("\nLEWt3 quants\n")
+cat("\nLEW t2 (Nov. 2023) scaled modeling approach 2\n")
+summary(surv_t2_lew_s)
+cat("\nLEW t3 (May 2024) modeling approach 2\n")
 summary(surv_lew_t3.0)
-cat("\nYRKt3 quants\n")
+cat("\nLEW t3 (May 2024) scaled modeling approach 2\n")
+summary(surv_t3_lew_s)
+cat("\nYRK t1 (May 2023) modeling approach 2\n")
+summary(surv_yrk_t1.1)
+cat("\nYRK t1 (May 2023) scaled modeling approach 2\n")
+summary(surv_t1_yrk_s)
+cat("\nYRK t2 (Nov. 2023) modeling approach 2\n")
+summary(surv_yrk_t2.1)
+cat("\nYRK t2 (Nov. 2023) scaled modeling approach 2\n")
+summary(surv_t2_yrk_s)
+cat("\nYRK t3 (May 2024) modeling approach 2\n")
 summary(surv_yrk_t3.0)
+cat("\nYRK t3 (May 2024) scaled modeling approach 2\n")
+summary(surv_t3_yrk_s)
 sink()
 ```
 
@@ -320,14 +327,11 @@ Anova(len_yrk_t1.0, type = "III") # ar signif
 summary(len_yrk_t1.0)
 step(len_yrk_t1.0) # drop everything except bags label?
 
-
-len_yrk_t1.1 <- lmerTest::lmer(length ~ (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
+#bags have a significant effect on length
+len_yrk_t1.1<- lm(length ~ bags_label, data = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
+Anova(len_yrk_t1.1, type = "III")
 #plot(len_lew_t1.1) 
-Anova(len_yrk_t1.1, type = "III") 
-summary(len_yrk_t1.1)
-step(len_yrk_t1.1) # final model
 
-len_t1_yrk_s <- lmerTest::lmer(scale(length) ~ (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
 ```
 
 ## T2 Length, York
@@ -336,9 +340,17 @@ len_yrk_t2.0 <- lmerTest::lmer(length ~ ho + ar + dist_YRK + (1|bags_label), dat
 #plot(len_yrk_t2.0) 
 Anova(len_yrk_t2.0, type = "III") # all signif
 summary(len_yrk_t2.0)
-step(len_yrk_t2.0) # drop everything except bags label? I am ignoring this for now
+step(len_yrk_t2.0) # drop everything except bags label??
 
-len_t2_yrk_s <- lmerTest::lmer(scale(length) ~ scale(ho) + scale(ar) + scale(dist_YRK) + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
+#try cutting dist_YRK, least significant among the variables
+len_yrk_t2.1 <- lmerTest::lmer(length ~ ho + ar + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
+Anova(len_yrk_t2.1, type = "III") #only ar signif
+summary(len_yrk_t2.1)
+step(len_yrk_t2.1) #still recommends cutting everything except bag label
+
+len_yrk_t2.2 <- lmerTest::lmer(length ~ (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
+step(len_yrk_t2.2) #final model
+
 ```
 
 ## T3 Length, York
@@ -358,19 +370,37 @@ step(len_yrk_t3.1) # final model
 len_t3_yrk_s <- lmerTest::lmer(scale(length) ~ scale(ho) + scale(ar)  + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
 
 #save results
-sink(paste0("../../results_field/length_GEdistance_model_results_",Sys.Date(),".txt"))
-cat("\nLEWt1 quants\n")
+sink(paste0("../../results_field/length_GEdistance_model2_results_",Sys.Date(),".txt"))
+cat("\nLEW t1 (May 2023) modeling approach 2\n")
 summary(len_lew_t1.1)
-cat("\nYRKt1 quants\n")
-summary(len_yrk_t1.1)
-cat("\nLEWt2 quants\n")
+Anova(len_lew_t1.1)
+cat("\nLEW t1 (May 2023) scaled modeling approach 2\n")
+summary(len_t1_lew_s)
+Anova(len_t1_lew_s)
+cat("\nLEW t2 (Nov. 2023) modeling approach 2\n")
 summary(len_lew_t2.1)
-cat("\nYRKt2 quants\n")
-summary(len_yrk_t2.0)
-cat("\nLEWt3 quants\n")
+Anova(len_lew_t2.1)
+cat("\nLEW t2 (Nov. 2023) scaled modeling approach 2\n")
+summary(len_t2_lew_s)
+Anova(len_t2_lew_s)
+cat("\nLEW t3 (May 2024) modeling approach 2\n")
 summary(len_lew_t3.1)
-cat("\nYRKt3 quants\n")
+Anova(len_lew_t3.1)
+cat("\nLEW t3 (May 2024) scaled modeling approach 2\n")
+summary(len_t3_lew_s)
+Anova(len_t3_lew_s)
+cat("\nYRK t1 (May 2023) modeling approach 2\n")
+summary(len_yrk_t1.1)
+Anova(len_yrk_t1.1)
+cat("\nYRK t2 (Nov. 2023) modeling approach 2\n")
+summary(len_yrk_t2.0)
+Anova(len_yrk_t2.0)
+cat("\nYRK t3 (May 2024) modeling approach 2\n")
 summary(len_yrk_t3.1)
+Anova(len_yrk_t3.1)
+cat("\nYRK t3 (May 2024) scaled modeling approach 2\n")
+summary(len_t3_yrk_s)
+Anova(len_t3_yrk_s)
 sink()
 ```
 
@@ -463,6 +493,119 @@ yrk_surv_dist_plot
 #save plot as pdf
 ggsave("yrk_surv_dist.pdf",
        plot = yrk_surv_dist_plot,
+       device = "pdf",
+       path = "../../figures/parent_effects_H2F",
+       height = 4,
+       width = 7)
+```
+
+##Figure product - Lewisetta length
+```{r}
+#save Lewisetta survival lm results as one data frame
+lew_len_dist_df <- rbind(broom.mixed::tidy(len_t1_lew_s), broom.mixed::tidy(len_t2_lew_s), broom.mixed::tidy(len_t3_lew_s))
+
+#add column for sampling time
+lew_len_dist_df$t <- c(rep(c("t1"), 4), rep(c("t2"), 5), rep(c("t3"), 5))
+
+#rename columns
+colnames(lew_len_dist_df) <- c("effect", "group", "explanatory", "slope", "se", "Fstat", "df", "pval", "t")
+
+#remove rows with Intercept slopes
+lew_len_dist_df <- lew_len_dist_df %>% 
+  filter(explanatory != "(Intercept)") %>% 
+  filter(effect != "ran_pars")
+
+lew_len_dist_df2 <- subset(lew_len_dist_df, select = -c(effect, group, df))
+
+#add dummy rows for time points lacking variables so that position_dodge v plots each data point in the same time point at consistent vertical positions for each y axis variable
+lew_len_dist_df2[nrow(lew_len_dist_df2) +1, ] = list("scale(ar)", -.5, .01, NA, NA, "t1")
+lew_len_dist_df2[nrow(lew_len_dist_df2) +1, ] = list("scale(dist_LEW)", -.5, .01, NA, NA, "t1")
+lew_len_dist_df2[nrow(lew_len_dist_df2) +1, ] = list("scale(dist_LEW)", -.5, .01, NA, NA, "t2")
+lew_len_dist_df2[nrow(lew_len_dist_df2) +1, ] = list("scale(dist_LEW)", -.5, .01, NA, NA, "t3")
+
+#plot
+lew_len_dist_plot <- lew_len_dist_df2 %>% 
+  ggplot(aes(x = slope, y = explanatory))+
+  geom_point(aes(alpha = t, shape = t), color = "#F06292", size = 3.5, position = position_dodge2v(height = .85, reverse = T, preserve = "total"))+
+  geom_errorbarh(aes(xmax = slope + 2*se, xmin = slope - 2*se, alpha= t), color = "#F06292", height = 0, size = 1.2, position = position_dodgev(height = -.85, preserve = "total"))+
+  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
+  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
+  xlim(c(-1,2))+
+  xlab("Slope on Scaled Data")+
+  ylab("Variable")+
+  geom_vline(xintercept = 0, linetype = "dashed")+
+  scale_y_discrete(name = "Explanatory Variable", 
+                   limits = c("scale(dist_LEW)", "scale(ho)", "scale(ar)"),
+                   labels = c(str_wrap(c("Env. Distance to Lewisetta"), width = 20), "Heterozygosity", "Allelic Richness"))+
+  theme_classic()+
+    theme(axis.text = element_text(color = "black", size = 14),
+        axis.title = element_text(size = 15),
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15))
+
+lew_len_dist_plot
+
+#save plot as pdf
+ggsave("lew_len_dist.pdf",
+       plot = lew_len_dist_plot,
+       device = "pdf",
+       path = "../../figures/parent_effects_H2F",
+       height = 4,
+       width = 7)
+```
+
+##Figure product - York length
+```{r}
+#save Lewisetta survival lm results as one data frame. T1 and t2 excluded everything except bag effect, so just make t3 here
+yrk_len_dist_df <- rbind(broom.mixed::tidy(len_t3_yrk_s))
+
+#add column for sampling time
+yrk_len_dist_df$t <- c("t3")
+#rename columns
+colnames(yrk_len_dist_df) <- c("effect", "group", "explanatory", "slope", "se", "Fstat", "df", "pval", "t")
+
+#remove rows with Intercept slopes
+yrk_len_dist_df <- yrk_len_dist_df %>% 
+  filter(explanatory != "(Intercept)") %>% 
+  filter(effect != "ran_pars")
+
+yrk_len_dist_df2 <- subset(yrk_len_dist_df, select = -c(effect, group, df))
+
+#add dummy rows for time points lacking variables so that position_dodge v plots each data point in the same time point at consistent vertical positions for each y axis variable
+yrk_len_dist_df2[nrow(yrk_len_dist_df2) +1, ] = list("scale(ar)", -.5, .01, NA, NA, "t1")
+yrk_len_dist_df2[nrow(yrk_len_dist_df2) +1, ] = list("scale(ho)", -.5, .01, NA, NA, "t1")
+yrk_len_dist_df2[nrow(yrk_len_dist_df2) +1, ] = list("scale(dist_YRK)", -.5, .01, NA, NA, "t1")
+yrk_len_dist_df2[nrow(yrk_len_dist_df2) +1, ] = list("scale(ar)", -.5, .01, NA, NA, "t2")
+yrk_len_dist_df2[nrow(yrk_len_dist_df2) +1, ] = list("scale(ho)", -.5, .01, NA, NA, "t2")
+yrk_len_dist_df2[nrow(yrk_len_dist_df2) +1, ] = list("scale(dist_YRK)", -.5, .01, NA, NA, "t2")
+yrk_len_dist_df2[nrow(yrk_len_dist_df2) +1, ] = list("scale(dist_YRK)", -.5, .01, NA, NA, "t3")
+
+
+#plot
+yrk_len_dist_plot <- yrk_len_dist_df2 %>% 
+  ggplot(aes(x = slope, y = explanatory))+
+  geom_point(aes(alpha = t, shape = t), color = "#880E4F", size = 3.5, position = position_dodgev(height = -.85, preserve = "total"))+
+  geom_errorbarh(aes(xmax = slope + 2*se, xmin = slope - 2*se, alpha= t), color = "#880E4F", height = 0, size = 1.2, position = position_dodgev(height = -.85, preserve = "total"))+
+  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
+  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
+  xlim(c(-1, 2))+
+  xlab("Slope on Scaled Data")+
+  ylab("Variable")+
+  geom_vline(xintercept = 0, linetype = "dashed")+
+  scale_y_discrete(name = "Explanatory Variable", 
+                   limits = c("scale(dist_YRK)", "scale(ho)", "scale(ar)"),
+                   labels = c(str_wrap(c("Env. Distance to York River"), width = 20), "Heterozygosity", "Allelic Richness"))+
+  theme_classic()+ 
+    theme(axis.text = element_text(color = "black", size = 14),
+        axis.title = element_text(size = 15),
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15))
+
+yrk_len_dist_plot
+
+#save plot as pdf
+ggsave("yrk_len_dist.pdf",
+       plot = yrk_len_dist_plot,
        device = "pdf",
        path = "../../figures/parent_effects_H2F",
        height = 4,

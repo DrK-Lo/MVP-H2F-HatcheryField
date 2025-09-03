@@ -52,6 +52,8 @@ NH_sal <- subset(NH_sal, select = c(site_name, datetime, salinity))
 
 ME_sal <- read.csv("../../data/envr_of_origin/full_sal/ME_sal_full.csv")
 
+YRK_sal <- read.csv("../../data/envr_of_origin/full_sal/YRK_sal_full.csv")[, 2:4]
+
 #Read in data frames with salinity and temp summary stats (including quantiles) for each eoo and field site
 temp_all <- read.csv("../../data/environment/all_temperature.csv")
 sal_all <- read.csv("../../data/environment/all_salinity.csv")
@@ -81,12 +83,6 @@ ME_sal$datetime <- as.POSIXct(ME_sal$datetime, "%m/%d/%y %H:%M", tz = "")
 
 #### Field environmental data
 ```{r}
-#S2-DEBY and the York field site use the same environmental data, but the field site data should only include the time frame of the field experiment (August 2023 - November 2024). Make a copy of the DEBY_sal df, rename it YRK_sal, and filter the time frame.
-
-YRK_sal <- DEBY_sal %>% 
-  filter(datetime>= 1690862400 & datetime <= 1732078800)
-YRK_sal["site_name"][YRK_sal["site_name"] == "DEBY"] <- "YRK"
-
 #S1-LOLA and the Lewisetta field site use the same environmental data, but the field site data should only include the time frame of the field experiment (August 2023 - November 2024). Make a copy of the LOLA_sal df, rename it LEW_sal, and filter the time frame.
 #currently subsetting dates as 08-01-2023- 11-20-2024
 LEW_sal <- LOLA_sal %>% 
@@ -195,6 +191,8 @@ ggsave("eoo_salinity_violin.pdf",
 
 ### Figure: Common gardens salinity violin plot
 ```{r}
+yrk <- filtered_sal %>% 
+  filter(site_name == "YRK")
 field_sal_violin <- filtered_sal %>% 
   filter(site_name == "YRK" | site_name == "LEW") %>% 
   ggplot(aes(site_name, salinity)) +
@@ -223,6 +221,58 @@ ggsave("field_salinity_violin.pdf",
        path = "../../figures/envr_of_origin",
        height = 4,
        width = 2.5)
+```
+
+###Figure: EoO 0.1 salinity quantile heatmap
+```{r temp_heatmap}
+eoo_sal_10_heatmap <- ggplot(quant_eoo, aes(site_name, 1, fill = salinity_quantile_10)) +
+  geom_tile()+
+  geom_text(aes(label = round(salinity_quantile_10, digits = 1)), color = "white", size = 5)+
+  scale_fill_viridis_c(option = "G", limits = c(0,38), direction=-1)+  # use viridis color scale
+  scale_x_discrete(limits = c("W1-TX","W2-LA","W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME"))+
+  labs(fill = "Salinity (ppt)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.ticks.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank(), 
+        panel.grid = element_blank(), 
+        legend.position = "none")
+
+eoo_sal_10_heatmap
+
+ggsave("eoo_sal10_heat.pdf",
+       plot = eoo_sal_10_heatmap,
+       device = "pdf",
+       path = "../../figures/envr_of_origin",
+       height = 1.9,
+       width = 9)
+```
+
+###Figure: EoO 0.9 salinity quantile heatmap
+```{r temp_heatmap}
+eoo_sal_90_heatmap <- ggplot(quant_eoo, aes(site_name, 1, fill = salinity_quantile_90)) +
+  geom_tile()+
+  geom_text(aes(label = round(salinity_quantile_90, digits = 1)), color = "white", size = 5)+
+  scale_fill_viridis_c(option = "G", limits = c(0,38), direction = -1)+  # use viridis color scale
+  scale_x_discrete(limits = c("W1-TX","W2-LA","W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME"))+
+  labs(fill = "Salinity (ppt)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.ticks.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank(), 
+        panel.grid = element_blank(), 
+        legend.position = "none")
+
+eoo_sal_90_heatmap
+
+ggsave("eoo_sal90_heat.pdf",
+       plot = eoo_sal_90_heatmap,
+       device = "pdf",
+       path = "../../figures/envr_of_origin",
+       height = 1.9,
+       width = 9)
 ```
 
 ###Figure: EoO 0.1 temperature quantile heatmap
@@ -277,6 +327,60 @@ ggsave("eoo_temp_90_heat.pdf",
        width = 9)
 ```
 
+###Figure: Common gardens 0.1 salinity quantile heatmap
+```{r}
+field_sal_10_heatmap <- ggplot(quant_field, aes(site_name, 1, fill = salinity_quantile_10)) +
+  geom_tile()+
+  geom_text(aes(label = round(salinity_quantile_10, digits = 1)), color = "white", size = 5)+
+  scale_fill_viridis_c(option = "G", limits = c(0,38), direction = -1) +  # use viridis color scale
+  scale_x_discrete(limits = c("LEW", "YRK"))+
+  labs(fill = "Salinity (ppt)") +
+  theme_minimal() +
+   theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+         axis.ticks.y = element_blank(), 
+         axis.text.y = element_blank(), 
+         axis.title.y = element_blank(), 
+         panel.grid = element_blank(), 
+         legend.key.size = unit(.4, 'cm'), 
+         legend.title = element_text(size = 10), 
+         legend.text = element_text(size = 10))
+field_sal_10_heatmap
+
+ggsave("field_sal10_heat.pdf",
+       plot = field_sal_10_heatmap,
+       device = "pdf",
+       path = "../../figures/envr_of_origin",
+       height = 1.7,
+       width = 3.4)
+```
+
+###Figure: Common gardens 0.9 salinity quantile heatmap
+```{r}
+field_sal_90_heatmap <- ggplot(quant_field, aes(site_name, 1, fill = salinity_quantile_90)) +
+  geom_tile()+
+  geom_text(aes(label = round(salinity_quantile_90, digits = 1)), color = "white", size = 5)+
+  scale_fill_viridis_c(option = "G", limits = c(0,38), direction = -1) +  # use viridis color scale
+  scale_x_discrete(limits = c("LEW", "YRK"))+
+  labs(fill = "Salinity (ppt)") +
+  theme_minimal() +
+   theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+         axis.ticks.y = element_blank(), 
+         axis.text.y = element_blank(), 
+         axis.title.y = element_blank(), 
+         panel.grid = element_blank(), 
+         legend.key.size = unit(.4, 'cm'), 
+         legend.title = element_text(size = 10), 
+         legend.text = element_text(size = 10))
+field_sal_90_heatmap
+
+ggsave("field_sal90_heat.pdf",
+       plot = field_sal_90_heatmap,
+       device = "pdf",
+       path = "../../figures/envr_of_origin",
+       height = 1.7,
+       width = 3.4)
+```
+
 ###Figure: Common gardens 0.1 temperature quantile heatmap
 ```{r}
 field_temp_10_heatmap <- ggplot(quant_field, aes(site_name, 1, fill = temp_quantile_10)) +
@@ -304,7 +408,7 @@ ggsave("field_temp10_heat.pdf",
        width = 3.4)
 ```
 
-###Figure: Common gardnes 0.9 temperature quantile heatmap
+###Figure: Common gardens 0.9 temperature quantile heatmap
 ```{r}
 field_temp_90_heatmap <- ggplot(quant_field, aes(site_name, 1, fill = temp_quantile_90), height = 2, width = 7) +
   geom_tile()+

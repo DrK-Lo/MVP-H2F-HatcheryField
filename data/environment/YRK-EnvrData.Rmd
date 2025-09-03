@@ -123,6 +123,13 @@ print(summary(filtered_YRK_env$temp))
 
 #Store our data into a variable name with just the site name. 
 YRK <- filtered_YRK_env
+
+#save cleaned sal and temp data into separate csv files. First, add column for site_name
+YRK_name <- YRK
+YRK_name$site_name <- c("YRK")
+
+write.csv(YRK_name[, c(7,1,2)], "../../data/envr_of_origin/full_sal/YRK_temp_full.csv")
+write.csv(YRK_name[, c(7,1,3)], "../../data/envr_of_origin/full_sal/YRK_sal_full.csv")
 ```
 
 ### Visualize the salinity, temperature, and date ranges over time. This can help us see if there are any anomalies or gaps in the data and make sure the filtering was done correctly. Sanity check - do the temperature and salinity ranges look appropriate for the geography of the site (ex. near full ocean salinity for coastal sites, lower salinity for estuaries or near rivers)?

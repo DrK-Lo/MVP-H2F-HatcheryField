@@ -35,7 +35,7 @@ setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/performance_H2F")
 ```
 
 ### Condition Index
-
+Condition index calculations and modeling performed by ZS.
 #### Data preparation
 ```{r}
 # load in condition index dataset 
@@ -112,7 +112,7 @@ step(mixed.model.4)
 ```
 
 ### Figure product: Condition index vs parental group
-This creates box plots of the condition index by population, with unique colors for LEW and YR. 
+This creates box plots of the condition index by population, with unique colors for LEW and YR. Plotting by NM.
 ```{r}
 mm3.cld_letters1$population <- as.factor(mm3.cld_letters1$population)
 
@@ -131,7 +131,8 @@ mm3.cld_letters2$x2 <- as.numeric(mm3.cld_letters2$x2)
 field_ci <- ggplot(data202411, aes(x = population, y = CI, fill = site)) +
   geom_boxplot(position = position_dodge(width = 0.8)) +  
   scale_x_discrete() +  
-  labs(x = "Parental Group", y = "Condition Index", title = "Condition Index vs. Parental Group", subtitle = "Final Field Time Point", fill = "Site") +   scale_fill_manual(labels = c("LEW" = "Lewisetta", "YR" = "York River"), values = c("LEW" = "#F06292", "YR" = "#880E4F")) +  
+  labs(x = "Treatment Group", y = "Condition Index", title = "Condition Index vs. Treatment Group", subtitle = "Final Field Time Point, Nov. 2024", fill = "Site") +   scale_fill_manual(labels = c("LEW" = "Lewisetta", "YR" = "York River"), values = c("LEW" = "#F06292", "YR" = "#880E4F")) +  
+  ylim(c(0, 12.2))+
   theme_minimal() +
   theme_bw()+
   theme(axis.text.x = element_text(angle = 45, hjust = 1, color = "black", size = 10),
@@ -158,12 +159,12 @@ for(x in letters_ls){
 
 #add horizontal line segments for each significance letter based on the dataframes we just made
 field_ci_sig <- field_ci + 
-  geom_segment(data = a_df, aes(x = x1, xend = x2, y = 8, yend =8)) + 
-  geom_segment(data = b_df, aes(x = x1, xend = x2, y = 7.8, yend = 7.8))+
-  geom_segment(data = c_df, aes(x = x1, xend = x2, y = 7.6, yend =7.6))+
-  geom_segment(data = d_df, aes(x = x1, xend = x2, y = 7.4, yend =7.4))+
-  geom_segment(data = e_df, aes(x = x1, xend = x2, y = 7.2, yend =7.2))+
-  geom_segment(data = f_df, aes(x = x1, xend = x2, y = 7, yend =7))
+  geom_segment(data = a_df, aes(x = x1, xend = x2, y = 12, yend =12), color = "#8A8989") + 
+  geom_segment(data = b_df, aes(x = x1, xend = x2, y = 11.8, yend = 11.8), color = "#8A8989")+
+  geom_segment(data = c_df, aes(x = x1, xend = x2, y = 11.6, yend =11.6), color = "#8A8989")+
+  geom_segment(data = d_df, aes(x = x1, xend = x2, y = 11.4, yend =11.4), color = "#8A8989")+
+  geom_segment(data = e_df, aes(x = x1, xend = x2, y = 11.2, yend =11.2), color = "#8A8989")+
+  geom_segment(data = f_df, aes(x = x1, xend = x2, y = 11, yend =11), color = "#8A8989")
 
 field_ci_sig
 ggsave("field_ci.pdf",
@@ -175,6 +176,7 @@ ggsave("field_ci.pdf",
 ```
 
 ### Survival
+Survival calculations and models conducted by CR in len_surv_modeling_ooters.Rmd. Plotting by NM.
 ```{r}
 #final field time-point survival analyses were conducted in len_surv_modeling_ooters.Rmd
 survival <- read.csv("../../data/performance_H2F/field_surv_final_time2025-07-24.csv")[,-c(1, 8)]
@@ -188,10 +190,10 @@ survival$population <- factor(survival$population, levels = c("W1-TX", "W2-LA", 
 ```{r}
 surv_t3_plot <- ggplot(survival, aes(x = population, y = survival, fill = site)) + 
   geom_boxplot(position=position_dodge(width = 0.8), linewidth = .4, fatten = 0.5) +
-  ggtitle("Survival vs Parental Group") +
+  ggtitle("Survival vs Treatment Group") +
   scale_x_discrete() +  
-  ylim(c(0, 1.3))+
-  labs(x = "Parental Group", y = "Survival", subtitle = "Final Field Time Point", fill = "Site") +   scale_fill_manual(values = c("Lewisetta" = "#F06292", "YorkRiver" = "#880E4F"), labels = c("Lewisetta" = "Lewisetta", "YorkRiver" = "York River")) + 
+  ylim(c(0, 1.5))+
+  labs(x = "Treatment Group", y = "Survival", subtitle = "Final Field Time Point, Nov. 2024", fill = "Site") +   scale_fill_manual(values = c("Lewisetta" = "#F06292", "YorkRiver" = "#880E4F"), labels = c("Lewisetta" = "Lewisetta", "YorkRiver" = "York River")) + 
   theme_bw()+
   theme(axis.text.x = element_text(angle = 45, hjust = 1, color = "black", size = 10),
         axis.title = element_text(size = 12),
@@ -228,15 +230,15 @@ for(x in s_letters_ls){
 
 #add horizontal line segments for each significance letter based on the dataframes we just made
 surv_t3_plot_sig <- surv_t3_plot + 
-  geom_segment(data = a_s_df, aes(x = x1, xend = x2, y = 1.24, yend =1.24)) + 
-  geom_segment(data = b_s_df, aes(x = x1, xend = x2, y = 1.21, yend = 1.21))+
-  geom_segment(data = c_s_df, aes(x = x1, xend = x2, y = 1.18, yend =1.18))+
-  geom_segment(data = d_s_df, aes(x = x1, xend = x2, y = 1.15, yend =1.15))+
-  geom_segment(data = e_s_df, aes(x = x1, xend = x2, y = 1.12, yend =1.12))+
-  geom_segment(data = f_s_df, aes(x = x1, xend = x2, y = 1.09, yend =1.09)) +
-  geom_segment(data = g_s_df, aes(x = x1, xend = x2, y = 1.06, yend =1.06))+
-  geom_segment(data = h_s_df, aes(x = x1, xend = x2, y = 1.03, yend =1.03))+
-  geom_segment(data = i_s_df, aes(x = x1, xend = x2, y = 1, yend =1))
+  geom_segment(data = a_s_df, aes(x = x1, xend = x2, y = 1.44, yend =1.44), color = "#8A8989") + 
+  geom_segment(data = b_s_df, aes(x = x1, xend = x2, y = 1.41, yend = 1.41), color = "#8A8989")+
+  geom_segment(data = c_s_df, aes(x = x1, xend = x2, y = 1.38, yend =1.38), color = "#8A8989")+
+  geom_segment(data = d_s_df, aes(x = x1, xend = x2, y = 1.35, yend =1.35), color = "#8A8989")+
+  geom_segment(data = e_s_df, aes(x = x1, xend = x2, y = 1.32, yend =1.32), color = "#8A8989")+
+  geom_segment(data = f_s_df, aes(x = x1, xend = x2, y = 1.29, yend =1.29), color = "#8A8989") +
+  geom_segment(data = g_s_df, aes(x = x1, xend = x2, y = 1.26, yend =1.26), color = "#8A8989")+
+  geom_segment(data = h_s_df, aes(x = x1, xend = x2, y = 1.23, yend =1.23), color = "#8A8989")+
+  geom_segment(data = i_s_df, aes(x = x1, xend = x2, y = 1.2, yend =1.2), color = "#8A8989")
 
 surv_t3_plot_sig
 ggsave("field_surv.pdf",
@@ -250,11 +252,13 @@ ggsave("field_surv.pdf",
 ```{r}
 length <- read.csv("../../data/performance_H2F/field_length_final_time.csv")[, 2:10]
 
+length$pop <- factor(length$pop, levels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY",  "W5-NH", "W6-ME", "H1-HYBRIDMIX", "H2-SEEDMIX"))
+
 len_plot <- ggplot(length, aes(x = pop, y = length, fill = bag_site)) + 
   geom_boxplot(position=position_dodge(.8), linewidth = 0.4, fatten = 0.5) +
-  ylim(c(0, 134))+
-  labs(x = "Parental Group", y = "Length (mm)", title = "Shell Length vs. Parental Group", subtitle = "Final Field Time Point", fill = "Site")+
-  scale_x_discrete(labels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME", "H1-HYBRIDMIX", "H2-SEEDMIX"))+
+  ylim(c(0, 155))+
+  labs(x = "Treatment Group", y = "Length (mm)", title = "Shell Length vs. Treatment Group", subtitle = "Final Field Time Point, Nov. 2024", fill = "Site")+
+  #scale_x_discrete(labels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME", "H1-HYBRIDMIX", "H2-SEEDMIX"))+
   scale_fill_manual(values = c("Lewisetta" = "#F06292", "YorkRiver" = "#880E4F"), labels = c("Lewisetta" = "Lewisetta", "YorkRiver" = "York River")) + 
   theme_bw()+
   theme(axis.text.x = element_text(angle = 45, hjust = 1, color = "black", size = 10),
@@ -287,23 +291,23 @@ for(x in l_letters_ls){
 
 #add horizontal line segments for each significance letter based on the dataframes we just made
 len_plot_sig <- len_plot + 
-  geom_segment(data = a_l_df, aes(x = x1, xend = x2, y = 132, yend =132)) + 
-  geom_segment(data = b_l_df, aes(x = x1, xend = x2, y = 130, yend = 130))+
-  geom_segment(data = c_l_df, aes(x = x1, xend = x2, y = 128, yend =128))+
-  geom_segment(data = d_l_df, aes(x = x1, xend = x2, y = 126, yend =126))+
-  geom_segment(data = e_l_df, aes(x = x1, xend = x2, y = 124, yend =124))+
-  geom_segment(data = f_l_df, aes(x = x1, xend = x2, y = 122, yend =122)) +
-  geom_segment(data = g_l_df, aes(x = x1, xend = x2, y = 120, yend =120))+
-  geom_segment(data = h_l_df, aes(x = x1, xend = x2, y = 118, yend =118))+
-  geom_segment(data = i_l_df, aes(x = x1, xend = x2, y = 116, yend =116))+
-  geom_segment(data = j_l_df, aes(x = x1, xend = x2, y = 114, yend =114))
+  geom_segment(data = a_l_df, aes(x = x1, xend = x2, y = 152, yend =152), color = "#8A8989") + 
+  geom_segment(data = b_l_df, aes(x = x1, xend = x2, y = 150, yend =150), color = "#8A8989")+
+  geom_segment(data = c_l_df, aes(x = x1, xend = x2, y = 148, yend =148), color = "#8A8989")+
+  geom_segment(data = d_l_df, aes(x = x1, xend = x2, y = 146, yend =146), color = "#8A8989")+
+  geom_segment(data = e_l_df, aes(x = x1, xend = x2, y = 144, yend =144), color = "#8A8989")+
+  geom_segment(data = f_l_df, aes(x = x1, xend = x2, y = 142, yend =142), color = "#8A8989") +
+  geom_segment(data = g_l_df, aes(x = x1, xend = x2, y = 140, yend =140), color = "#8A8989")+
+  geom_segment(data = h_l_df, aes(x = x1, xend = x2, y = 138, yend =138), color = "#8A8989")+
+  geom_segment(data = i_l_df, aes(x = x1, xend = x2, y = 136, yend =136), color = "#8A8989")+
+  geom_segment(data = j_l_df, aes(x = x1, xend = x2, y = 134, yend =134), color = "#8A8989")
 
 len_plot_sig
 ggsave("field_len.pdf",
        plot = len_plot_sig,
        device = "pdf",
        path = "../../figures/performance_H2F",
-       height = 4,
-       width = 6)
+       height = 6,
+       width = 8)
 ```
 
