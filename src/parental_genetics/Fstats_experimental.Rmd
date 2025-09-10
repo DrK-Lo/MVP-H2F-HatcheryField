@@ -513,7 +513,7 @@ out_trim <- OutFLANK(FstDataFrame[FstDataFrame$LocusName %in% colnames(thinned_s
                      RightTrimFraction = 0.05, 
                      Hmin = 0.1, 
                      NumberOfSamples = 8, # number of populations
-                     qthreshold = 0.05)
+                     qthreshold = 0.01)
 
 # view results
 str(out_trim)
@@ -540,7 +540,7 @@ hist(out_trim$results$pvaluesRightTail)
 
 # then, calulate p-values on the full set
 P1 <- pOutlierFinderChiSqNoCorr(FstDataFrame, Fstbar = out_trim$FSTNoCorrbar, 
-                                   dfInferred = out_trim$dfInferred, qthreshold = 0.05, Hmin=0.05)
+                                   dfInferred = out_trim$dfInferred, qthreshold = 0.01, Hmin=0.05)
 
 # view data
 head(P1)
