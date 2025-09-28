@@ -23,7 +23,7 @@ library(stringr) #for relpacing parts of a string
 library(ggplot2) #plot with ggplot
 library(cowplot) #arrange ggplots
 library(ggpmisc)
-library(car)
+library(car) #Anova function
 ```
 
 ### Load Data
@@ -51,6 +51,8 @@ NH_sal <- read.csv("../../data/envr_of_origin/full_sal/NH_sal_full.csv")
 NH_sal <- subset(NH_sal, select = c(site_name, datetime, salinity))
 
 ME_sal <- read.csv("../../data/envr_of_origin/full_sal/ME_sal_full.csv")
+
+YRK_sal <- read.csv("../../data/envr_of_origin/full_sal/YRK_sal_full.csv")[, 2:4]
 
 #Read in data frames with salinity and temp summary stats (including quantiles) for each eoo and field site
 temp_all <- read.csv("../../data/environment/all_temperature.csv")
@@ -81,12 +83,6 @@ ME_sal$datetime <- as.POSIXct(ME_sal$datetime, "%m/%d/%y %H:%M", tz = "")
 
 #### Field environmental data
 ```{r}
-#S2-DEBY and the York field site use the same environmental data, but the field site data should only include the time frame of the field experiment (August 2023 - November 2024). Make a copy of the DEBY_sal df, rename it YRK_sal, and filter the time frame.
-
-YRK_sal <- DEBY_sal %>% 
-  filter(datetime>= 1690862400 & datetime <= 1732078800)
-YRK_sal["site_name"][YRK_sal["site_name"] == "DEBY"] <- "YRK"
-
 #S1-LOLA and the Lewisetta field site use the same environmental data, but the field site data should only include the time frame of the field experiment (August 2023 - November 2024). Make a copy of the LOLA_sal df, rename it LEW_sal, and filter the time frame.
 #currently subsetting dates as 08-01-2023- 11-20-2024
 LEW_sal <- LOLA_sal %>% 
@@ -190,18 +186,20 @@ ggsave("eoo_salinity_violin.pdf",
        device = "pdf",
        path = "../../figures/envr_of_origin",
        height = 4,
-       width = 6)
+       width = 9.25)
 ```
 
 ### Figure: Common gardens salinity violin plot
 ```{r}
+yrk <- filtered_sal %>% 
+  filter(site_name == "YRK")
 field_sal_violin <- filtered_sal %>% 
   filter(site_name == "YRK" | site_name == "LEW") %>% 
   ggplot(aes(site_name, salinity)) +
   geom_violin() +
   geom_boxplot(width = .1) +
   geom_errorbar(data = quant_field, aes(ymin = salinity_quantile_10, ymax = salinity_quantile_90), width=.3, color = "blue")+
-  ggtitle("Common Garden Environments")+
+  ggtitle("Common Gardens")+
   ylab("Salinity (ppt)")+
   ylim(c(0, 40))+
   scale_x_discrete(limits = c("LEW", "YRK"))+
@@ -211,8 +209,9 @@ field_sal_violin <- filtered_sal %>%
         axis.ticks.x = element_blank(),
         axis.text.x = element_blank(),
         axis.title.x = element_blank(),
-        axis.text.y = element_text(color = "black", size = 10),
-        axis.title.y = element_text(size = 12))
+        axis.text.y = element_blank(),
+        axis.title.y = element_blank(),
+        axis.ticks.y = element_blank())
 
 field_sal_violin
 
@@ -221,18 +220,76 @@ ggsave("field_salinity_violin.pdf",
        device = "pdf",
        path = "../../figures/envr_of_origin",
        height = 4,
-       width = 6)
+       width = 2.5)
+```
+
+###Figure: EoO 0.1 salinity quantile heatmap
+```{r temp_heatmap}
+eoo_sal_10_heatmap <- ggplot(quant_eoo, aes(site_name, 1, fill = salinity_quantile_10)) +
+  geom_tile()+
+  geom_text(aes(label = round(salinity_quantile_10, digits = 1)), color = "white", size = 5)+
+  scale_fill_viridis_c(option = "G", limits = c(0,38), direction=-1)+  # use viridis color scale
+  scale_x_discrete(limits = c("W1-TX","W2-LA","W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME"))+
+  labs(fill = "Salinity (ppt)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.ticks.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank(), 
+        panel.grid = element_blank(), 
+        legend.position = "none")
+
+eoo_sal_10_heatmap
+
+ggsave("eoo_sal10_heat.pdf",
+       plot = eoo_sal_10_heatmap,
+       device = "pdf",
+       path = "../../figures/envr_of_origin",
+       height = 1.9,
+       width = 9)
+```
+
+###Figure: EoO 0.9 salinity quantile heatmap
+```{r temp_heatmap}
+eoo_sal_90_heatmap <- ggplot(quant_eoo, aes(site_name, 1, fill = salinity_quantile_90)) +
+  geom_tile()+
+  geom_text(aes(label = round(salinity_quantile_90, digits = 1)), color = "white", size = 5)+
+  scale_fill_viridis_c(option = "G", limits = c(0,38), direction = -1)+  # use viridis color scale
+  scale_x_discrete(limits = c("W1-TX","W2-LA","W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME"))+
+  labs(fill = "Salinity (ppt)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.ticks.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank(), 
+        panel.grid = element_blank(), 
+        legend.position = "none")
+
+eoo_sal_90_heatmap
+
+ggsave("eoo_sal90_heat.pdf",
+       plot = eoo_sal_90_heatmap,
+       device = "pdf",
+       path = "../../figures/envr_of_origin",
+       height = 1.9,
+       width = 9)
 ```
 
 ###Figure: EoO 0.1 temperature quantile heatmap
 ```{r temp_heatmap}
 eoo_temp_10_heatmap <- ggplot(quant_eoo, aes(site_name, 1, fill = temp_quantile_10)) +
   geom_tile()+
-  scale_fill_viridis_c(option = "D", limits = c(6.1,14.75))+  # use viridis color scale
+  geom_text(aes(label = round(temp_quantile_10, digits = 1)), color = "white", size = 5)+
+  scale_fill_viridis_c(option = "C", limits = c(5,32))+  # use viridis color scale
   scale_x_discrete(limits = c("W1-TX","W2-LA","W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME"))+
   labs(fill = "Temp °C ") +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.ticks.y = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), panel.grid = element_blank(), legend.key.size = unit(.3, 'cm'), legend.title = element_text(size = 9), legend.text = element_text(size = 7))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.ticks.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank(), 
+        panel.grid = element_blank(), 
+        legend.position = "none")
 
 eoo_temp_10_heatmap
 
@@ -240,19 +297,25 @@ ggsave("eoo_temp10_heat.pdf",
        plot = eoo_temp_10_heatmap,
        device = "pdf",
        path = "../../figures/envr_of_origin",
-       height = 1.75,
-       width = 5.55)
+       height = 1.9,
+       width = 9)
 ```
 
 ###Figure: EoO 0.9 temperature quantile heatmap
 ```{r}
 eoo_temp_90_heatmap <- ggplot(quant_eoo, aes(site_name, 1, fill = temp_quantile_90), height = 2, width = 7) +
   geom_tile()+
-  scale_fill_viridis_c(option = "A", limits = c(21.2,30.8)) +  # use viridis color scale
+  geom_text(aes(label = round(temp_quantile_90, digits = 1)), size = 5)+
+  scale_fill_viridis_c(option = "C", limits = c(5,32)) +  # use viridis color scale
   scale_x_discrete(limits = c("W1-TX","W2-LA","W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME"))+
   labs(fill = "Temp °C ") +
   theme_minimal() +
- theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.ticks.y = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), panel.grid = element_blank(), legend.key.size = unit(.3, 'cm'), legend.title = element_text(size = 9), legend.text = element_text(size = 7))
+ theme(axis.text.x = element_text(angle = 45, hjust = 1, color = "black"), 
+       axis.ticks.y = element_blank(), 
+       axis.text.y = element_blank(), 
+       axis.title.y = element_blank(), 
+       panel.grid = element_blank(), 
+       legend.position = "none")
 
 eoo_temp_90_heatmap
 
@@ -260,38 +323,108 @@ ggsave("eoo_temp_90_heat.pdf",
        plot = eoo_temp_90_heatmap,
        device = "pdf",
        path = "../../figures/envr_of_origin",
-       height = 1.75,
-       width = 5.55)
+       height = 1.9,
+       width = 9)
+```
+
+###Figure: Common gardens 0.1 salinity quantile heatmap
+```{r}
+field_sal_10_heatmap <- ggplot(quant_field, aes(site_name, 1, fill = salinity_quantile_10)) +
+  geom_tile()+
+  geom_text(aes(label = round(salinity_quantile_10, digits = 1)), color = "white", size = 5)+
+  scale_fill_viridis_c(option = "G", limits = c(0,38), direction = -1) +  # use viridis color scale
+  scale_x_discrete(limits = c("LEW", "YRK"))+
+  labs(fill = "Salinity (ppt)") +
+  theme_minimal() +
+   theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+         axis.ticks.y = element_blank(), 
+         axis.text.y = element_blank(), 
+         axis.title.y = element_blank(), 
+         panel.grid = element_blank(), 
+         legend.key.size = unit(.4, 'cm'), 
+         legend.title = element_text(size = 10), 
+         legend.text = element_text(size = 10))
+field_sal_10_heatmap
+
+ggsave("field_sal10_heat.pdf",
+       plot = field_sal_10_heatmap,
+       device = "pdf",
+       path = "../../figures/envr_of_origin",
+       height = 1.7,
+       width = 3.4)
+```
+
+###Figure: Common gardens 0.9 salinity quantile heatmap
+```{r}
+field_sal_90_heatmap <- ggplot(quant_field, aes(site_name, 1, fill = salinity_quantile_90)) +
+  geom_tile()+
+  geom_text(aes(label = round(salinity_quantile_90, digits = 1)), color = "white", size = 5)+
+  scale_fill_viridis_c(option = "G", limits = c(0,38), direction = -1) +  # use viridis color scale
+  scale_x_discrete(limits = c("LEW", "YRK"))+
+  labs(fill = "Salinity (ppt)") +
+  theme_minimal() +
+   theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+         axis.ticks.y = element_blank(), 
+         axis.text.y = element_blank(), 
+         axis.title.y = element_blank(), 
+         panel.grid = element_blank(), 
+         legend.key.size = unit(.4, 'cm'), 
+         legend.title = element_text(size = 10), 
+         legend.text = element_text(size = 10))
+field_sal_90_heatmap
+
+ggsave("field_sal90_heat.pdf",
+       plot = field_sal_90_heatmap,
+       device = "pdf",
+       path = "../../figures/envr_of_origin",
+       height = 1.7,
+       width = 3.4)
 ```
 
 ###Figure: Common gardens 0.1 temperature quantile heatmap
 ```{r}
 field_temp_10_heatmap <- ggplot(quant_field, aes(site_name, 1, fill = temp_quantile_10)) +
   geom_tile()+
-  scale_fill_viridis_c(option = "D", limits = c(6.1,14.75)) +  # use viridis color scale
+  geom_text(aes(label = round(temp_quantile_10, digits = 1)), color = "white", size = 5)+
+  scale_fill_viridis_c(option = "C", limits = c(5,32)) +  # use viridis color scale
   scale_x_discrete(limits = c("LEW", "YRK"))+
   labs(fill = "Temp °C ") +
   theme_minimal() +
-   theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.ticks.y = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), panel.grid = element_blank(), legend.key.size = unit(.3, 'cm'), legend.title = element_text(size = 9), legend.text = element_text(size = 7))
+   theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+         axis.ticks.y = element_blank(), 
+         axis.text.y = element_blank(), 
+         axis.title.y = element_blank(), 
+         panel.grid = element_blank(), 
+         legend.key.size = unit(.4, 'cm'), 
+         legend.title = element_text(size = 10), 
+         legend.text = element_text(size = 10))
 field_temp_10_heatmap
 
 ggsave("field_temp10_heat.pdf",
        plot = field_temp_10_heatmap,
        device = "pdf",
        path = "../../figures/envr_of_origin",
-       height = 1.53,
-       width = 2.17)
+       height = 1.7,
+       width = 3.4)
 ```
 
-###Figure: Common gardnes 0.9 temperature quantile heatmap
+###Figure: Common gardens 0.9 temperature quantile heatmap
 ```{r}
 field_temp_90_heatmap <- ggplot(quant_field, aes(site_name, 1, fill = temp_quantile_90), height = 2, width = 7) +
   geom_tile()+
-  scale_fill_viridis_c(option = "A", limits = c(21.2,30.8)) +  # use viridis color scale
+  geom_text(aes(label = round(temp_quantile_90, digits = 1)), size = 5)+
+  scale_fill_viridis_c(option = "C", limits = c(5,32)) +  # use viridis color scale
   scale_x_discrete(limits = c("LEW", "YRK"))+
   labs(fill = "Temp °C ") +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.ticks.y = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), panel.grid = element_blank(), legend.key.size = unit(.3, 'cm'), legend.title = element_text(size = 9), legend.text = element_text(size = 7))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.ticks.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank(), 
+        panel.grid = element_blank(), 
+        legend.key.size = unit(.4, 'cm'), 
+        legend.title = element_text(size = 10), 
+        legend.text = element_text(size = 10))
 
 field_temp_90_heatmap
 
@@ -299,8 +432,8 @@ ggsave("field_temp_90_heat.pdf",
        plot = field_temp_90_heatmap,
        device = "pdf",
        path = "../../figures/envr_of_origin",
-       height = 1.53,
-       width = 2.17)
+       height = 1.7,
+       width = 3.4)
 ```
 
 ### Disease data
@@ -313,8 +446,8 @@ Disease data are classified as the following:
 ```{r}
 #Make disease dataframe
 site_name <- c("W1-TX","W2-LA","W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME", "LEW", "YRK")
-dermo<- c(2, 1, 2, 1, 1, 2, 2, 2)
-MSX <- c(0, 0, 2, 1, 1, 1, 2, 2)
+dermo<- c(2, 1, 2, 1, 1, 2, 2, 2, 1, 2)
+MSX <- c(0, 0, 2, 1, 1, 1, 2, 2, 1, 2)
 disease <- as.data.frame(cbind(site_name, MSX, dermo))
 summary(disease)
 ```
@@ -326,12 +459,18 @@ eoo_dermo <- disease %>%
   filter(site_name != "YRK" | site_name != "LEW") %>% 
   ggplot(aes(site_name, 1, fill = factor(dermo)), height = 2, width = 7)+
   geom_tile(show.legend = T)+
+  geom_text(aes(label = dermo), size = 5)+
   scale_fill_manual(name="Pressure",
-                    limits=c("0", "1", "2", "3", "NA"),
-                    values=c("0"="#DEF5E5FF", "1"="#6CD3ADFF", "2"="#3487A6FF", "3"="#403A75FF", "NA" = "grey"))+
+                    limits=c("0", "1", "2"),
+                    values=c("0"="#FFF2F2", "1"="#FF7C7C", "2"="#DA0707"))+
   scale_x_discrete(limits = c("W1-TX","W2-LA","W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME"))+
   theme_minimal() +
- theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.ticks.y = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), panel.grid = element_blank(), legend.key.size = unit(.3, 'cm'), legend.title = element_text(size = 9), legend.text = element_text(size = 7))
+ theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+       axis.ticks.y = element_blank(), 
+       axis.text.y = element_blank(), 
+       axis.title.y = element_blank(), 
+       panel.grid = element_blank(), 
+       legend.position = "none")
 
 eoo_dermo
 
@@ -339,8 +478,8 @@ ggsave("eoo_dermo.pdf",
        plot = eoo_dermo,
        device = "pdf",
        path = "../../figures/envr_of_origin",
-       height = 1.75,
-       width = 5.55)
+       height = 1.9,
+       width = 9)
 ```
 
 ###Figure: EoO MSX Pressure
@@ -350,13 +489,19 @@ eoo_msx <- disease %>%
   filter(site_name != "YRK" | site_name != "LEW") %>% 
     ggplot(aes(site_name, 1, fill = factor(MSX)), height = 2, width = 7)+
   geom_tile(show.legend = T)+
+  geom_text(aes(label = MSX), size = 5)+
   scale_fill_manual(name="Pressure",
-                    limits=c("0", "1", "2", "3", "NA"),
-                    values=c("0"="#DEF5E5FF", "1"="#6CD3ADFF", "2"="#3487A6FF", "3"="#403A75FF", "NA" = "grey"))+
+                    limits=c("0", "1", "2"),
+                    values=c("0"="#FFF2F2", "1"="#FF7C7C", "2"="#DA0707"))+
   scale_x_discrete(name = "Environment-of-Origin", limits = c("W1-TX","W2-LA","W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME"))+
   labs(fill = "MSX Pressure") +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, color = "black"), axis.ticks.y = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), panel.grid = element_blank(), legend.key.size = unit(.3, 'cm'), legend.title = element_text(size = 9), legend.text = element_text(size = 7))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, color = "black"), 
+        axis.ticks.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank(), 
+        panel.grid = element_blank(), 
+        legend.position = "none")
 
 eoo_msx
 
@@ -364,8 +509,8 @@ ggsave("eoo_msx.pdf",
        plot = eoo_msx,
        device = "pdf",
        path = "../../figures/envr_of_origin",
-       height = 1.75,
-       width = 5.55)
+       height = 1.9,
+       width = 9)
 ```
 
 ###Figure: Common Gardens Dermo Pressure
@@ -375,13 +520,21 @@ field_dermo <- disease %>%
   filter(site_name == "YRK" | site_name == "LEW") %>% 
     ggplot(aes(site_name, 1, fill = factor(dermo)), height = 2, width = 7)+
   geom_tile(show.legend = T)+
+  geom_text(aes(label = dermo), size = 5)+
   scale_fill_manual(name="Pressure",
-                    limits=c("0", "1", "2", "3", "NA"),
-                    values=c("0"="#DEF5E5FF", "1"="#6CD3ADFF", "2"="#3487A6FF", "3"="#403A75FF", "NA" = "grey"))+
+                    limits=c("0", "1", "2"),
+                    values=c("0"="#FFF2F2", "1"="#FF7C7C", "2"="#DA0707"))+
   scale_x_discrete(name = "Group", limits = c("LEW", "YRK"))+
   labs( fill = "Pressure") +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1), axis.ticks.y = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), panel.grid = element_blank(), legend.key.size = unit(.3, 'cm'), legend.title = element_text(size = 9), legend.text = element_text(size = 7))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.ticks.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank(), 
+        panel.grid = element_blank(), 
+        legend.key.size = unit(.4, 'cm'), 
+        legend.title = element_text(size = 10), 
+        legend.text = element_text(size = 10))
 
 field_dermo
 
@@ -389,8 +542,8 @@ ggsave("field_dermo.pdf",
        plot = field_dermo,
        device = "pdf",
        path = "../../figures/envr_of_origin",
-       height = 1.53,
-       width = 2.17)
+       height = 1.7,
+       width = 3.4)
 ```
 
 ###Figure: Common Gardens MSX Pressure
@@ -400,13 +553,21 @@ field_msx <- disease %>%
   filter(site_name == "YRK" | site_name == "LEW") %>% 
     ggplot(aes(site_name, 1, fill = factor(MSX)), color = colors_df$colors, height = 2, width = 7) +
   geom_tile(show.legend = T)+
+  geom_text(aes(label = MSX), size = 5)+
    scale_fill_manual(name="Pressure",
-                    limits=c("0", "1", "2", "3", "NA"),
-                    values=c("0"="#DEF5E5FF", "1"="#6CD3ADFF", "2"="#3487A6FF", "3"="#403A75FF", "NA" = "grey"))+
-  scale_x_discrete(name = "Group", limits = c("LEW", "YRK"))+
+                    limits=c("0", "1", "2"),
+                    values=c("0"="#FFF2F2", "1"="#FF7C7C", "2"="#DA0707"))+
+  scale_x_discrete(name = "Common Garden Site", limits = c("LEW", "YRK"))+
   labs(fill = "Pressure") +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1, color = "black"), axis.ticks.y = element_blank(), axis.text.y = element_blank(), axis.title.y = element_blank(), panel.grid = element_blank(), legend.key.size = unit(.3, 'cm'), legend.title = element_text(size = 9), legend.text = element_text(size = 7))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, color = "black"), 
+        axis.ticks.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank(), 
+        panel.grid = element_blank(), 
+        legend.key.size = unit(.4, 'cm'), 
+        legend.title = element_text(size = 10), 
+        legend.text = element_text(size = 10))
 
 field_msx
 
@@ -414,26 +575,6 @@ ggsave("field_msx.pdf",
        plot = field_msx,
        device = "pdf",
        path = "../../figures/envr_of_origin",
-       height = 1.53,
-       width = 2.17)
-```
-
-### Arrange figures
-```{r}
-allplotslist <- align_plots(eoo_temp_10_heatmap, eoo_temp_90_heatmap, eoo_dermo, eoo_msx, eoo_sal_violin, align = "hv")
-
-eoo_heat <- plot_grid(allplotslist[[1]], allplotslist[[2]], allplotslist[[3]], allplotslist[[4]], ncol = 1)
-
-ggsave(filename="eoo_heatmaps.pdf", 
-       plot=eoo_heat,
-       device = "pdf",
-       path = "../../figures/envr_of_origin",
-       width = 5, height = 8, dpi = 300)
-
-ggsave(filename="eoo_violin.pdf", 
-       plot=eoo_sal_violin,
-       device = "pdf",
-       path = "../../figures/envr_of_origin",
-       width = 5, height = 3, dpi = 300)
-
+       height = 1.7,
+       width = 3.4)
 ```

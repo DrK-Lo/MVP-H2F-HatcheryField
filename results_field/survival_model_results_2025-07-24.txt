@@ -1,0 +1,57 @@
+Anova Table (Type III tests)
+
+Response: surv
+             Sum Sq  Df  F value    Pr(>F)    
+(Intercept)  3.2628   1 537.5500 < 2.2e-16 ***
+bag_site     0.0005   1   0.0780    0.7805    
+pop          0.9208   9  16.8561 < 2.2e-16 ***
+t            0.1951   2  16.0721 5.312e-07 ***
+bag_site:pop 0.5078   9   9.2955 5.937e-11 ***
+bag_site:t   0.6461   2  53.2235 < 2.2e-16 ***
+pop:t        0.3940  18   3.6061 8.438e-06 ***
+Residuals    0.8376 138                       
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Anova Table (Type III tests)
+
+Response: surv
+              Sum Sq Df F value    Pr(>F)    
+(Intercept)  1.07279  1 275.337 < 2.2e-16 ***
+bag_site     0.10500  1  26.950 6.424e-06 ***
+pop          1.71580  9  48.930 < 2.2e-16 ***
+bag_site:pop 0.39027  9  11.129 1.886e-08 ***
+Residuals    0.15585 40                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Anova Table (Type III tests)
+
+Response: surv
+                 Sum Sq Df F value    Pr(>F)    
+(Intercept)     1.29524  1 332.429 < 2.2e-16 ***
+bag_site        0.04074  1  10.456  0.002453 ** 
+oldpop          1.71580  9  48.930 < 2.2e-16 ***
+bag_site:oldpop 0.39027  9  11.129 1.886e-08 ***
+Residuals       0.15585 40                      
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+                    letters             popsite
+Lewisetta:LA              a        Lewisetta:LA
+Lewisetta:LOLA           ab      Lewisetta:LOLA
+Lewisetta:TX             ab        Lewisetta:TX
+Lewisetta:FL             bc        Lewisetta:FL
+Lewisetta:DEBY          bcd      Lewisetta:DEBY
+Lewisetta:SEEDMIX      bcde   Lewisetta:SEEDMIX
+Lewisetta:HYBRIDMIX    bcde Lewisetta:HYBRIDMIX
+YorkRiver:FL           cdef        YorkRiver:FL
+Lewisetta:VA           cdef        Lewisetta:VA
+YorkRiver:DEBY         defg      YorkRiver:DEBY
+YorkRiver:VA           defg        YorkRiver:VA
+YorkRiver:TX            efg        YorkRiver:TX
+YorkRiver:SEEDMIX        fg   YorkRiver:SEEDMIX
+YorkRiver:HYBRIDMIX      gh YorkRiver:HYBRIDMIX
+YorkRiver:LOLA          ghi      YorkRiver:LOLA
+YorkRiver:LA            ghi        YorkRiver:LA
+Lewisetta:ME            hij        Lewisetta:ME
+Lewisetta:NH             ij        Lewisetta:NH
+YorkRiver:NH              j        YorkRiver:NH
+YorkRiver:ME              j        YorkRiver:ME

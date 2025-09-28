@@ -1,0 +1,623 @@
+
+LEW t1 (May 2023) modeling approach 1
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+lmerModLmerTest]
+Formula: length ~ ho + salinity_quantile_10 + (1 | bags_label)
+   Data: 
+len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site ==  
+    "Lewisetta", ]
+
+REML criterion at convergence: 7292.2
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-3.06936 -0.67874  0.00755  0.60601  2.89720 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept)  6.026   2.455   
+ Residual               51.939   7.207   
+Number of obs: 1069, groups:  bags_label, 24
+
+Fixed effects:
+                      Estimate Std. Error        df t value Pr(>|t|)
+(Intercept)          -33.88355    8.65709  20.65064  -3.914 0.000819
+ho                   153.27973   19.27993  20.75317   7.950 9.89e-08
+salinity_quantile_10   0.40819    0.08571  20.62362   4.762 0.000110
+                        
+(Intercept)          ***
+ho                   ***
+salinity_quantile_10 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) ho    
+ho          -0.993       
+slnty_qn_10 -0.754  0.690
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+Response: length
+                      Chisq Df Pr(>Chisq)    
+(Intercept)          15.319  1  9.079e-05 ***
+ho                   63.206  1  1.862e-15 ***
+salinity_quantile_10 22.679  1  1.914e-06 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+LEW t1 (May 2023) scaled modeling approach 1
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+lmerModLmerTest]
+Formula: 
+scale(length) ~ scale(ho) + scale(salinity_quantile_10) + (1 |  
+    bags_label)
+   Data: 
+len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site ==  
+    "Lewisetta", ]
+
+REML criterion at convergence: 2669.8
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-3.06936 -0.67874  0.00755  0.60601  2.89720 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 0.0787   0.2805  
+ Residual               0.6783   0.8236  
+Number of obs: 1069, groups:  bags_label, 24
+
+Fixed effects:
+                            Estimate Std. Error       df t value
+(Intercept)                  0.01113    0.06269 20.99148   0.177
+scale(ho)                    0.67721    0.08518 20.75317   7.950
+scale(salinity_quantile_10)  0.40942    0.08597 20.62362   4.762
+                            Pr(>|t|)    
+(Intercept)                  0.86083    
+scale(ho)                   9.89e-08 ***
+scale(salinity_quantile_10)  0.00011 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) scl(h)
+scale(ho)   -0.049       
+scl(sl__10) -0.025  0.690
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+Response: scale(length)
+                              Chisq Df Pr(>Chisq)    
+(Intercept)                  0.0315  1     0.8591    
+scale(ho)                   63.2060  1  1.862e-15 ***
+scale(salinity_quantile_10) 22.6791  1  1.914e-06 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+LEW t2 (Nov. 2023) modeling approach 1
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+lmerModLmerTest]
+Formula: length ~ ho + ar + salinity_quantile_10 + (1 | bags_label)
+   Data: 
+len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site ==  
+    "Lewisetta", ]
+
+REML criterion at convergence: 7810.3
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-1.7740 -0.4124 -0.0648  0.3178 26.0328 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept)   0.9663  0.983  
+ Residual               190.4295 13.800  
+Number of obs: 967, groups:  bags_label, 24
+
+Fixed effects:
+                      Estimate Std. Error        df t value Pr(>|t|)
+(Intercept)          -84.30214   23.56415  20.90912  -3.578  0.00178
+ho                    94.56829   18.52115  20.97550   5.106 4.68e-05
+ar                    34.48186   10.43301  20.86528   3.305  0.00339
+salinity_quantile_10   0.28046    0.07606  20.07002   3.687  0.00145
+                        
+(Intercept)          ** 
+ho                   ***
+ar                   ** 
+salinity_quantile_10 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) ho     ar    
+ho           0.043              
+ar          -0.945 -0.367       
+slnty_qn_10 -0.299  0.621  0.055
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+Response: length
+                      Chisq Df Pr(>Chisq)    
+(Intercept)          12.799  1  0.0003468 ***
+ho                   26.071  1  3.291e-07 ***
+ar                   10.924  1  0.0009495 ***
+salinity_quantile_10 13.596  1  0.0002267 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+LEW t2 (Nov. 2023) scaled modeling approach 1
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+lmerModLmerTest]
+Formula: 
+scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +  
+    (1 | bags_label)
+   Data: 
+len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site ==  
+    "Lewisetta", ]
+
+REML criterion at convergence: 2693.2
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-1.7740 -0.4124 -0.0648  0.3178 26.0328 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 0.004719 0.06869 
+ Residual               0.929973 0.96435 
+Number of obs: 967, groups:  bags_label, 24
+
+Fixed effects:
+                             Estimate Std. Error        df t value
+(Intercept)                 2.058e-04  3.405e-02 2.079e+01   0.006
+scale(ho)                   2.578e-01  5.049e-02 2.098e+01   5.106
+scale(ar)                   1.311e-01  3.967e-02 2.087e+01   3.305
+scale(salinity_quantile_10) 1.739e-01  4.716e-02 2.007e+01   3.687
+                            Pr(>|t|)    
+(Intercept)                  0.99523    
+scale(ho)                   4.68e-05 ***
+scale(ar)                    0.00339 ** 
+scale(salinity_quantile_10)  0.00145 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) scl(h) scl(r)
+scale(ho)   -0.003              
+scale(ar)    0.003 -0.367       
+scl(sl__10)  0.003  0.621  0.055
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+Response: scale(length)
+                             Chisq Df Pr(>Chisq)    
+(Intercept)                  0.000  1  0.9951769    
+scale(ho)                   26.071  1  3.291e-07 ***
+scale(ar)                   10.924  1  0.0009495 ***
+scale(salinity_quantile_10) 13.596  1  0.0002267 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+LEW t3 (May 2024) modeling approach 1
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+lmerModLmerTest]
+Formula: 
+length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 +  
+    (1 | bags_label)
+   Data: 
+len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site ==  
+    "Lewisetta", ]
+
+REML criterion at convergence: 6225.9
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.3831 -0.6077  0.0130  0.6710  3.2255 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept)  15.28    3.909  
+ Residual               156.53   12.511  
+Number of obs: 787, groups:  bags_label, 24
+
+Fixed effects:
+                      Estimate Std. Error        df t value Pr(>|t|)
+(Intercept)          -202.7332    51.8424   19.5821  -3.911 0.000896
+ho                    306.9106    35.9872   19.5784   8.528 5.06e-08
+ar                     61.4575    22.6430   19.5200   2.714 0.013545
+salinity_quantile_10    0.9571     0.1575   19.9458   6.078 6.18e-06
+salinity_quantile_90   -0.6306     0.1539   18.7549  -4.097 0.000629
+                        
+(Intercept)          ***
+ho                   ***
+ar                   *  
+salinity_quantile_10 ***
+salinity_quantile_90 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) ho     ar     sl__10
+ho           0.152                     
+ar          -0.958 -0.423              
+slnty_qn_10 -0.049  0.658 -0.141       
+slnty_qn_90 -0.507 -0.239  0.490 -0.381
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+Response: length
+                       Chisq Df Pr(>Chisq)    
+(Intercept)          15.2926  1  9.208e-05 ***
+ho                   72.7325  1  < 2.2e-16 ***
+ar                    7.3668  1   0.006644 ** 
+salinity_quantile_10 36.9443  1  1.216e-09 ***
+salinity_quantile_90 16.7823  1  4.192e-05 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+LEW t3 (May 2024) scaled modeling approach 1
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+lmerModLmerTest]
+Formula: 
+scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +  
+    scale(salinity_quantile_90) + (1 | bags_label)
+   Data: 
+len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site ==  
+    "Lewisetta", ]
+
+REML criterion at convergence: 1769
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.3831 -0.6077  0.0130  0.6710  3.2255 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 0.0509   0.2256  
+ Residual               0.5215   0.7221  
+Number of obs: 787, groups:  bags_label, 24
+
+Fixed effects:
+                             Estimate Std. Error        df t value
+(Intercept)                 -0.001636   0.052951 19.013851  -0.031
+scale(ho)                    0.696994   0.081727 19.578351   8.528
+scale(ar)                    0.187466   0.069069 19.520044   2.714
+scale(salinity_quantile_10)  0.487901   0.080271 19.945772   6.078
+scale(salinity_quantile_90) -0.281452   0.068703 18.754905  -4.097
+                            Pr(>|t|)    
+(Intercept)                 0.975679    
+scale(ho)                   5.06e-08 ***
+scale(ar)                   0.013545 *  
+scale(salinity_quantile_10) 6.18e-06 ***
+scale(salinity_quantile_90) 0.000629 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) scl(h) scl(r) s(__10
+scale(ho)    0.037                     
+scale(ar)    0.018 -0.423              
+scl(sl__10)  0.032  0.658 -0.141       
+scl(sl__90)  0.006 -0.239  0.490 -0.381
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+Response: scale(length)
+                              Chisq Df Pr(>Chisq)    
+(Intercept)                  0.0010  1   0.975357    
+scale(ho)                   72.7325  1  < 2.2e-16 ***
+scale(ar)                    7.3668  1   0.006644 ** 
+scale(salinity_quantile_10) 36.9443  1  1.216e-09 ***
+scale(salinity_quantile_90) 16.7823  1  4.192e-05 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+YRK t1 (May 2023) modeling approach 1
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+lmerModLmerTest]
+Formula: length ~ ho + ar + salinity_quantile_10 + (1 | bags_label)
+   Data: 
+len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site ==  
+    "YorkRiver", ]
+
+REML criterion at convergence: 7290.3
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.4908 -0.4415  0.0849  0.6428  2.7444 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept)  3.514   1.875   
+ Residual               53.694   7.328   
+Number of obs: 1066, groups:  bags_label, 24
+
+Fixed effects:
+                      Estimate Std. Error        df t value Pr(>|t|)
+(Intercept)          -57.39684   21.38194  19.67251  -2.684  0.01439
+ho                    41.41568   16.82382  19.75353   2.462  0.02316
+ar                    27.68853    9.47501  19.70812   2.922  0.00851
+salinity_quantile_10   0.44314    0.06968  19.65516   6.359  3.6e-06
+                        
+(Intercept)          *  
+ho                   *  
+ar                   ** 
+salinity_quantile_10 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) ho     ar    
+ho           0.046              
+ar          -0.945 -0.369       
+slnty_qn_10 -0.306  0.619  0.061
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+Response: length
+                       Chisq Df Pr(>Chisq)    
+(Intercept)           7.2058  1   0.007267 ** 
+ho                    6.0601  1   0.013827 *  
+ar                    8.5397  1   0.003475 ** 
+salinity_quantile_10 40.4404  1  2.027e-10 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+YRK t1 (May 2023) scaled modeling approach 1
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+lmerModLmerTest]
+Formula: 
+scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +  
+    (1 | bags_label)
+   Data: 
+len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site ==  
+    "YorkRiver", ]
+
+REML criterion at convergence: 2851.5
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.4908 -0.4415  0.0849  0.6428  2.7444 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 0.05338  0.2310  
+ Residual               0.81561  0.9031  
+Number of obs: 1066, groups:  bags_label, 24
+
+Fixed effects:
+                             Estimate Std. Error        df t value
+(Intercept)                  0.004594   0.054706 19.874318   0.084
+scale(ho)                    0.200264   0.081351 19.753527   2.462
+scale(ar)                    0.189075   0.064701 19.708119   2.922
+scale(salinity_quantile_10)  0.482942   0.075943 19.655161   6.359
+                            Pr(>|t|)    
+(Intercept)                  0.93391    
+scale(ho)                    0.02316 *  
+scale(ar)                    0.00851 ** 
+scale(salinity_quantile_10)  3.6e-06 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) scl(h) scl(r)
+scale(ho)   -0.018              
+scale(ar)   -0.008 -0.369       
+scl(sl__10) -0.012  0.619  0.061
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+Response: scale(length)
+                              Chisq Df Pr(>Chisq)    
+(Intercept)                  0.0071  1   0.933074    
+scale(ho)                    6.0601  1   0.013827 *  
+scale(ar)                    8.5397  1   0.003475 ** 
+scale(salinity_quantile_10) 40.4404  1  2.027e-10 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+YRK t2 (Nov. 2023) modeling approach 1
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+lmerModLmerTest]
+Formula: length ~ ho + ar + salinity_quantile_10 + (1 | bags_label)
+   Data: 
+len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site ==  
+    "YorkRiver", ]
+
+REML criterion at convergence: 5941.4
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.0793 -0.6180 -0.0285  0.6377  3.4077 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept)  1.489   1.220   
+ Residual               33.424   5.781   
+Number of obs: 934, groups:  bags_label, 24
+
+Fixed effects:
+                      Estimate Std. Error        df t value Pr(>|t|)
+(Intercept)          -69.56908   15.17800  20.27761  -4.584 0.000174
+ho                    43.39182   11.91248  20.15678   3.643 0.001604
+ar                    34.63334    6.69966  20.00114   5.169 4.66e-05
+salinity_quantile_10   0.45192    0.04952  20.33503   9.126 1.24e-08
+                        
+(Intercept)          ***
+ho                   ** 
+ar                   ***
+salinity_quantile_10 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) ho     ar    
+ho           0.033              
+ar          -0.944 -0.359       
+slnty_qn_10 -0.310  0.629  0.063
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+Response: length
+                      Chisq Df Pr(>Chisq)    
+(Intercept)          21.009  1  4.571e-06 ***
+ho                   13.268  1  0.0002699 ***
+ar                   26.723  1  2.348e-07 ***
+salinity_quantile_10 83.290  1  < 2.2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+YRK t2 (Nov. 2023) scaled modeling approach 1
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+lmerModLmerTest]
+Formula: 
+scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +  
+    (1 | bags_label)
+   Data: 
+len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site ==  
+    "YorkRiver", ]
+
+REML criterion at convergence: 2416.7
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.0793 -0.6180 -0.0285  0.6377  3.4077 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 0.03336  0.1826  
+ Residual               0.74881  0.8653  
+Number of obs: 934, groups:  bags_label, 24
+
+Fixed effects:
+                             Estimate Std. Error        df t value
+(Intercept)                  0.003146   0.046838 19.935404   0.067
+scale(ho)                    0.255835   0.070235 20.156775   3.643
+scale(ar)                    0.280750   0.054310 20.001133   5.169
+scale(salinity_quantile_10)  0.601267   0.065883 20.335031   9.126
+                            Pr(>|t|)    
+(Intercept)                   0.9471    
+scale(ho)                     0.0016 ** 
+scale(ar)                   4.66e-05 ***
+scale(salinity_quantile_10) 1.24e-08 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) scl(h) scl(r)
+scale(ho)    0.010              
+scale(ar)    0.009 -0.359       
+scl(sl__10)  0.015  0.629  0.063
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+Response: scale(length)
+                              Chisq Df Pr(>Chisq)    
+(Intercept)                  0.0045  1  0.9464407    
+scale(ho)                   13.2682  1  0.0002699 ***
+scale(ar)                   26.7229  1  2.348e-07 ***
+scale(salinity_quantile_10) 83.2896  1  < 2.2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+YRK t3 (May 2024) modeling approach 1
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+lmerModLmerTest]
+Formula: length ~ ho + ar + salinity_quantile_10 + temp_quantile_10 +  
+    (1 | bags_label)
+   Data: 
+len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site ==  
+    "YorkRiver", ]
+
+REML criterion at convergence: 4006.6
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.4109 -0.5361  0.0847  0.6574  2.6294 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept)   4.706   2.169  
+ Residual               128.942  11.355  
+Number of obs: 521, groups:  bags_label, 24
+
+Fixed effects:
+                      Estimate Std. Error        df t value Pr(>|t|)
+(Intercept)          -222.9197    35.1512   23.1921  -6.342 1.73e-06
+ho                     84.4791    34.3554   19.7820   2.459  0.02328
+ar                     99.9943    15.6668   20.9474   6.383 2.54e-06
+salinity_quantile_10    0.7117     0.1307   22.8965   5.445 1.58e-05
+temp_quantile_10       -0.9415     0.2526   17.3969  -3.727  0.00162
+                        
+(Intercept)          ***
+ho                   *  
+ar                   ***
+salinity_quantile_10 ***
+temp_quantile_10     ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) ho     ar     sl__10
+ho           0.036                     
+ar          -0.928 -0.401              
+slnty_qn_10 -0.238  0.765 -0.078       
+tmp_qntl_10 -0.146 -0.635  0.331 -0.483
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+Response: length
+                       Chisq Df Pr(>Chisq)    
+(Intercept)          40.2176  1  2.272e-10 ***
+ho                    6.0466  1  0.0139333 *  
+ar                   40.7369  1  1.742e-10 ***
+salinity_quantile_10 29.6513  1  5.172e-08 ***
+temp_quantile_10     13.8918  1  0.0001936 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+YRK t3 (May 2024) scaled modeling approach 1
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [
+lmerModLmerTest]
+Formula: 
+scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +  
+    scale(temp_quantile_10) + (1 | bags_label)
+   Data: 
+len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site ==  
+    "YorkRiver", ]
+
+REML criterion at convergence: 1353.6
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.4109 -0.5361  0.0847  0.6574  2.6294 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 0.02722  0.1650  
+ Residual               0.74574  0.8636  
+Number of obs: 521, groups:  bags_label, 24
+
+Fixed effects:
+                             Estimate Std. Error        df t value
+(Intercept)                  0.001175   0.051438 17.140913   0.023
+scale(ho)                    0.245714   0.099925 19.781973   2.459
+scale(ar)                    0.372001   0.058284 20.947422   6.383
+scale(salinity_quantile_10)  0.467099   0.085780 22.896465   5.445
+scale(temp_quantile_10)     -0.252162   0.067655 17.396872  -3.727
+                            Pr(>|t|)    
+(Intercept)                  0.98204    
+scale(ho)                    0.02328 *  
+scale(ar)                   2.54e-06 ***
+scale(salinity_quantile_10) 1.58e-05 ***
+scale(temp_quantile_10)      0.00162 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) scl(h) scl(r) scl(s__10)
+scale(ho)    0.002                         
+scale(ar)    0.068 -0.401                  
+scl(sl__10)  0.022  0.765 -0.078           
+scl(tm__10)  0.014 -0.635  0.331 -0.483    
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+Response: scale(length)
+                              Chisq Df Pr(>Chisq)    
+(Intercept)                  0.0005  1  0.9817722    
+scale(ho)                    6.0466  1  0.0139333 *  
+scale(ar)                   40.7369  1  1.742e-10 ***
+scale(salinity_quantile_10) 29.6513  1  5.172e-08 ***
+scale(temp_quantile_10)     13.8918  1  0.0001936 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1

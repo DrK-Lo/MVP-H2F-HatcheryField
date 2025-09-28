@@ -23,18 +23,19 @@ library(readr)
 This is the standard deviation, 10th quantile, and 90th quantile for salinity and temperature all in one data frame. It includes the 8 environments-of-origin and the 2 environments-of-experiment.
 
 ```{r}
+setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/envr_data")
 
-envr_quants_raw <- read_csv(file.path("..", "..", "data", "pairwise_differences_analyses", "H2F_envr_20250409.csv"))
-
+envr_quants_raw <- read_csv("../../data/environment/quantiles_05232025.csv")[,-c(1, 9)]
 ```
 
 ### Data preparation
-
+Make one version with field sites and one version without
 ```{r}
 
-# change underscore to dash in site names to match all other datasets
-envr_quants_raw$site_name <- gsub("_", "-", envr_quants_raw$site_name)
+envr_quants_ordered <- envr_quants_raw %>% 
+  arrange(factor(site_name, levels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME", "LEW", "YRK"))) # reorder
 
+#make version without field sites
 envr_quants_filtered <- envr_quants_raw %>% 
   filter(!site_name %in% c("LEW", "YRK")) %>% # remove environments of experiment
   arrange(factor(site_name, levels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME"))) # reorder
@@ -44,10 +45,40 @@ write.csv(envr_quants_filtered, "../../data/envr_of_origin/envr_quantiles_summar
           
 ```
 
-### Run distance analysis 
+### Run distance analysis - all sites
+
+```{r}
+# select columns that need to be scaled for distance analysis
+envr_for_scaling_all <- envr_quants_ordered %>%
+  select(salinity_quantile_10, salinity_quantile_90, temp_quantile_10, temp_quantile_90)
+
+# scale
+envr_scaled_all <- (scale(envr_for_scaling_all))
+
+# calculate distances
+envr_quants_mat_all <- as.matrix(dist(envr_scaled_all))
+
+# add labels back
+rownames(envr_quants_mat_all) <- c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME", "LEW", "YRK")
+colnames(envr_quants_mat_all) <- c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME", "LEW", "YRK")
+
+```
+
+#### Data product: environmental distance matrix- all sites
+
+Scaled, using quantiles and no standard deviations. 
 
 ```{r}
 
+# save envr distance matrix as csv
+write.csv(envr_quants_mat_all, "../../data/envr_of_origin/envr_quantiles_dist_all.csv")
+
+View(envr_quants_mat_all)
+```
+
+### Run distance analysis - filtered sites
+
+```{r}
 # select columns that need to be scaled for distance analysis
 envr_for_scaling <- envr_quants_filtered %>%
   select(salinity_quantile_10, salinity_quantile_90, temp_quantile_10, temp_quantile_90)
@@ -64,7 +95,7 @@ colnames(envr_quants_mat) <- c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S
 
 ```
 
-#### Data product: environmental distance matrix
+#### Data product: environmental distance matrix- filtered sites
 
 Scaled, using quantiles and no standard deviations. 
 
@@ -74,5 +105,4 @@ Scaled, using quantiles and no standard deviations.
 saveRDS(envr_quants_mat, "../../data/envr_of_origin/envr_quantiles_dist.rds")
 
 View(envr_quants_mat)
-```
 ```

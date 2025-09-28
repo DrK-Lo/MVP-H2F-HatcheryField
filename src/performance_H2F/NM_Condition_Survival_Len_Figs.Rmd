@@ -1,0 +1,313 @@
+---
+title: "NM_Condition_Survival_Figs"
+author: "Nicole Mongillo"
+date: "2025-06-02"
+output: pdf_document
+---
+
+Condition plots created from code developed by Zea Segnitz.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Load libraries
+```{r}
+library(fitdistrplus)
+library(dplyr)
+library(lme4)
+library(lmerTest)
+library(pbkrtest)
+library(emmeans)
+library(multcompView)
+library(multcomp)
+library(tidyverse)
+library(lme4) 
+library(effects)
+library(ggsignif) 
+library(renv)
+library(readr)
+library(car)
+```
+
+```{r}
+setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/performance_H2F")
+```
+
+### Condition Index
+Condition index calculations and modeling performed by ZS.
+#### Data preparation
+```{r}
+# load in condition index dataset 
+MVP_phenotyping_final <- read_csv("../../data/condition_index_H2F/MVP_phenotyping_final.csv", show_col_types = FALSE)
+
+MVP_phenotyping_final$population <- as.character(MVP_phenotyping_final$population)
+
+#replace LARMIX with HYBRIDMIX
+MVP_phenotyping_final["population"][MVP_phenotyping_final["population"] == "H1-LARMIX"] <- "H1-HYBRIDMIX"
+
+# put the populations in correct factor order
+MVP_phenotyping_final$population <- factor(MVP_phenotyping_final$population, levels = c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME", "H1-HYBRIDMIX","H2-SEEDMIX"))
+
+population_colors <- c(
+  "W1-TX" = "#3e4989",
+  "W2-LA" = "#31688e",
+  "W3-FL" = "#26828e",
+  "W4-VA" = "#1f9e89",
+  "S1-LOLA" = "#440154",
+  "S2-DEBY" = "#482878",
+  "W5-NH" = "#35b779",
+  "W6-ME" = "#6ece58",
+  "H1-HYBRIDMIX" = "#fde725",
+  "H2-SEEDMIX"= "#b5de2b")
+
+#subset the timepoints 
+data202405 = MVP_phenotyping_final %>% filter(samplingTimePoint == "2024-05")
+data202411 = MVP_phenotyping_final %>% filter(samplingTimePoint == "2024-11")
+
+#set the levels 
+data202405$population <- factor(data202405$population, levels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME", "H1-HYBRIDMIX", "H2-SEEDMIX"))
+
+data202411$population <- factor(data202411$population, levels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY",  "W5-NH", "W6-ME", "H1-HYBRIDMIX", "H2-SEEDMIX"))
+```
+
+#### Create linear mixed-effects models 
+```{r}
+mixed.model.3 <- lmer(CI ~ site*population + (1 | bagID), data = data202411)
+summary(mixed.model.3)
+mm3_anova <- Anova(mixed.model.3, type = 3, ddf = "Satterthwaite")
+
+mixed.model.3.site.pop = lmer(CI ~ site.pop + (1 | bagID), data = data202411) # build this as well to be able to compute pairwise differences between every site.pop combination 
+```
+
+#### p=Post-hoc testing. 
+Use emmeans to find and pairwise compare means of every population. 
+```{r}
+#pairwise comparisons of every site-population combination ex. LEW.TX etc. - only for Nov 2024 because site is not significant at May 2024
+mm3.site.pop.emmeans = emmeans(mixed.model.3.site.pop, pairwise ~ site.pop, adjust = "tukey")
+
+# get just the emmeans output 
+mm3.emm = mm3.site.pop.emmeans$emmeans
+
+# Generate compact letter display
+mm3.cld_letters <- cld(mm3.emm, adjust = "tukey", Letters = letters, decreasing = T)
+
+#make sure the letters are in dataframes
+as.data.frame(mm3.cld_letters)
+
+#add cols for site and parental group separately based on those in data202411
+site_pop <- subset(data202411, select = c("site.pop", "site", "population"))
+site_pop1 <- site_pop %>% 
+  distinct(site.pop, .keep_all = TRUE)
+
+mm3.cld_letters1 <- left_join(mm3.cld_letters, site_pop1, by = "site.pop")
+```
+
+#### Model with time inclusion
+```{r}
+mixed.model.4 = lmer(CI ~ site*population*samplingTimePoint + (1 | bagID), data = MVP_phenotyping_final %>% filter(samplingTimePoint == "2024-05" | samplingTimePoint == "2024-11"))
+anova(mixed.model.4)
+step(mixed.model.4)
+### confirms that current model is the best one 
+```
+
+### Figure product: Condition index vs parental group
+This creates box plots of the condition index by population, with unique colors for LEW and YR. Plotting by NM.
+```{r}
+mm3.cld_letters1$population <- as.factor(mm3.cld_letters1$population)
+
+site.pop_ls <- c("LEW.TX", "YR.TX", "LEW.LA", "YR.LA", "LEW.FL", "YR.FL", "LEW.VA", "YR.VA", "LEW.LOLA", "YR.LOLA", "LEW.DEBY", "YR.DEBY", "LEW.NH", "YR.NH", "LEW.ME", "YR.ME", "LEW.LARMIX", "YR.LARMIX", "LEW.SEEDMIX", "YR.SEEDMIX")
+x1 <- c(0.7, 1.1, 1.7, 2.1, 2.7, 3.1, 3.7, 4.1, 4.7, 5.1, 5.7, 6.1, 6.7, 7.1, 7.7, 8.1, 8.7, 9.1, 9.7, 10.1)
+x2 <- c(0.9, 1.3, 1.9, 2.3, 2.9, 3.3, 3.9, 4.3, 4.9, 5.3, 5.9, 6.3, 6.9, 7.3, 7.9, 8.3, 8.9, 9.3, 9.9, 10.3)
+
+xvals <- as.data.frame(cbind(site.pop_ls, x1, x2))
+colnames(xvals) <- c("site.pop", "x1", "x2")
+
+mm3.cld_letters2 <- as.data.frame(left_join(mm3.cld_letters1, xvals, by = "site.pop"))
+mm3.cld_letters2$x1 <- as.numeric(mm3.cld_letters2$x1)
+mm3.cld_letters2$x2 <- as.numeric(mm3.cld_letters2$x2)
+
+# Nov 2024
+field_ci <- ggplot(data202411, aes(x = population, y = CI, fill = site)) +
+  geom_boxplot(position = position_dodge(width = 0.8)) +  
+  scale_x_discrete() +  
+  labs(x = "Treatment Group", y = "Condition Index", title = "Condition Index vs. Treatment Group", subtitle = "Final Field Time Point, Nov. 2024", fill = "Site") +   scale_fill_manual(labels = c("LEW" = "Lewisetta", "YR" = "York River"), values = c("LEW" = "#F06292", "YR" = "#880E4F")) +  
+  ylim(c(0, 12.2))+
+  theme_minimal() +
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, color = "black", size = 10),
+        axis.title = element_text(size = 12),
+        axis.text.y = element_text(color = "black", size = 10),
+        legend.text = element_text(size = 10),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+
+field_ci
+
+#make list of significance letters
+letters_ls <- c("a", "b", "c", "d", "e", "f")
+
+#make dfs where each parental group with a given significance letter is subsetted out
+for(x in letters_ls){
+  names <- paste(x, "df", sep = "_")
+  
+  df <- mm3.cld_letters2 %>% 
+  filter(grepl(x, .group) == TRUE)
+  
+  assign(names, df)
+}
+
+#add horizontal line segments for each significance letter based on the dataframes we just made
+field_ci_sig <- field_ci + 
+  geom_segment(data = a_df, aes(x = x1, xend = x2, y = 12, yend =12), color = "#8A8989") + 
+  geom_segment(data = b_df, aes(x = x1, xend = x2, y = 11.8, yend = 11.8), color = "#8A8989")+
+  geom_segment(data = c_df, aes(x = x1, xend = x2, y = 11.6, yend =11.6), color = "#8A8989")+
+  geom_segment(data = d_df, aes(x = x1, xend = x2, y = 11.4, yend =11.4), color = "#8A8989")+
+  geom_segment(data = e_df, aes(x = x1, xend = x2, y = 11.2, yend =11.2), color = "#8A8989")+
+  geom_segment(data = f_df, aes(x = x1, xend = x2, y = 11, yend =11), color = "#8A8989")
+
+field_ci_sig
+ggsave("field_ci.pdf",
+       plot = field_ci_sig,
+       device = "pdf",
+       path = "../../figures/performance_H2F",
+       height = 4,
+       width = 6)
+```
+
+### Survival
+Survival calculations and models conducted by CR in len_surv_modeling_ooters.Rmd. Plotting by NM.
+```{r}
+#final field time-point survival analyses were conducted in len_surv_modeling_ooters.Rmd
+survival <- read.csv("../../data/performance_H2F/field_surv_final_time2025-07-24.csv")[,-c(1, 8)]
+
+#rename columns
+colnames(survival) <- c("pop_site", "site", "population", "bag_label", "t", "survival", "letters")
+
+survival$population <- factor(survival$population, levels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY",  "W5-NH", "W6-ME", "H1-HYBRIDMIX", "H2-SEEDMIX"))
+```
+
+```{r}
+surv_t3_plot <- ggplot(survival, aes(x = population, y = survival, fill = site)) + 
+  geom_boxplot(position=position_dodge(width = 0.8), linewidth = .4, fatten = 0.5) +
+  ggtitle("Survival vs Treatment Group") +
+  scale_x_discrete() +  
+  ylim(c(0, 1.5))+
+  labs(x = "Treatment Group", y = "Survival", subtitle = "Final Field Time Point, Nov. 2024", fill = "Site") +   scale_fill_manual(values = c("Lewisetta" = "#F06292", "YorkRiver" = "#880E4F"), labels = c("Lewisetta" = "Lewisetta", "YorkRiver" = "York River")) + 
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, color = "black", size = 10),
+        axis.title = element_text(size = 12),
+        axis.text.y = element_text(color = "black", size = 10),
+        legend.text = element_text(size = 10),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+surv_t3_plot
+
+#make df of each pop_site and significance letters
+survival_sig <- survival[seq(1, nrow(survival), 3), ]
+
+surv_ps_ls <- c("Lewisetta:TX", "YorkRiver:TX", "Lewisetta:LA", "YorkRiver:LA", "Lewisetta:FL", "YorkRiver:FL", "Lewisetta:VA", "YorkRiver:VA", "Lewisetta:LOLA", "YorkRiver:LOLA", "Lewisetta:DEBY", "YorkRiver:DEBY", "Lewisetta:NH", "YorkRiver:NH", "Lewisetta:ME", "YorkRiver:ME", "Lewisetta:HYBRIDMIX", "YorkRiver:HYBRIDMIX", "Lewisetta:SEEDMIX", "YorkRiver:SEEDMIX")
+
+site_xvals <- as.data.frame(cbind(surv_ps_ls, x1, x2))
+colnames(site_xvals) <- c("pop_site", "x1", "x2")
+
+survival_sig2 <- as.data.frame(left_join(survival_sig, site_xvals, by = "pop_site"))
+survival_sig2$x1 <- as.numeric(survival_sig2$x1)
+survival_sig2$x2 <- as.numeric(survival_sig2$x2)
+
+#make list of significance letters
+s_letters_ls <- c("a", "b", "c", "d", "e", "f", "g", "h", "i")
+
+#make dfs where each parental group with a given significance letter is subsetted out
+for(x in s_letters_ls){
+  names <- paste(x, "s_df", sep = "_")
+  
+  df <- survival_sig2 %>% 
+  filter(grepl(x, letters) == TRUE)
+  
+  assign(names, df)
+}
+
+#add horizontal line segments for each significance letter based on the dataframes we just made
+surv_t3_plot_sig <- surv_t3_plot + 
+  geom_segment(data = a_s_df, aes(x = x1, xend = x2, y = 1.44, yend =1.44), color = "#8A8989") + 
+  geom_segment(data = b_s_df, aes(x = x1, xend = x2, y = 1.41, yend = 1.41), color = "#8A8989")+
+  geom_segment(data = c_s_df, aes(x = x1, xend = x2, y = 1.38, yend =1.38), color = "#8A8989")+
+  geom_segment(data = d_s_df, aes(x = x1, xend = x2, y = 1.35, yend =1.35), color = "#8A8989")+
+  geom_segment(data = e_s_df, aes(x = x1, xend = x2, y = 1.32, yend =1.32), color = "#8A8989")+
+  geom_segment(data = f_s_df, aes(x = x1, xend = x2, y = 1.29, yend =1.29), color = "#8A8989") +
+  geom_segment(data = g_s_df, aes(x = x1, xend = x2, y = 1.26, yend =1.26), color = "#8A8989")+
+  geom_segment(data = h_s_df, aes(x = x1, xend = x2, y = 1.23, yend =1.23), color = "#8A8989")+
+  geom_segment(data = i_s_df, aes(x = x1, xend = x2, y = 1.2, yend =1.2), color = "#8A8989")
+
+surv_t3_plot_sig
+ggsave("field_surv.pdf",
+       plot = surv_t3_plot_sig,
+       device = "pdf",
+       path = "../../figures/performance_H2F",
+       height = 4,
+       width = 6)
+```
+
+```{r}
+length <- read.csv("../../data/performance_H2F/field_length_final_time.csv")[, 2:10]
+
+length$pop <- factor(length$pop, levels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY",  "W5-NH", "W6-ME", "H1-HYBRIDMIX", "H2-SEEDMIX"))
+
+len_plot <- ggplot(length, aes(x = pop, y = length, fill = bag_site)) + 
+  geom_boxplot(position=position_dodge(.8), linewidth = 0.4, fatten = 0.5) +
+  ylim(c(0, 155))+
+  labs(x = "Treatment Group", y = "Length (mm)", title = "Shell Length vs. Treatment Group", subtitle = "Final Field Time Point, Nov. 2024", fill = "Site")+
+  #scale_x_discrete(labels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME", "H1-HYBRIDMIX", "H2-SEEDMIX"))+
+  scale_fill_manual(values = c("Lewisetta" = "#F06292", "YorkRiver" = "#880E4F"), labels = c("Lewisetta" = "Lewisetta", "YorkRiver" = "York River")) + 
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, color = "black", size = 10),
+        axis.title = element_text(size = 12),
+        axis.text.y = element_text(color = "black", size = 10),
+        legend.text = element_text(size = 10),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank())
+
+len_plot
+
+colnames(length) <- c("pop_site", "bag_site", "pop", "t", "bags_label", "tags_label", "length", "width", "letters")
+
+length_sig <- as.data.frame(left_join(length, site_xvals, by = "pop_site"))
+length_sig$x1 <- as.numeric(length_sig$x1)
+length_sig$x2 <- as.numeric(length_sig$x2)
+
+#make list of significance letters
+l_letters_ls <- c("a", "b", "c", "d", "e", "f", "g", "h", "i", "j")
+
+#make dfs where each parental group with a given significance letter is subsetted out
+for(x in l_letters_ls){
+  names <- paste(x, "l_df", sep = "_")
+  
+  df <- length_sig %>% 
+  filter(grepl(x, letters) == TRUE)
+  
+  assign(names, df)
+}
+
+#add horizontal line segments for each significance letter based on the dataframes we just made
+len_plot_sig <- len_plot + 
+  geom_segment(data = a_l_df, aes(x = x1, xend = x2, y = 152, yend =152), color = "#8A8989") + 
+  geom_segment(data = b_l_df, aes(x = x1, xend = x2, y = 150, yend =150), color = "#8A8989")+
+  geom_segment(data = c_l_df, aes(x = x1, xend = x2, y = 148, yend =148), color = "#8A8989")+
+  geom_segment(data = d_l_df, aes(x = x1, xend = x2, y = 146, yend =146), color = "#8A8989")+
+  geom_segment(data = e_l_df, aes(x = x1, xend = x2, y = 144, yend =144), color = "#8A8989")+
+  geom_segment(data = f_l_df, aes(x = x1, xend = x2, y = 142, yend =142), color = "#8A8989") +
+  geom_segment(data = g_l_df, aes(x = x1, xend = x2, y = 140, yend =140), color = "#8A8989")+
+  geom_segment(data = h_l_df, aes(x = x1, xend = x2, y = 138, yend =138), color = "#8A8989")+
+  geom_segment(data = i_l_df, aes(x = x1, xend = x2, y = 136, yend =136), color = "#8A8989")+
+  geom_segment(data = j_l_df, aes(x = x1, xend = x2, y = 134, yend =134), color = "#8A8989")
+
+len_plot_sig
+ggsave("field_len.pdf",
+       plot = len_plot_sig,
+       device = "pdf",
+       path = "../../figures/performance_H2F",
+       height = 6,
+       width = 8)
+```
+
