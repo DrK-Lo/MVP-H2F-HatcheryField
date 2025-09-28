@@ -23,7 +23,7 @@ library(tidyverse)
 library(ggplot2)
 library(grid)
 library(reshape2)
-library(vegan)
+library(vegan) # for Mantel tests
 library(patchwork)
 
 ```
@@ -55,7 +55,7 @@ fst_mat <- readRDS(file.path("..", "..", "data", "pairwise_differences_analyses"
 
 ```
 
-### Global variable
+### Global variables
 
 Population order
 
@@ -258,6 +258,8 @@ envr$lat <- c(28.096000, 29.239925, 30.440030, 37.1501163, 37.98030, 37.249107, 
 ```
 
 #### Data product: hatchery survival, hatchery length, environment-of-origin
+
+For further analysis in src/parent_effects_H2F. 
 
 ```{r}
 
@@ -481,7 +483,7 @@ heatmap_envr
 stacked_envr_fst_heatmap <- heatmap_fst / heatmap_envr +
   plot_annotation(tag_levels = "A")
 
-ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_stacked_envr_fst_heatmap.pdf"), stacked_envr_fst_heatmap, width = 8, height = 10, dpi = 300)
+ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_stacked_envr_fst_heatmap.pdf"), stacked_envr_fst_heatmap, width = 8, height = 12, dpi = 300)
 
 ```
 
