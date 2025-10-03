@@ -629,4 +629,12 @@ ggsave("yrk_length.pdf",
        path = "../../figures/parent_effects_H2F",
        height = 4,
        width = 7)
+
+
+surv_mod_gen_env %>% 
+  filter(t== "3") %>% 
+  filter(bag_site == "Lewisetta") %>% 
+  ggplot(aes(x = salinity_quantile_10, y = surv))+
+  geom_point()+
+  geom_smooth(formula = y~x, method = "lm")
 ```
