@@ -182,7 +182,7 @@ snp_annotated <- snp_annotated %>%
 snp_annotated_sharing <- snp_annotated %>%
   select(Affx.ID:go_term)
 
-write_csv(snp_annotated_sharing, file.path("..", "..", "data", "putative_selection", "full_SNPset_reannotated.csv"))
+write_csv(snp_annotated_sharing, file.path("..", "..", "supp files"))
 
 ```
 
