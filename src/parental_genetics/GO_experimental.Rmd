@@ -208,6 +208,10 @@ dermo_loci <- snp_annotated %>%
   select(LocusName, FST, OutlierFlag, chrom_position, gene_id, description) %>%
   filter(OutlierFlag == TRUE)
 
+write.table(dermo_loci, pipe("pbcopy"), sep = "\t", row.names = FALSE, quote = FALSE)
+write.csv(dermo_loci, file.path("..", "..", "supp files", "dermo_loci.csv"), row.names = FALSE)
+
+
 ```
 
 ```{r}
