@@ -186,6 +186,30 @@ write_csv(snp_annotated_sharing, file.path("..", "..", "supp files"))
 
 ```
 
+### Table product: Dermo resistance genes
+
+```{r}
+
+# list of putative Dermo resistance genes from Wang et al. 2025 10.2983/035.044.0108
+gene_list <- c(
+  "LOC111118916", "LOC111121781", "LOC111121782", "LOC111117973", "LOC111123901",
+  "LOC111124277", "LOC111124319", "LOC111122703", "LOC111122700", "LOC111123748",
+  "LOC111123431", "LOC111123196", "LOC111127997", "LOC111130709", "LOC111129507",
+  "LOC111137292", "LOC111132556", "LOC111134468", "LOC111101514", "LOC111101533",
+  "LOC111101234", "LOC111104654", "LOC111105403", "LOC111103311", "LOC111103990",
+  "LOC111103375", "LOC111110409", "LOC111107154", "LOC111108295", "LOC111106182",
+  "LOC111108376", "LOC111113499", "LOC111113290", "LOC111115720", "LOC111115227",
+  "LOC111114164", "LOC111116247"
+)
+
+# Filter and select columns
+dermo_loci <- snp_annotated %>%
+  filter(gene_id %in% gene_list) %>%
+  select(LocusName, FST, OutlierFlag, chrom_position, gene_id, description) %>%
+  filter(OutlierFlag == TRUE)
+
+```
+
 ```{r}
 
 # Check for SNPs mapping to multiple genes
