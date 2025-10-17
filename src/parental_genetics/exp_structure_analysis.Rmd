@@ -1,6 +1,5 @@
 ---
 title: "exp_structure_analysis"
-author: "Nicole Mongillo"
 date: "2025-05-23"
 output: pdf_document
 ---
@@ -37,6 +36,8 @@ region_colors <- c(
   "W6-ME" = "#6ece58"
   )
 ```
+
+MGE wrote this code in "exp_structure_analysis.R." Code was adapted by NM to format figures for H2F. 
 
 ```{r}
 pca_data <- read.csv("../../data/parental_genetics_structure/20250203_pca_data_exp.csv")
@@ -113,14 +114,15 @@ pca_plot4
 ```
 
 
-# snmf ancestry analysis
+### snmf ancestry analysis
 
+```{r}
 # subset the last geno matrix that we made (GEN_filtered) with our thinned SNPs list from the auto_SVD function
 gen_filtered_subset <- GEN_imputed[, thinned_snps]
 
 # now save our matrix as a .geno format to run the snmf analysis
 write.geno(gen_filtered_subset, "/Users/madelineeppley/Desktop/cvi-diploid-files/20250204geno_imputedfile_exp.geno")
-
+```
 
 ```{r}
 # now generate the snmf project for our plate
@@ -270,6 +272,7 @@ ggsave("ancestry_map.pdf",
 
 ### Common garden sites inset map
 ```{r}
+
 # load US coastline 
 coastline <- ne_coastline(scale = "medium", returnclass = "sf")
 

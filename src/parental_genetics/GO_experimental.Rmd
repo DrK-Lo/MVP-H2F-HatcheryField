@@ -182,7 +182,7 @@ snp_annotated <- snp_annotated %>%
 snp_annotated_sharing <- snp_annotated %>%
   select(Affx.ID:go_term)
 
-write_csv(snp_annotated_sharing, file.path("..", "..", "supp files"))
+write_csv(snp_annotated_sharing, file.path("..", "..", "supp files", "full_SNPset_reannotated.csv"))
 
 ```
 
@@ -409,11 +409,18 @@ label_points <- highlight_snps %>%
 ggplot_manhattan <- ggplot(merged_manhattan, aes(x = Cumulative_Position, y = FST)) +
 
   # background points
-  geom_point(aes(color = Color), size = 1, shape = 16, alpha = 1) +
+  geom_point(aes(color = Color), size = 1, shape = 1, alpha = 1) +
 
   # highlighted GO category points
   geom_point(
     data = merged_manhattan %>% filter(!is.na(gene_type) & Outlier == "outlier"),
+    # aes(color = case_when(
+    #   gene_type == "Transcription and gene regulation" ~ "#1B4F72",
+    #   gene_type == "Membrane and ion transport" ~ "#1B7837",
+    #   gene_type == "Signal transduction and kinase activity" ~ "#542788",
+    #   gene_type == "Motor and cytoskeleton function" ~ "#994F88",
+    #   gene_type == "Binding and general cell structure" ~ "#E08214"
+    # )),
     aes(color = case_when(
       gene_type == "Transcription and gene regulation" ~ "#3e4989",
       gene_type == "Membrane and ion transport" ~ "#440154",
@@ -428,8 +435,7 @@ ggplot_manhattan <- ggplot(merged_manhattan, aes(x = Cumulative_Position, y = FS
   geom_point(
     data = highlight_snps,
     aes(x = Cumulative_Position, y = FST),
-    shape = 21, fill = NA, color = "black", size = 3, stroke = 0.8
-  ) +
+    shape = 21, fill = "darkgrey", color = "black", size = 3, stroke = 0.8) +
   geom_segment(
   data = label_points,
   aes(
@@ -479,6 +485,14 @@ ggsave(file.path("..", "..", "figures", "putative_selection", "fst_manhattan_plo
 ```{r}
 
 # assign colors for GO categories
+# color_mapping <- c(
+#   "Transcription and gene regulation" = "#1B4F72",
+#   "Membrane and ion transport" = "#1B7837",
+#   "Signal transduction and kinase activity" = "#542788",
+#   "Motor and cytoskeleton function" = "#994F88",
+#   "Binding and general cell structure" = "#E08214"
+# )
+
 color_mapping <- c(
   "Transcription and gene regulation" = "#3e4989",
   "Membrane and ion transport" = "#440154",
