@@ -21,37 +21,46 @@ library("ggplot2")
 ```
 
 ### Note the date of data download and source. All available data should be used for each site regardless of year. Note from the CSV file how often the site was sampled, and if there are replicates in the data. Also describe if the sampling occurred at only low tide, only high tide, or continuously.  
+
 ```{r}
-#Data was downloaded on 05/10/2024
-#Source - Dr. William "Willy" Reay of VIMS shared the file with Jess Small via email. Jess emailed the file to KEL who shared it with me (NM).
+#Data was downloaded on 10/14/2025
+#Source - Dr. William "Willy" Reay of VIMS shared the file with Jess Small via email. Jess emailed the file to KEL who shared it with CR & NM.
 #The site was sampled continuously every 15 min from May 2023 to April 2024
 
 #Create text strings with metadata information that we want to include in the final data frame. 
-download_date <- ("05-10-2024")
+download_date <- ("10-14-2025")
 source_description <- ("William Reay, VIMS")
 site_name <- ("LOLA") 
 collection_type <- ("continuous")
 ```
 
-### Use the file path name in your working directory or desktop, see example below. Or, import data set through the "Files" window in R studio. Store the file in a variable with the "raw_ID_Site" format. If salinity and temperature data are in separate files, read in both and store them with "_sal" or "_temp" in the variable names. 
+### Read in files. 
+
 ```{r}
 #The files we will be working with are from the Coan River, VA, which is for the LOLA selection line. The ID_Site for this site is LOLA. 
 
 #set working directory to files location
-setwd("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/LOLA_Coan")
+setwd("/Users/camillerumberger/Documents/GitHub/MVP-H2F-HatcheryField")
 
-#merge files into one
-raw_LOLA_env <- read.csv("/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/LOLA_Coan/LOLA_Coan_raw_VIMS.csv")
+#files
+raw_LOLA_env21 <- read.csv("data/environment/Jess_COAN_2021.csv")
+raw_LOLA_env22 <- read.csv("data/environment/Jess_COAN_2022.csv")
+raw_LOLA_env25 <- read.csv("data/environment/Jess_COAN_2025.csv")
+raw_LOLA_env23_24 <- read.csv("data/environment/LEW-raw.csv")
+
+head(raw_LOLA_env23_24)
+raw_LOLA_env23_24_prep <- raw_LOLA_env23_24[,c("Date","EST.Time","Temp","Salinity")]
+colnames(raw_LOLA_env21) <- colnames(raw_LOLA_env22) <- colnames(raw_LOLA_env23_24) <- colnames(raw_LOLA_env25) <- c("Date","EST.Time","Temp","Salinity")
+raw_LOLA_env <- rbind(raw_LOLA_env21, raw_LOLA_env22, raw_LOLA_env23_24_prep, raw_LOLA_env25)
 
 #The data include separate columns for date and time, which I want to merge into one.
 raw_LOLA_env$datetime <- paste(raw_LOLA_env$Date, raw_LOLA_env$EST.Time)
 
-#Remove Date and EST.Time columns, as well as depth column.
-raw_LOLA_env <- subset(raw_LOLA_env, select = -c(Date, EST.Time, Depth))
+#Remove Date and EST.Time columns
+raw_LOLA_env <- subset(raw_LOLA_env, select = -c(Date, EST.Time))
 
 #Reorder columns so datetime is first
 raw_LOLA_env <- raw_LOLA_env[, c(3,1,2)]
-
 
 # View how the data are stored. Note the variable names and the format and units that the data are stored in.  
 summary(raw_LOLA_env)
@@ -67,8 +76,6 @@ colnames(raw_LOLA_env) <- c("datetime", "temp", "salinity")
 #Convert to POSIXct format. Tell R what the current date/time format is so it knows how to convert it. Store it into a column named datetime in the data frame.
 raw_LOLA_env$datetime <- as.POSIXct(raw_LOLA_env$datetime, "%m/%d/%y %H:%M:%S", tz = "")
 
-
-
 #Print the new data frame and examine to make sure the new datetime column is in the correct format. 
 head(raw_LOLA_env)
 ```
@@ -76,8 +83,8 @@ head(raw_LOLA_env)
 ## Set up data frames for violin plots
 ```{r}
 #add site name and create new data frame with full envr data set
-LOLA_env_full <- raw_LOLA_env %>% 
-  mutate(site_name, site_name = "LOLA")
+raw_LOLA_env$site_name <- "LOLA"
+LOLA_env_full <- raw_LOLA_env
 
 #reorder columns with site_name first
 LOLA_env_full <- LOLA_env_full[, c(4, 1, 2, 3)]
@@ -88,22 +95,23 @@ LOLA_temp_full <- LOLA_env_full[, c(1,2,3)]
 LOLA_sal_full <- LOLA_env_full[, c(1,2,4)]
 
 #save LOLA  as csvs for future analyses
-write.csv(LOLA_temp_full, "/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/full_temp/LOLA_temp_full.csv", row.names = FALSE)
+write.csv(LOLA_temp_full, "data/envr_raw_data/full_datasets/full_temp/LOLA_temp_full.csv", row.names = FALSE)
 
-write.csv(LOLA_sal_full, "/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/full_datasets/full_sal/LOLA_sal_full.csv", row.names = FALSE)
+write.csv(LOLA_sal_full, "data/envr_raw_data/full_datasets/full_sal/LOLA_sal_full.csv", row.names = FALSE)
 ```
 
 ### #Standardize column and variable names. We will use "lat" for latitude in degrees, and "lon" for longitude in degrees. 
 
 ```{r}
-
-
 #Store variables that we will include in the final data frame
+site_name <- "LOLA"
+download_date <- as.Date("2025-10-14")
+source_description <- "KCB hatchery in Coan River as part of CBNERR water quality monitoring, comes from Willy Reay"
 lat <- 37.9803
 lon <- -76.4619
 #Lat and long data are from this site(https://www.vims.edu/cbnerr/monitoring/water_quality/). Data came from the KCB hatchery in the Coan as part of the CBNERR water quality monitoring initiative.
-firstyear <- 2023
-finalyear <- 2024
+firstyear <- 2021
+finalyear <- 2025
 ```
 
 
@@ -111,7 +119,7 @@ finalyear <- 2024
 ```{r}
 #Filter the data between the values of 0 and 40 for both salinity and temperature. 
 filtered_LOLA_sal <- raw_LOLA_env %>%
-    filter(between(salinity, 0, 40)) 
+    filter(between(salinity, 0, 40))
            
 filtered_LOLA_env <- filtered_LOLA_sal %>%
     filter(between(temp, 0, 40))
@@ -125,12 +133,11 @@ LOLA_env <- filtered_LOLA_env
 
 # we have NAs in the our data frame in the datetime column - need to remove these
 count.nas_LOLA_env <- is.na(LOLA_env$datetime) # store our NAs in a variable
-summary(count.nas_LOLA_env) # we have 4 NAs that are stored as "TRUE" in our count.nas
+summary(count.nas_LOLA_env) # no nas
 
-nrow(LOLA_env) # figure out how many rows we have in the original df: 34082
-which(count.nas_LOLA_env == TRUE) # find the number of NA rows that we need to remove: 4
+nrow(LOLA_env) # figure out how many rows we have in the original df: 153925
 LOLA_env <- na.omit(LOLA_env) #remove NAs using na.omit
-nrow(LOLA_env) #there are 34078 rows in the new data frame. 34082-34078 = 4, meaning we removed the right number of rows
+nrow(LOLA_env) # none removed
 
 # check for NAs in our temperature column
 count.nas_LOLA_temp <- is.na(LOLA_env$temp) # store our NAs in temp in a variable
@@ -138,8 +145,7 @@ summary(count.nas_LOLA_temp) # we have 0 NAs
 
 #check for NAs in our salinity column
 count.nas_LOLA_sal <- is.na(LOLA_env$salinity) #store our NAs in salinity in a variable
-summary(count.nas_LOLA_sal) #we have no NAs
-
+summary(count.nas_LOLA_sal) # we have no NAs
 ```
 
 ### Visualize the salinity, temperature, and date ranges over time. This can help us see if there are any anomalies or gaps in the data and make sure the filtering was done correctly. Sanity check - do the temperature and salinity ranges look appropriate for the geography of the site (ex. near full ocean salinity for coastal sites, lower salinity for estuaries or near rivers)?
@@ -152,9 +158,9 @@ salplot <- ggplot(LOLA_env, aes(x = datetime)) +
     labs(x = "Time", y = "Salinity ppt", title = "Salinity Plot for LOLA - Coan River, Virginia") +
     scale_color_manual(values = c("Salinity (ppt)" = "blue")) +
     theme_minimal()
-
-
 salplot
+
+# there is a time skip between 2022-12-31 23:45:00 - 2023-05-01 00:00:00
 ```
 
 
@@ -266,11 +272,11 @@ Temperature_n <- nrow(LOLA_env)
 Temperature_years <- nrow(LOLA_envryear_temp)
 
 #Create a data frame to store the temperature results
-LOLA_temp <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Temperature_C, Mean_max_temperature_C, Mean_min_temperature_C, Temperature_st_dev, Temperature_n, Temperature_years, collection_type)
+LOLA_temp <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Temperature_C, Mean_max_temperature_C, Mean_min_temperature_C, Temperature_st_dev, Temperature_n, Temperature_years)
 print(LOLA_temp)
 
 # Write to a unique new CSV file
-write.csv(LOLA_temp, "/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/Temp/LOLA_temperature.csv", row.names = FALSE)
+write.csv(LOLA_temp, "data/environment/LOLA_temperature.csv", row.names = FALSE)
 
 ```
 
@@ -285,10 +291,10 @@ Salinity_years <- nrow(LOLA_envryear_sal)
 
 
 #Create a data frame to store the temperature results
-LOLA_salinity <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Salinity_ppt, Mean_max_Salinity_ppt, Mean_min_Salinity_ppt, Salinity_st_dev, Salinity_n, Salinity_years, collection_type)
+LOLA_salinity <- cbind(site_name, download_date, source_description, lat, lon, firstyear, finalyear, Mean_Annual_Salinity_ppt, Mean_max_Salinity_ppt, Mean_min_Salinity_ppt, Salinity_st_dev, Salinity_n, Salinity_years)
 print(LOLA_salinity)
 
 # Write to the combined file with all sites 
 # Write to a unique new CSV file
-write.csv(LOLA_salinity, "/Users/nicolemongillo/Desktop/GitHub/MVP_Chesapeake_VIMS_hatchery/data/envr_raw_data/Salinity/LOLA_salinity.csv", row.names = FALSE)
+write.csv(LOLA_temp, "data/environment/LOLA_salinity.csv", row.names = FALSE)
 ```
