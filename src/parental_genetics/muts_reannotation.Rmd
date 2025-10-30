@@ -1,0 +1,240 @@
+---
+title: "muts_reannotation.Rmd"
+author: "Kiran Bajaj"
+date: "2025-10-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#setwd("~/Desktop/MVP-H2F-HatcheryField")
+```
+
+### Objective
+
+The goal of this file is to re-annotate SNPs in the mutation-level data frame for our 200K SNP chip.
+This re-annotated SNP data frame can be sliced into thinned and full SNP sets and used for multiple projects. 
+
+### Packages
+
+```{r}
+
+# install relevant packages
+#BiocManager::install(c("rtracklayer", "GenomicRanges", "biomaRt"))
+
+library(tidyverse)
+library(dplyr)
+library(readr)
+library(rtracklayer)
+library(GenomicRanges)
+library(biomaRt)
+
+```
+
+### Load data
+
+```{r}
+
+# Load in mutation data frame
+# MGE produced this file in /MVP-H2F-HatcheryField/src/parental_genetics/updated_genetics_experimental.R (big merge file that is also saved in other places)
+
+muts <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250604_mutmatrix_PASS.rds"))
+
+dim(muts) # 195,025 SNPs and 18 variables
+names(muts)
+head(muts)
+
+```
+
+```{r}
+
+# figure out how many SNPs are annotated in the data frame as it is
+annotated_only <- muts %>%
+  filter(!is.na(cust_gene_id)) # down to 26,125
+
+```
+
+This tells us that only 26,125 SNPs out of 195025 were initially annotated, so it is important to re-annotate. 
+
+### Re-annotation
+
+Start by downloading the GFF3 file for the eastern oyster from Ensembl. Save it somewhere and import it here. 
+Link to download: https://metazoa.ensembl.org/Crassostrea_virginica_gca002022765v4/Info/Index
+
+```{r}
+
+# I have this file saved in the MVP-H2F-HatcheryField repo but you can load it in from anywhere
+gff <- rtracklayer::import(file.path("..", "..", "data", "putative_selection", "Crassostrea_virginica_gca002022765v4.C_virginica_3.0.62.gff3"))
+
+```
+
+Next step is to get the gene identifiers using the GenomicRanges package and the GFF3 file. 
+
+```{r}
+
+# our SNP dataframe uses numbers 1-10 for chromosomes but the GFF3 object has a different naming scheme - we need to make these match
+muts$scaffold <- dplyr::case_when(
+  muts$Chromosome == 1 ~ "CM008241.1",
+  muts$Chromosome == 2 ~ "CM008242.1",
+  muts$Chromosome == 3 ~ "CM008243.1",
+  muts$Chromosome == 4 ~ "CM008244.1",
+  muts$Chromosome == 5 ~ "CM008245.1",
+  muts$Chromosome == 6 ~ "CM008246.1",
+  muts$Chromosome == 7 ~ "CM008247.1",
+  muts$Chromosome == 8 ~ "CM008248.1",
+  muts$Chromosome == 9 ~ "CM008249.1",
+  muts$Chromosome == 10 ~ "CM008250.1"
+)
+
+# filter for rows with position info filled in - we need this for reannotation
+muts <- muts %>%
+  filter(!is.na(Position)) # none removed
+
+# convert the info from our muts data frame into a GenomicRanges object - stores genomic coordinates in a standardized way
+snp_gr <- GRanges(
+  seqnames = muts$scaffold,
+  ranges = IRanges(start = muts$Position, end = muts$Position),
+  snp_id = muts$Affx.ID
+)
+
+# filter to get just the gene entries in the GFF3 file (the file includes everything like mRNA, exons, etc.)
+gene_features <- gff[gff$type == "gene"]
+
+# find overlaps between our SNPs and genes in GFF3 file
+hits <- findOverlaps(snp_gr, gene_features)
+
+# create an annotation data frame
+annotated <- data.frame(
+  snp_id = snp_gr$snp_id[queryHits(hits)],
+  gene_id = mcols(gene_features)$ID[subjectHits(hits)]
+)
+
+# merge annotation data frame back with original 
+snp_annotated <- left_join(muts, annotated, by = c("Affx.ID" = "snp_id"))
+
+print(sum(!is.na(snp_annotated$gene_id))) # 142,178 SNPs of 195,025 now annotated with gene IDs
+
+# snp_annotated goes up to 198,269 rows - this is because some SNPs map to multiple genes. we will deal with this at the next step.
+
+```
+
+We now have way more gene IDs filled in. The next step is to connect to Ensembl online to query for biological information about our new gene IDs.
+
+```{r}
+
+# connect to the Ensembl Metazoa databse
+mart <- useEnsemblGenomes(
+  biomart = "metazoa_mart", 
+  dataset = "cvgca002022765v4_eg_gene", # this is the label for the genome we want
+  host = "https://metazoa.ensembl.org"
+)
+
+# first clean up the annotated SNP data frame 
+snp_annotated$gene_id <- as.character(snp_annotated$gene_id)
+# remove the "gene:" prefix from new gene_id values
+snp_annotated$gene_id <- sub("^gene:", "", snp_annotated$gene_id)
+# remove NAs as before
+gene_ids <- unique(na.omit(snp_annotated$gene_id))
+
+# query Ensembl Metazoa for the information we want. attributes = columns to grab, filters = how you want to search, values = our gene IDs, mart = database connection
+
+# Column meanings:
+
+# ensembl_gene_id: the official Ensembl gene ID
+# description: functional description
+# go_id: Gene Ontology ID
+# name_1006: name/definition of the GO term
+
+annotations <- getBM(
+  attributes = c("ensembl_gene_id", "description", "go_id", "name_1006"),
+  filters = "ensembl_gene_id",
+  values = gene_ids,
+  mart = mart
+)
+
+```
+
+This created a longer than expected data frame because it's creating a new row for every GO term - so SNPs appear in the df more than once. I want to collapse this.
+
+```{r}
+
+annotations_collapsed <- annotations %>%
+  group_by(ensembl_gene_id, description) %>%
+  summarise(
+    go_id = list(unique(na.omit(go_id))),
+    go_term = list(unique(na.omit(name_1006))),
+    .groups = "drop"
+  )
+
+# now join this to SNPs (each SNP keeps its gene associations)
+snp_annotated <- snp_annotated %>%
+  left_join(annotations_collapsed, by = c("gene_id" = "ensembl_gene_id"))
+
+```
+
+The new re-annotated data frame (snp_annotated) is longer than the original data frame (muts).
+Check for SNPs that are mapping to multiple genes and producing double entries 
+
+```{r}
+
+snp_gene_counts <- snp_annotated %>%
+  filter(!is.na(gene_id)) %>% # goes down to our annotated set of 142178
+  group_by(Affx.ID) %>%
+  summarise(num_genes = n_distinct(gene_id)) %>%
+  filter(num_genes > 1) # number of genes > 1 = 3181, number of genes > 2 = 62, number of genes > 3 = 1. 
+                        # 3181 + 62 + 1 = 3244
+
+# this calculation makes sense
+dim(snp_gene_counts)  # 198,269 in the re-annotated set - 195,025 in the original set = 3244 SNPs are in multiple genes
+
+dim(snp_annotated)
+
+```
+
+I want this data frame to be one row per SNP. So we need to find a way to collapse rows for SNPs that are in multiple genes while still being able to work with the data easily. 
+
+```{r}
+
+# this collpases the data frame into one row per SNP
+snp_collapsed <- snp_annotated %>%
+  group_by(Affx.ID, Name, Sequence, ) %>%
+  summarise(
+    Chromosome = first(Chromosome),
+    Position = first(Position),
+    genes = list(unique(na.omit(gene_id))),
+    descriptions = list(unique(na.omit(description))),
+    go_ids = list(unique(unlist(go_id))),
+    go_terms = list(unique(unlist(go_term))),
+    .groups = "drop"
+  )
+
+# but, that format is not friendly for CSV. for SNPs in multiple genes, this code
+# collpases the genes, annotations, and GO terms into one row per SNP, separated by semicolons
+snp_collapsed_export <- snp_collapsed %>%
+  mutate(
+    genes = sapply(genes, function(x) paste(x, collapse = "; ")),
+    descriptions = sapply(descriptions, function(x) paste(x, collapse = "; ")),
+    go_ids = sapply(go_ids, function(x) paste(x, collapse = "; ")),
+    go_terms = sapply(go_terms, function(x) paste(x, collapse = "; "))
+  )
+
+# data export
+write_csv(
+  snp_collapsed_export,
+  file.path("..", "..", "supp files", "20251029_muts_reannotated.csv")
+)
+
+```
+
+```{r}
+# to recover the list structure, use this code: 
+snp_reloaded <- read_csv(file.path("..", "..", "supp files", "20251029_muts_reannotated.csv")) %>%
+  mutate(
+    genes = strsplit(genes, "; "),
+    go_terms = strsplit(go_terms, "; ")
+  )
+
+```
