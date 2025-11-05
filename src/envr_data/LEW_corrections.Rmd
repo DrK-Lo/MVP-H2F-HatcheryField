@@ -1,0 +1,168 @@
+---
+title: "LEW_Data_Comparisons"
+output: pdf_document
+date: "2025-11-05"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This code examines the differences between environmental data for LOLA/Lewisetta. The data sources are:
+
+1. Willy Reay's data (VIMS data) from the Coan River
+2. NOAA National Buoy Data Center (NDBC), Station 44042 (Potomac, MD) for salinity
+3. NOAA National Buoy Data Center (NDBC), Station 8635750 (Lewisetta, VA) for temp
+
+```{r setwd}
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+```
+
+```{r packages}
+library("dplyr") #Used for working with data frames
+library("lubridate") #Used for time-date conversions
+library("readr") #Used to read the CSV file
+library("ggplot2") 
+library("stringr")
+```
+
+#NDBC Data Upload and Cleaning
+```{r NDBC}
+# directory for files
+lew_sonde <- "data/EnvDat/exp/lew_raw/lew_sonde" 
+pot_sonde <- "data/EnvDat/exp/lew_raw/potomac_sonde"
+
+# Get a list of all .txt files in the directory
+files_lew <- list.files(path = lew_sonde, pattern = "\\.txt$", full.names = T)
+files_pot <- list.files(path = pot_sonde, pattern = "\\.txt$", full.names = T)
+
+# Read each file into a list of data frames
+lew_sonde_df <- lapply(files_lew, function(file) {
+  read.table(file, sep = " ")
+})
+pot_sonde_df <- lapply(files_pot, function(file) {
+  read.table(file, sep = " ")
+})
+
+# Combine all data frames in the list into a single data frame
+lew_check <- bind_rows(lew_sonde_df)
+pot_check <- bind_rows(pot_sonde_df)
+
+# colnames
+colnames(lew_check) <- c("YY", "MM", "DD", "hh", "mm", "WDIR", "WSPD", "GST", "WVHT", "DPD", "APD", "MWD", "PRES", "ATMP", "temp", "DEWP", "VIS", "TIDE")
+colnames(pot_check) <- c("YY", "MM", "DD", "hh", "mm", "DEPTH", "OTMP", "COND", "sal", "O2%", "O2PPM", "CLCON", "TURB", "PH", "EH")
+
+# just relevant data
+lew_check_red <- lew_check[,c("YY","MM","DD", "hh", "mm","temp")]
+pot_check_red <- pot_check[,c("YY","MM","DD", "hh", "mm", "sal")]
+
+# put together datetime
+lew_check_red$datetime <- paste0(lew_check_red$YY, "-", lew_check_red$MM, "-", lew_check_red$DD, " ", lew_check_red$hh, ":", lew_check_red$mm, ":00 EST")
+pot_check_red$datetime <- paste0(pot_check_red$YY, "-", pot_check_red$MM, "-", pot_check_red$DD, " ", pot_check_red$hh, ":", pot_check_red$mm, ":00 EST")
+
+lew_check_red$datetime <- as.POSIXct(lew_check_red$datetime, "%Y-%m-%d %H:%M:%S", tz = "")
+pot_check_red$datetime <- as.POSIXct(pot_check_red$datetime, "%Y-%m-%d %H:%M:%S", tz = "")
+
+# merge these datesets
+check_lewisetta <- merge(lew_check_red[,c("datetime","temp")], pot_check_red[,c("datetime","sal")], by = "datetime", all = T)
+
+# check data
+check_lewisetta$temp[check_lewisetta$temp == 999] <- NA
+check_lewisetta$sal[check_lewisetta$sal == 99] <- NA
+summary(check_lewisetta)
+
+# qc filter
+filtered_check_lewisetta <- check_lewisetta %>%
+    filter(between(sal, 0, 40)) 
+filtered_check_lewisetta <- filtered_check_lewisetta %>%
+    filter(between(temp, 0, 40))
+```
+
+#VIMS Data Upload and Cleaning
+
+```{r VIMS_cleaning}
+# read in data
+lew <- read.csv("data/EnvDat/exp/lew_raw/lewisetta_coandat.csv")[,-1]
+
+# vims data is every 15 mins vs more every hour at noaa buoys -- use daily averages to calculate the other summary stats
+filtered_check_lewisetta$date <- as.Date(filtered_check_lewisetta$datetime, tz = "EST")
+daily_check_lewisetta <- filtered_check_lewisetta %>% 
+  group_by(date) %>% 
+  mutate(mean_daily_temp = mean(temp), mean_daily_sal = mean(sal))
+
+# do the same with other lewisetta data
+lew_daily <- lew
+lew_daily$date <- as.Date(lew$datetime, tz = "EST")
+daily_lewisetta <- lew_daily %>% 
+  group_by(date) %>% 
+  mutate(mean_daily_temp = mean(temp), mean_daily_sal = mean(salinity))
+
+#filter so each day is represented once
+day_check_lewisetta <- daily_check_lewisetta[match(unique(daily_check_lewisetta$date), daily_check_lewisetta$date),]
+noaa_day_filtered <- day_check_lewisetta[day_check_lewisetta$date %in% as.Date(daily_lewisetta$datetime, tz = "EST"),]
+lola_day_filtered <- daily_lewisetta[as.Date(daily_lewisetta$datetime, tz = "EST") %in% day_check_lewisetta$date,]
+
+# put together full dataset
+colnames(noaa_day_filtered) <- c("datetime", "temp_noaa", "sal_noaa", "date", "mean_daily_temp_noaa", "mean_daily_sal_noaa")
+lew_mg <- merge(noaa_day_filtered, lola_day_filtered, by = c("datetime", "date"), all = T)
+```
+
+
+Plot to visualize differences in salinity & temperature:
+
+```{r env plot}
+# plot to look at differences
+filter_tempplot <- ggplot(lew_mg, aes(x=datetime, y = mean_daily_temp, color = "VIMS")) +
+    geom_line()+
+    geom_line(data = lew_mg, aes(x=datetime, y = mean_daily_temp_noaa, color = "NOAA"))+
+  scale_color_manual(values=c("black", "red"))+
+  labs(x = "Time", y = "Temperature C", title = "Temperature Plot for NOAA and VIMS Data Sets") 
+filter_tempplot # basically right on top of each other
+
+filter_salplot <- ggplot(lew_mg, aes(x=datetime, y = mean_daily_sal, color = "VIMS")) +
+    geom_line()+
+    geom_line(data = lew_mg, aes(x=datetime, y = mean_daily_sal_noaa, color = "NOAA"))+
+  scale_color_manual(values=c("black", "blue"))+
+  labs(x = "Time", y = "Salinity psu", title = "Salinity Plot for NOAA and VIMS Data Sets") 
+filter_salplot # trends follow, but need a large correction
+```
+
+Now we correct the NDBC data
+
+```{r correction_value}
+# corrections
+lew_mg <- lew_mg %>% 
+  mutate(temp_diff = mean_daily_temp-mean_daily_temp_noaa, sal_diff = mean_daily_sal -mean_daily_sal_noaa)
+
+temp_correction <- mean(lew_mg$temp_diff)
+# VIMS data (from Willy Coan) is 0.09287575ºC above NOAA data, apply this correction to past NOAA data (2014-2020)
+
+sal_correction <- mean(lew_mg$sal_diff)
+# VIMS data (from Willy Coan) is -1.192284 below NOAA data, apply this correction to past NOAA data (2014-2020)
+
+# apply correction
+day_check_lewisetta$temp_corrected <- day_check_lewisetta$mean_daily_temp + 0.09287575
+day_check_lewisetta$sal_corrected <- day_check_lewisetta$mean_daily_sal - 1.192284
+
+# write it out
+lew_correct <- day_check_lewisetta
+lew_correct <- lew_correct[!(is.na(lew_correct$datetime)),]
+write.csv(lew_correct, "../../../../data/envr_of_origin/raw_envr_data/lewisetta_corrected.csv", row.names = F)
+
+# summary of these data
+lew_correct_yr <- lew_correct %>%
+    dplyr::mutate(year = year(datetime)) %>%
+    dplyr::group_by(year, .drop = FALSE) %>%
+    dplyr::summarise(
+      min_salinity = min(sal_corrected),
+      max_salinity = max(sal_corrected),
+      mean_salinity = mean(sal_corrected),
+      salinity_quantile10 = quantile(sal_corrected, 0.1),
+      salinity_quantile90 = quantile(sal_corrected, 0.9),
+      min_temp = min(temp_corrected),
+      max_temp = max(temp_corrected),
+      mean_temp = mean(temp_corrected),
+      temp_quantile10 = quantile(temp_corrected, 0.1),
+      temp_quantile90 = quantile(temp_corrected, 0.9))
+```
+
