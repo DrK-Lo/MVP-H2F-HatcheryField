@@ -4,7 +4,6 @@ author: "Nicole Mongillo"
 date: "2025-06-02"
 output: pdf_document
 ---
-
 Condition plots created from code developed by Zea Segnitz.
 
 ```{r setup, include=FALSE}
@@ -131,10 +130,10 @@ mm3.cld_letters2$x2 <- as.numeric(mm3.cld_letters2$x2)
 field_ci <- ggplot(data202411, aes(x = population, y = CI, fill = site)) +
   geom_boxplot(position = position_dodge(width = 0.8)) +  
   scale_x_discrete() +  
-  labs(x = "Treatment Group", y = "Condition Index", title = "Condition Index vs. Treatment Group", subtitle = "Final Field Time Point, Nov. 2024", fill = "Site") +   scale_fill_manual(labels = c("LEW" = "Lewisetta", "YR" = "York River"), values = c("LEW" = "#F06292", "YR" = "#880E4F")) +  
+  labs(x = "Treatment Group", y = "Condition Index", title = "Condition Index vs. Treatment Group", subtitle = "Final Field Monitoring Event, Nov. 2024", fill = "Site") +   scale_fill_manual(labels = c("LEW" = "Lewisetta", "YR" = "York River"), values = c("LEW" = "#F06292", "YR" = "#880E4F")) +  
   ylim(c(0, 12.2))+
   theme_minimal() +
-  theme_bw()+
+  theme_classic()+
   theme(axis.text.x = element_text(angle = 45, hjust = 1, color = "black", size = 10),
         axis.title = element_text(size = 12),
         axis.text.y = element_text(color = "black", size = 10),
@@ -164,15 +163,16 @@ field_ci_sig <- field_ci +
   geom_segment(data = c_df, aes(x = x1, xend = x2, y = 11.6, yend =11.6), color = "#8A8989")+
   geom_segment(data = d_df, aes(x = x1, xend = x2, y = 11.4, yend =11.4), color = "#8A8989")+
   geom_segment(data = e_df, aes(x = x1, xend = x2, y = 11.2, yend =11.2), color = "#8A8989")+
-  geom_segment(data = f_df, aes(x = x1, xend = x2, y = 11, yend =11), color = "#8A8989")
+  geom_segment(data = f_df, aes(x = x1, xend = x2, y = 11, yend =11), color = "#8A8989")+
+  geom_hline(yintercept = 10.5, linetype = "dashed")
 
 field_ci_sig
 ggsave("field_ci.pdf",
        plot = field_ci_sig,
        device = "pdf",
        path = "../../figures/performance_H2F",
-       height = 4,
-       width = 6)
+       height = 6,
+       width = 8)
 ```
 
 ### Survival
@@ -193,8 +193,8 @@ surv_t3_plot <- ggplot(survival, aes(x = population, y = survival, fill = site))
   ggtitle("Survival vs Treatment Group") +
   scale_x_discrete() +  
   ylim(c(0, 1.5))+
-  labs(x = "Treatment Group", y = "Survival", subtitle = "Final Field Time Point, Nov. 2024", fill = "Site") +   scale_fill_manual(values = c("Lewisetta" = "#F06292", "YorkRiver" = "#880E4F"), labels = c("Lewisetta" = "Lewisetta", "YorkRiver" = "York River")) + 
-  theme_bw()+
+  labs(x = "Treatment Group", y = "Survival", subtitle = "Final Field Monitoring Event, Nov. 2024", fill = "Site") +   scale_fill_manual(values = c("Lewisetta" = "#F06292", "YorkRiver" = "#880E4F"), labels = c("Lewisetta" = "Lewisetta", "YorkRiver" = "York River")) + 
+  theme_classic()+
   theme(axis.text.x = element_text(angle = 45, hjust = 1, color = "black", size = 10),
         axis.title = element_text(size = 12),
         axis.text.y = element_text(color = "black", size = 10),
@@ -238,7 +238,8 @@ surv_t3_plot_sig <- surv_t3_plot +
   geom_segment(data = f_s_df, aes(x = x1, xend = x2, y = 1.29, yend =1.29), color = "#8A8989") +
   geom_segment(data = g_s_df, aes(x = x1, xend = x2, y = 1.26, yend =1.26), color = "#8A8989")+
   geom_segment(data = h_s_df, aes(x = x1, xend = x2, y = 1.23, yend =1.23), color = "#8A8989")+
-  geom_segment(data = i_s_df, aes(x = x1, xend = x2, y = 1.2, yend =1.2), color = "#8A8989")
+  geom_segment(data = i_s_df, aes(x = x1, xend = x2, y = 1.2, yend =1.2), color = "#8A8989")+
+  geom_hline(yintercept = 1.1, linetype = "dashed")
 
 surv_t3_plot_sig
 ggsave("field_surv.pdf",
@@ -257,10 +258,10 @@ length$pop <- factor(length$pop, levels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", 
 len_plot <- ggplot(length, aes(x = pop, y = length, fill = bag_site)) + 
   geom_boxplot(position=position_dodge(.8), linewidth = 0.4, fatten = 0.5) +
   ylim(c(0, 155))+
-  labs(x = "Treatment Group", y = "Length (mm)", title = "Shell Length vs. Treatment Group", subtitle = "Final Field Time Point, Nov. 2024", fill = "Site")+
+  labs(x = "Treatment Group", y = "Length (mm)", title = "Shell Length vs. Treatment Group", subtitle = "Final Field Monitoring Event, Nov. 2024", fill = "Site")+
   #scale_x_discrete(labels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME", "H1-HYBRIDMIX", "H2-SEEDMIX"))+
   scale_fill_manual(values = c("Lewisetta" = "#F06292", "YorkRiver" = "#880E4F"), labels = c("Lewisetta" = "Lewisetta", "YorkRiver" = "York River")) + 
-  theme_bw()+
+  theme_classic()+
   theme(axis.text.x = element_text(angle = 45, hjust = 1, color = "black", size = 10),
         axis.title = element_text(size = 12),
         axis.text.y = element_text(color = "black", size = 10),
@@ -300,14 +301,15 @@ len_plot_sig <- len_plot +
   geom_segment(data = g_l_df, aes(x = x1, xend = x2, y = 140, yend =140), color = "#8A8989")+
   geom_segment(data = h_l_df, aes(x = x1, xend = x2, y = 138, yend =138), color = "#8A8989")+
   geom_segment(data = i_l_df, aes(x = x1, xend = x2, y = 136, yend =136), color = "#8A8989")+
-  geom_segment(data = j_l_df, aes(x = x1, xend = x2, y = 134, yend =134), color = "#8A8989")
+  geom_segment(data = j_l_df, aes(x = x1, xend = x2, y = 134, yend =134), color = "#8A8989")+
+  geom_hline(yintercept = 130, linetype = "dashed")
 
 len_plot_sig
 ggsave("field_len.pdf",
        plot = len_plot_sig,
        device = "pdf",
        path = "../../figures/performance_H2F",
-       height = 6,
-       width = 8)
+       height = 4,
+       width = 6)
 ```
 

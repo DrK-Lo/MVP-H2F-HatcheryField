@@ -1,0 +1,79 @@
+---
+title: "Dermo_RFTM_H2F_NMedit"
+author: "Nicole Mongillo"
+date: "2025-10-03"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This Rmd is based on code produced by Madeline Eppley in the H2Fdisease_barplots.R file. NM has edited their code to create a plot of RFTM results for Dermo prevalence in Lewisetta and York River that matches H2F plot formatting.
+
+##Load packages
+```{r}
+library(ggplot2)
+library(dplyr)
+```
+
+##Read in data
+```{r}
+#set working directory
+setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/data/disease")
+
+dermo_york <- read.csv("./H2F_dermo_york_RFTM.csv")
+dermo_lew <- read.csv("./H2F_lewisetta_dermo.csv")
+```
+
+##Prep data
+```{r}
+#add column for commong garden (cg) site
+dermo_york$cg <- c("YorkRiver")
+dermo_lew$cg <- c("Lewisetta")
+
+#make column names the same
+colnames(dermo_york) <- c("Month", "Year", "Dermo_prev", "cg")
+colnames(dermo_lew) <- c("Month", "Year", "Dermo_prev", "cg")
+
+#merge dfs
+dermo_combo <- rbind(dermo_york, dermo_lew)
+
+#filter for years 2023 and 2024 and months July and November
+dermo_sub <- dermo_combo %>% 
+  filter(Year == 2023 | Year == 2024) %>% 
+  filter(Month == 7 | Month == 11)
+
+#merge month and year columns
+dermo_sub$sampling_date <- paste(dermo_sub$Month, dermo_sub$Year, sep = "-")
+```
+
+## Two way barplot for Dermo prevalence over time in each common garden site
+```{r}
+ dermo_H2F <- dermo_sub %>% 
+  ggplot(aes(x = sampling_date, y = Dermo_prev, fill = cg))+
+  geom_bar(stat = "identity", position = "dodge")+
+  scale_fill_manual(name = c("Common Garden Site"), limits = c("Lewisetta", "YorkRiver"), labels = c("Lewisetta", "York River"), values = c("#F06292","#880E4F"))+
+  scale_x_discrete(limits = c("7-2023", "11-2023", "7-2024", "11-2024"))+
+  ylim (c(0, 105))+
+  ggtitle("Dermo Prevalence through Field Experiment")+
+  xlab("Sampling Date")+
+  ylab("RFTM Dermo Prevalence (%)")+
+  #geom_text(aes(label = Dermo_prev), stat = "identity", position = position_dodge(width = .8), vjust = 0)+
+  theme_bw()+
+  theme(panel.grid = element_blank(),
+        axis.title = element_text(color = "black", size = 11),
+        axis.text = element_text(color = "black", size = 10),
+        legend.title = element_text(size = 11),
+        legend.text = element_text(size = 10),
+        legend.position = "bottom")
+  
+dermo_H2F
+
+ggsave("Dermo_Field_H2F.pdf",
+       plot = dermo_H2F,
+       device = "pdf",
+       height = 4,
+       width = 5,
+       path = ".")
+```
