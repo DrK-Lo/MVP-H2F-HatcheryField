@@ -468,26 +468,23 @@ dim(outflank_data) # 154103
 
 ```{r}
 
-# OutFLANK components: snp matrix, locus names, population names
+# OutFLANK inputs: snp matrix, locus names, population names
 # documentation: https://github.com/whitlock/OutFLANK/blob/master/OutFLANK%20readme.pdf
 
-# create snp matrix
-SNPmat <- as.matrix(outflank_data[,-1])  # snp matrix - exclude the population column
-SNPmat <- apply(SNPmat, 2, as.numeric)  # convert all columns to numeric
-SNPmat[is.na(SNPmat)] <- 9  # replace NA with 9 for missing data - there shouldn't be any 9s
+# make the outflank input data frame
+make_outflank_input <- function(df) {
+  SNPmat <- as.matrix(df[, -1])         # exclude population column
+  SNPmat <- apply(SNPmat, 2, as.numeric)
+  SNPmat[is.na(SNPmat)] <- 9            # replace missing with 9
+  
+  locus_names <- colnames(df)[-1]       # SNP names
+  pop_names <- df$ID_SiteDate           # population IDs
+  
+  FstDataFrame <- MakeDiploidFSTMat(SNPmat, locus_names, pop_names)
+  return(FstDataFrame)
+}
 
-# create locus names
-locus_names <- colnames(outflank_data)[-1]  # exclude first column (population)
-
-# create pop names
-pop_names <- rep(outflank_data$ID_SiteDate, each = nrow(SNPmat) / nrow(outflank_data)) # replicate based on number of rows
-pop_counts_outflank <- table(pop_names) # create a table to check with pop counts from before
-
-pop_counts_outflank # these two should match
-population_counts # these two should match
-
-# make input data for OutFLANK
-FstDataFrame <- MakeDiploidFSTMat(SNPmat, locus_names, pop_names)
+make_outflank_input(outflank_data)
 
 ```
 
@@ -562,13 +559,153 @@ hist(P1$pvaluesRightTail)
 ```{r}
 
 # separating by chromosome
-a = sprintf("%08d", muts_outflank$Position)
-muts_outflank$chrom_position <- paste(muts_outflank$Chromosome, a, sep = ".")
+a = sprintf("%08d", muts$Position)
+muts$chrom_position <- paste(muts$Chromosome, a, sep = ".")
 
 # add chromosome positions to dataframe
 P1$Affx.ID <- P1$LocusName
-joined_P1 <- left_join(P1, muts_outflank, by = c("Affx.ID" = "Affx.ID"))
+joined_P1 <- left_join(P1, muts, by = c("Affx.ID" = "Affx.ID"))
 
 write_csv(joined_P1, file.path("..", "..", "data", "putative_selection", "outflank_results.csv"))
+
+```
+
+#### Excluding selection lines/trying k = 2
+
+```{r}
+
+run_outflank_variants <- function(outflank_data, thinned_snps = NULL, qthreshold = 0.01, Hmin = 0.1) {
+  library(OutFLANK)
+  library(dplyr)
+  library(ggplot2)
+  
+  # helper function: make FST data frame
+  make_outflank_input <- function(df) {
+    SNPmat <- as.matrix(df[, -1])
+    SNPmat <- apply(SNPmat, 2, as.numeric)
+    SNPmat[is.na(SNPmat)] <- 9
+    locus_names <- colnames(df)[-1]
+    pop_names <- df$ID_SiteDate
+    FstDataFrame <- MakeDiploidFSTMat(SNPmat, locus_names, pop_names)
+    return(FstDataFrame)
+  }
+  
+  # helper: plot assumption checks
+  plot_assumptions <- function(FstDataFrame, label = "") {
+    par(mfrow = c(1, 2))
+    plot(FstDataFrame$He, FstDataFrame$FST, pch = 19, col = rgb(0, 0, 0, 0.3),
+         main = paste("He vs FST -", label), xlab = "He", ylab = "FST")
+    plot(FstDataFrame$FST, FstDataFrame$FSTNoCorr, pch = 19, col = rgb(0, 0, 0, 0.3),
+         main = paste("FST vs FSTNoCorr -", label), xlab = "FST", ylab = "FSTNoCorr")
+    par(mfrow = c(1, 1))
+  }
+  
+  # helper: run OutFLANK and plot diagnostics
+  run_outflank_single <- function(FstDataFrame, label, num_pops, thinned_snps, qthreshold, Hmin) {
+    message("\n=== Running OutFLANK for ", label, " ===")
+    
+    # assumption plots
+    plot_assumptions(FstDataFrame, label)
+    
+    # subset to thinned SNPs if available
+    if (!is.null(thinned_snps)) {
+      FstDataFrame_sub <- FstDataFrame[FstDataFrame$LocusName %in% colnames(thinned_snps), ]
+    } else {
+      FstDataFrame_sub <- FstDataFrame
+    }
+    
+    # run OutFLANK
+    out_trim <- OutFLANK(FstDataFrame_sub,
+                         LeftTrimFraction = 0.05,
+                         RightTrimFraction = 0.05,
+                         Hmin = Hmin,
+                         NumberOfSamples = num_pops,
+                         qthreshold = qthreshold)
+    
+    # diagnostic plots
+    OutFLANKResultsPlotter(out_trim, withOutliers = TRUE, NoCorr = TRUE, Hmin = Hmin,
+                           binwidth = 0.001, Zoom = FALSE, titletext = paste(label, "- full"))
+    OutFLANKResultsPlotter(out_trim, withOutliers = TRUE, NoCorr = TRUE, Hmin = Hmin,
+                           binwidth = 0.001, Zoom = TRUE, RightZoomFraction = 0.15,
+                           titletext = paste(label, "- zoom"))
+    hist(out_trim$results$pvaluesRightTail, main = paste("p-values (", label, ")"), xlab = "p-value")
+    
+    # p-value calculation
+    P1 <- pOutlierFinderChiSqNoCorr(FstDataFrame,
+                                    Fstbar = out_trim$FSTNoCorrbar,
+                                    dfInferred = out_trim$dfInferred,
+                                    qthreshold = qthreshold, Hmin = Hmin)
+    
+    # outlier plot
+    my_out <- P1$OutlierFlag == TRUE
+    plot(P1$He, P1$FST, pch = 19, col = rgb(0, 0, 0, 0.1),
+         main = paste("Outliers -", label), xlab = "He", ylab = "FST")
+    points(P1$He[my_out], P1$FST[my_out], col = "blue")
+    hist(P1$pvaluesRightTail, main = paste("Full p-values (", label, ")"), xlab = "p-value")
+    
+    return(list(out_trim = out_trim, P1 = P1))
+  }
+  
+  # create versions ---------------------------------------------------------
+  
+  # 1. All 8 populations (k = 8)
+  fst_all8 <- make_outflank_input(outflank_data)
+  res_all8 <- run_outflank_single(fst_all8, "All 8 populations (k=8)", 8, thinned_snps, qthreshold, Hmin)
+  
+  # 2. 6 wild only (k = 6)
+  wild_pops <- c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "W5-NH", "W6-ME")
+  outflank_wild <- outflank_data[outflank_data$ID_SiteDate %in% wild_pops, ]
+  fst_wild6 <- make_outflank_input(outflank_wild)
+  res_wild6 <- run_outflank_single(fst_wild6, "Wild only (k=6)", 6, thinned_snps, qthreshold, Hmin)
+  
+  # 3. Wild grouped (k = 2)
+  outflank_wild_grouped <- outflank_wild
+  outflank_wild_grouped$ID_SiteDate <- ifelse(outflank_wild_grouped$ID_SiteDate %in% c("W1-TX", "W2-LA"),
+                                              "Gulf", "Atlantic")
+  fst_gulfatl_wild6 <- make_outflank_input(outflank_wild_grouped)
+  res_gulfatl_wild6 <- run_outflank_single(fst_gulfatl_wild6, "Wild grouped (k=2)", 2, thinned_snps, qthreshold, Hmin)
+  
+  # 4. All populations grouped (k = 2)
+  outflank_all_grouped <- outflank_data
+  outflank_all_grouped$ID_SiteDate <- ifelse(outflank_all_grouped$ID_SiteDate %in% c("W1-TX", "W2-LA"),
+                                             "Gulf", "Atlantic")
+  fst_gulfatl_all8 <- make_outflank_input(outflank_all_grouped)
+  res_gulfatl_all8 <- run_outflank_single(fst_gulfatl_all8, "All grouped (k=2)", 2, thinned_snps, qthreshold, Hmin)
+  
+  # Return results
+  return(list(
+    all8 = res_all8,
+    wild6 = res_wild6,
+    gulfatl_wild6 = res_gulfatl_wild6,
+    gulfatl_all8 = res_gulfatl_all8
+  ))
+}
+
+```
+
+```{r}
+
+results <- run_outflank_variants(outflank_data, thinned_snps = thinned_snps)
+
+```
+
+```{r}
+
+# add chromosome positions and write results
+results$all8$P1$Affx.ID <- results$all8$P1$LocusName
+joined_all8 <- left_join(results$all8$P1, muts, by = "Affx.ID")
+write_csv(joined_all8, file.path("..", "..", "data", "putative_selection", "outflank_all8.csv"))
+
+results$wild6$P1$Affx.ID <- results$wild6$P1$LocusName
+joined_wild6 <- left_join(results$wild6$P1, muts, by = "Affx.ID")
+write_csv(joined_wild6, file.path("..", "..", "data", "putative_selection", "outflank_wild6.csv"))
+
+results$gulfatl_wild6$P1$Affx.ID <- results$gulfatl_wild6$P1$LocusName
+joined_wild6_grouped <- left_join(results$gulfatl_wild6$P1, muts, by = "Affx.ID")
+write_csv(joined_wild6_grouped, file.path("..", "..", "data", "putative_selection", "outflank_wild6_grouped.csv"))
+
+results$gulfatl_all8$P1$Affx.ID <- results$gulfatl_all8$P1$LocusName
+joined_all8_grouped <- left_join(results$gulfatl_all8$P1, muts, by = "Affx.ID")
+write_csv(joined_all8_grouped, file.path("..", "..", "data", "putative_selection", "outflank_all8_grouped.csv"))
 
 ```

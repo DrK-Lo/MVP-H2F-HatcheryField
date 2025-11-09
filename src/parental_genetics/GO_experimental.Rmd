@@ -40,27 +40,27 @@ outflank_output <- read_csv(file.path("..", "..", "data", "putative_selection", 
 
 ```{r}
 
-# filter for outliers and SNPs with available gene info to put into ShinyGO
-
-outliers_only <- outflank_output %>% # starts at 154102 rows
-  filter(OutlierFlag == TRUE) %>% # down to 6928 flagged as outliers
-  arrange(qvalues) %>% # sort by q value
-  dplyr::select(LocusName, FST, pvalues, Chromosome, Position, cust_id, cust_gene_id, cust_gene_name) %>%
-  filter(!is.na(cust_gene_id)) %>% # down to 333 with gene info available
-  filter(!is.na(cust_gene_name)) %>%
-  rename(gene = cust_gene_id)
-
-# generate list for ShinyGO
-shinygo_genes <- paste(outliers_only$gene, collapse = " ")
-shinygo_genes # print list to copy and paste into ShinyGO
-
-length(unique(outliers_only$gene)) # this is 310 unique genes
+test <- outflank_output %>%
+  filter(OutlierFlag == TRUE) %>%
+  filter(!is.na(cust_gene_id))
 
 ```
 
 ```{r}
 
-# i'm interested in getting more annotations for this genome since only 929 out of 12077 outliers were annotated in the SNP dataframe that we got from the sequencing facility. 
+# filter for SNPs with available gene info to put into ShinyGO
+
+annotated_only <- outflank_output %>% # starts at 154102 rows
+  arrange(qvalues) %>% # sort by q value
+  filter(!is.na(cust_gene_id)) %>% # down to 21610 with gene info available
+  filter(!is.na(cust_gene_name)) %>%
+  rename(gene = cust_gene_id)
+
+```
+
+```{r}
+
+# i'm interested in getting more annotations for this genome since only 21610 out of 154102 SNPs are annotated in the dataframe that we got from the sequencing facility. 
 
 # install relevant packages
 #BiocManager::install(c("rtracklayer", "GenomicRanges"))
@@ -71,14 +71,12 @@ library(dplyr)
 
 # same code as above but don't filter for annotated SNPs this time
 snp_df <- outflank_output %>% # starts at 154102 rows
-  filter(OutlierFlag == TRUE) %>% # down to 6928 flagged as outliers
-  arrange(qvalues) %>% # sort by q value
-  dplyr::select(LocusName, FST, pvalues, qvalues, Chromosome, Position, cust_id, cust_gene_id, cust_gene_name)
+  arrange(qvalues) # sort by q value
 
 # download the gff3 annotation from Ensembl, save it somewhere, and import it here
 # download link: https://metazoa.ensembl.org/Crassostrea_virginica_gca002022765v4/Info/Index
 
-gff <- rtracklayer::import(file.path("..", "..", "data", "putative_selection", "Crassostrea_virginica_gca002022765v4.C_virginica_3.0.61.gff3"))
+gff <- rtracklayer::import(file.path("..", "..", "data", "putative_selection", "Crassostrea_virginica_gca002022765v4.C_virginica_3.0.62.gff3"))
 
 ```
 
@@ -98,8 +96,9 @@ snp_df$scaffold <- dplyr::case_when(
   snp_df$Chromosome == 10 ~ "CM008250.1"
 )
 
+# filter for rows with position info - we need this for reannotation
 snp_df <- snp_df %>%
-  filter(!is.na(Position))
+  filter(!is.na(Position)) # none removed
 
 # turn info from our SNP data frame into a GenomicRanges object - stores genomic coordinates in a standardized way
 snp_gr <- GRanges(
@@ -123,7 +122,7 @@ annotated <- data.frame(
 # merge annotation data frame back with original 
 snp_annotated <- left_join(snp_df, annotated, by = c("LocusName" = "snp_id"))
 
-print(sum(!is.na(snp_annotated$gene_id))) # 5024 SNPs of 6928 now annotated with gene IDs
+print(sum(!is.na(snp_annotated$gene_id))) # 113878 SNPs of 151258 now annotated with gene IDs
 
 ```
 
@@ -160,74 +159,103 @@ annotations <- getBM(
 # go_id: Gene Ontology ID
 # name_1006: name/definition of the GO term
 
-# join back with SNP data using gene_id = ensembl_gene_id
-snp_annotated <- left_join(snp_annotated, annotations, by = c("gene_id" = "ensembl_gene_id"))
-
 # this creates a longer than expected data frame because it's creating a new row for every GO term - so SNPs appear in the df more than once. I want to collapse this.
 
-```
-
-```{r}
-
-# collapse annotations to have a data frame with one row per SNP (harder to work with the GO term column with this format, but shinyGO will do it for us)
-
-snp_annotated_collapsed <- snp_annotated %>%
-  group_by(LocusName, gene_id, description) %>%   # group by the SNP identifier + gene_id + description
+annotations_collapsed <- annotations %>%
+  group_by(ensembl_gene_id, description) %>%
   summarise(
-    # collapse the GO IDs (we're not using these anyway)
-    go_id = {
-      ids <- unique(na.omit(go_id))
-      if (length(ids)) paste(ids, collapse = "; ") else NA_character_
-    },
-    # collapse the GO descriptions (we're not using these anyway)
-    go_term = {
-      terms <- unique(na.omit(name_1006))
-      if (length(terms)) paste(terms, collapse = "; ") else NA_character_
-    },
+    go_id = list(unique(na.omit(go_id))),
+    go_term = list(unique(na.omit(name_1006))),
     .groups = "drop"
   )
 
-# original SNP count (outliers)
-nrow(snp_df) # 6898
-# unique SNP IDs 
-length(unique(snp_df$LocusName)) # 6898
-# SNP count with gene info
-length(unique(snp_annotated$LocusName)) # 6898
-# unique SNP-gene pairs
-length(unique(paste(snp_annotated$LocusName, snp_annotated$gene_id))) # 6951
+# Now join this to SNPs (each SNP keeps its gene associations)
+snp_annotated <- snp_annotated %>%
+  left_join(annotations_collapsed, by = c("gene_id" = "ensembl_gene_id"))
 
-# I think this discrepancy comes from the fact that some SNPs are in multiple genes. I think it makes sense to keep these entries. 
+```
 
-# check how many SNPs appear in multiple genes
-snp_gene_counts <- snp_annotated_collapsed %>%
-  filter(!is.na(gene_id)) %>%    
-  group_by(LocusName) %>%
-  summarise(num_genes = n_distinct(gene_id)) %>%
-  filter(num_genes > 1) # keep only SNPs in multiple genes
+### Data product: annotated SNP dataframe
 
-dim(snp_gene_counts) # 110 makes sense because 6951 - 6898 = 53 
+```{r}
 
-snp_annotated <- left_join(
-  snp_df,
-  snp_annotated_collapsed, 
-  by = "LocusName"
-  )
+snp_annotated_sharing <- snp_annotated %>%
+  select(Affx.ID:go_term)
 
-dim(snp_annotated) # 6951
+write_csv(snp_annotated_sharing, file.path("..", "..", "supp files", "full_SNPset_reannotated.csv"))
+
+```
+
+### Table product: Dermo resistance genes
+
+```{r}
+
+# list of putative Dermo resistance genes from Wang et al. 2025 10.2983/035.044.0108
+gene_list <- c(
+  "LOC111118916", "LOC111121781", "LOC111121782", "LOC111117973", "LOC111123901",
+  "LOC111124277", "LOC111124319", "LOC111122703", "LOC111122700", "LOC111123748",
+  "LOC111123431", "LOC111123196", "LOC111127997", "LOC111130709", "LOC111129507",
+  "LOC111137292", "LOC111132556", "LOC111134468", "LOC111101514", "LOC111101533",
+  "LOC111101234", "LOC111104654", "LOC111105403", "LOC111103311", "LOC111103990",
+  "LOC111103375", "LOC111110409", "LOC111107154", "LOC111108295", "LOC111106182",
+  "LOC111108376", "LOC111113499", "LOC111113290", "LOC111115720", "LOC111115227",
+  "LOC111114164", "LOC111116247"
+)
+
+# Filter and select columns
+dermo_loci <- snp_annotated %>%
+  filter(gene_id %in% gene_list) %>%
+  select(LocusName, FST, OutlierFlag, chrom_position, gene_id, description) %>%
+  filter(OutlierFlag == TRUE)
+
+write.table(dermo_loci, pipe("pbcopy"), sep = "\t", row.names = FALSE, quote = FALSE)
+write.csv(dermo_loci, file.path("..", "..", "supp files", "dermo_loci.csv"), row.names = FALSE)
+
 
 ```
 
 ```{r}
 
-# generate list for ShinyGO 
+# Check for SNPs mapping to multiple genes
+snp_gene_counts <- snp_annotated %>%
+  filter(!is.na(gene_id)) %>% # goes down to our annotated set of 110455
+  group_by(LocusName) %>%
+  summarise(num_genes = n_distinct(gene_id)) %>%
+  filter(num_genes > 1) # number of genes > 1 = 2414, number of genes > 2 = 46, number of genes > 3 = 1. 
+                        # 2414 + 46 + 1 = 2461
+
+dim(snp_gene_counts)  # this should be 2461, because we have 156563 in the reannotated set and 154102 in the original set
+
+dim(snp_annotated)
+
+```
+
+```{r}
+
+# generate list for ShinyGO - outliers only
 
 snp_annotated_shinygo <- snp_annotated %>%
+  filter(OutlierFlag == TRUE) %>%
   filter(!is.na(gene_id))    
 
 shinygo_genes <- paste(unique(snp_annotated_shinygo$gene_id), collapse = " ")
 shinygo_genes # print list to copy and paste into ShinyGO
 
-length(unique(snp_annotated_shinygo$gene_id)) # this is 1629 unique genes
+length(unique(snp_annotated_shinygo$gene_id)) # this is 1634 unique genes
+
+```
+
+```{r}
+
+# look at the specific loci with high Fst, what genes are they in?
+snp_annotated_outliers <- snp_annotated %>%
+  filter(OutlierFlag == TRUE) %>%
+  arrange(desc(FST)) %>%                     # sort by Fst descending
+  select(LocusName, FST, gene_id, description)      # keep only SNP ID, Fst, and gene name
+
+length(unique(snp_annotated_outliers$LocusName)) # this is 6928 unique loci, with some repeats (data frame = 6981 rows)
+
+write_csv(snp_annotated, file.path("..", "..", "data", "putative_selection", "outlier_SNPs.csv"))
 
 ```
 
@@ -262,7 +290,7 @@ genes <- read_csv(file.path("..", "..", "data", "putative_selection", "shinyGO_g
 ```{r}
 
 # prepare data
-manhattan_fst <- outflank_output %>%
+manhattan_fst <- snp_annotated %>%
   filter(He > 0.1) %>%  # filter based on heterozygosity - goes down to 151340 SNPs
   mutate(
     Chromosome = as.numeric(Chromosome),
@@ -272,8 +300,8 @@ manhattan_fst <- outflank_output %>%
     Outlier = ifelse(qvalues < 0.01, "outlier", "nonoutlier"), # outliers are designated with q values 
     Color = ifelse(
       Outlier == "nonoutlier",
-      ifelse(Chromosome %% 2 == 1, "#4A5763", "#6A747C"),  # base color
-      lighten(ifelse(Chromosome %% 2 == 1, "#4A5763", "#6A747C"), 0.5) # lighten for outliers
+      ifelse(Chromosome %% 2 == 1, "#8c9bad", "#a5b7cc"),  # base color
+      lighten(ifelse(Chromosome %% 2 == 1, "#8c9bad", "#a5b7cc"), 0.4) # lighten for outliers
     )
   )
 # compute chromosome lengths and cumulative positions for plotting
@@ -339,29 +367,6 @@ enriched_fully_joined <- manhattan_fst %>%
     )
   )
 
-
-# # old pathways
-#   # join enriched pathway genes with Outflank output data
-# enriched_fully_joined <- manhattan_fst %>%
-#   dplyr::inner_join(enriched_joined, by = "gene") %>%
-#   dplyr::select(LocusName, `Enrichment FDR`, nGenes, `Pathway Genes`, `Fold Enrichment`, Pathway) %>%
-#   dplyr::mutate(
-#     # create categories based on individual GOs
-#     gene_type = case_when(
-#       str_extract(Pathway, "^GO:\\d+") %in% c("GO:0004806", "GO:0008083") ~ 
-#         "Lipid metabolism and signaling", 
-#       str_extract(Pathway, "^GO:\\d+") %in% c("GO:0043565", "GO:0003700", "GO:0006355") ~ 
-#         "Gene expression and transcription",
-#       str_extract(Pathway, "^GO:\\d+") %in% c("GO:0034220", "GO:0055085", "GO:0098655") ~ 
-#         "Membrane and ion transport",
-#       str_extract(Pathway, "^GO:\\d+") %in% c("GO:0007601", "GO:0004930", "GO:0007186") ~ 
-#         "GPCR signaling and sensory",
-#       str_extract(Pathway, "^GO:\\d+") %in% c("GO:0016021", "GO:0016020", "GO:0031012") ~ 
-#         "Cellular structure and organization",
-#       TRUE ~ "Other"
-#     )
-#   )
-
 ```
 
 #### Manhattan plot
@@ -369,62 +374,109 @@ enriched_fully_joined <- manhattan_fst %>%
 ```{r}
 
 # this is all the data we need for the manhattan plot
-merged_manhattan <- manhattan_fst %>%
-  left_join(enriched_fully_joined, by = "LocusName") # merge
+library(dplyr)
+library(ggplot2)
+library(ggrepel)
 
-# calculate where to draw the outlier cutoff line
+merged_manhattan <- manhattan_fst %>%
+  left_join(enriched_fully_joined, by = "LocusName")
+
+# outlier threshold
 threshold_fst <- min(merged_manhattan$FST[merged_manhattan$qvalues < 0.01], na.rm = TRUE)
 
-# plotting
-ggplot_manhattan <- ggplot(merged_manhattan, aes(x = Cumulative_Position, y = FST)) +
-  
-  # first layer: default points (background)
-  geom_point(aes(color = Color), size = 1, shape = 1, alpha = 0.7) +  # slight transparency, open circles
-  
-  # second layer: highlighted points (foreground)
-  geom_point(data = merged_manhattan %>% filter(!is.na(gene_type) & Outlier == "outlier"), 
-            # add colors for GO categories
-              aes(color = case_when(
-               gene_type == "Transcription and gene regulation" ~ "#3e4989", # color by gene type
-               gene_type == "Membrane and ion transport" ~ "#440154", 
-               gene_type == "Signal transduction and kinase activity" ~ "#fde725",  
-               gene_type == "Motor and cytoskeleton function" ~ "#7b3294", 
-               gene_type == "Binding and general cell structure" ~ "#35b779"
-             )), size = 2) +  # closed circles on top
-  
-  # # second layer: highlighted points (foreground)
-  # geom_point(data = merged_manhattan %>% filter(!is.na(gene_type) & Outlier == "outlier"), 
-  #           # add colors for GO categories
-  #             aes(color = case_when(
-  #              gene_type == "Membrane and ion transport" ~ "#3e4989", # color by gene type
-  #              gene_type == "GPCR signaling and sensory" ~ "#440154", 
-  #              gene_type == "Lipid metabolism and signaling" ~ "#fde725",  
-  #              gene_type == "Gene expression and transcription" ~ "#31688e",
-  #              gene_type == "Cellular structure and organization" ~ "#35b779", 
-  #            )), size = 2) +  # closed circles on top
+# genes to highlight + y text positions
+gene_labels <- tibble(
+  gene_id = c("LOC111118916", "LOC111122700", "LOC111110350", "LOC111130444"),
+  label = c("Myosin (LOC111118916)",
+            "Advillin (LOC111122700)",
+            "Voltage-dependent calcium channel (LOC111110350)",
+            "Organic cation transporter protein-like (LOC111130444)"),
+  y_pos = c(0.90, 0.85, 0.84, 0.88),
+  slant = c(-70000000, -60000000, 50000000, 60000000)
+)
 
+# subset SNPs to highlight
+highlight_snps <- merged_manhattan %>%
+  filter(Outlier == "outlier", gene_id %in% gene_labels$gene_id)
+
+# pick one top SNP per gene for label placement
+label_points <- highlight_snps %>%
+  group_by(gene_id) %>%
+  slice_max(order_by = FST, n = 1) %>%
+  left_join(gene_labels, by = "gene_id")
+
+# base manhattan plot
+ggplot_manhattan <- ggplot(merged_manhattan, aes(x = Cumulative_Position, y = FST)) +
+
+  # background points
+  geom_point(aes(color = Color), size = 1, shape = 1, alpha = 1) +
+
+  # highlighted GO category points
+  geom_point(
+    data = merged_manhattan %>% filter(!is.na(gene_type) & Outlier == "outlier"),
+    # aes(color = case_when(
+    #   gene_type == "Transcription and gene regulation" ~ "#1B4F72",
+    #   gene_type == "Membrane and ion transport" ~ "#1B7837",
+    #   gene_type == "Signal transduction and kinase activity" ~ "#542788",
+    #   gene_type == "Motor and cytoskeleton function" ~ "#994F88",
+    #   gene_type == "Binding and general cell structure" ~ "#E08214"
+    # )),
+    aes(color = case_when(
+      gene_type == "Transcription and gene regulation" ~ "#3e4989",
+      gene_type == "Membrane and ion transport" ~ "#440154",
+      gene_type == "Signal transduction and kinase activity" ~ "#fde725",
+      gene_type == "Motor and cytoskeleton function" ~ "#7b3294",
+      gene_type == "Binding and general cell structure" ~ "#35b779"
+    )),
+    size = 2
+  ) +
+
+  # circles around specific genes' SNPs
+  geom_point(
+    data = highlight_snps,
+    aes(x = Cumulative_Position, y = FST),
+    shape = 21, fill = "darkgrey", color = "black", size = 3, stroke = 0.8) +
+  geom_segment(
+  data = label_points,
+  aes(
+    x = Cumulative_Position,
+    xend = Cumulative_Position + slant, 
+    y = FST,
+    yend = y_pos + 0.08  # make segment end at the label y
+  ),
+  color = "black",
+  size = 0.4
+) +
+geom_text(
+  data = label_points,
+  aes(
+    x = Cumulative_Position + slant,
+    y = y_pos + 0.11,
+    label = label
+  ),
+  color = "black",
+  size = 4
+) +
+
+  # rest of plot setup
   scale_x_continuous(breaks = chrom_ticks$center, labels = chrom_ticks$Chromosome) +
-  scale_color_identity(guide = "none") +  # remove color legend
+  scale_color_identity(guide = "none") +
   labs(x = "Chromosome", y = expression(F[ST])) +
+  geom_hline(aes(yintercept = threshold_fst, linetype = "q < 0.01"), color = "black") +
+  scale_linetype_manual(name = "Outlier threshold", values = c("q < 0.01" = "dashed")) +
   theme_bw() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, color = "black"),
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_blank(), 
-    panel.grid.minor.y = element_blank(),
-    axis.title = element_text(size = 16),    
-    axis.text = element_text(size = 14),      
-    legend.title = element_text(size = 15),      
-    legend.text = element_text(size = 13)
-  ) +
-  geom_hline(aes(yintercept = threshold_fst, linetype = "q < 0.01"), color = "black") +
-  scale_linetype_manual(name = "Outlier threshold", values = c("q < 0.01" = "dashed"))
+    panel.grid.major = element_blank(),
+    axis.title = element_text(size = 16),
+    axis.text = element_text(size = 14)
+  )
 
-# save plot
-ggsave(file.path("..", "..", "figures", "putative_selection", "fst_manhattan_plot.pdf"), ggplot_manhattan, width = 15, height = 6, dpi = 300)
+# save
+ggsave(file.path("..", "..", "figures", "putative_selection", "fst_manhattan_plot.pdf"),
+       ggplot_manhattan, width = 15, height = 6, dpi = 300)
 
-ggplot_manhattan
+
 
 ```
 
@@ -433,6 +485,14 @@ ggplot_manhattan
 ```{r}
 
 # assign colors for GO categories
+# color_mapping <- c(
+#   "Transcription and gene regulation" = "#1B4F72",
+#   "Membrane and ion transport" = "#1B7837",
+#   "Signal transduction and kinase activity" = "#542788",
+#   "Motor and cytoskeleton function" = "#994F88",
+#   "Binding and general cell structure" = "#E08214"
+# )
+
 color_mapping <- c(
   "Transcription and gene regulation" = "#3e4989",
   "Membrane and ion transport" = "#440154",
