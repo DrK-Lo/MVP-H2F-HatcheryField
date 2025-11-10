@@ -37,7 +37,9 @@ LA_sal <- read.csv("../../data/envr_of_origin/full_sal/LA_sal_full.csv")
 
 FL_sal <- read.csv("../../data/envr_of_origin/full_sal/FL_sal_full.csv")
 
-LOLA_sal <- read.csv("../../data/envr_of_origin/full_sal/LOLA_sal_full.csv")
+LOLA_sal <- read.csv("../../data/envr_of_origin/full_sal/LOLA_sal_full.csv")[, c(2,3)]
+#add site_name column
+LOLA_sal$site_name <- "LOLA"
 
 DEBY_sal <- read.csv("../../data/envr_of_origin/full_sal/DEBY_sal_full.csv")
 
@@ -70,7 +72,7 @@ LA_sal$datetime <- as.POSIXct(LA_sal$datetime, "%Y-%m-%d %H:%M:%S", tz = "")
 
 FL_sal$datetime <- as.POSIXct(FL_sal$datetime, "%m/%d/%y %H:%M", tz = "")
 
-LOLA_sal$datetime <- as.POSIXct(LOLA_sal$datetime, "%Y-%m-%d %H:%M:%S", tz = "")
+LOLA_sal$datetime <- as.POSIXct(LOLA_sal$datetime, "%Y-%m-%d", tz = "")
 
 DEBY_sal$datetime <- as.POSIXct(DEBY_sal$datetime, "%Y-%m-%d %H:%M:%S", tz = "")
 
@@ -85,7 +87,7 @@ ME_sal$datetime <- as.POSIXct(ME_sal$datetime, "%m/%d/%y %H:%M", tz = "")
 ```{r}
 #S1-LOLA and the Lewisetta field site use the same environmental data, but the field site data should only include the time frame of the field experiment (August 2023 - November 2024). Make a copy of the LOLA_sal df, rename it LEW_sal, and filter the time frame.
 #currently subsetting dates as 08-01-2023- 11-20-2024
-LEW_sal <- LOLA_sal %>% 
+LEW_sal <- LOLA_sal[, c(3,1,2)] %>% 
   filter(datetime>= 1690862400 & datetime <= 1732078800)
 LEW_sal["site_name"][LEW_sal["site_name"] == "LOLA"] <- "LEW"
 ```
@@ -100,7 +102,7 @@ full_sal$salinity <- as.numeric(full_sal$salinity)
 
 #check for NAs
 na_full_sal <- is.na(full_sal) # store our NAs in a variable
-summary(na_full_sal) # we have 553 NAs in datetime and 192380 NAs in salinity that are stored as "TRUE" 
+summary(na_full_sal) # we have 190 NAs in datetime and 192110 NAs in salinity that are stored as "TRUE" 
 #remove NAs using na.omit
 full_sal <- na.omit(full_sal) 
 
@@ -144,7 +146,7 @@ quantiles$site_name <-
 quantiles <- quantiles[order(quantiles$site_name),]
 
 #write to csv
-write.csv(quantiles, file = "../../data/environment/quantiles_05232025.csv")
+write.csv(quantiles, file = "../../data/environment/quantiles_11092025.csv")
 
 ```
 

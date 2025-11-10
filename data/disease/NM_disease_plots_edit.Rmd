@@ -73,7 +73,7 @@ dermo_H2F
 ggsave("Dermo_Field_H2F.pdf",
        plot = dermo_H2F,
        device = "pdf",
-       height = 4,
+       height = 3,
        width = 5,
        path = ".")
 ```

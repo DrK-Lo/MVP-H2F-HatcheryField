@@ -257,7 +257,7 @@ length$pop <- factor(length$pop, levels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", 
 
 len_plot <- ggplot(length, aes(x = pop, y = length, fill = bag_site)) + 
   geom_boxplot(position=position_dodge(.8), linewidth = 0.4, fatten = 0.5) +
-  ylim(c(0, 155))+
+  ylim(c(0, 170))+
   labs(x = "Treatment Group", y = "Length (mm)", title = "Shell Length vs. Treatment Group", subtitle = "Final Field Monitoring Event, Nov. 2024", fill = "Site")+
   #scale_x_discrete(labels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME", "H1-HYBRIDMIX", "H2-SEEDMIX"))+
   scale_fill_manual(values = c("Lewisetta" = "#F06292", "YorkRiver" = "#880E4F"), labels = c("Lewisetta" = "Lewisetta", "YorkRiver" = "York River")) + 
@@ -292,15 +292,15 @@ for(x in l_letters_ls){
 
 #add horizontal line segments for each significance letter based on the dataframes we just made
 len_plot_sig <- len_plot + 
-  geom_segment(data = a_l_df, aes(x = x1, xend = x2, y = 152, yend =152), color = "#8A8989") + 
-  geom_segment(data = b_l_df, aes(x = x1, xend = x2, y = 150, yend =150), color = "#8A8989")+
-  geom_segment(data = c_l_df, aes(x = x1, xend = x2, y = 148, yend =148), color = "#8A8989")+
-  geom_segment(data = d_l_df, aes(x = x1, xend = x2, y = 146, yend =146), color = "#8A8989")+
-  geom_segment(data = e_l_df, aes(x = x1, xend = x2, y = 144, yend =144), color = "#8A8989")+
-  geom_segment(data = f_l_df, aes(x = x1, xend = x2, y = 142, yend =142), color = "#8A8989") +
-  geom_segment(data = g_l_df, aes(x = x1, xend = x2, y = 140, yend =140), color = "#8A8989")+
-  geom_segment(data = h_l_df, aes(x = x1, xend = x2, y = 138, yend =138), color = "#8A8989")+
-  geom_segment(data = i_l_df, aes(x = x1, xend = x2, y = 136, yend =136), color = "#8A8989")+
+  geom_segment(data = a_l_df, aes(x = x1, xend = x2, y = 170, yend =170), color = "#8A8989") + 
+  geom_segment(data = b_l_df, aes(x = x1, xend = x2, y = 166, yend =166), color = "#8A8989")+
+  geom_segment(data = c_l_df, aes(x = x1, xend = x2, y = 162, yend =162), color = "#8A8989")+
+  geom_segment(data = d_l_df, aes(x = x1, xend = x2, y = 158, yend =158), color = "#8A8989")+
+  geom_segment(data = e_l_df, aes(x = x1, xend = x2, y = 154, yend =154), color = "#8A8989")+
+  geom_segment(data = f_l_df, aes(x = x1, xend = x2, y = 150, yend =150), color = "#8A8989") +
+  geom_segment(data = g_l_df, aes(x = x1, xend = x2, y = 146, yend =146), color = "#8A8989")+
+  geom_segment(data = h_l_df, aes(x = x1, xend = x2, y = 142, yend =142), color = "#8A8989")+
+  geom_segment(data = i_l_df, aes(x = x1, xend = x2, y = 138, yend =138), color = "#8A8989")+
   geom_segment(data = j_l_df, aes(x = x1, xend = x2, y = 134, yend =134), color = "#8A8989")+
   geom_hline(yintercept = 130, linetype = "dashed")
 
