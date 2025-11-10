@@ -304,17 +304,17 @@ inset_map <- inset_base +
   geom_point(data = common_garden, aes(x = Longitude, y = Latitude, shape = cg_site, fill = cg_site), size = 4)+
   scale_fill_manual(name = " ", breaks = c("LEW", "YRK"), 
                     values = c("#F06292", "#880E4F"),
-                    labels = c("Lewisetta (LEW): low salinity and disease", "York (YRK): higher salinity and disease"))+
+                    labels = str_wrap(c("Lewisetta (LEW): low salinity and disease, LOLA selection site", "York (YRK): higher salinity and disease, DEBY selection site"), width = 35))+
   scale_shape_manual(name = " ", breaks = c("LEW", "YRK"), 
                     values = c(23, 24),
-                    labels = c("Lewisetta (LEW): low salinity and disease", "York (YRK): higher salinity and disease"))+
+                    labels = str_wrap(c("Lewisetta (LEW): low salinity and disease, LOLA selection site", "York (YRK): higher salinity and disease, DEBY selection site"), width = 35))+
   ggtitle("Common Garden Sites")+
   scale_x_continuous(breaks = seq(-78, -74, by =1))+
   scale_y_continuous(breaks = seq(36.5, 39.5, by = 1))+
-  theme(legend.position = "right",
+  theme(legend.position = "bottom",
         legend.direction = "vertical",
-        legend.text = element_text(size = 11),
-        plot.title = element_text(size = 11))
+        legend.text = element_text(size = 9),
+        plot.title = element_text(size = 10))
 
 inset_map
 

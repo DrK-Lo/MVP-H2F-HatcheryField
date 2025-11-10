@@ -25,7 +25,7 @@ This is the standard deviation, 10th quantile, and 90th quantile for salinity an
 ```{r}
 setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/envr_data")
 
-envr_quants_raw <- read_csv("../../data/environment/quantiles_05232025.csv")[,-c(1, 9)]
+envr_quants_raw <- read_csv("../../data/environment/quantiles_11092025.csv")[,-c(1, 9)]
 ```
 
 ### Data preparation
@@ -49,8 +49,7 @@ write.csv(envr_quants_filtered, "../../data/envr_of_origin/envr_quantiles_summar
 
 ```{r}
 # select columns that need to be scaled for distance analysis
-envr_for_scaling_all <- envr_quants_ordered %>%
-  select(salinity_quantile_10, salinity_quantile_90, temp_quantile_10, temp_quantile_90)
+envr_for_scaling_all <- envr_quants_ordered[, c(2,3,5,6)]
 
 # scale
 envr_scaled_all <- (scale(envr_for_scaling_all))
@@ -69,7 +68,6 @@ colnames(envr_quants_mat_all) <- c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA"
 Scaled, using quantiles and no standard deviations. 
 
 ```{r}
-
 # save envr distance matrix as csv
 write.csv(envr_quants_mat_all, "../../data/envr_of_origin/envr_quantiles_dist_all.csv")
 
@@ -80,8 +78,7 @@ View(envr_quants_mat_all)
 
 ```{r}
 # select columns that need to be scaled for distance analysis
-envr_for_scaling <- envr_quants_filtered %>%
-  select(salinity_quantile_10, salinity_quantile_90, temp_quantile_10, temp_quantile_90)
+envr_for_scaling <- envr_quants_filtered[, c(2,3,5,6)]
 
 # scale
 envr_scaled <- (scale(envr_for_scaling))
