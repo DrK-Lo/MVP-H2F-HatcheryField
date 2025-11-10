@@ -36,7 +36,7 @@ library(ggstance) #for vertical position dodge function
 length <- read.csv(file.path("../../data/performance_H2F/latestage_length.csv"))
 
 #this file has 0.1 and 0.9 quantiles for temperature and salinity for the 8 groups
-quantiles <- read.csv("../../data/environment/quantiles_05232025.csv")[, -c(1,9)]
+quantiles <- read.csv("../../data/environment/quantiles_11092025.csv")[, -c(1,9)]
 
 #this file contains survival rate data for larval oysters up to day 21 post hatching
 survival <-  read.csv("../../data/performance_H2F/CViMVP_larvae_survival.csv")

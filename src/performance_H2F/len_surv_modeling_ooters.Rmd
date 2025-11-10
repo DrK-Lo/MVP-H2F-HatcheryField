@@ -33,10 +33,10 @@ I intend to use linear (mixed) models to examine how survival and length vary by
 First I'll read in and process survival data
 
 ```{r}
-setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/performance_H2F")
+setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField")
 # read in data
-surv_long <- read.csv("../../data/performance_H2F/mortality_long_bags_h2f_2025-07-23.csv")[,-1]
-bags <- read.csv("../../data/performance_H2F/MVP23-FieldBags-bags.csv")
+surv_long <- read.csv("data/performance_H2F/mortality_long_bags_h2f_2025-07-23.csv")[,-1]
+bags <- read.csv("data/performance_H2F/MVP23-FieldBags-bags.csv")
 
 # split bags to have more detailed bag data
 bags[,5:6] <- str_split_fixed(bags$bags_label, "-", 3)[,2:3]
@@ -52,9 +52,6 @@ colnames(surv_mod_ord) <- c("bag_site","pop","bags_label","t","surv")
 map=c("TX"="W1-TX","LA"="W2-LA","FL"="W3-FL","LOLA"="S1-LOLA","DEBY"="S2-DEBY",
       "JR"="W4-VA","NH"="W5-NH","ME"="W6-ME", "LARMIX" = "H1-HYBRIDMIX", "SEEDMIX" = "H2-SEEDMIX")
 surv_mod_ord_rename <- surv_mod_ord %>% mutate(pop = ifelse(pop %in% names(map), map[pop], pop))
-
-# we should also remove seedmix and larmix from the df used to test for parental effects
-#surv_mod_ord_rm <- surv_mod_ord_rename %>% filter(!pop %in% c("LARMIX","SEEDMIX"))
 ```
 
 Now I can use LMMs to look at differences in survival by group.
@@ -84,7 +81,7 @@ drop1(lmm2)
 TukeyHSD(aov(lmm2))
 # another way to do this, in em-means package can get Tukey to letters in plot
 
-sink(paste0("../../results_field/survival_model_results_",Sys.Date(),".txt"))
+sink(paste0("results_field/survival_model_results_",Sys.Date(),".txt"))
 Anova(lmm1.1, type = "III")
 Anova(lmm2, type = "III")
 sink()
@@ -128,7 +125,7 @@ letters_surv_t3_df_red <- letters_surv_t3_df[,c("letters.Letters","popsite")]
 colnames(letters_surv_t3_df_red) <- c("letters","popsite")
 
 # save these outputs too
-sink(paste0("../../results_field/survival_model_results_",Sys.Date(),".txt"))
+sink(paste0("results_field/survival_model_results_",Sys.Date(),".txt"))
 Anova(lmm1.1, type = "III")
 Anova(lmm2, type = "III")
 Anova(lmm2.1, type = "III")
@@ -138,7 +135,7 @@ sink()
 # merge
 surv_final_time_rename_mg <- merge(surv_t3, letters_surv_t3_df_red, by = "popsite")
 
-write.csv(surv_final_time_rename_mg, paste0("../../data/performance_H2F/field_surv_final_time",Sys.Date(),".csv"))
+write.csv(surv_final_time_rename_mg, paste0("data/performance_H2F/field_surv_final_time",Sys.Date(),".csv"))
 
 # plot
 # pop color scheme
@@ -165,7 +162,7 @@ Now I'll try modeling differences in length. I'll start by reading in and proces
 
 ```{r}
 # read in and trim data
-lengths <- read.csv("../../results_field/lengths_long.csv")[,-1]
+lengths <- read.csv("results_field/lengths_long.csv")[,-1]
 head(lengths)
 lengths_mod <- lengths[,c("bag_site","pop","monitoring_event","bags_label","tags_label","length","width")]
 colnames(lengths_mod) <- c("bag_site","pop","t","bags_label","tags_label","length","width")
@@ -175,7 +172,7 @@ map=c("TX"="W1-TX","LA"="W2-LA","FL"="W3-FL","LOLA"="S1-LOLA","DEBY"="S2-DEBY",
       "JR"="W4-VA","NH"="W5-NH","ME"="W6-ME", "LARMIX" = "H1-HYBRIDMIX", "SEEDMIX" = "H2-SEEDMIX")
 lengths_mod_rename <- lengths_mod %>% mutate(pop = ifelse(pop %in% names(map), map[pop], pop))
 
-# we should also remove seedmix and larmix from the df used to test for parental effects
+# we should remove seedmix and larmix from the df used to test for parental effects since we have no environmental data for these
 #lengths_mod_rm <- lengths_mod_rename %>% filter(!pop %in% c("LARMIX","SEEDMIX"))
 
 # some individuals died/went missing and have "0" in length/width - rm these
@@ -219,7 +216,7 @@ boxplot(residuals(modtemp0.1) ~ lengths_mod_narm_nodead$bags_label) # looks for 
 # with interactions
 # using REML
 lmm3 <- lmer(length ~ bag_site * pop * t + (1|bags_label), data = lengths_mod_narm_nodead)
-Anova(lmm3, type = "III") # all signif
+Anova(lmm3, type = "III") # all signif except bag_site:t
 
 # start with full model, then subtract each interaction, then subtract two of the interaction
 drop1(lmm3) # says to drop the three way interaction - this is Satterthwaite's method
@@ -230,7 +227,6 @@ drop1(lmm3) # says to drop the three way interaction - this is Satterthwaite's m
 lmm4 <- lmer(length ~ bag_site * pop + (1|bags_label), data = lengths_mod_narm_nodead[lengths_mod_narm_nodead$t == 3,])
 plot(lmm4)
 Anova(lmm4, type = "III") # all significant
-#TukeyHSD(aov(lmm10)) # tukey post hoc - not working, try em-means
 
 emmeans_lmm4 <- emmeans::emmeans(lmm4, ~bag_site * pop) # get estimated marginal means
 (pairwise_contrasts_lmm4 <- emmeans(lmm4, ~ bag_site * pop) )
@@ -264,16 +260,16 @@ summary_len_t3 <- lengths_final_time_rename_mg %>%
   arrange()
 
 # save all this 
-sink(paste0("../../results_field/length_model_results_",Sys.Date(),".txt"))
+sink(paste0("results_field/length_model_results_",Sys.Date(),".txt"))
 Anova(lmm3, type = "III")
 Anova(lmm4, type = "III")
 anova_len_t3
 letters_len_t3
 sink()
 
-write.csv(lengths_final_time_rename_mg, paste0("../../data/performance_H2F/field_length_final_time_",Sys.Date(),".csv"))
+write.csv(lengths_final_time_rename_mg, paste0("data/performance_H2F/field_length_final_time_",Sys.Date(),".csv"))
 
-write.csv(letters_len_t3_df, paste0("../../data/performance_H2F/field_length_letters_",Sys.Date(),".csv"))
+write.csv(letters_len_t3_df, paste0("data/performance_H2F/field_length_letters_",Sys.Date(),".csv"))
 
 len_final_time_plotting <- merge(lengths_final_time_rename_mg, pop_colors, by = "pop")
 
@@ -286,7 +282,7 @@ len_t3_plot_pop <- ggplot(len_final_time_plotting, aes(x = bag_site, y = length,
   theme_classic()
 len_t3_plot_pop
 
-ggsave(paste0("../../figures/performance_H2F/length_t3_h2f_",Sys.Date(),".pdf"), plot = len_t3_plot_pop, width = 10, height = 6, dpi = 300)
+ggsave(paste0("figures/performance_H2F/length_t3_h2f_",Sys.Date(),".pdf"), plot = len_t3_plot_pop, width = 10, height = 6, dpi = 300)
 ```
 
 
@@ -538,7 +534,7 @@ drop1(surv_GE3.0.york.0) # final model
 
 
 # save everything
-sink(paste0("../../results_field/survival_GE_model_results_",Sys.Date(),".txt"))
+sink(paste0("results_field/survival_GE_model_results_",Sys.Date(),".txt"))
 cat("\nLEWt1 quants\n")
 summary(surv_GE1.2.lew)
 cat("\nLEWt1 sd\n")
