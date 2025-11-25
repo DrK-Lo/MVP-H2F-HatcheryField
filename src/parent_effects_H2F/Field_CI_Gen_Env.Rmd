@@ -44,7 +44,7 @@ ci_df <- read_csv("../../data/condition_index_H2F/MVP_phenotyping_final.csv", sh
 gen_parents <- read.csv("../../data/parent_effects_H2F/parent_genetic_effects.csv")
 
 #environment of origin quantiles
-env_parents <- read.csv("../../data/environment/quantiles_05232025.csv")[,-c(1, 9)]
+env_parents <- read.csv("../../data/environment/quantiles_11092025.csv")[,-c(1, 9)]
 
 #environmental distance based on scaled envr quantiles
 env_dist <- read.csv("../../data/envr_of_origin/envr_quantiles_dist_all.csv")
@@ -125,17 +125,17 @@ summary(ci_t1_lew_scaled)
 ```{r t2_ci_lew}
 ci_t2_lew <- lmerTest::lmer(ci ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "Lewisetta",]) 
 #plot(ci_t2_lew) 
-Anova(ci_t2_lew, type = "III") # temp10 signif
+Anova(ci_t2_lew, type = "III") # nothing signif, but temp10 is borderline significant based on p-val (p = 0.06)
 summary(ci_t2_lew)
-step(ci_t2_lew) # drop ho, ar, sal quant10
+step(ci_t2_lew) # says drop everything but ho, but will keep temp10 and check again
 
-ci_t2_lew2 <- lmerTest::lmer(ci ~ temp_quantile_10 + salinity_quantile_90 + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "Lewisetta",]) 
+ci_t2_lew2 <- lmerTest::lmer(ci ~ temp_quantile_10 + ho + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "Lewisetta",]) 
 #plot(ci_t2_lew2) 
-Anova(ci_t2_lew2, type = "III") # temp10, sal90 signif
+Anova(ci_t2_lew2, type = "III") # both temp10 and ho significant
 summary(ci_t2_lew2)
-step(ci_t2_lew2) #says to drop random effect, we will keep it for consistency among all models
+step(ci_t2_lew2) #says to drop random effect, we will keep it for consistency among all models. Also drop temp10
 
-ci_t2_lew_scaled <- lmerTest::lmer(scale(ci) ~ scale(temp_quantile_10) + scale(salinity_quantile_90) + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "Lewisetta",])
+ci_t2_lew_scaled <- lmerTest::lmer(scale(ci) ~ scale(ho) + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "Lewisetta",])
 ```
 
 ### T3 CI, Lewisetta
@@ -144,28 +144,29 @@ ci_t3_lew <- lmerTest::lmer(ci ~ ho + ar + salinity_quantile_10 + salinity_quant
 #plot(ci_t3_lew) 
 Anova(ci_t3_lew, type = "III") # sal10 signif
 summary(ci_t3_lew)
-step(ci_t3_lew) # drop everything but sal10, we will keep the random effect for consistency among all models
+step(ci_t3_lew) # drop everything but sal10 and ar, we will keep the random effect for consistency among all models
 
-ci_t3_lew2 <- lmerTest::lmer(ci ~ salinity_quantile_10 + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t3" & ci_gen_env$bag_site == "Lewisetta",])
+ci_t3_lew2 <- lmerTest::lmer(ci ~ ar + salinity_quantile_10 + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t3" & ci_gen_env$bag_site == "Lewisetta",])
 
 #plot(ci_t3_lew) 
 Anova(ci_t3_lew2) #sal10 signif
 summary(ci_t3_lew2)
+step(ci_t3_lew2) #final model
 
-ci_t3_lew_scaled <- lmerTest::lmer(scale(ci) ~ scale(salinity_quantile_10) + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t3" & ci_gen_env$bag_site == "Lewisetta",])
+ci_t3_lew_scaled <- lmerTest::lmer(scale(ci) ~ scale(ar) +  scale(salinity_quantile_10) + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t3" & ci_gen_env$bag_site == "Lewisetta",])
 ```
 
 ### T1 CI, York
 ```{r t1_ci_yrk}
 ci_t1_yrk <- lmerTest::lmer(ci ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t1" & ci_gen_env$bag_site == "YorkRiver",]) 
 #plot(ci_t1_yrk) 
-Anova(ci_t1_yrk, type = "III") # sal10 signif
+Anova(ci_t1_yrk, type = "III") # ho and sal10 signif
 summary(ci_t1_yrk)
 step(ci_t1_yrk) # drop everything but ho and sal10, function says to drop random effect but we will keep it for consistency between models
 
 ci_t1_yrk2 <-lmerTest::lmer(ci ~ ho + salinity_quantile_10 + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t1" & ci_gen_env$bag_site == "YorkRiver",])
 #plot(ci_t1_yrk2) 
-Anova(ci_t1_yrk2)
+Anova(ci_t1_yrk2) #both signif
 summary(ci_t1_yrk2)
 
 ci_t1_yrk_scaled <- lmerTest::lmer(scale(ci) ~ scale(ho) + scale(salinity_quantile_10) + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t1" & ci_gen_env$bag_site == "YorkRiver",])
@@ -177,15 +178,15 @@ ci_t2_yrk <- lmerTest::lmer(ci ~ ho + ar + salinity_quantile_10 + salinity_quant
 #plot(ci_t2_yrk) 
 Anova(ci_t2_yrk, type = "III") # ar signif
 summary(ci_t2_yrk)
-step(ci_t2_yrk) # drop everything but ar and temp10, keep random effect
+step(ci_t2_yrk) # drop everything but ar keep random effect
 
-ci_t2_yrk2 <-lmerTest::lmer(ci ~ ar + temp_quantile_10 + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "YorkRiver",]) 
+ci_t2_yrk2 <-lmerTest::lmer(ci ~ ar + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "YorkRiver",]) 
 #plot(ci_t2_yrk2) 
 Anova(ci_t2_yrk2, type = "III") #both signif
 summary(ci_t2_yrk2)
-step(ci_t2_yrk2) # drop random effect, ignoring this for reasons mentioned above
 
-ci_t2_yrk_scaled <- lmerTest::lmer(scale(ci) ~ scale(ar) + scale(temp_quantile_10) + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "YorkRiver",])
+
+ci_t2_yrk_scaled <- lmerTest::lmer(scale(ci) ~ scale(ar) + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "YorkRiver",])
 ```
 
 ### T3 CI, York
@@ -279,16 +280,10 @@ dist_t2_lew_scaled <- lmerTest::lmer(scale(ci) ~ scale(ho) + (1|bags_label), dat
 ```{r}
 dist_t3_lew <- lmerTest::lmer(ci ~ ho + ar + dist_LEW + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t3" & ci_gen_dist$bag_site == "Lewisetta",]) 
 #plot(dist_t3_lew) 
-Anova(dist_t3_lew, type = "III") # ho, ar signif
+Anova(dist_t3_lew, type = "III") # ho, ar, dist_LEW signif
 summary(dist_t3_lew)
-step(dist_t3_lew) # drop random effect
+step(dist_t3_lew) # says to drop random effect, but ignoring for consistency
 
-dist_t3_lew2 <-lm(ci ~ ho + ar + dist_LEW, data = ci_gen_dist[ci_gen_dist$t == "t3" & ci_gen_dist$bag_site == "Lewisetta",]) 
-#plot(dist_t3_lew2) 
-summary(dist_t3_lew2) #all signif
-drop1(dist_t3_lew2) #final model
-
-#use lmer with random effect for plotting, but note that excluding the random effect makes envr distance a significant predictor (but barely, p = 0.034)
 dist_t3_lew_scaled <- lmerTest::lmer(scale(ci) ~ scale(ho) + scale(ar) + scale(dist_LEW) + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t3" & ci_gen_dist$bag_site == "Lewisetta",]) 
 ```
 
@@ -355,8 +350,8 @@ cat("\nLEW t2 (Nov. 2023) scaled modeling approach 2\n")
 summary(dist_t2_lew_scaled)
 Anova(dist_t2_lew_scaled)
 cat("\nLEW t3 (May 2024) modeling approach 2\n")
-summary(dist_t3_lew2)
-Anova(dist_t3_lew2)
+summary(dist_t3_lew)
+Anova(dist_t3_lew)
 cat("\nLEW t3 (May 2024) scaled modeling approach 2\n")
 summary(dist_t3_lew_scaled)
 Anova(dist_t3_lew_scaled)
@@ -382,7 +377,7 @@ sink()
 ##Figure product - Lewisetta CI model 1
 ```{r}
 lew_ci1_df <- rbind(broom.mixed::tidy(ci_t1_lew_scaled), tidy(ci_t2_lew_scaled), tidy(ci_t3_lew_scaled))
-lew_ci1_df$t <- c(rep(c("t1"), 4), rep(c("t2"), 5), rep(c("t3"), 4))
+lew_ci1_df$t <- c(rep(c("t1"), 4), rep(c("t2"), 4), rep(c("t3"), 5))
 
 #remove rows with Intercept slopes and ran_par
 lew_ci1_df <- lew_ci1_df %>% 
@@ -401,12 +396,12 @@ lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(temp_quantile_10)",-.4,.01,N
 lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(salinity_quantile_10)",-.4,.01,NA,NA, NA,"t1")
 lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(salinity_quantile_90)",-.4,.01,NA,NA,NA,"t1")
 #t2
-lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(ho)",-.4,.01,NA,NA,NA,"t2")
 lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(ar)",-.4,.01,NA,NA,NA,"t2")
 lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(salinity_quantile_10)",-.4,.01,NA,NA,NA,"t2")
+lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(salinity_quantile_90)",-.4,.01,NA,NA,NA,"t2")
+lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(temp_quantile_10)",-.4,.01,NA,NA,NA,"t2")
 #t3
 lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(ho)",-.4,.01,NA,NA,NA,"t3")
-lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(ar)",-.4,.01,NA,NA,NA,"t3")
 lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(temp_quantile_10)",-.4,.01,NA,NA,NA,"t3")
 lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(salinity_quantile_90)",-.4,.01,NA,NA,NA,"t3")
 
@@ -442,7 +437,7 @@ ggsave("lew_ci1.pdf",
 #Plotting slopes - York CI model 1
 ```{r}
 yrk_ci1_df <- rbind(broom.mixed::tidy(ci_t1_yrk_scaled), tidy(ci_t2_yrk_scaled), tidy(ci_t3_yrk_scaled))
-yrk_ci1_df$t <- c(rep(c("t1"), 5), rep(c("t2"), 5), rep(c("t3"), 5))
+yrk_ci1_df$t <- c(rep(c("t1"), 5), rep(c("t2"), 4), rep(c("t3"), 5))
 
 #remove rows with Intercept slopes and ran_par
 yrk_ci1_df <- yrk_ci1_df %>% 
@@ -463,6 +458,7 @@ yrk_ci1_df_sub[nrow(yrk_ci1_df_sub)+1,]=list("scale(salinity_quantile_90)",-.4,.
 yrk_ci1_df_sub[nrow(yrk_ci1_df_sub)+1,]=list("scale(ho)",-.4,.01,NA,NA,NA,"t2")
 yrk_ci1_df_sub[nrow(yrk_ci1_df_sub)+1,]=list("scale(salinity_quantile_10)",-.4,.01,NA,NA,NA,"t2")
 yrk_ci1_df_sub[nrow(yrk_ci1_df_sub)+1,]=list("scale(salinity_quantile_90)",-.4,.01,NA,NA,NA,"t2")
+yrk_ci1_df_sub[nrow(yrk_ci1_df_sub)+1,]=list("scale(temp_quantile_10)",-.4,.01,NA,NA,NA,"t2")
 #t3
 yrk_ci1_df_sub[nrow(yrk_ci1_df_sub)+1,]=list("scale(ho)",-.4,.01,NA,NA,NA,"t3")
 yrk_ci1_df_sub[nrow(yrk_ci1_df_sub)+1,]=list("scale(temp_quantile_10)",-.4,.01,NA,NA,NA,"t3")

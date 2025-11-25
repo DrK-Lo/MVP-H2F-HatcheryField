@@ -6,6 +6,8 @@ date: "2025-02-20"
 
 This code analyzes the effect of conditions in the environments-of-origin and parent genetics on offspring oyster survival and shell length in the VIMS ABC hatchery and nursery.
 
+CR: Updated 2025-11-16 with new envr quantiles file.
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -194,18 +196,18 @@ VIF <- function(a, b, c, d, e){
 
 #get VIF for temp quantile 10
 VIF(envr_gen$temp10, envr_gen$sal10, envr_gen$sal90, envr_gen$ho, envr_gen$ar)
-#VIF temp10 = 2.82
+#VIF temp10 = 2.50
 
 VIF(envr_gen$sal10, envr_gen$sal90, envr_gen$ho, envr_gen$ar, envr_gen$temp10)
-#VIF sal10 = 2.47
+#VIF sal10 = 2.39
 
 #VIF for salinity quantile 90
 VIF(envr_gen$sal90, envr_gen$ho, envr_gen$ar, envr_gen$temp10, envr_gen$sal10)
-#VIF_sal90 = 2.78
+#VIF_sal90 = 2.81
 
 #VIF for ho
 VIF(envr_gen$ho, envr_gen$ar, envr_gen$temp10, envr_gen$sal10, envr_gen$sal90)
-#VIF_ho = 4.04
+#VIF_ho = 3.43
 
 #VIF for average allelic richness
 VIF(envr_gen$ar, envr_gen$temp10, envr_gen$sal10, envr_gen$sal90, envr_gen$ho)

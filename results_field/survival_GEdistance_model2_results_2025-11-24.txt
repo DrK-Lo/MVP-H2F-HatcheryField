@@ -1,0 +1,288 @@
+
+LEW t1 (May 2023) modeling approach 2
+
+Call:
+lm(formula = surv ~ ho + ar + dist_LEW, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 
+    1 & surv_mod_gen_dist$bag_site == "Lewisetta", ])
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.210797 -0.060978 -0.002912  0.046624  0.271002 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)   
+(Intercept) -4.35009    1.59314  -2.731  0.01289 * 
+ho           2.14985    0.73013   2.944  0.00802 **
+ar           1.73015    0.70302   2.461  0.02307 * 
+dist_LEW     0.05515    0.02689   2.051  0.05363 . 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.1177 on 20 degrees of freedom
+Multiple R-squared:  0.6029,	Adjusted R-squared:  0.5433 
+F-statistic: 10.12 on 3 and 20 DF,  p-value: 0.0002884
+
+
+LEW t1 (May 2023) scaled modeling approach 2
+
+Call:
+lm(formula = scale(surv) ~ scale(ho) + scale(ar) + scale(dist_LEW), 
+    data = surv_mod_gen_dist[surv_mod_gen_dist$t == 1 & surv_mod_gen_dist$bag_site == 
+        "Lewisetta", ])
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.21000 -0.35002 -0.01671  0.26763  1.55558 
+
+Coefficients:
+                  Estimate Std. Error t value Pr(>|t|)   
+(Intercept)     -4.320e-16  1.379e-01   0.000  1.00000   
+scale(ho)        4.960e-01  1.684e-01   2.944  0.00802 **
+scale(ar)        5.556e-01  2.258e-01   2.461  0.02307 * 
+scale(dist_LEW)  4.066e-01  1.982e-01   2.051  0.05363 . 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.6758 on 20 degrees of freedom
+Multiple R-squared:  0.6029,	Adjusted R-squared:  0.5433 
+F-statistic: 10.12 on 3 and 20 DF,  p-value: 0.0002884
+
+
+LEW t2 (Nov. 2023) modeling approach 2
+
+Call:
+lm(formula = surv ~ ho + ar + dist_LEW, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 
+    2 & surv_mod_gen_dist$bag_site == "Lewisetta", ])
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.158652 -0.046412  0.009396  0.045445  0.189490 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -4.62476    1.29073  -3.583  0.00186 ** 
+ho           3.02059    0.59154   5.106 5.39e-05 ***
+ar           1.67211    0.56958   2.936  0.00817 ** 
+dist_LEW     0.06000    0.02179   2.754  0.01224 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.09538 on 20 degrees of freedom
+Multiple R-squared:  0.7735,	Adjusted R-squared:  0.7395 
+F-statistic: 22.76 on 3 and 20 DF,  p-value: 1.174e-06
+
+
+LEW t2 (Nov. 2023) scaled modeling approach 2
+
+Call:
+lm(formula = scale(surv) ~ scale(ho) + scale(ar) + scale(dist_LEW), 
+    data = surv_mod_gen_dist[surv_mod_gen_dist$t == 2 & surv_mod_gen_dist$bag_site == 
+        "Lewisetta", ])
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.84898 -0.24836  0.05028  0.24318  1.01400 
+
+Coefficients:
+                  Estimate Std. Error t value Pr(>|t|)    
+(Intercept)     -2.405e-16  1.042e-01   0.000  1.00000    
+scale(ho)        6.496e-01  1.272e-01   5.106 5.39e-05 ***
+scale(ar)        5.006e-01  1.705e-01   2.936  0.00817 ** 
+scale(dist_LEW)  4.123e-01  1.497e-01   2.754  0.01224 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.5104 on 20 degrees of freedom
+Multiple R-squared:  0.7735,	Adjusted R-squared:  0.7395 
+F-statistic: 22.76 on 3 and 20 DF,  p-value: 1.174e-06
+
+
+LEW t3 (May 2024) modeling approach 2
+
+Call:
+lm(formula = surv ~ ho + ar + dist_LEW, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 
+    3 & surv_mod_gen_dist$bag_site == "Lewisetta", ])
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.259722 -0.072193 -0.006987  0.099550  0.203076 
+
+Coefficients:
+             Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -10.32288    1.72636  -5.980 7.58e-06 ***
+ho            3.23838    0.79119   4.093 0.000566 ***
+ar            3.91847    0.76181   5.144 4.95e-05 ***
+dist_LEW      0.09982    0.02914   3.425 0.002680 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.1276 on 20 degrees of freedom
+Multiple R-squared:  0.8206,	Adjusted R-squared:  0.7937 
+F-statistic:  30.5 on 3 and 20 DF,  p-value: 1.167e-07
+
+
+LEW t3 (May 2024) scaled modeling approach 2
+
+Call:
+lm(formula = scale(surv) ~ scale(ho) + scale(ar) + scale(dist_LEW), 
+    data = surv_mod_gen_dist[surv_mod_gen_dist$t == 3 & surv_mod_gen_dist$bag_site == 
+        "Lewisetta", ])
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.92462 -0.25701 -0.02487  0.35440  0.72296 
+
+Coefficients:
+                  Estimate Std. Error t value Pr(>|t|)    
+(Intercept)     -7.249e-16  9.271e-02   0.000 1.000000    
+scale(ho)        4.634e-01  1.132e-01   4.093 0.000566 ***
+scale(ar)        7.804e-01  1.517e-01   5.144 4.95e-05 ***
+scale(dist_LEW)  4.564e-01  1.332e-01   3.425 0.002680 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.4542 on 20 degrees of freedom
+Multiple R-squared:  0.8206,	Adjusted R-squared:  0.7937 
+F-statistic:  30.5 on 3 and 20 DF,  p-value: 1.167e-07
+
+
+YRK t1 (May 2023) modeling approach 2
+
+Call:
+lm(formula = surv ~ ar + dist_YRK, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 
+    1 & surv_mod_gen_dist$bag_site == "YorkRiver", ])
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.18520 -0.01794  0.01574  0.03699  0.12405 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -3.31442    0.83033  -3.992 0.000663 ***
+ar           1.67467    0.33831   4.950 6.74e-05 ***
+dist_YRK     0.07970    0.02044   3.899 0.000826 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.07798 on 21 degrees of freedom
+Multiple R-squared:  0.5628,	Adjusted R-squared:  0.5212 
+F-statistic: 13.52 on 2 and 21 DF,  p-value: 0.0001687
+
+
+YRK t1 (May 2023) scaled modeling approach 2
+
+Call:
+lm(formula = scale(surv) ~ scale(ar) + scale(dist_YRK), data = surv_mod_gen_dist[surv_mod_gen_dist$t == 
+    1 & surv_mod_gen_dist$bag_site == "YorkRiver", ])
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.6434 -0.1592  0.1397  0.3282  1.1008 
+
+Coefficients:
+                  Estimate Std. Error t value Pr(>|t|)    
+(Intercept)     -1.257e-15  1.413e-01   0.000 1.000000    
+scale(ar)        8.313e-01  1.679e-01   4.950 6.74e-05 ***
+scale(dist_YRK)  6.549e-01  1.679e-01   3.899 0.000826 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.692 on 21 degrees of freedom
+Multiple R-squared:  0.5628,	Adjusted R-squared:  0.5212 
+F-statistic: 13.52 on 2 and 21 DF,  p-value: 0.0001687
+
+
+YRK t2 (Nov. 2023) modeling approach 2
+
+Call:
+lm(formula = surv ~ ar + dist_YRK, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 
+    2 & surv_mod_gen_dist$bag_site == "YorkRiver", ])
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.23731 -0.02812  0.01897  0.04136  0.10400 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -4.12594    0.84323  -4.893 7.72e-05 ***
+ar           1.92957    0.34357   5.616 1.42e-05 ***
+dist_YRK     0.08673    0.02076   4.178 0.000424 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.07919 on 21 degrees of freedom
+Multiple R-squared:  0.6171,	Adjusted R-squared:  0.5807 
+F-statistic: 16.92 on 2 and 21 DF,  p-value: 4.19e-05
+
+
+YRK t2 (Nov. 2023) scaled modeling approach 2
+
+Call:
+lm(formula = scale(surv) ~ scale(ar) + scale(dist_YRK), data = surv_mod_gen_dist[surv_mod_gen_dist$t == 
+    2 & surv_mod_gen_dist$bag_site == "YorkRiver", ])
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.9405 -0.2299  0.1551  0.3382  0.8505 
+
+Coefficients:
+                  Estimate Std. Error t value Pr(>|t|)    
+(Intercept)     -1.259e-15  1.322e-01   0.000 1.000000    
+scale(ar)        8.827e-01  1.572e-01   5.616 1.42e-05 ***
+scale(dist_YRK)  6.567e-01  1.572e-01   4.178 0.000424 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.6476 on 21 degrees of freedom
+Multiple R-squared:  0.6171,	Adjusted R-squared:  0.5807 
+F-statistic: 16.92 on 2 and 21 DF,  p-value: 4.19e-05
+
+
+YRK t3 (May 2024) modeling approach 2
+
+Call:
+lm(formula = surv ~ ho + ar + dist_YRK, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 
+    3 & surv_mod_gen_dist$bag_site == "YorkRiver", ])
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.188173 -0.093790 -0.006013  0.062530  0.198741 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -8.80013    1.50641  -5.842 1.03e-05 ***
+ho          -1.70512    0.83503  -2.042   0.0546 .  
+ar           4.03206    0.69527   5.799 1.13e-05 ***
+dist_YRK     0.09380    0.03606   2.601   0.0171 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.1201 on 20 degrees of freedom
+Multiple R-squared:  0.6739,	Adjusted R-squared:  0.625 
+F-statistic: 13.78 on 3 and 20 DF,  p-value: 4.217e-05
+
+
+YRK t3 (May 2024) scaled modeling approach 2
+
+Call:
+lm(formula = scale(surv) ~ scale(ho) + scale(ar) + scale(dist_YRK), 
+    data = surv_mod_gen_dist[surv_mod_gen_dist$t == 3 & surv_mod_gen_dist$bag_site == 
+        "YorkRiver", ])
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.95955 -0.47827 -0.03066  0.31886  1.01345 
+
+Coefficients:
+                  Estimate Std. Error t value Pr(>|t|)    
+(Intercept)     -1.536e-15  1.250e-01   0.000   1.0000    
+scale(ho)       -3.495e-01  1.711e-01  -2.042   0.0546 .  
+scale(ar)        1.150e+00  1.983e-01   5.799 1.13e-05 ***
+scale(dist_YRK)  4.429e-01  1.703e-01   2.601   0.0171 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.6124 on 20 degrees of freedom
+Multiple R-squared:  0.6739,	Adjusted R-squared:  0.625 
+F-statistic: 13.78 on 3 and 20 DF,  p-value: 4.217e-05
+

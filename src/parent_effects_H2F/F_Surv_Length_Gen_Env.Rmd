@@ -46,7 +46,7 @@ lengths_mod_narm_nodead <- read.csv("../../data/performance_H2F/field_length_all
 gen_parents <- read.csv("../../data/parent_effects_H2F/parent_genetic_effects.csv")
 
 #environment of origin quantiles
-env_parents <- read.csv("../../data/environment/quantiles_05232025.csv")[,-c(1, 9)]
+env_parents <- read.csv("../../data/environment/quantiles_11092025.csv")[,-c(1, 9)]
 
 #environmental distance based on scaled envr quantiles
 env_dist <- read.csv("../../data/envr_of_origin/envr_quantiles_dist_all.csv")
@@ -108,7 +108,7 @@ corrplot_quant <- corrplot(cor_matrix_quant,
          mar=c(0,0,2,0))
 dev.off()
 
-#temp quantile 90 is collinear with Ho (r = 0.74) and ar (r = 0.76). Salinity quantile 10 is borderline collinear with ho (-0.69).
+#temp quantile 90 is collinear with Ho (r = 0.72) and ar (r = 0.74). Salinity quantile 10 is borderline collinear with ho (-0.70).
 ```
 
 ## Assess VIF
@@ -119,18 +119,18 @@ VIF <- function(a, b, c, d, e){
 }
 #get VIF for temp quantile 10
 VIF(surv_mod_gen_env$temp_quantile_10, surv_mod_gen_env$salinity_quantile_10, surv_mod_gen_env$salinity_quantile_90, surv_mod_gen_env$ho, surv_mod_gen_env$ar)
-#VIF temp10 = 2.82
+#VIF temp10 = 2.50
 
 VIF(surv_mod_gen_env$salinity_quantile_10, surv_mod_gen_env$salinity_quantile_90, surv_mod_gen_env$ho, surv_mod_gen_env$ar, surv_mod_gen_env$temp_quantile_10)
-#VIF sal10 = 2.47
+#VIF sal10 = 2.39
 
 #VIF for salinity quantile 90
 VIF(surv_mod_gen_env$salinity_quantile_90, surv_mod_gen_env$ho, surv_mod_gen_env$ar, surv_mod_gen_env$temp_quantile_10, surv_mod_gen_env$salinity_quantile_10)
-#VIF_sal90 = 2.78
+#VIF_sal90 = 2.81
 
 #VIF for ho
 VIF(surv_mod_gen_env$ho, surv_mod_gen_env$ar, surv_mod_gen_env$temp_quantile_10, surv_mod_gen_env$salinity_quantile_10,  surv_mod_gen_env$salinity_quantile_90)
-#VIF_ho = 4.04
+#VIF_ho = 3.43
 
 #VIF for average allelic richness
 VIF(surv_mod_gen_env$ar, surv_mod_gen_env$temp_quantile_10, surv_mod_gen_env$salinity_quantile_10,  surv_mod_gen_env$salinity_quantile_90, surv_mod_gen_env$ho)
@@ -150,7 +150,7 @@ surv_GE1.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 
 vif(surv_GE1.lew) # double check vif, vif looks good
 
 #plot(surv_GE1.lew)
-summary(surv_GE1.lew) # ar signif
+summary(surv_GE1.lew) # ho signif
 drop1(surv_GE1.lew) # get rid of salinity_quantile_90
 
 surv_GE1.0.lew <- lm(surv ~ ho + ar + salinity_quantile_10 +  temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta",])
@@ -189,12 +189,12 @@ surv_t1_yrk_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_qu
 ```{r t2_surv_lew}
 surv_GE2.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta",])
 #plot(surv_GE2.lew)
-summary(surv_GE2.lew) # ho, temp_quantile_10 signif
+summary(surv_GE2.lew) # ho, salinity_quantile_10, temp_quantile_10 signif
 drop1(surv_GE2.lew) # get rid of salinity_quantile_90
 
 surv_GE2.0.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta",])
 #plot(surv_GE2.0.lew)
-summary(surv_GE2.0.lew) # intercept, ho, ar
+summary(surv_GE2.0.lew) # intercept, ho, ar, sal10
 drop1(surv_GE2.0.lew) # final model
 
 #make scaled model for plotting
@@ -206,7 +206,7 @@ surv_t2_lew_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_qu
 # york t2
 surv_GE2.york <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "YorkRiver",])
 #plot(surv_GE2.york)
-summary(surv_GE2.york) # ar, salinity_quantile_10, temp_quantile_10 signif
+summary(surv_GE2.york) # ho, ar, salinity_quantile_10, temp_quantile_10 signif
 drop1(surv_GE2.york) # get rid of salinity_quantile_90
 
 surv_GE2.0.york <- lm(surv ~ ho + ar + salinity_quantile_10 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "YorkRiver",])
@@ -235,7 +235,7 @@ surv_t3_lew_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_qu
 # york t3
 surv_GE3.york <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "YorkRiver",])
 #plot(surv_GE3.york)
-summary(surv_GE3.york) # intercept, ar, salinity_quantile_10 signif
+summary(surv_GE3.york) # intercept, ar, salinity_quantile_10, temp10 signif
 drop1(surv_GE3.york) # get rid of ho
 
 surv_GE3.0.york <- lm(surv ~ ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "YorkRiver",])
@@ -342,19 +342,12 @@ len_t2_lew_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(salinity
 ```{r}
 len_GE2.york <- lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "YorkRiver",])
 #plot(len_GE2.york)
-Anova(len_GE2.york, type = "III") # all except salinity_quantile_90 and temp quant 10 signif
+Anova(len_GE2.york, type = "III") # all signif
 summary(len_GE2.york)
-step(len_GE2.york) # drop salinity_quantile_90 and temp10
-
-len_GE2.0.york <- lmer(length ~ ho + ar + salinity_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "YorkRiver",])
-len_GE2.0.york
-#plot(len_GE2.0.york)
-Anova(len_GE2.0.york, type = "III") # all signif 
-summary(len_GE2.0.york)
-step(len_GE2.0.york) # final model
+step(len_GE2.york) # drop nothing
 
 #make scaled version for plotting
-len_t2_yrk_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "YorkRiver",])
+len_t2_yrk_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + scale(salinity_quantile_90) + scale(temp_quantile_10) + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "YorkRiver",])
 len_t2_yrk_scaled
 ```
 
@@ -420,8 +413,8 @@ cat("\nYRK t1 (May 2023) scaled modeling approach 1\n")
 summary(len_t1_yrk_scaled)
 Anova(len_t1_yrk_scaled, type = "III")
 cat("\nYRK t2 (Nov. 2023) modeling approach 1\n")
-summary(len_GE2.0.york)
-Anova(len_GE2.0.york, type = "III")
+summary(len_GE2.york)
+Anova(len_GE2.york, type = "III")
 cat("\nYRK t2 (Nov. 2023) scaled modeling approach 1\n")
 summary(len_t2_yrk_scaled)
 Anova(len_t2_yrk_scaled, type = "III")
@@ -489,9 +482,10 @@ yrk_surv_df <- yrk_surv_df %>%
   filter(explanatory != "(Intercept)")
 
 #add dummy rows for time points lacking variables so that position_dodge v plots each data point in the same time point at consistent vertical positions for each y axis variable
-yrk_surv_df[nrow(yrk_surv_df) + 1,] = list("scale(ho)", -.5, .01, NA, NA, "t3")
 yrk_surv_df[nrow(yrk_surv_df) + 1,] = list("scale(salinity_quantile_90)", -.5, .01, NA, NA, "t1")
 yrk_surv_df[nrow(yrk_surv_df) + 1,] = list("scale(salinity_quantile_90)", -.5, .01, NA, NA, "t2")
+yrk_surv_df[nrow(yrk_surv_df) + 1,] = list("scale(ho)", -.5, .01, NA, NA, "t3")
+
 
 yrk_surv_plot <- yrk_surv_df %>% 
   ggplot(aes(x = slope, y = explanatory))+
@@ -580,7 +574,7 @@ ggsave("lew_length.pdf",
 ```{r}
 yrk_len_df <- rbind(broom.mixed::tidy(len_t1_yrk_scaled), broom.mixed::tidy(len_t2_yrk_scaled), broom.mixed::tidy(len_t3_yrk_scaled))
 
-yrk_len_df$t <- c(rep(c("t1"), 6), rep(c("t2"), 6), rep(c("t3"), 7))
+yrk_len_df$t <- c(rep(c("t1"), 6), rep(c("t2"), 8), rep(c("t3"), 7))
 
 colnames(yrk_len_df) <- c("effect", "group", "explanatory", "slope", "se", "Fstat", "df", "pval", "t")
 #remove rows with Intercept slopes and random effects
@@ -593,8 +587,6 @@ yrk_len_df2 <- subset(yrk_len_df, select= -c(effect, group))
 #add dummy rows for time points lacking variables so that position_dodge v plots each data point in the same time point at consistent vertical positions for each y axis variable
 yrk_len_df2[nrow(yrk_len_df2) + 1,] = list("scale(temp_quantile_10)", -.4, .01, NA, NA, NA, "t1")
 yrk_len_df2[nrow(yrk_len_df2) + 1,] = list("scale(salinity_quantile_90)", -.4, .01, NA, NA, NA, "t1")
-yrk_len_df2[nrow(yrk_len_df2) + 1,] = list("scale(temp_quantile_10)", -.4, .01, NA, NA, NA, "t2")
-yrk_len_df2[nrow(yrk_len_df2) + 1,] = list("scale(salinity_quantile_90)", -.4, .01, NA, NA, NA, "t2")
 yrk_len_df2[nrow(yrk_len_df2) + 1,] = list("scale(salinity_quantile_90)", -.4, .01, NA, NA, NA, "t3")
 
 
@@ -629,12 +621,4 @@ ggsave("yrk_length.pdf",
        path = "../../figures/parent_effects_H2F",
        height = 4,
        width = 7)
-
-
-surv_mod_gen_env %>% 
-  filter(t== "3") %>% 
-  filter(bag_site == "Lewisetta") %>% 
-  ggplot(aes(x = salinity_quantile_10, y = surv))+
-  geom_point()+
-  geom_smooth(formula = y~x, method = "lm")
 ```

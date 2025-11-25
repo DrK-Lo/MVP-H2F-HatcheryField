@@ -88,7 +88,7 @@ corrplot_lew <- corrplot(cor_matrix_lew,
          addCoef.col = 'black',
          mar=c(0,0,2,0))
 dev.off()
-#borderline collinearity with distance to Lew and ar
+#borderline collinearity with distance to Lew and ar (r = -0.69). 
 
 cor_matrix_yrk <- cor(surv_mod_gen_dist[,c("dist_YRK", "ho", "ar")])
 
@@ -116,30 +116,26 @@ VIF <- function(a, b, c){
 }
 
 VIF(surv_mod_gen_dist$ho, surv_mod_gen_dist$ar, surv_mod_gen_dist$dist_LEW)
-#VIF ho = 1.41
+#VIF ho = 1.43
 
 VIF(surv_mod_gen_dist$ar, surv_mod_gen_dist$dist_LEW, surv_mod_gen_dist$ho)
-#VIF ar = 2.48
+#VIF ar = 2.57
 
 VIF(surv_mod_gen_dist$dist_LEW, surv_mod_gen_dist$ho, surv_mod_gen_dist$ar)
-#VIF dist_LEW = 1.93
+#VIF dist_LEW = 1.98
 ```
 VIF is low enough for all remaining variables that I'm not super worried about the borderline collinearity between distance to LEW and AR.
 
 ## Assess VIF - York
 ```{r}
-VIF <- function(a, b, c){
-  1/(1-summary(lm(a ~ b + c))$r.squared)
-}
-
 VIF(surv_mod_gen_dist$ho, surv_mod_gen_dist$ar, surv_mod_gen_dist$dist_YRK)
-#VIF ho = 1.75
+#VIF ho = 1.80
 
 VIF(surv_mod_gen_dist$ar, surv_mod_gen_dist$dist_YRK, surv_mod_gen_dist$ho)
-#VIF ar = 2.39
+#VIF ar = 2.41
 
 VIF(surv_mod_gen_dist$dist_YRK, surv_mod_gen_dist$ho, surv_mod_gen_dist$ar)
-#VIF dist_LEW = 1.75
+#VIF dist_LEW = 1.78
 ```
 VIF is low for all.
 
@@ -200,8 +196,6 @@ drop1(surv_yrk_t1.1) #final model
 
 #make scaled version of final model for plotting
 surv_t1_yrk_s <- lm(scale(surv) ~ scale(ar) + scale(dist_YRK), data = surv_mod_gen_dist[surv_mod_gen_dist$t == 1 & surv_mod_gen_dist$bag_site == "YorkRiver",])
-
-summary(surv_t1_yrk_s)
 ```
 
 ## T2 survival, York
@@ -224,7 +218,7 @@ surv_t2_yrk_s <- lm(scale(surv) ~ scale(ar) + scale(dist_YRK), data = surv_mod_g
 ```{r t1_surv_lew}
 surv_yrk_t3.0 <- lm(surv ~ ho + ar + dist_YRK, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 3 & surv_mod_gen_dist$bag_site == "YorkRiver",]) 
 #plot(surv_yrk_t3.0)
-summary(surv_yrk_t3.0) # all significant
+summary(surv_yrk_t3.0) # ar, dist to YRK significant
 drop1(surv_yrk_t3.0) # final model
 
 #make scaled version of final model for plotting
@@ -272,17 +266,11 @@ len_mod_gen_dist <- merge(len_mod_gen, env_dist_filter, by = c("pop"))
 ```{r t1_len_lew}
 len_lew_t1.0 <- lmerTest::lmer(length ~ ho + ar + dist_LEW + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "Lewisetta",]) 
 #plot(len_lew_t1.0) 
-Anova(len_lew_t1.0, type = "III") # ho signif
+Anova(len_lew_t1.0, type = "III") # all signif
 summary(len_lew_t1.0)
-step(len_lew_t1.0) # drop ar, dist_LEW
+step(len_lew_t1.0) # final model
 
-len_lew_t1.1 <- lmerTest::lmer(length ~ ho + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "Lewisetta",]) 
-#plot(len_lew_t1.1) 
-Anova(len_lew_t1.1, type = "III") # ho signif
-summary(len_lew_t1.1)
-step(len_lew_t1.1) # final model
-
-len_t1_lew_s <- lmerTest::lmer(scale(length) ~ scale(ho) + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "Lewisetta",]) 
+len_t1_lew_s <- lmerTest::lmer(scale(length) ~ scale(ho) + scale(ar) + scale(dist_LEW) + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "Lewisetta",]) 
 ```
 
 ## T2 Length, Lewisetta
@@ -323,14 +311,17 @@ len_t3_lew_s <- lmerTest::lmer(scale(length) ~ scale(ho) + scale(ar) + (1|bags_l
 ```{r t1_len_lew}
 len_yrk_t1.0 <- lmerTest::lmer(length ~ ho + ar + dist_YRK + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
 #plot(len_yrk_t1.0) 
-Anova(len_yrk_t1.0, type = "III") # ar signif
-summary(len_yrk_t1.0)
-step(len_yrk_t1.0) # drop everything except bags label?
+Anova(len_yrk_t1.0, type = "III") # all signif
+summary(len_yrk_t1.0) #but only ar signif here
+step(len_yrk_t1.0) # drop everything except bags label? I'm ignoring this due to ANOVA results, but will check with collaborators.
+
+len_t1_yrk_s <- lmerTest::lmer(scale(length) ~ scale(ho) + scale(ar)  + scale(dist_YRK) + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
 
 #bags have a significant effect on length
-len_yrk_t1.1<- lm(length ~ bags_label, data = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
-Anova(len_yrk_t1.1, type = "III")
+#len_yrk_t1.1<- lm(length ~ bags_label, data = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
+#Anova(len_yrk_t1.1, type = "III")
 #plot(len_lew_t1.1) 
+
 
 ```
 
@@ -340,17 +331,9 @@ len_yrk_t2.0 <- lmerTest::lmer(length ~ ho + ar + dist_YRK + (1|bags_label), dat
 #plot(len_yrk_t2.0) 
 Anova(len_yrk_t2.0, type = "III") # all signif
 summary(len_yrk_t2.0)
-step(len_yrk_t2.0) # drop everything except bags label??
+step(len_yrk_t2.0) #final model
 
-#try cutting dist_YRK, least significant among the variables
-len_yrk_t2.1 <- lmerTest::lmer(length ~ ho + ar + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
-Anova(len_yrk_t2.1, type = "III") #only ar signif
-summary(len_yrk_t2.1)
-step(len_yrk_t2.1) #still recommends cutting everything except bag label
-
-len_yrk_t2.2 <- lmerTest::lmer(length ~ (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
-step(len_yrk_t2.2) #final model
-
+len_t2_yrk_s <- lmerTest::lmer(scale(length) ~ scale(ho) + scale(ar)  + scale(dist_YRK) + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
 ```
 
 ## T3 Length, York
@@ -372,8 +355,8 @@ len_t3_yrk_s <- lmerTest::lmer(scale(length) ~ scale(ho) + scale(ar)  + (1|bags_
 #save results
 sink(paste0("../../results_field/length_GEdistance_model2_results_",Sys.Date(),".txt"))
 cat("\nLEW t1 (May 2023) modeling approach 2\n")
-summary(len_lew_t1.1)
-Anova(len_lew_t1.1)
+summary(len_lew_t1.0)
+Anova(len_lew_t1.0)
 cat("\nLEW t1 (May 2023) scaled modeling approach 2\n")
 summary(len_t1_lew_s)
 Anova(len_t1_lew_s)
@@ -390,8 +373,8 @@ cat("\nLEW t3 (May 2024) scaled modeling approach 2\n")
 summary(len_t3_lew_s)
 Anova(len_t3_lew_s)
 cat("\nYRK t1 (May 2023) modeling approach 2\n")
-summary(len_yrk_t1.1)
-Anova(len_yrk_t1.1)
+summary(len_yrk_t1.0)
+Anova(len_yrk_t1.0)
 cat("\nYRK t2 (Nov. 2023) modeling approach 2\n")
 summary(len_yrk_t2.0)
 Anova(len_yrk_t2.0)
@@ -505,7 +488,7 @@ ggsave("yrk_surv_dist.pdf",
 lew_len_dist_df <- rbind(broom.mixed::tidy(len_t1_lew_s), broom.mixed::tidy(len_t2_lew_s), broom.mixed::tidy(len_t3_lew_s))
 
 #add column for sampling time
-lew_len_dist_df$t <- c(rep(c("t1"), 4), rep(c("t2"), 5), rep(c("t3"), 5))
+lew_len_dist_df$t <- c(rep(c("t1"), 6), rep(c("t2"), 5), rep(c("t3"), 5))
 
 #rename columns
 colnames(lew_len_dist_df) <- c("effect", "group", "explanatory", "slope", "se", "Fstat", "df", "pval", "t")
@@ -518,8 +501,6 @@ lew_len_dist_df <- lew_len_dist_df %>%
 lew_len_dist_df2 <- subset(lew_len_dist_df, select = -c(effect, group, df))
 
 #add dummy rows for time points lacking variables so that position_dodge v plots each data point in the same time point at consistent vertical positions for each y axis variable
-lew_len_dist_df2[nrow(lew_len_dist_df2) +1, ] = list("scale(ar)", -.5, .01, NA, NA, "t1")
-lew_len_dist_df2[nrow(lew_len_dist_df2) +1, ] = list("scale(dist_LEW)", -.5, .01, NA, NA, "t1")
 lew_len_dist_df2[nrow(lew_len_dist_df2) +1, ] = list("scale(dist_LEW)", -.5, .01, NA, NA, "t2")
 lew_len_dist_df2[nrow(lew_len_dist_df2) +1, ] = list("scale(dist_LEW)", -.5, .01, NA, NA, "t3")
 
@@ -557,10 +538,10 @@ ggsave("lew_len_dist.pdf",
 ##Figure product - York length
 ```{r}
 #save Lewisetta survival lm results as one data frame. T1 and t2 excluded everything except bag effect, so just make t3 here
-yrk_len_dist_df <- rbind(broom.mixed::tidy(len_t3_yrk_s))
+yrk_len_dist_df <- rbind(broom.mixed::tidy(len_t1_yrk_s), broom.mixed::tidy(len_t2_yrk_s), broom.mixed::tidy(len_t3_yrk_s))
 
 #add column for sampling time
-yrk_len_dist_df$t <- c("t3")
+yrk_len_dist_df$t <- c(rep(c("t1"), 6), rep(c("t2"), 6), rep(c("t3"), 5))
 #rename columns
 colnames(yrk_len_dist_df) <- c("effect", "group", "explanatory", "slope", "se", "Fstat", "df", "pval", "t")
 
@@ -572,12 +553,6 @@ yrk_len_dist_df <- yrk_len_dist_df %>%
 yrk_len_dist_df2 <- subset(yrk_len_dist_df, select = -c(effect, group, df))
 
 #add dummy rows for time points lacking variables so that position_dodge v plots each data point in the same time point at consistent vertical positions for each y axis variable
-yrk_len_dist_df2[nrow(yrk_len_dist_df2) +1, ] = list("scale(ar)", -.5, .01, NA, NA, "t1")
-yrk_len_dist_df2[nrow(yrk_len_dist_df2) +1, ] = list("scale(ho)", -.5, .01, NA, NA, "t1")
-yrk_len_dist_df2[nrow(yrk_len_dist_df2) +1, ] = list("scale(dist_YRK)", -.5, .01, NA, NA, "t1")
-yrk_len_dist_df2[nrow(yrk_len_dist_df2) +1, ] = list("scale(ar)", -.5, .01, NA, NA, "t2")
-yrk_len_dist_df2[nrow(yrk_len_dist_df2) +1, ] = list("scale(ho)", -.5, .01, NA, NA, "t2")
-yrk_len_dist_df2[nrow(yrk_len_dist_df2) +1, ] = list("scale(dist_YRK)", -.5, .01, NA, NA, "t2")
 yrk_len_dist_df2[nrow(yrk_len_dist_df2) +1, ] = list("scale(dist_YRK)", -.5, .01, NA, NA, "t3")
 
 
