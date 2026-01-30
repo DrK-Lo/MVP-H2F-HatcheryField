@@ -180,7 +180,7 @@ snp_annotated <- snp_annotated %>%
 ```{r}
 
 snp_annotated_sharing <- snp_annotated %>%
-  select(Affx.ID:go_term)
+  dplyr::select(Affx.ID:go_term)
 
 write_csv(snp_annotated_sharing, file.path("..", "..", "supp files", "full_SNPset_reannotated.csv"))
 
@@ -205,7 +205,7 @@ gene_list <- c(
 # Filter and select columns
 dermo_loci <- snp_annotated %>%
   filter(gene_id %in% gene_list) %>%
-  select(LocusName, FST, OutlierFlag, chrom_position, gene_id, description) %>%
+  dplyr::select(LocusName, FST, OutlierFlag, chrom_position, gene_id, description) %>%
   filter(OutlierFlag == TRUE)
 
 write.table(dermo_loci, pipe("pbcopy"), sep = "\t", row.names = FALSE, quote = FALSE)

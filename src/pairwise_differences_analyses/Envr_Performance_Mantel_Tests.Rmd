@@ -5,582 +5,274 @@ output: pdf_document
 date: "2025-01-23"
 ---
 
-This code analyzes the effect of pairwise environmental distance between conditions at the environments-of-origin and pairwise genetic distance between parent populations on pairwise differences in survival and shell length.
+# Overview
+This analysis tests whether pairwise environmental distance (at origin sites) and 
+pairwise genetic distance (Fst) predict differences in oyster survival and shell length.
+Method: Partial Mantel tests with Spearman correlation and 10,000 permutations.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r}
-#setwd("~/Desktop/MVP-H2F-HatcheryField")
-```
-
-### Packages
-
-```{r packages}
-
+## Packages
+```{r packages, message=FALSE}
 library(tidyverse)
-library(ggplot2)
-library(grid)
-library(reshape2)
-library(vegan) # for Mantel tests
-library(patchwork)
-
+library(vegan)      # Mantel tests
+library(patchwork)  # combining plots
 ```
 
-### Load data
-
-```{r}
-
-# raw lengths of all oysters aged 15-78 days
-hatchery_length <- read.csv(file.path("..", "..", "data", "performance_H2F", "latestage_length.csv"))
-
-# survival rate data for larval oysters up to day 21 post hatching
-hatchery_survival <-  read.csv(file.path("..", "..", "data", "performance_H2F", "CViMVP_larvae_survival.csv"))
-
-# lengths of all oysters averaged by bag for field monitoring events 1-3
-field_length <- read.csv(file.path("..", "..", "data", "performance_H2F", "lengths_bags_022025.csv"))
-
-# survival of all oysters averaged by bag for field monitoring events 1-3
-field_survival <- read.csv(file.path("..", "..", "data", "performance_H2F", "mortality_bags_022025.csv"))
-
-# summary statistics - temperature and salinity quantiles for the 8 groups 
-envr_summary <-  read.csv(file.path("..", "..", "data", "envr_of_origin", "envr_quantiles_summary.csv"))
-
-# matrix of euclidean environmental distances using SCALED data
-envr_dist <- readRDS(file.path("..", "..", "data", "envr_of_origin", "envr_quantiles_dist.rds"))
-
-# matrix of genetic distances between each group
-fst_mat <- readRDS(file.path("..", "..", "data", "pairwise_differences_analyses", "20250606_fst_results.rds"))
-
-```
-
-### Global variables
-
-Population order
-
-```{r}
-
-# save vector of population order
-population_order <- c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME")
-
-```
-
-### Data preparation
-
-#### Hatchery survival
-
-For hatchery survival rate, we used survival from day 21, so filter for those values only. Days 15-21 were grouped for analysis because there were constant larval drops occurring during that time, but the number of drops varied by site. Also exclude LARMIX, since there is no environmental data for group, given that it represents oysters from multiple sites. 
-
-```{r}
-
-# filter for day 21, exclude LARMIX, and recode site names
-survival_day21 <- hatchery_survival %>% 
-  filter(Day_analysis == "15-21") %>% 
-  filter(Tank_naming != "MVP-LARMIX") %>%
-  mutate(Tank_naming = recode(Tank_naming,
-                           "MVP-DEBY" = "S2-DEBY",
-                           "MVP-FL" = "W3-FL",
-                           "MVP-LA" = "W2-LA",
-                           "MVP-LOLA" = "S1-LOLA",
-                           "MVP-ME" = "W6-ME",
-                           "MVP-NH" = "W5-NH",
-                           "MVP-TX" = "W1-TX",
-                           "MVP-JR" = "W4-VA"))
-
-# exclude any groups with "small" in their label, we only want to analyze eyed oysters
-surv_day21 <- survival_day21 %>%
-  filter(!grepl("small", Group_Day_Label, ignore.case = TRUE)) %>%
-  select(Tank_naming, Survival_rate_perc) %>%
-  arrange(factor(Tank_naming, levels = population_order)) # reorder
-
-# rename columns
-colnames(surv_day21) <- c("site_name", "surv_21")
-
-```
-
-#### Hatchery length
-
-```{r}
-
-# exclude LARMIX
-hatchery_length_filter <- hatchery_length %>%
-  select(site_name, day_an, shell_length_mm)  %>% 
-  filter(site_name != "H1-LARMIX") # filter out LARMIX
-
-# data frame for days 15-21
-length_21 <- hatchery_length_filter %>% 
-  filter(day_an == "15-21")
-
-# data frame for day 78
-length_78 <- hatchery_length_filter %>% 
-  filter(day_an == "78")
-
-# calc mean shell lengths of each group on each day
-means_mm_21 <- aggregate(shell_length_mm ~ site_name, FUN = mean, data = length_21)
-colnames(means_mm_21) <- c("site_name", "mean_length_mm_21")
-means_mm_21 <- means_mm_21 %>% arrange(factor(site_name, levels = population_order)) # reorder
-
-means_mm_78 <- aggregate(shell_length_mm ~ site_name, FUN = mean, data = length_78)
-colnames(means_mm_78) <- c("site_name", "mean_length_mm_78")
-means_mm_78 <- means_mm_78 %>% arrange(factor(site_name, levels = population_order)) # reorder
-
-```
-
-#### Field length
-
-The goal is to create 6 data frames: one for each monitoring event (3) and each field site (2) with
-the average length across all bags for each group.
-
-```{r}
-
-# separate bag labels, recode sites, and average by bag and field site
-field_length_clean <- field_length %>%
-  separate(bag, into = c("site_name", "bag_number"), sep = "-(?=\\d+$)") %>%
-  filter(!site_name %in% c("MVP-SEEDMIX", "MVP-LARMIX")) %>% # remove LARMIX and SEEDMIX
-  mutate(site_name = recode(site_name,
-                           "MVP-DEBY" = "S2-DEBY",
-                           "MVP-FL" = "W3-FL",
-                           "MVP-LA" = "W2-LA",
-                           "MVP-LOLA" = "S1-LOLA",
-                           "MVP-ME" = "W6-ME",
-                           "MVP-NH" = "W5-NH",
-                           "MVP-TX" = "W1-TX",
-                           "MVP-JR" = "W4-VA")) 
-
-# average lengths across all bags per group 
-# within-bag lengths are are already averaged
-# average separately for each monitoring event and field site
-field_length_summary <- field_length_clean %>%
-  group_by(monitoring_event, site, site_name) %>%
-  summarise(mean_length = mean(length, na.rm = TRUE), .groups = "drop")
-
-# split the data frame by monitoring event and site
-split_list <- field_length_summary %>%
-  group_split(monitoring_event, site)
-
-# give each data frame a name according to monitoring event and field site
-split_names <- field_length_summary %>%
-  group_keys(monitoring_event, site) %>%
-  mutate(name = paste0("length_event", monitoring_event, "_", gsub(" ", "", tolower(site)))) %>%
-  pull(name)
-
-split_list <- lapply(split_list, function(df) {
-  df %>%
-    arrange(factor(site_name, levels = population_order)) %>% # reorder
-    select(site_name, mean_length) # remove columns except for population and length
-  })
-
-# assign each data frame to a variable
-names(split_list) <- split_names
-list2env(split_list, envir = .GlobalEnv)
-
-```
-
-#### Field survival
-
-The goal is to create 6 data frames: one for each monitoring event (3) and each field site (2) with
-the average survival across all bags for each group.
-
-```{r}
-
-# separate bag labels, recode sites, and average by bag and field site
-field_survival_clean <- field_survival %>%
-  separate(bags_label, into = c("site_name", "bag_number"), sep = "-(?=\\d+$)") %>%
-  filter(!site_name %in% c("MVP-SEEDMIX", "MVP-LARMIX")) %>% # remove LARMIX and SEEDMIX
-  mutate(site_name = recode(site_name,
-                           "MVP-DEBY" = "S2-DEBY",
-                           "MVP-FL" = "W3-FL",
-                           "MVP-LA" = "W2-LA",
-                           "MVP-LOLA" = "S1-LOLA",
-                           "MVP-ME" = "W6-ME",
-                           "MVP-NH" = "W5-NH",
-                           "MVP-TX" = "W1-TX",
-                           "MVP-JR" = "W4-VA")) %>%
-  select(site_name, bag_number, bag_site, t1, t2, t3)
-
-# pivot so there is one row per site name, bag, field site, and monitoring event
-field_survival_long <- field_survival_clean %>%
-  pivot_longer(
-    cols = starts_with("t"),  # columns t1, t2, t3
-    names_to = "monitoring_event", 
-    values_to = "survival"
-  ) %>%
-  mutate(
-    monitoring_event = recode(monitoring_event, 
-                              t1 = "1", 
-                              t2 = "2", 
-                              t3 = "3")
-  )
-
-# now can use code from above to make one data frame per monitoring event per field site
-
-# average lengths across all bags per group 
-# within-bag lengths are are already averaged
-# average separately for each monitoring event and field site
-field_survival_summary <- field_survival_long %>%
-  group_by(monitoring_event, bag_site, site_name) %>%
-  summarise(mean_survival = mean(survival, na.rm = TRUE), .groups = "drop")
-
-# split the data frame by monitoring event and field site
-split_list <- field_survival_summary %>%
-  group_split(monitoring_event, bag_site)
-
-# give each data frame a name according to monitoring event and field site
-split_names <- field_survival_summary %>%
-  group_keys(monitoring_event, bag_site) %>%
-  mutate(name = paste0("survival_event", monitoring_event, "_", gsub(" ", "", tolower(bag_site)))) %>%
-  pull(name)
-
-split_list <- lapply(split_list, function(df) {
-  df %>%
-    arrange(factor(site_name, levels = population_order)) %>% # reorder
-    select(site_name, mean_survival) # remove columns except for population and length
-  })
-
-# assign each data frame to a variable
-names(split_list) <- split_names
-list2env(split_list, envir = .GlobalEnv)
-
-```
-
-#### Environment-of-origin
-
-```{r}
-
-# remove extra column from environmental data summary table
-envr <- envr_summary %>% select(-X)
-
-# add sampling site latitudes. from table 1 of Nicole thesis
-
-envr$lat <- c(28.096000, 29.239925, 30.440030, 37.1501163, 37.98030, 37.249107, 43.053746, 44.01330)
-
-```
-
-#### Data product: hatchery survival, hatchery length, environment-of-origin
-
-For further analysis in src/parent_effects_H2F. 
-
-```{r}
-
-surv_length_envr <- left_join(envr, means_mm_21, by = "site_name") %>% 
-  left_join(means_mm_78, by = "site_name") %>% 
-  left_join(surv_day21, by = "site_name")
-
-# save csv for further analyses
-write.csv(surv_length_envr, file.path("..", "..", "data", "parent_effects_H2F", "Survival_Length_Envr_Data.csv"), row.names = FALSE)
-
-```
-
-#### Fst
-
-```{r}
-
-# reorder
-fst_mat <- fst_mat[population_order, population_order]
-
-```
-
-### Distance matrices
-
-Make distance matrices for all survival and length variables
-
-```{r}
-
-# list of all the data frames that need to be made into distance matrices
-df_list <- list(
-  surv_day21 = surv_day21,
-  len_21 = means_mm_21,
-  len_78 = means_mm_78,
-  len_1_lew = length_event1_lewisetta,
-  len_1_york = length_event1_yorkriver,
-  len_2_lew = length_event2_lewisetta,
-  len_2_york = length_event2_yorkriver,
-  len_3_lew = length_event3_lewisetta,
-  len_3_york = length_event3_yorkriver,
-  surv_1_lew = survival_event1_lewisetta,
-  surv_1_york = survival_event1_yorkriver,
-  surv_2_lew = survival_event2_lewisetta,
-  surv_2_york = survival_event2_yorkriver,
-  surv_3_lew = survival_event3_lewisetta,
-  surv_3_york = survival_event3_yorkriver
+## Configuration
+```{r config}
+# Population display order (south to north within wild, then selected)
+POP_ORDER <- c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME")
+
+# Site name mapping from raw data to standardized names
+SITE_RECODE <- c(
+  "MVP-TX" = "W1-TX", "MVP-LA" = "W2-LA", "MVP-FL" = "W3-FL", "MVP-JR" = "W4-VA",
+  "MVP-LOLA" = "S1-LOLA", "MVP-DEBY" = "S2-DEBY", "MVP-NH" = "W5-NH", "MVP-ME" = "W6-ME"
 )
 
-# empty list to store distance matrices
-dist_matrices <- list()
+# Groups to exclude from analysis (no environmental data available)
+EXCLUDE_GROUPS <- c("MVP-LARMIX", "MVP-SEEDMIX", "H1-LARMIX", "H1-HYBRIDMIX")
 
-# loop through each data frame in the list
-for (name in names(df_list)) {
-  df <- df_list[[name]]
-  
-  # remove polyculture
-  df <- df[!df$site_name %in% "H1-HYBRIDMIX", ]
-  
-  # set the second column as values (first column is population names)
-  values <- df[[2]]
-
-  # create distance matrix
-  dist_matrix <- as.matrix(dist(values))
-  
-  # set row and col names
-  rownames(dist_matrix) <- population_order
-  colnames(dist_matrix) <- population_order
-  
-  # save into the list
-  dist_matrices[[name]] <- dist_matrix
-}
-
+# Paths
+DATA_DIR <- file.path("..", "..", "data")
+FIG_DIR <- file.path("..", "..", "figures", "pairwise_differences_analyses")
 ```
 
-#### Data check
-
-```{r}
-
-check_matrix_order <- function(matrices, population_order) {
-  all_good <- TRUE
-  for (i in seq_along(matrices)) {
-    if (!identical(rownames(matrices[[i]]), population_order)) {
-      message(sprintf("Row names do not match in matrix %d", i))
-      all_good <- FALSE
-    }
-    if (!identical(colnames(matrices[[i]]), population_order)) {
-      message(sprintf("Column names do not match in matrix %d", i))
-      all_good <- FALSE
-    }
-  }
-  if (all_good) {
-    message("All matrices have matching row and column names.")
-  }
+## Helper Functions
+```{r helpers}
+#' Recode site names and filter excluded groups
+clean_site_names <- function(df, site_col = "site_name") {
+  df %>%
+    filter(!.data[[site_col]] %in% EXCLUDE_GROUPS) %>%
+    mutate(!!site_col := recode(.data[[site_col]], !!!SITE_RECODE))
 }
 
-check_matrix_order(dist_matrices, population_order)
-
-```
-
-### Partial Mantel tests
-
-#### Assumptions
-
-```{r}
-
-# Linearity
-
-for (name in names(dist_matrices)) {
-  mat <- dist_matrices[[name]]
-
-  # Plot against fst_mat
-  plot(as.vector(as.matrix(fst_mat)), as.vector(as.matrix(mat)),
-    main = paste("FST vs", name),
-    xlab = "FST",
-    ylab = paste(name, "Response variable distance")
-  )
-
-  # plot against envr_dist
-  plot(
-    as.vector(as.matrix(envr_dist)), as.vector(as.matrix(mat)),
-    main = paste("Environment vs", name),
-    xlab = "Environmental distance",
-    ylab = paste(name, "Response variable distance")
-  )
+#' Reorder dataframe by population order
+order_by_pop <- function(df, site_col = "site_name") {
+  df %>% arrange(factor(.data[[site_col]], levels = POP_ORDER))
 }
 
+#' Create distance matrix from a two-column dataframe (site_name, value)
+make_dist_matrix <- function(df) {
+  df <- df %>% filter(!site_name %in% c("H1-HYBRIDMIX", EXCLUDE_GROUPS))
+  mat <- as.matrix(dist(df[[2]]))
+  rownames(mat) <- colnames(mat) <- POP_ORDER
+  mat
+}
+
+#' Summarize field data by monitoring event and site
+summarize_field_data <- function(df, value_col, group_col = "bag_site") {
+  df %>%
+    group_by(monitoring_event, .data[[group_col]], site_name) %>%
+    summarise(value = mean(.data[[value_col]], na.rm = TRUE), .groups = "drop")
+}
+
+#' Split field summary into named list of dataframes
+split_field_data <- function(df, prefix, group_col = "bag_site") {
+  df %>%
+    group_split(monitoring_event, .data[[group_col]]) %>%
+    setNames(
+      df %>%
+        group_keys(monitoring_event, .data[[group_col]]) %>%
+        mutate(name = paste0(prefix, "_event", monitoring_event, "_", 
+                            tolower(gsub(" ", "", .data[[group_col]])))) %>%
+        pull(name)
+    ) %>%
+    map(~ .x %>% order_by_pop() %>% select(site_name, value))
+}
+
+#' Create a heatmap from a distance matrix
+plot_heatmap <- function(mat, fill_label, title = "") {
+  as.data.frame(as.table(mat)) %>%
+    ggplot(aes(Var1, Var2, fill = Freq)) +
+    geom_tile(color = "white") +
+    scale_fill_viridis_c(option = "D", na.value = "grey50",
+                         guide = guide_colorbar(label.theme = element_text(angle = 45, size = 12))) +
+    labs(title = title, x = "Treatment group", y = "Treatment group", fill = fill_label) +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1, size = 14),
+      axis.text.y = element_text(size = 14),
+      axis.title = element_text(size = 14),
+      legend.title = element_text(size = 14),
+      legend.position = "bottom"
+    )
+}
 ```
 
-#### Partial tests
+## Load Data
+```{r load-data}
+# Performance data
+hatchery_length <- read.csv(file.path(DATA_DIR, "performance_H2F", "latestage_length.csv"))
+hatchery_survival <- read.csv(file.path(DATA_DIR, "performance_H2F", "CViMVP_larvae_survival.csv"))
+field_length <- read.csv(file.path(DATA_DIR, "performance_H2F", "lengths_bags_022025.csv"))
+field_survival <- read.csv(file.path(DATA_DIR, "performance_H2F", "mortality_bags_022025.csv"))
 
-To test the effect of genetic distance while controlling for environmental distance and vice versa. 
+# Environmental and genetic distance matrices
+envr_summary <- read.csv(file.path(DATA_DIR, "envr_of_origin", "envr_quantiles_summary.csv"))
+envr_dist <- readRDS(file.path(DATA_DIR, "envr_of_origin", "envr_quantiles_dist.rds"))
+fst_mat <- readRDS(file.path(DATA_DIR, "pairwise_differences_analyses", "20250606_fst_results.rds"))
 
-```{r}
+# Reorder Fst matrix to match population order
+fst_mat <- fst_mat[POP_ORDER, POP_ORDER]
+```
 
-# genetic distance controlling for environmental distance
-genetic_dist_results <- lapply(dist_matrices, function(dist_mat) {
-  mantel.partial(dist_mat, fst_mat, envr_dist, method = "spearman",
-                 permutations = 10000, na.rm = TRUE)
-})
-genetic_p <- sapply(genetic_dist_results, function(res) res$signif)
+## Process Hatchery Data
+```{r hatchery-data}
+# Survival at day 21 (days 15-21 grouped due to variable larval drop timing)
+surv_day21 <- hatchery_survival %>%
+  filter(Day_analysis == "15-21", !grepl("small", Group_Day_Label, ignore.case = TRUE)) %>%
+  clean_site_names("Tank_naming") %>%
+  select(site_name = Tank_naming, surv_21 = Survival_rate_perc) %>%
+  order_by_pop()
 
-# environmental distance controlling for genetic distance
-envr_dist_results <- lapply(dist_matrices, function(dist_mat) {
-  mantel.partial(dist_mat, envr_dist, fst_mat, method = "spearman",
-                 permutations = 10000, na.rm = TRUE)
-})
-envr_p <- sapply(envr_dist_results, function(res) res$signif)
+# Shell length at days 21 and 78
+hatchery_length_clean <- hatchery_length %>%
+  select(site_name, day_an, shell_length_mm) %>%
+  filter(!site_name %in% EXCLUDE_GROUPS)
 
-# adjust all p-values together
-all_p <- c(genetic_p, envr_p)
-all_p_adj <- p.adjust(all_p, method = "BH")
+calc_mean_length <- function(df, day) {
+  df %>%
+    filter(day_an == day) %>%
+    group_by(site_name) %>%
+    summarise(mean_length = mean(shell_length_mm), .groups = "drop") %>%
+    order_by_pop()
+}
 
-# split adjusted p-values back
-genetic_p_adj <- all_p_adj[1:length(genetic_p)]
-envr_p_adj <- all_p_adj[(length(genetic_p) + 1):length(all_p)]
+means_mm_21 <- calc_mean_length(hatchery_length_clean, "15-21")
+means_mm_78 <- calc_mean_length(hatchery_length_clean, "78")
+```
 
-# create results data frame
-mantel_results <- data.frame(
-  test = rep(names(dist_matrices), times = 2),
+## Process Field Data
+```{r field-data}
+# Helper to parse field bag labels
+parse_field_bags <- function(df, bag_col) {
+  df %>%
+    separate(!!bag_col, into = c("site_name", "bag_number"), sep = "-(?=\\d+$)") %>%
+    clean_site_names()
+}
+
+# Field length: average across bags per group/event/site
+field_length_list <- field_length %>%
+  parse_field_bags("bag") %>%
+  summarize_field_data("length", "site") %>%
+  split_field_data("len", "site")
+
+# Field survival: reshape to long format, then summarize
+field_survival_list <- field_survival %>%
+  parse_field_bags("bags_label") %>%
+  pivot_longer(cols = c(t1, t2, t3), names_to = "monitoring_event", values_to = "survival") %>%
+  mutate(monitoring_event = str_replace(monitoring_event, "t", "")) %>%
+  summarize_field_data("survival", "bag_site") %>%
+  split_field_data("surv", "bag_site")
+```
+
+## Prepare Environmental Data
+```{r envr-data}
+# Add sampling site latitudes (from Table 1 of Nicole thesis)
+envr <- envr_summary %>%
+  select(-X) %>%
+  mutate(lat = c(28.096, 29.240, 30.440, 37.150, 37.980, 37.249, 43.054, 44.013))
+```
+
+## Export Combined Dataset
+```{r export}
+surv_length_envr <- envr %>%
+  left_join(means_mm_21 %>% rename(mean_length_mm_21 = mean_length), by = "site_name") %>%
+  left_join(means_mm_78 %>% rename(mean_length_mm_78 = mean_length), by = "site_name") %>%
+  left_join(surv_day21, by = "site_name")
+
+write.csv(surv_length_envr, 
+          file.path(DATA_DIR, "parent_effects_H2F", "Survival_Length_Envr_Data.csv"), 
+          row.names = FALSE)
+```
+
+## Build Distance Matrices
+```{r distance-matrices}
+# Combine all response variables into named list
+response_dfs <- c(
+  list(surv_day21 = surv_day21 %>% select(site_name, value = surv_21),
+       len_21 = means_mm_21 %>% rename(value = mean_length),
+       len_78 = means_mm_78 %>% rename(value = mean_length)),
+  field_length_list,
+  field_survival_list
+)
+
+# Convert each to distance matrix
+dist_matrices <- map(response_dfs, make_dist_matrix)
+
+# Verify all matrices have correct ordering
+stopifnot(all(map_lgl(dist_matrices, ~ identical(rownames(.x), POP_ORDER))))
+message("All matrices have correct row/column ordering.")
+```
+
+## Partial Mantel Tests
+```{r mantel-tests}
+# Test genetic distance effect (controlling for environment)
+genetic_results <- map(dist_matrices, ~ mantel.partial(
+  .x, fst_mat, envr_dist, method = "spearman", permutations = 10000, na.rm = TRUE
+))
+
+# Test environmental distance effect (controlling for genetics)
+envr_results <- map(dist_matrices, ~ mantel.partial(
+  .x, envr_dist, fst_mat, method = "spearman", permutations = 10000, na.rm = TRUE
+))
+
+# Extract p-values and apply FDR correction
+genetic_p <- map_dbl(genetic_results, "signif")
+envr_p <- map_dbl(envr_results, "signif")
+all_p_adj <- p.adjust(c(genetic_p, envr_p), method = "BH")
+
+# Compile results table
+mantel_results <- tibble(
+  test = rep(names(dist_matrices), 2),
   comparison = rep(c("Genetic|Environment", "Environment|Genetic"), each = length(dist_matrices)),
+  statistic = c(map_dbl(genetic_results, "statistic"), map_dbl(envr_results, "statistic")),
   p = c(genetic_p, envr_p),
-  p_adj = c(genetic_p_adj, envr_p_adj)
+  p_adj = all_p_adj
 )
 
 print(mantel_results)
-
 ```
 
-### Heatmaps
+## Assumption Check: Linearity
+```{r assumptions, fig.height=4, fig.width=8}
+# Visual check of linearity between predictor and response distances
+for (name in names(dist_matrices)) {
+  par(mfrow = c(1, 2))
+  plot(as.vector(fst_mat), as.vector(dist_matrices[[name]]),
+       main = paste("Fst vs", name), xlab = "Fst", ylab = "Response distance")
+  plot(as.vector(envr_dist), as.vector(dist_matrices[[name]]),
+       main = paste("Environment vs", name), xlab = "Environmental distance", ylab = "Response distance")
+}
+```
 
-```{r}
+## Heatmaps
+```{r heatmaps, fig.height=10, fig.width=12}
+# Predictor distance heatmaps
+heatmap_fst <- plot_heatmap(fst_mat, expression("Pairwise " * F[ST]))
+heatmap_envr <- plot_heatmap(envr_dist, "Standardized Euclidean\nenvironmental distance")
 
-fst_long <- as.data.frame(as.table(fst_mat))
+# Combined figure
+stacked_heatmap <- heatmap_fst / heatmap_envr + plot_annotation(tag_levels = "A")
+ggsave(file.path(FIG_DIR, "fig_stacked_envr_fst_heatmap.pdf"), stacked_heatmap, width = 12, height = 10)
 
-heatmap_fst <- ggplot(fst_long, aes(Var1, Var2, fill = Freq)) +
-  geom_tile(color = "white") +
-  #geom_text(aes(label = round(value, 3)), size = 2, color = "black") +
-scale_fill_viridis_c(
-    option = "D", 
-    na.value = "grey50", 
-    guide = guide_colorbar(label.theme = element_text(angle = 45, size = 12))  # legend tick labels
-  ) +
-  labs(title = "", x = "Treatment group", y = "Treatment group", fill = expression("Pairwise " * F[ST])) + 
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 14),  # x tick labels
-    axis.text.y = element_text(size = 14),                        # y tick labels
-    axis.title.x = element_text(size = 14),                       # x-axis label
-    axis.title.y = element_text(size = 14),                       # y-axis label
-    legend.title = element_text(size = 14),                       # legend title
-    text = element_text(color = "black"),
-    legend.position = "bottom"
-  )
+# Response variable heatmaps (event 3 as example)
+response_heatmaps <- list(
+  len_lew = plot_heatmap(dist_matrices$len_event3_lewisetta, "Euclidean distance\nin shell length"),
+  len_york = plot_heatmap(dist_matrices$len_event3_yorkriver, "Euclidean distance\nin shell length"),
+  surv_lew = plot_heatmap(dist_matrices$surv_event3_lewisetta, "Euclidean distance\nin survival"),
+  surv_york = plot_heatmap(dist_matrices$surv_event3_yorkriver, "Euclidean distance\nin survival")
+)
 
-ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_fst_heatmap.pdf"), heatmap_fst, width = 12, height = 10, dpi = 300)
+# Save response heatmaps
+iwalk(response_heatmaps, ~ ggsave(
+  file.path(FIG_DIR, paste0("fig_", .y, "_event3_heatmap.pdf")), .x, width = 12, height = 10
+))
 
+# Display
 heatmap_fst
-
-envr_long <- as.data.frame(as.table(envr_dist))
-
-heatmap_envr <- ggplot(envr_long, aes(Var1, Var2, fill = Freq)) +
-  geom_tile(color = "white") +
-  #geom_text(aes(label = round(value, 3)), size = 2, color = "black") +
-scale_fill_viridis_c(
-    option = "D", 
-    na.value = "grey50", 
-    guide = guide_colorbar(label.theme = element_text(angle = 45, size = 12))  # legend tick labels
-  ) +
-  labs(title = "", 
-       x = "Treatment group", y = "Treatment group",   fill = "Standardized Euclidean\nenvironmental distance") +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 14),  # x tick labels
-    axis.text.y = element_text(size = 14),                        # y tick labels
-    axis.title.x = element_text(size = 14),                       # x-axis label
-    axis.title.y = element_text(size = 14),                       # y-axis label
-    legend.title = element_text(size = 14),                       # legend title
-    text = element_text(color = "black"),
-    legend.position = "bottom"
-  )
-
-ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_envr_dist_heatmap.pdf"), heatmap_envr, width = 12, height = 10, dpi = 300)
-
 heatmap_envr
-
-stacked_envr_fst_heatmap <- heatmap_fst / heatmap_envr +
-  plot_annotation(tag_levels = "A")
-
-ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_stacked_envr_fst_heatmap.pdf"), stacked_envr_fst_heatmap, width = 12, height = 10, dpi = 300)
-
 ```
-
-```{r}
-
-len_3_lew_long <- as.data.frame(as.table(dist_matrices$len_3_lew))
-surv_3_lew_long <- as.data.frame(as.table(dist_matrices$surv_3_lew))
-len_3_york_long <- as.data.frame(as.table(dist_matrices$len_3_york))
-surv_3_york_long <- as.data.frame(as.table(dist_matrices$surv_3_york))
-
-heatmap_len_3_lew <- ggplot(len_3_lew_long, aes(Var1, Var2, fill = Freq)) +
-  geom_tile(color = "white") +
-  #geom_text(aes(label = round(value, 3)), size = 2, color = "black") +
-  scale_fill_viridis_c(option = "D", 
-    na.value = "grey50", 
-    guide = guide_colorbar(label.theme = element_text(angle = 45, size = 12))  # legend tick labels
-  ) +
-  labs(title = "", x = "Treatment group", y = "Treatment group", fill = "Euclidean distance\nin shell length") + 
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 14),  # x tick labels
-    axis.text.y = element_text(size = 14),                        # y tick labels
-    axis.title.x = element_text(size = 14),                       # x-axis label
-    axis.title.y = element_text(size = 14),                       # y-axis label
-    text = element_text(color = "black"),
-    legend.position = "bottom"
-  )
-
-heatmap_surv_3_lew <- ggplot(surv_3_lew_long, aes(Var1, Var2, fill = Freq)) +
-  geom_tile(color = "white") +
-  #geom_text(aes(label = round(value, 3)), size = 2, color = "black") +
-  scale_fill_viridis_c(option = "D", 
-    na.value = "grey50", 
-    guide = guide_colorbar(label.theme = element_text(angle = 45, size = 12))  # legend tick labels
-  ) +
-  labs(title = "", 
-       x = "Treatment group", y = "Treatment group",   fill = "Euclidean distance\nin survival") +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 14),  # x tick labels
-    axis.text.y = element_text(size = 14),                        # y tick labels
-    axis.title.x = element_text(size = 14),                       # x-axis label
-    axis.title.y = element_text(size = 14),                       # y-axis label
-    text = element_text(color = "black"),
-    legend.position = "bottom"
-  )
-
-heatmap_len_3_york <- ggplot(len_3_york_long, aes(Var1, Var2, fill = Freq)) +
-  geom_tile(color = "white") +
-  #geom_text(aes(label = round(value, 3)), size = 2, color = "black") +
-  scale_fill_viridis_c(option = "D", 
-    na.value = "grey50", 
-    guide = guide_colorbar(label.theme = element_text(angle = 45, size = 12))  # legend tick labels
-  ) +
-  labs(title = "", x = "Treatment group", y = "Treatment group", fill = "Euclidean distance\nin shell length") +  
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 14),  # x tick labels
-    axis.text.y = element_text(size = 14),                        # y tick labels
-    axis.title.x = element_text(size = 14),                       # x-axis label
-    axis.title.y = element_text(size = 14),                       # y-axis label
-    text = element_text(color = "black"),
-    legend.position = "bottom"
-  )
-
-heatmap_surv_3_york <- ggplot(surv_3_york_long, aes(Var1, Var2, fill = Freq)) +
-  geom_tile(color = "white") +
-  #geom_text(aes(label = round(value, 3)), size = 2, color = "black") +
-  scale_fill_viridis_c(option = "D", 
-    na.value = "grey50", 
-    guide = guide_colorbar(label.theme = element_text(angle = 45, size = 12))  # legend tick labels
-  ) +
-  labs(title = "", 
-       x = "Treatment group", y = "Treatment group",   fill = "Euclidean distance\nin survival") +  
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 14),  # x tick labels
-    axis.text.y = element_text(size = 14),                        # y tick labels
-    axis.title.x = element_text(size = 14),                       # x-axis label
-    axis.title.y = element_text(size = 14),                       # y-axis label
-    text = element_text(color = "black"),
-    legend.position = "bottom"
-  )
-
-
-ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_len_lewisetta_heatmap.pdf"), heatmap_len_3_lew, width = 12, height = 10, dpi = 300)
-
-ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_len_york_heatmap.pdf"), heatmap_len_3_york, width = 12, height = 10, dpi = 300)
-
-ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_surv_lewisetta_heatmap.pdf"), heatmap_surv_3_lew, width = 12, height = 10, dpi = 300)
-
-ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_surv_york_heatmap.pdf"), heatmap_surv_3_york, width = 12, height = 10, dpi = 300)
-
-
-```
-
-

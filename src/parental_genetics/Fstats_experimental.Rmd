@@ -349,6 +349,22 @@ ggplot(pop_long, aes(x = factor(Population, levels = population_order), y = Valu
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
 
+# convert Population to factor with levels
+Ho_long$Population <- factor(Ho_long$Population, levels = population_order)
+
+# plot
+ggplot(Ho_long, aes(x = Population, y = Ho)) +
+  geom_boxplot(fill = "lightblue", alpha = 0.7) +
+  labs(
+    title = "Observed Heterozygosity by Population",
+    x = "Population",
+    y = "Observed Heterozygosity (Ho)"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  
+ggsave(file.path("..", "..", "figures", "parental_genetics", "Ho_boxplot.pdf"), Ho_boxplot, width = 10, height = 8, dpi = 300) 
+
 ```
 
 ```{r}
@@ -385,6 +401,8 @@ ggplot(avg_het_long, aes(x = factor(Population, levels = population_order), y = 
 ```
 
 #### Allelic richness
+Something might be wrong with this calculation - it's working with 0, 1, and 2s and might be
+inflating allelic richness. 
 
 Total number of unique alleles present in a population. Results are close to whole numbers because of small adjustments from rarefaction. 
 
