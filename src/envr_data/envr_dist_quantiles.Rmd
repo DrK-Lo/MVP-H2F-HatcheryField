@@ -1,43 +1,45 @@
 ---
 title: "envr_dist_quantiles"
 author: "Kiran Bajaj"
-output: html_document
-date: "2025-04-22"
+output: pdf_document
+date: "`r Sys.Date()`"
 ---
 
 ## Overview
-Calculates pairwise environmental distances between sites based on scaled 
+This analysis calcualtes pairwise environmental distances between sites based on scaled 
 temperature and salinity quantiles (10th and 90th percentiles).
-Produces two distance matrices: one with all sites, one excluding field sites.
+This produces two distance matrices: one with all sites + one excluding field sites.
 
 ## Edit history:
  - 2025-11-10: NM updated environmental quantiles
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Packages
+```{r packages, message=FALSE}
 library(tidyverse)
 ```
 
-## Configuration
+## Global variables
 ```{r config}
-# Site ordering
+# site ordering
 POP_ORDER <- c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME")
 FIELD_SITES <- c("LEW", "YRK")
 ALL_SITES <- c(POP_ORDER, FIELD_SITES)
 
-# Columns used for distance calculation (10th/90th quantiles for temp and salinity)
+# columns used for distance calculation (10th/90th quantiles for temp and salinity)
 DIST_COLS <- c("salinity_quantile_10", "salinity_quantile_90", "temp_quantile_10", "temp_quantile_90")
 
-# Paths
-DATA_DIR <- file.path("..", "..", "data")
 ```
 
-## Helper Functions
+## Helper functions
 ```{r helpers}
-#' Calculate scaled Euclidean distance matrix from environmental data
-#' @param df Data frame with site_name and environmental variables
-#' @param cols Columns to use for distance calculation
-#' @param sites Vector of site names for row/column labels
+#' calculate scaled Euclidean distance matrix from environmental data
+    # df: data frame with site_name and environmental variables
+    # cols: columns to use for distance calculation
+    # sites: vector of site names for row/column labels
 calc_envr_dist <- function(df, cols, sites) {
   df %>%
     select(all_of(cols)) %>%
@@ -49,39 +51,39 @@ calc_envr_dist <- function(df, cols, sites) {
 }
 ```
 
-## Load and Prepare Data
+## Data preparation
 ```{r load-data}
-# Environmental quantiles: SD, 10th, and 90th percentiles for temp/salinity
-# Includes 8 origin sites + 2 field experiment sites
-envr_quants_raw <- read_csv(file.path(DATA_DIR, "environment", "quantiles_11092025.csv"),
+# SD, 10th, and 90th quantiles for temp/salinity
+# includes 8 environment-of-origin sites + 2 field experiment sites
+envr_quants_raw <- read_csv(file.path("..", "..", "data", "environment", "quantiles_11092025.csv"),
                             show_col_types = FALSE) %>%
-  select(-1, -9)  # Remove index and unused columns
+  select(-1, -9)  # remove index and unused columns
 
-# Create ordered versions
+# create ordered versions
 envr_all <- envr_quants_raw %>% arrange(factor(site_name, levels = ALL_SITES))
 envr_origin <- envr_all %>% filter(!site_name %in% FIELD_SITES)
 
-# Export origin-only summary
-write.csv(envr_origin, file.path(DATA_DIR, "envr_of_origin", "envr_quantiles_summary.csv"),
+# export summary of environment-of-origin sites only
+write.csv(envr_origin, file.path("..", "..", "data", "envr_of_origin", "envr_quantiles_summary.csv"),
           row.names = FALSE)
 ```
 
-## Calculate Distance Matrices
+## Run distance analysis
 ```{r distance-matrices}
-# All sites (including field experiment locations)
+# all sites (including field experiment locations)
 envr_dist_all <- calc_envr_dist(envr_all, DIST_COLS, ALL_SITES)
 
-# Origin sites only (excluding field sites)
+# environment-of-origin sites only (excluding field sites)
 envr_dist_origin <- calc_envr_dist(envr_origin, DIST_COLS, POP_ORDER)
 ```
 
-## Export Results
+## Save results
 ```{r export}
-# Distance matrix with all sites (CSV for inspection)
-write.csv(envr_dist_all, file.path(DATA_DIR, "envr_of_origin", "envr_quantiles_dist_all.csv"))
+# distance matrix with all sites
+write.csv(envr_dist_all, file.path("..", "..", "data", "envr_of_origin", "envr_quantiles_dist_all.csv"))
 
-# Distance matrix for origin sites only (RDS for downstream analysis)
-saveRDS(envr_dist_origin, file.path(DATA_DIR, "envr_of_origin", "envr_quantiles_dist.rds"))
+# distance matrix for environment-of-origin sites sites only for downstream analysis
+saveRDS(envr_dist_origin, file.path("..", "..", "data", "envr_of_origin", "envr_quantiles_dist.rds"))
 
 # Display matrices
 envr_dist_all
