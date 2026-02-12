@@ -269,9 +269,10 @@ for (name in names(dist_matrices)) {
 heatmap_fst <- plot_heatmap(fst_mat, expression("Pairwise " * F[ST]))
 heatmap_envr <- plot_heatmap(envr_dist, "Standardized Euclidean\nenvironmental distance")
 
-# combined figure
-stacked_heatmap <- heatmap_fst / heatmap_envr + plot_annotation(tag_levels = "A")
-ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_stacked_envr_fst_heatmap.pdf"), stacked_heatmap, width = 6, height = 10)
+# save predictor heatmaps
+ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_fst_heatmap.pdf"), heatmap_fst, width = 12, height = 10)
+ggsave(file.path("..", "..", "figures", "pairwise_differences_analyses", "fig_envr_dist_heatmap.pdf"), heatmap_envr, width = 12, height = 10)
+
 
 # response variable heatmaps (for monitoring event #3)
 response_heatmaps <- list(
