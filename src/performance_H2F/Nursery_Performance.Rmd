@@ -1,5 +1,6 @@
 ---
 title: "Nursery_Performance"
+author: "Nicole Mongillo"
 output: pdf_document  
 date: "2024-02-22"
 ---
@@ -45,6 +46,9 @@ len_analysis_df <- subset(len_df, select = -c(Ind_ID, Group_Day_Label.y, Image_K
 ```
 
 #### Subset data
+
+We use day 78 as the end of the nursery stage here, as this was what was recorded in the original dataset. This was likely actually day 77 according to SK -KEB. 
+
 ```{r}
 #subset data for oysters aged 15-78 days (later stage larvae)
 latestage <- subset(len_analysis_df, Day_analysis == "78"| Day_analysis == "15-21")

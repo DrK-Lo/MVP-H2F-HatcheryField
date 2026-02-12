@@ -113,7 +113,6 @@ pca_plot4 <- ggplot(pca_data, aes(x = PC3, y = PC4, color = ID_SiteDate)) +
 pca_plot4
 ```
 
-
 ### snmf ancestry analysis
 
 ```{r}
