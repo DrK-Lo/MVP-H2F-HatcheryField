@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ### Objective
 
-The goal of this file is to re-annotate SNPs in the mutation-level data frame for our 200K SNP chip.
+The goal of this analysis is to re-annotate SNPs in the mutation-level data frame for our 200K SNP chip.
 This re-annotated SNP data frame can be sliced into thinned and full SNP sets and used for multiple projects. 
 
 ### Packages
@@ -39,7 +39,7 @@ library(biomaRt)
 ```{r}
 
 # Load in mutation data frame
-# MGE produced this file in /MVP-H2F-HatcheryField/src/parental_genetics/updated_genetics_experimental.R (big merge file that is also saved in other places)
+# MGE produced this file in /MVP-H2F-HatcheryField/src/parental_genetics/updated_genetics_experimental.R (big merge file that is also saved in other repos)
 
 muts <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250604_mutmatrix_PASS.rds"))
 
