@@ -1,7 +1,7 @@
 ---
 title: "Dermo_RFTM_H2F_NMedit"
-author: "Nicole Mongillo"
-date: "2025-10-03"
+author: "Nicole Mongillo & Camille Rumberger"
+date: "2026-02-13"
 output: pdf_document
 ---
 
@@ -24,6 +24,8 @@ setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/data/disease")
 
 dermo_york <- read.csv("./H2F_dermo_york_RFTM.csv")
 dermo_lew <- read.csv("./H2F_lewisetta_dermo.csv")
+
+dis_yrk <- read.csv("./H2F_prev_york_bothdiseases.csv")
 ```
 
 ##Prep data
@@ -46,6 +48,24 @@ dermo_sub <- dermo_combo %>%
 
 #merge month and year columns
 dermo_sub$sampling_date <- paste(dermo_sub$Month, dermo_sub$Year, sep = "-")
+
+# using histology for msx
+msx_lew <- data.frame(Month = dis_yrk$Month, Year = dis_yrk$Year, MSX_prev = 0, cg = "Lewisetta")
+
+msx_yrk <- dis_yrk[,c("Month", "Year", "Histo_MSX_York")]
+colnames(msx_yrk) <- c("Month", "Year", "MSX_prev")
+msx_yrk$cg <- "YorkRiver"
+
+# combine sites
+msx <- rbind(msx_yrk, msx_lew)
+
+#filter for years 2023 and 2024 and months July and November
+msx_sub <- msx %>% 
+  filter(Year == 2023 | Year == 2024) %>% 
+  filter(Month == 7 | Month == 11)
+
+# merge month and year columns
+msx_sub$sampling_date <- paste(msx_sub$Month, msx_sub$Year, sep = "-")
 ```
 
 ## Two way barplot for Dermo prevalence over time in each common garden site
@@ -72,6 +92,48 @@ dermo_H2F
 
 ggsave("Dermo_Field_H2F.pdf",
        plot = dermo_H2F,
+       device = "pdf",
+       height = 3,
+       width = 5,
+       path = ".")
+```
+
+## Two way barplot for MSX prevalence over time in each common garden site
+```{r}
+ msx_H2F <- msx_sub %>% 
+  ggplot(aes(x = sampling_date, y = MSX_prev, fill = cg))+
+  geom_bar(stat = "identity", position = "dodge")+
+  scale_fill_manual(name = c("Common Garden Site"), limits = c("Lewisetta", "YorkRiver"), labels = c("Lewisetta", "York River"), values = c("#F06292","#880E4F"))+
+  scale_x_discrete(limits = c("7-2023", "11-2023", "7-2024", "11-2024"))+
+  ylim (c(0, 105))+
+  ggtitle("MSX Prevalence through Field Experiment")+
+  xlab("Sampling Date")+
+  ylab("RFTM MSX Prevalence (%)")+
+  #geom_text(aes(label = Dermo_prev), stat = "identity", position = position_dodge(width = .8), vjust = 0)+
+  theme_bw()+
+  theme(panel.grid = element_blank(),
+        axis.title = element_text(color = "black", size = 11),
+        axis.text = element_text(color = "black", size = 10),
+        legend.title = element_text(size = 11),
+        legend.text = element_text(size = 10),
+        legend.position = "bottom")
+  
+msx_H2F
+
+ggsave("MSX_Field_H2F.pdf",
+       plot = msx_H2F,
+       device = "pdf",
+       height = 3,
+       width = 5,
+       path = ".")
+```
+
+## Both diseases
+
+```{r}
+disease_H2F <- ggpubr::ggarrange(dermo_H2F, msx_H2F, ncol = 1)
+ggsave("disease_Field_H2F.pdf",
+       plot = disease_H2F,
        device = "pdf",
        height = 3,
        width = 5,
