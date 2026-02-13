@@ -1,5 +1,5 @@
 ---
-title: "Q2_Envr_Distance_Len_Surv"
+title: "Q2_envrdist_models"
 author: "Nicole Mongillo"
 date: "2025-07-29"
 output: pdf_document
@@ -31,6 +31,7 @@ library(corrplot)
 library(broom) #save lm results as tables
 library(ggstance) #vertical position.dodge function
 library(broom.mixed) #save lmer results as tables
+library(corrplot)
 ```
 
 ## Modeling differences in survival
@@ -39,13 +40,13 @@ library(broom.mixed) #save lmer results as tables
 Environmental distance calculations done by KB.
 
 ```{r}
-setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/parent_effects_H2F")
+#setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/parent_effects_H2F")
 
 #survival data
-surv_mod_ord_rename <- read.csv("../../data/performance_H2F/field_surv_all_times2025-07-24.csv")[, -1]
+surv_mod_ord_rename <- read.csv("../../data/performance_H2F/field_surv_all_times2026-01-03.csv")[, -1]
 
 #length data
-lengths_mod_narm_nodead <- read.csv("../../data/performance_H2F/field_length_all_times_2025-07-24.csv")[ ,-1]
+lengths_mod_narm_nodead <- read.csv("../../data/performance_H2F/field_length_all_times_2026-01-03.csv")[ ,-1]
 
 #parent genetics
 gen_parents <- read.csv("../../data/parent_effects_H2F/parent_genetic_effects.csv")
@@ -80,13 +81,13 @@ rownames(cor_matrix_lew) <- c("Distance to Lewisetta","Heterozygosity","Allelic 
 
 text_col <- ifelse(abs(cor_matrix_lew) > 0.5, "white", "black")
 
-pdf(file = "../../figures/parent_effects_H2F/Lew_EnvrDist_Genetics_Corrplot.pdf")
+pdf(file = "../../figures/parent_effects_H2F/corrplot_lew_envrdist_H0_Ar.pdf")
 corrplot_lew <- corrplot(cor_matrix_lew,
          method = "color",
          type = "upper",
          tl.col = "black",
          tl.srt = 45,
-         title = "Lewisetta: Genetics Variables and Envr. Distance Multicollinearity",
+         title = "Multicollinearity of environmental distance, heterozygosity, and allelic richness (Lewisetta)",
          addCoef.col = text_col,
          mar=c(0,0,2,0))
 dev.off()
@@ -94,19 +95,19 @@ dev.off()
 
 cor_matrix_yrk <- cor(surv_mod_gen_dist[,c("dist_YRK", "ho", "ar")])
 
-colnames(cor_matrix_yrk) <- c("Distance to York","Heterozygosity","Allelic Richness")
+colnames(cor_matrix_yrk) <- c("Distance to York River","Heterozygosity","Allelic richness")
 
-rownames(cor_matrix_yrk) <- c("Distance to York","Heterozygosity","Allelic Richness")
+rownames(cor_matrix_yrk) <- c("Distance to York","Heterozygosity","Allelic richness")
 
 text_col <- ifelse(abs(cor_matrix_yrk) > 0.5, "white", "black")
 
-pdf(file = "../../figures/parent_effects_H2F/Yrk-EnvrDist_Genetics_Corrplot.pdf")
+pdf(file = "../../figures/parent_effects_H2F/corrplot_york_envrdist_H0_Ar.pdf")
 corrplot_yrk <- corrplot(cor_matrix_yrk,
          method = "color",
          type = "upper",
          tl.col = "black",
          tl.srt = 45,
-         title = "York River: Genetics Variables and Envr. Distance Multicollinearity",
+         title = "Multicollinearity of environmental distance, heterozygosity, and allelic richness (York River)",
          addCoef.col = text_col,
          mar=c(0,0,2,0))
 dev.off()
@@ -549,15 +550,15 @@ lew_surv_dist_plot <- lew_surv_dist_df %>%
   ggplot(aes(x = slope, y = explanatory))+
   geom_point(aes(alpha = t, shape = t), color = "#F06292", size = 3.5, position = position_dodge2v(height = .85, reverse = T, preserve = "total"))+
   geom_errorbarh(aes(xmax = slope + 2*se, xmin = slope - 2*se, alpha= t), color = "#F06292", height = 0, size = 1.2, position = position_dodgev(height = -.85, preserve = "total"))+
-  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
-  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
+  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
+  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
   xlim(c(-1,2))+
-  xlab("Slope on Scaled Data")+
+  xlab("Slope on scaled data")+
   ylab("Variable")+
   geom_vline(xintercept = 0, linetype = "dashed")+
-  scale_y_discrete(name = "Explanatory Variable", 
+  scale_y_discrete(name = "Explanatory variable", 
                    limits = c("scale(dist_LEW)", "scale(ho)", "scale(ar)"),
-                   labels = c(str_wrap(c("Env. Distance to Lewisetta"), width = 20), "Heterozygosity", "Allelic Richness"))+
+                   labels = c(str_wrap(c("Environmental distance (EOO to Lewisetta)"), width = 20), "Heterozygosity", "Allelic richness"))+
   theme_classic()+
     theme(axis.text = element_text(color = "black", size = 14),
         axis.title = element_text(size = 15),
@@ -598,15 +599,15 @@ yrk_surv_dist_plot <- yrk_surv_dist_df %>%
   ggplot(aes(x = slope, y = explanatory))+
   geom_point(aes(alpha = t, shape = t), color = "#880E4F", size = 3.5, position = position_dodgev(height = -.85, preserve = "total"))+
   geom_errorbarh(aes(xmax = slope + 2*se, xmin = slope - 2*se, alpha= t), color = "#880E4F", height = 0, size = 1.2, position = position_dodgev(height = -.85, preserve = "total"))+
-  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
-  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
+  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
+  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
   xlim(c(-1, 2))+
-  xlab("Slope on Scaled Data")+
+  xlab("Slope on scaled data")+
   ylab("Variable")+
   geom_vline(xintercept = 0, linetype = "dashed")+
-  scale_y_discrete(name = "Explanatory Variable", 
+  scale_y_discrete(name = "Explanatory variable", 
                    limits = c("scale(dist_YRK)", "scale(ho)", "scale(ar)"),
-                   labels = c(str_wrap(c("Env. Distance to York River"), width = 20), "Heterozygosity", "Allelic Richness"))+
+                   labels = c(str_wrap(c("Environmental distance (EOO to York River)"), width = 20), "Heterozygosity", "Allelic richness"))+
   theme_classic()+ 
     theme(axis.text = element_text(color = "black", size = 14),
         axis.title = element_text(size = 15),
@@ -616,7 +617,7 @@ yrk_surv_dist_plot <- yrk_surv_dist_df %>%
 yrk_surv_dist_plot
 
 #save plot as pdf
-ggsave("yrk_surv_dist.pdf",
+ggsave("york_surv_dist.pdf",
        plot = yrk_surv_dist_plot,
        device = "pdf",
        path = "../../figures/parent_effects_H2F",
@@ -651,15 +652,15 @@ lew_len_dist_plot <- lew_len_dist_df2 %>%
   ggplot(aes(x = slope, y = explanatory))+
   geom_point(aes(alpha = t, shape = t), color = "#F06292", size = 3.5, position = position_dodge2v(height = .85, reverse = T, preserve = "total"))+
   geom_errorbarh(aes(xmax = slope + 2*se, xmin = slope - 2*se, alpha= t), color = "#F06292", height = 0, size = 1.2, position = position_dodgev(height = -.85, preserve = "total"))+
-  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
-  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
+  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
+  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
   xlim(c(-1,2))+
-  xlab("Slope on Scaled Data")+
+  xlab("Slope on scaled data")+
   ylab("Variable")+
   geom_vline(xintercept = 0, linetype = "dashed")+
-  scale_y_discrete(name = "Explanatory Variable", 
+  scale_y_discrete(name = "Explanatory variable", 
                    limits = c("scale(dist_LEW)", "scale(ho)", "scale(ar)"),
-                   labels = c(str_wrap(c("Env. Distance to Lewisetta"), width = 20), "Heterozygosity", "Allelic Richness"))+
+                   labels = c(str_wrap(c("Environmental distance (EOO to Lewisetta)"), width = 20), "Heterozygosity", "Allelic richness"))+
   theme_classic()+
     theme(axis.text = element_text(color = "black", size = 14),
         axis.title = element_text(size = 15),
@@ -703,15 +704,15 @@ yrk_len_dist_plot <- yrk_len_dist_df2 %>%
   ggplot(aes(x = slope, y = explanatory))+
   geom_point(aes(alpha = t, shape = t), color = "#880E4F", size = 3.5, position = position_dodgev(height = -.85, preserve = "total"))+
   geom_errorbarh(aes(xmax = slope + 2*se, xmin = slope - 2*se, alpha= t), color = "#880E4F", height = 0, size = 1.2, position = position_dodgev(height = -.85, preserve = "total"))+
-  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
-  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
+  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
+  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
   xlim(c(-1, 2))+
-  xlab("Slope on Scaled Data")+
+  xlab("Slope on scaled data")+
   ylab("Variable")+
   geom_vline(xintercept = 0, linetype = "dashed")+
-  scale_y_discrete(name = "Explanatory Variable", 
+  scale_y_discrete(name = "Explanatory variable", 
                    limits = c("scale(dist_YRK)", "scale(ho)", "scale(ar)"),
-                   labels = c(str_wrap(c("Env. Distance to York River"), width = 20), "Heterozygosity", "Allelic Richness"))+
+                   labels = c(str_wrap(c("Environmental distance (EOO to York River)"), width = 20), "Heterozygosity", "Allelic richness"))+
   theme_classic()+ 
     theme(axis.text = element_text(color = "black", size = 14),
         axis.title = element_text(size = 15),
@@ -721,7 +722,7 @@ yrk_len_dist_plot <- yrk_len_dist_df2 %>%
 yrk_len_dist_plot
 
 #save plot as pdf
-ggsave("yrk_len_dist.pdf",
+ggsave("york_len_dist.pdf",
        plot = yrk_len_dist_plot,
        device = "pdf",
        path = "../../figures/parent_effects_H2F",
