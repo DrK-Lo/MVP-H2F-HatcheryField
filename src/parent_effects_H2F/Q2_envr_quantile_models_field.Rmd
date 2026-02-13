@@ -1,5 +1,5 @@
 ---
-title: "F_Surv_Length_Gen_Env"
+title: "Q2_envr_quantile_models_field"
 author: "Nicole Mongillo"
 date: "2025-07-24"
 output: pdf_document
@@ -36,11 +36,11 @@ CR: "I intend to use linear (mixed) models to examine how survival and length va
 
 ### Read in data
 ```{r}
-setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/parent_effects_H2F")
+#setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/parent_effects_H2F")
 # read in data
-surv_mod_ord_rename <- read.csv("../../data/performance_H2F/field_surv_all_times2025-07-24.csv")[, -1]
+surv_mod_ord_rename <- read.csv("../../data/performance_H2F/field_surv_all_times2026-01-03.csv")[, -1]
 
-lengths_mod_narm_nodead <- read.csv("../../data/performance_H2F/field_length_all_times_2025-07-24.csv")[ ,-1]
+lengths_mod_narm_nodead <- read.csv("../../data/performance_H2F/field_length_all_times_2026-01-03.csv")[ ,-1]
 
 #parent genetics
 gen_parents <- read.csv("../../data/parent_effects_H2F/parent_genetic_effects.csv")
@@ -75,35 +75,35 @@ surv_mod_gen_env <- merge(surv_mod_gen, env_parents, by = c("pop"))
 cor_matrix_all <- cor(surv_mod_gen_env[,c("salinity_quantile_10","salinity_quantile_90","Salinity_st_dev","temp_quantile_10","temp_quantile_90","Temperature_st_dev", "ho", "ar")])
 
 #rename rows and columns
-colnames(cor_matrix_all) <- c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Salinity SD", "Temp 0.1 quantile", "Temp 0.9 quantile", "Temperature SD","Heterozygosity","Allelic Richness")
+colnames(cor_matrix_all) <- c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Salinity SD", "Temp 0.1 quantile", "Temp 0.9 quantile", "Temperature SD","Heterozygosity","Allelic richness")
 
-rownames(cor_matrix_all) <- c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Salinity SD", "Temp 0.1 quantile", "Temp 0.9 quantile", "Temperature SD","Heterozygosity","Allelic Richness")
+rownames(cor_matrix_all) <- c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Salinity SD", "Temp 0.1 quantile", "Temp 0.9 quantile", "Temperature SD","Heterozygosity","Allelic richness")
 
-#pdf(file = "../../figures/supplement/EOO_Envr_Genetics_Corrplot.pdf")
+#pdf(file = "../../figures/supplement/corrplot_envr_quantiles_H0_Ar.pdf")
 
 corrplot_all <- corrplot(cor_matrix_all,
          method = "color",
          type = "upper",
          tl.col = "black",
          tl.srt = 45,
-         title = "Envr Genetics Variable Multicollinearity",
+         title = "Multicollinearity of environmental quantiles, heterozygosity, and allelic richess",
          addCoef.col = 'black',
          mar=c(0,0,2,0))
 #dev.off()
 
 cor_matrix_quant <- cor(surv_mod_gen_env[,c("salinity_quantile_10","salinity_quantile_90","temp_quantile_10","temp_quantile_90","ho", "ar")])
 
-colnames(cor_matrix_quant) <- c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Temp 0.1 quantile", "Temp 0.9 quantile", "Heterozygosity","Allelic Richness")
+colnames(cor_matrix_quant) <- c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Temp 0.1 quantile", "Temp 0.9 quantile", "Heterozygosity","Allelic richness")
 
-rownames(cor_matrix_quant) <- c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Temp 0.1 quantile", "Temp 0.9 quantile", "Heterozygosity","Allelic Richness")
+rownames(cor_matrix_quant) <- c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Temp 0.1 quantile", "Temp 0.9 quantile", "Heterozygosity","Allelic richness")
 
-pdf(file = "../../figures/parent_effects_H2F/Envr_Genetics_Corrplot.pdf")
+pdf(file = "../../figures/parent_effects_H2F/FigS2_corrplot_envr_quantiles_H0_Ar.pdf")
 corrplot_quant <- corrplot(cor_matrix_quant,
          method = "color",
          type = "upper",
          tl.col = "black",
          tl.srt = 45,
-         title = "Environmental Quantiles and Genetics Variables Collinearity",
+         title = "Multicollinearity of environmental quantiles, heterozygosity, and allelic richess",
          addCoef.col = 'black',
          mar=c(0,0,2,0))
 dev.off()
@@ -427,7 +427,7 @@ Anova(len_t3_yrk_scaled, type = "III")
 sink()
 ```
 
-##Figure product - Lewisetta survival
+##Plotting slopes - Lewisetta survival
 ```{r}
 lew_surv_df <- rbind(tidy(surv_t1_lew_scaled), tidy(surv_t2_lew_scaled), tidy(surv_t3_lew_scaled))
 lew_surv_df$t <- c(rep(c("t1"), 4), rep(c("t2"), 5), rep(c("t3"), 6))
@@ -447,14 +447,14 @@ lew_surv_plot <- lew_surv_df %>%
   ggplot(aes(x = slope, y = explanatory))+
   geom_point(aes(alpha = t, shape = t), color = "#F06292", size = 3.5, position = position_dodge2v(height = .85, reverse = T, preserve = "total"))+
   geom_errorbarh(aes(xmax = slope + 2*se, xmin = slope - 2*se, alpha= t), color = "#F06292", height = 0, size = 1.2, position = position_dodgev(height = -.85, preserve = "total"))+
-  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
-  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
+  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
+  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
   xlim(c(-1,2))+
-  xlab("Slope on Scaled Data")+
+  xlab("Slope on scaled data")+
   geom_vline(xintercept = 0, linetype = "dashed")+
-  scale_y_discrete(name = "Explanatory Variable", 
+  scale_y_discrete(name = "Explanatory variable", 
                    limits = c("scale(salinity_quantile_10)", "scale(salinity_quantile_90)", "scale(temp_quantile_10)", "scale(ho)", "scale(ar)"), 
-                   labels = c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Temp 0.1 quantile",  str_wrap(c("Heterozygosity/ Temp 0.9 quantile"), width = 17), str_wrap(c("Allelic richness/ Temp 0.9 quantile"), width = 20)))+
+                   labels = c("Salinity Q10", "Salinity Q90", "Temperature Q10",  str_wrap(c("Heterozygosity/ Temperature Q90"), width = 17), str_wrap(c("Allelic richness/ Temperature Q90"), width = 20)))+
   theme_classic()+
     theme(axis.text = element_text(color = "black", size = 14),
         axis.title = element_text(size = 15),
@@ -463,7 +463,7 @@ lew_surv_plot <- lew_surv_df %>%
 
 lew_surv_plot
 
-ggsave("lew_surv.pdf",
+ggsave("Fig3A_lew_surv_quantiles.pdf",
        plot = lew_surv_plot,
        device = "pdf",
        path = "../../figures/parent_effects_H2F",
@@ -491,15 +491,15 @@ yrk_surv_plot <- yrk_surv_df %>%
   ggplot(aes(x = slope, y = explanatory))+
   geom_point(aes(alpha = t, shape = t), color = "#880E4F", size = 3.5, position = position_dodge2v(height = .85, reverse = T, preserve = "total"))+
   geom_errorbarh(aes(xmax = slope + 2*se, xmin = slope - 2*se, alpha= t), color = "#880E4F", height = 0, size = 1.2, position = position_dodgev(height = -.85, preserve = "total"))+
-  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .4, "t2" = .7, "t3" = 1), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
-  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
+  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .4, "t2" = .7, "t3" = 1), labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
+  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
   xlim(c(-1,2))+
-  xlab("Slope on Scaled Data")+
+  xlab("Slope on scaled data")+
   ylab("Variable")+
   geom_vline(xintercept = 0, linetype = "dashed")+
-  scale_y_discrete(name = "Explanatory Variable", 
+  scale_y_discrete(name = "Explanatory variable", 
                    limits = c("scale(salinity_quantile_10)", "scale(salinity_quantile_90)", "scale(temp_quantile_10)", "scale(ho)", "scale(ar)"), 
-                   labels = c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Temp 0.1 quantile",  str_wrap(c("Heterozygosity/ Temp 0.9 quantile"), width = 17), str_wrap(c("Allelic richness/ Temp 0.9 quantile"), width = 20)))+
+                   labels = c("Salinity Q10", "Salinity Q90", "Temperature Q10",  str_wrap(c("Heterozygosity/ Temperature Q90"), width = 17), str_wrap(c("Allelic richness/ Temperature Q90"), width = 20)))+
   theme_classic()+
     theme(axis.text = element_text(color = "black", size = 14),
         axis.title = element_text(size = 15),
@@ -508,7 +508,7 @@ yrk_surv_plot <- yrk_surv_df %>%
 
 yrk_surv_plot
 
-ggsave("yrk_surv.pdf",
+ggsave("Fig3C_york_surv_quantiles.pdf",
        plot = yrk_surv_plot,
        device = "pdf",
        path = "../../figures/parent_effects_H2F",
@@ -517,7 +517,7 @@ ggsave("yrk_surv.pdf",
 ```
 
 
-#Plotting slopes - Lewisetta
+#Plotting slopes - Lewisetta length
 ```{r}
 lew_len_df <- rbind(broom.mixed::tidy(len_t1_lew_scaled), broom.mixed::tidy(len_t2_lew_scaled), broom.mixed::tidy(len_t3_lew_scaled))
 
@@ -545,15 +545,15 @@ lew_len_plot <- lew_len_df2 %>%
   ggplot(aes(x = slope, y = explanatory))+
   geom_point(aes(alpha = t, shape = t), color = "#F06292", size = 3.5, position = position_dodge2v(height = .85, reverse = T, preserve = "total"))+
   geom_errorbarh(aes(xmax = slope + 2*se, xmin = slope - 2*se, alpha= t), color = "#F06292", height = 0, size = 1.2, position = position_dodgev(height = -.85, preserve = "total"))+
-  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
-  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
+  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
+  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
   xlim(c(-1,2))+
-  xlab("Slope on Scaled Data")+
+  xlab("Slope on scaled data")+
   ylab("Variable")+
   geom_vline(xintercept = 0, linetype = "dashed")+
-  scale_y_discrete(name = "Explanatory Variable", 
+  scale_y_discrete(name = "Explanatory variable", 
                    limits = c("scale(salinity_quantile_10)", "scale(salinity_quantile_90)", "scale(temp_quantile_10)", "scale(ho)", "scale(ar)"), 
-                   labels = c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Temp 0.1 quantile",  str_wrap(c("Heterozygosity/ Temp 0.9 quantile"), width = 17), str_wrap(c("Allelic richness/ Temp 0.9 quantile"), width = 20)))+
+                   labels = c("Salinity Q10", "Salinity Q90", "Temperature Q10",  str_wrap(c("Heterozygosity/ Temperature Q90"), width = 17), str_wrap(c("Allelic richness/ Temperature Q90"), width = 20)))+
   theme_classic()+
     theme(axis.text = element_text(color = "black", size = 14),
         axis.title = element_text(size = 15),
@@ -562,7 +562,7 @@ lew_len_plot <- lew_len_df2 %>%
 
 lew_len_plot
 
-ggsave("lew_length.pdf",
+ggsave("FigS5A_lew_length_quantiles.pdf",
        plot = lew_len_plot,
        device = "pdf",
        path = "../../figures/parent_effects_H2F",
@@ -596,17 +596,17 @@ yrk_len_plot <- yrk_len_df2 %>%
   geom_errorbarh(aes(xmax = slope + 2*se, xmin = slope - 2*se, alpha= t), color = "#880E4F", height = 0, size = 1.2, position = position_dodgev(height = -.85, preserve = "total"))+
   scale_alpha_manual(name = "Time", na.translate = F, 
                      values = c("t1" = .45, "t2" = .7, "t3" = 1), 
-                     labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
+                     labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
   scale_shape_manual(name = "Time", na.translate = F, 
                      values = c("t1" = 15, "t2" = 16, "t3" = 17), 
-                     labels = c("t1" = "Nov. 2023", "t2" = "May 2024", "t3" = "Nov. 2024"))+
+                     labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
   xlim(c(-1,2))+
-  xlab("Slope on Scaled Data")+
+  xlab("Slope on scaled data")+
   ylab("Variable")+
   geom_vline(xintercept = 0, linetype = "dashed")+
-  scale_y_discrete(name = "Explanatory Variable", 
+  scale_y_discrete(name = "Explanatory variable", 
                    limits = c("scale(salinity_quantile_10)", "scale(salinity_quantile_90)", "scale(temp_quantile_10)", "scale(ho)", "scale(ar)"), 
-                   labels = c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Temp 0.1 quantile",  str_wrap(c("Heterozygosity/ Temp 0.9 quantile"), width = 17), str_wrap(c("Allelic richness/ Temp 0.9 quantile"), width = 20)))+
+                   labels = c("Salinity Q10", "Salinity Q90", "Temperature Q10",  str_wrap(c("Heterozygosity/ Temperature Q90"), width = 17), str_wrap(c("Allelic richness/ Temperature Q90"), width = 20)))+
   theme_classic()+
     theme(axis.text = element_text(color = "black", size = 14),
         axis.title = element_text(size = 15),
@@ -615,7 +615,7 @@ yrk_len_plot <- yrk_len_df2 %>%
 
 yrk_len_plot
 
-ggsave("yrk_length.pdf",
+ggsave("FigS5C_york_length_quantiles.pdf",
        plot = yrk_len_plot,
        device = "pdf",
        path = "../../figures/parent_effects_H2F",
