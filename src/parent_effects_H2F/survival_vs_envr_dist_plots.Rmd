@@ -1,5 +1,5 @@
 ---
-title: "survival_vs_envrdist"
+title: "survival_vs_envr_dist_plots"
 author: "Nicole Mongillo"
 date: "2025-08-20"
 output: pdf_document

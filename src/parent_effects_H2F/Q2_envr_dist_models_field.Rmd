@@ -1,5 +1,5 @@
 ---
-title: "Q2_envrdist_models"
+title: "Q2_envr_dist_models_field"
 author: "Nicole Mongillo"
 date: "2025-07-29"
 output: pdf_document
@@ -79,7 +79,7 @@ colnames(cor_matrix_lew) <- c("Distance to Lewisetta","Heterozygosity","Allelic 
 
 rownames(cor_matrix_lew) <- c("Distance to Lewisetta","Heterozygosity","Allelic Richness")
 
-pdf(file = "../../figures/parent_effects_H2F/corrplot_lew_envrdist_H0_Ar.pdf")
+pdf(file = "../../figures/parent_effects_H2F/FigS8A_corrplot_lew_envr_dist_H0_Ar.pdf")
 corrplot_lew <- corrplot(cor_matrix_lew,
          method = "color",
          type = "upper",
@@ -97,7 +97,7 @@ colnames(cor_matrix_yrk) <- c("Distance to York River","Heterozygosity","Allelic
 
 rownames(cor_matrix_yrk) <- c("Distance to York","Heterozygosity","Allelic richness")
 
-pdf(file = "../../figures/parent_effects_H2F/corrplot_york_envrdist_H0_Ar.pdf")
+pdf(file = "../../figures/parent_effects_H2F/FigS8B_corrplot_york_envr_dist_H0_Ar.pdf")
 corrplot_yrk <- corrplot(cor_matrix_yrk,
          method = "color",
          type = "upper",
@@ -426,7 +426,7 @@ lew_surv_dist_plot <- lew_surv_dist_df %>%
 lew_surv_dist_plot
 
 #save plot as pdf
-ggsave("lew_surv_dist.pdf",
+ggsave("Fig3B_lew_surv_dist.pdf",
        plot = lew_surv_dist_plot,
        device = "pdf",
        path = "../../figures/parent_effects_H2F",
@@ -475,7 +475,7 @@ yrk_surv_dist_plot <- yrk_surv_dist_df %>%
 yrk_surv_dist_plot
 
 #save plot as pdf
-ggsave("york_surv_dist.pdf",
+ggsave("Fig3D_york_surv_dist.pdf",
        plot = yrk_surv_dist_plot,
        device = "pdf",
        path = "../../figures/parent_effects_H2F",
@@ -528,7 +528,7 @@ lew_len_dist_plot <- lew_len_dist_df2 %>%
 lew_len_dist_plot
 
 #save plot as pdf
-ggsave("lew_len_dist.pdf",
+ggsave("FigS5B_lew_len_dist.pdf",
        plot = lew_len_dist_plot,
        device = "pdf",
        path = "../../figures/parent_effects_H2F",
@@ -580,7 +580,7 @@ yrk_len_dist_plot <- yrk_len_dist_df2 %>%
 yrk_len_dist_plot
 
 #save plot as pdf
-ggsave("york_len_dist.pdf",
+ggsave("FigS5D_york_len_dist.pdf",
        plot = yrk_len_dist_plot,
        device = "pdf",
        path = "../../figures/parent_effects_H2F",
