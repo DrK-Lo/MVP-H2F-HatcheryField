@@ -1,5 +1,5 @@
 ---
-title: "Survival_vs_EnvrDist"
+title: "survival_vs_envrdist"
 author: "Nicole Mongillo"
 date: "2025-08-20"
 output: pdf_document
@@ -29,7 +29,7 @@ library(multcompView)
 
 ## Read in data
 ```{r}
-setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/parent_effects_H2F")
+#setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/parent_effects_H2F")
 
 # read in data
 surv_mod_ord_rename <- read.csv("../../data/performance_H2F/field_surv_all_times2025-07-24.csv")[, -1]
@@ -62,153 +62,69 @@ surv_dist_means$t <- as.character(surv_dist_means$t)
 surv_dist_means$pop <- factor(surv_dist_means$pop, levels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY",  "W5-NH", "W6-ME"))
 ```
 
-##Plot
+## Plot 
+
+KEB edited to just define plotting settings once and change as needed. 
+
 ```{r}
-Lsurv_dist_t1 <- surv_dist_means %>% 
-  filter(bag_site == "Lewisetta") %>% 
-  filter(t == "1") %>% 
-  ggplot(aes(x = dist_LEW, y = mean_surv))+
-  geom_point(aes(shape = pop), size = 2.5)+
-  scale_shape_manual(name = "EOO", values = c(15,16,17,18,4,3,7,10))+
-  ylim(c(0,1))+
-  ggtitle(str_wrap(c("Mean Survival vs Env. Distance from EOOs to Lewisetta"), width = 35))+
-  labs(subtitle = "Nov. 2023")+
-  xlab("Env. Distance from EOOs to Lewisetta")+
-  ylab("% Survival")+
-  theme_bw()+
-  theme(panel.grid = element_blank(),
-        axis.text = element_text(color = "black"),
-        plot.subtitle = element_text(color = "black"))
 
-Lsurv_dist_t1
+# shared plot settings
+site_config <- list(
+  Lewisetta = list(dist_col = "dist_LEW", label = "Lewisetta"),
+  YorkRiver = list(dist_col = "dist_YRK", label = "York River")
+)
 
-Lsurv_dist_t2 <- surv_dist_means %>% 
-  filter(bag_site == "Lewisetta") %>% 
-  filter(t == "2") %>% 
-  ggplot(aes(x = dist_LEW, y = mean_surv))+
-  geom_point(aes(shape = pop), size = 2.5)+
-  scale_shape_manual(name = "EOO", values = c(15,16,17,18,4,3,7,10))+
-  ylim(c(0,1))+
-  ggtitle(str_wrap(c("Mean Survival vs Env. Distance from EOOs to Lewisetta"), width = 35))+
-  labs(subtitle = "May 2024")+
-  xlab("Env. Distance from EOOs to Lewisetta")+
-  ylab("% Survival")+
-  theme_bw()+
-  theme(panel.grid = element_blank(),
-        axis.text = element_text(color = "black"),
-        plot.subtitle = element_text(color = "black"))
+time_labels <- c("1" = "November 2023", "2" = "May 2024", "3" = "November 2024")
 
-Lsurv_dist_t2
+# function to create a single plot
+make_surv_plot <- function(data, site, t_val) {
+  cfg <- site_config[[site]]
+  
+  data %>%
+    filter(bag_site == site, t == t_val) %>%
+    ggplot(aes(x = .data[[cfg$dist_col]], y = mean_surv)) +
+    geom_point(aes(shape = pop), size = 2.5) +
+    scale_shape_manual(name = "EOO", values = c(15, 16, 17, 18, 4, 3, 7, 10)) +
+    ylim(c(0, 1)) +
+    ggtitle(str_wrap(paste0("Survival vs. environmental distance (EOO to ", cfg$label, ")"), width = 35)) +
+    labs(subtitle = time_labels[t_val]) +
+    xlab(paste0("Environmental distance (EOO to ", cfg$label, ")")) +
+    ylab("% Survival") +
+    theme_classic() +
+    theme(
+      panel.grid.major = element_line(color = "grey90"),
+      axis.text = element_text(color = "black"),
+      plot.subtitle = element_text(color = "black")
+    )
+}
 
-Lsurv_dist_t3 <- surv_dist_means %>% 
-  filter(bag_site == "Lewisetta") %>% 
-  filter(t == "3") %>% 
-  ggplot(aes(x = dist_LEW, y = mean_surv))+
-  geom_point(aes(shape = pop), size = 2.5)+
-  scale_shape_manual(name = "EOO", values = c(15,16,17,18,4,3,7,10))+
-  ylim(c(0,1))+
-  ggtitle(str_wrap(c("Mean Survival vs Env. Distance from EOOs to Lewisetta"), width = 35))+
-  labs(subtitle = "Nov. 2024")+
-  xlab("Env. Distance from EOOs to Lewisetta")+
-  ylab("% Survival")+
-  theme_bw()+
-  theme(panel.grid = element_blank(),
-        axis.text = element_text(color = "black"),
-        plot.subtitle = element_text(color = "black"))
+# generate all plots
+plots <- list()
+for (site in names(site_config)) {
+  prefix <- ifelse(site == "Lewisetta", "L", "Y")
+  for (t_val in c("1", "2", "3")) {
+    name <- paste0(prefix, "surv_dist_t", t_val)
+    plots[[name]] <- make_surv_plot(surv_dist_means, site, t_val)
+    print(plots[[name]])
+  }
+}
 
-Lsurv_dist_t3
+# Save all plots
+file_map <- list(
+  Lsurv_dist_t1 = "lew_survival_envrdist_t1.pdf",
+  Lsurv_dist_t2 = "lew_survival_envrdist_t2.pdf",
+  Lsurv_dist_t3 = "lew_survival_envrdist_t3.pdf",
+  Ysurv_dist_t1 = "york_survival_envrdist_t1.pdf",
+  Ysurv_dist_t2 = "york_survival_envrdist_t2.pdf",
+  Ysurv_dist_t3 = "york_survival_envrdist_t3.pdf"
+)
 
-#plot York
-Ysurv_dist_t1 <- surv_dist_means %>% 
-  filter(bag_site == "YorkRiver") %>% 
-  filter(t == "1") %>% 
-  ggplot(aes(x = dist_YRK, y = mean_surv))+
-  geom_point(aes(shape = pop), size = 2.5)+
-  scale_shape_manual(name = "EOO", values = c(15,16,17,18,4,3,7,10))+
-  ylim(c(0,1))+
-  ggtitle(str_wrap(c("Mean Survival vs Env. Distance from EOOs to York River"), width = 35))+
-  labs(subtitle = "Nov. 2023")+
-  xlab("Env. Distance from EOOs to York River")+
-  ylab("% Survival")+
-  theme_bw()+
-  theme(panel.grid = element_blank(),
-        axis.text = element_text(color = "black"),
-        plot.subtitle = element_text(color = "black"))
-
-Ysurv_dist_t1
-
-Ysurv_dist_t2 <- surv_dist_means %>% 
-  filter(bag_site == "YorkRiver") %>% 
-  filter(t == "2") %>% 
-  ggplot(aes(x = dist_YRK, y = mean_surv))+
-  geom_point(aes(shape = pop), size = 2.5)+
-  scale_shape_manual(name = "EOO", values = c(15,16,17,18,4,3,7,10))+
-  ylim(c(0,1))+
-  ggtitle(str_wrap(c("Mean Survival vs Env. Distance from EOOs to York River"), width = 35))+
-  labs(subtitle = "May 2024")+
-  xlab("Env. Distance from EOOs to York River")+
-  ylab("% Survival")+
-  theme_bw()+
-  theme(panel.grid = element_blank(),
-        axis.text = element_text(color = "black"),
-        plot.subtitle = element_text(color = "black"))
-
-Ysurv_dist_t2
-
-Ysurv_dist_t3 <- surv_dist_means %>% 
-  filter(bag_site == "YorkRiver") %>% 
-  filter(t == "3") %>% 
-  ggplot(aes(x = dist_YRK, y = mean_surv))+
-  geom_point(aes(shape = pop), size = 2.5)+
-  scale_shape_manual(name = "EOO", values = c(15,16,17,18,4,3,7,10))+
-  ylim(c(0,1))+
-  ggtitle(str_wrap(c("Mean Survival vs Env. Distance from EOOs to York River"), width = 35))+
-  labs(subtitle = "Nov. 2024", )+
-  xlab("Env. Distance from EOOs to York River")+
-  ylab("% Survival")+
-  theme_bw()+
-  theme(panel.grid = element_blank(),
-        axis.text = element_text(color = "black"),
-        plot.subtitle = element_text(color = "black"))
-
-Ysurv_dist_t3
-
-#save everything
-ggsave("Lsurv_dist_t1.pdf",
-       plot = Lsurv_dist_t1,
-       device = "pdf",
-       path = "../../figures/parent_effects_H2F/supp_surv_envdist",
-       height = 3,
-       width = 5)
-ggsave("Lsurv_dist_t2.pdf",
-       plot = Lsurv_dist_t2,
-       device = "pdf",
-       path = "../../figures/parent_effects_H2F/supp_surv_envdist",
-       height = 3,
-       width = 5)
-ggsave("Lsurv_dist_t3.pdf",
-       plot = Lsurv_dist_t3,
-       device = "pdf",
-       path = "../../figures/parent_effects_H2F/supp_surv_envdist",
-       height = 3,
-       width = 5)
-ggsave("Ysurv_dist_t1.pdf",
-       plot = Ysurv_dist_t1,
-       device = "pdf",
-       path = "../../figures/parent_effects_H2F/supp_surv_envdist",
-       height = 3,
-       width = 5)
-ggsave("Ysurv_dist_t2.pdf",
-       plot = Ysurv_dist_t2,
-       device = "pdf",
-       path = "../../figures/parent_effects_H2F/supp_surv_envdist",
-       height = 3,
-       width = 5)
-ggsave("Ysurv_dist_t3.pdf",
-       plot = Ysurv_dist_t3,
-       device = "pdf",
-       path = "../../figures/parent_effects_H2F/supp_surv_envdist",
-       height = 3,
-       width = 5)
+for (name in names(file_map)) {
+  ggsave(file_map[[name]],
+         plot = plots[[name]],
+         device = "pdf",
+         path = "../../figures/parent_effects_H2F/survival_envrdist",
+         height = 3, width = 5)
+}
 ```
 
