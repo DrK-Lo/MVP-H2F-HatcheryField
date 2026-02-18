@@ -40,14 +40,6 @@ outflank_output <- read_csv(file.path("..", "..", "data", "putative_selection", 
 
 ```{r}
 
-test <- outflank_output %>%
-  filter(OutlierFlag == TRUE) %>%
-  filter(!is.na(cust_gene_id))
-
-```
-
-```{r}
-
 # filter for SNPs with available gene info to put into ShinyGO
 
 annotated_only <- outflank_output %>% # starts at 154102 rows
@@ -175,14 +167,11 @@ snp_annotated <- snp_annotated %>%
 
 ```
 
-### Data product: annotated SNP dataframe
+### Data product: annotated full SNP set with outlier status
 
 ```{r}
 
-snp_annotated_sharing <- snp_annotated %>%
-  dplyr::select(Affx.ID:go_term)
-
-write_csv(snp_annotated_sharing, file.path("..", "..", "supp files", "full_SNPset_reannotated.csv"))
+write_csv(snp_annotated, file.path("..", "..", "supp files", "full_SNPs_outliers_annotated.csv"))
 
 ```
 
