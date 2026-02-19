@@ -1,5 +1,5 @@
 Folder for code related to parental genetics structure, F stats, outliers, and SNP annotation
 
-| File | Function | Datasets Used | Datasets Produced |
+| File | Function | Datasets used | Datasets produced |
 |------|----------|---------------|-------------------|
 | updated_genetics_experimental.R | Builds a clean genotype matrix from raw VCF files, merges genotype data with project metadata, and runs population genetic analyses (PCA and ancestry estimation) on the experimental subset. | **Genotype data:** VCF files from Affymetrix OysterCVI200K SNP chip (PlDNA 1–13 + global recall); SNP annotation file (`20240719_mutmatrix.rds`)<br><br>**Sequencing metadata:** Sample tables with pass/fail, call rates, DQC, heterozygosity per plate<br><br>**Project metadata:** CSVs for experimental broodstock (phenotypes) | **Genotype matrices (RDS):** experimental (160 individuals × 195,025 SNPs), plus imputed/LD-thinned experimental<br><br>**Metadata (RDS/CSV):** Merged individual data with sequencing QC + project metadata + environment<br><br>**Analyses:** PCA (6 axes), SNMF ancestry (K=2), pie chart maps, batch effect plots |
