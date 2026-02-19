@@ -1,10 +1,10 @@
 ---
-title: "NM_Condition_Survival_Figs"
+title: "Q1_condition_survival_length_figures"
 author: "Nicole Mongillo"
 date: "2025-06-02"
 output: pdf_document
 ---
-Condition plots created from code developed by Zea Segnitz.
+Condition plots created from code developed by Zea Segnitz (condition_index_analysis.Rmd).
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -30,7 +30,7 @@ library(car)
 ```
 
 ```{r}
-setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/performance_H2F")
+#setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/performance_H2F")
 ```
 
 ### Condition Index
@@ -38,7 +38,7 @@ Condition index calculations and modeling performed by ZS.
 #### Data preparation
 ```{r}
 # load in condition index dataset 
-MVP_phenotyping_final <- read_csv("../../data/condition_index_H2F/MVP_phenotyping_final.csv", show_col_types = FALSE)
+MVP_phenotyping_final <- read_csv("../../data/performance_H2F/MVP_phenotyping_final.csv", show_col_types = FALSE)
 
 MVP_phenotyping_final$population <- as.character(MVP_phenotyping_final$population)
 
