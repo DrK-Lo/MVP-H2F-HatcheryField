@@ -116,10 +116,10 @@ field_length <- read.csv(file.path("..", "..", "data", "performance_H2F", "lengt
 field_survival <- read.csv(file.path("..", "..", "data", "performance_H2F", "mortality_bags_022025.csv"))
 
 # summary statistics - temperature and salinity quantiles for the 8 groups 
-envr_summary <-  read.csv(file.path("..", "..", "data", "envr_of_origin", "envr_quantiles_summary.csv"))
+envr_summary <-  read.csv(file.path("..", "..", "results", "envr_of_origin", "envr_quantiles_summary.csv"))
 
 # matrix of euclidean environmental distances using SCALED data
-envr_dist <- readRDS(file.path("..", "..", "data", "envr_of_origin", "envr_quantiles_dist.rds"))
+envr_dist <- readRDS(file.path("..", "..", "results", "envr_of_origin", "envr_quantiles_dist.rds"))
 
 # matrix of genetic distances between each group
 fst_mat <- readRDS(file.path("..", "..", "data", "pairwise_differences_analyses", "20250606_fst_results.rds"))

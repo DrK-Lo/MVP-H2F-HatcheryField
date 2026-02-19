@@ -42,7 +42,7 @@ DIST_COLS <- c("salinity_quantile_10", "salinity_quantile_90", "temp_quantile_10
     # sites: vector of site names for row/column labels
 calc_envr_dist <- function(df, cols, sites) {
   df %>%
-    select(all_of(cols)) %>%
+    dplyr::select(all_of(cols)) %>%
     scale() %>%
     dist() %>%
     as.matrix() %>%
@@ -57,14 +57,14 @@ calc_envr_dist <- function(df, cols, sites) {
 # includes 8 environment-of-origin sites + 2 field experiment sites
 envr_quants_raw <- read_csv(file.path("..", "..", "data", "environment", "quantiles_11092025.csv"),
                             show_col_types = FALSE) %>%
-  select(-1, -9)  # remove index and unused columns
+  dplyr::select(-1, -9)  # remove index and unused columns
 
 # create ordered versions
 envr_all <- envr_quants_raw %>% arrange(factor(site_name, levels = ALL_SITES))
 envr_origin <- envr_all %>% filter(!site_name %in% FIELD_SITES)
 
 # export summary of environment-of-origin sites only
-write.csv(envr_origin, file.path("..", "..", "data", "envr_of_origin", "envr_quantiles_summary.csv"),
+write.csv(envr_origin, file.path("..", "..", "results", "environment", "envr_quantiles_summary.csv"),
           row.names = FALSE)
 ```
 
@@ -80,10 +80,10 @@ envr_dist_origin <- calc_envr_dist(envr_origin, DIST_COLS, POP_ORDER)
 ## Save results
 ```{r export}
 # distance matrix with all sites
-write.csv(envr_dist_all, file.path("..", "..", "data", "envr_of_origin", "envr_quantiles_dist_all.csv"))
+write.csv(envr_dist_all, file.path("..", "..", "results", "environment", "envr_quantiles_dist_all.csv"))
 
 # distance matrix for environment-of-origin sites sites only for downstream analysis
-saveRDS(envr_dist_origin, file.path("..", "..", "data", "envr_of_origin", "envr_quantiles_dist.rds"))
+saveRDS(envr_dist_origin, file.path("..", "..", "results", "environment", "envr_quantiles_dist.rds"))
 
 # Display matrices
 envr_dist_all

@@ -130,7 +130,7 @@ mm3.cld_letters2$x2 <- as.numeric(mm3.cld_letters2$x2)
 field_ci <- ggplot(data202411, aes(x = population, y = CI, fill = site)) +
   geom_boxplot(position = position_dodge(width = 0.8)) +  
   scale_x_discrete() +  
-  labs(x = "Treatment Group", y = "Condition Index", title = "Condition Index vs. Treatment Group", subtitle = "Final Field Monitoring Event, Nov. 2024", fill = "Site") +   scale_fill_manual(labels = c("LEW" = "Lewisetta", "YR" = "York River"), values = c("LEW" = "#F06292", "YR" = "#880E4F")) +  
+  labs(x = "Treatment group", y = "Condition index", title = "Condition index vs. Treatment group", subtitle = "Final field monitoring event, November 2024", fill = "Site") +   scale_fill_manual(labels = c("LEW" = "Lewisetta", "YR" = "York River"), values = c("LEW" = "#F06292", "YR" = "#880E4F")) +  
   ylim(c(0, 12.2))+
   theme_minimal() +
   theme_classic()+
@@ -167,7 +167,7 @@ field_ci_sig <- field_ci +
   geom_hline(yintercept = 10.5, linetype = "dashed")
 
 field_ci_sig
-ggsave("field_ci.pdf",
+ggsave("FigS4_field_ci.pdf",
        plot = field_ci_sig,
        device = "pdf",
        path = "../../figures/performance_H2F",

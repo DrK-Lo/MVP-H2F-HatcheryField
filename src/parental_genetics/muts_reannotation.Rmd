@@ -67,7 +67,7 @@ Link to download: https://metazoa.ensembl.org/Crassostrea_virginica_gca002022765
 ```{r}
 
 # I have this file saved in the MVP-H2F-HatcheryField repo but you can load it in from anywhere
-gff <- rtracklayer::import(file.path("..", "..", "data", "putative_selection", "Crassostrea_virginica_gca002022765v4.C_virginica_3.0.62.gff3"))
+gff <- rtracklayer::import(file.path("..", "..", "data", "parental_genetics_structure", "Crassostrea_virginica_gca002022765v4.C_virginica_3.0.62.gff3"))
 
 ```
 

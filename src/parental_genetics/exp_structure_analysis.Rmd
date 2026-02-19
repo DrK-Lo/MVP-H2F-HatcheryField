@@ -22,7 +22,7 @@ library(stringr)
 
 ### Set region colors
 ```{r}
-setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/parental_genetics")
+#setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/parental_genetics")
 
 # can update region colors to whatever we want to see here
 region_colors <- c(
@@ -37,10 +37,10 @@ region_colors <- c(
   )
 ```
 
-MGE wrote this code in "exp_structure_analysis.R." Code was adapted by NM to format figures for H2F. 
+MGE wrote this code. Code was adapted by NM to format figures for H2F. 
 
 ```{r}
-pca_data <- read.csv("../../data/parental_genetics_structure/20250203_pca_data_exp.csv")
+pca_data <- read.csv("../../data/parental_genetics_structure/20250604_pca_data_exp.csv")
 
 #rename values in ID_SiteDate to match naming scheme
 pca_data <- pca_data %>%
@@ -117,10 +117,16 @@ pca_plot4
 
 ```{r}
 # subset the last geno matrix that we made (GEN_filtered) with our thinned SNPs list from the auto_SVD function
+
+# load imputed genotype matrix and thinned SNP indices
+GEN_imputed <- readRDS("../../data/parental_genetics_structure/20250604_FULLSNPs_exp.rds")
+thinned_snps <- readRDS("../../data/parental_genetics_structure/20250604_THINNEDSNPs_exp.rds")
+
+# subset to LD-thinned SNPs
 gen_filtered_subset <- GEN_imputed[, thinned_snps]
 
-# now save our matrix as a .geno format to run the snmf analysis
-write.geno(gen_filtered_subset, "/Users/madelineeppley/Desktop/cvi-diploid-files/20250204geno_imputedfile_exp.geno")
+# save as .geno format for snmf analysis
+write.geno(gen_filtered_subset, "../../data/parental_genetics_structure/20250204geno_imputedfile_exp.geno")
 ```
 
 ```{r}
@@ -148,7 +154,7 @@ bp <- barchart(snmf_exp, K = 2, run = best,
          sort.by.Q = T)
 
 #read in RDS file
-samp_full_subset <- readRDS("../../data/parental_genetics_structure/20250203_samp_full_subset_exp.rds")
+samp_full_subset <- readRDS("../../data/parental_genetics_structure/20250604_samp_full_subset_exp.rds")
 samp_full_subset <- samp_full_subset %>%
   mutate(ID_SiteDate = case_match(ID_SiteDate,
                                    "TX-CapBay" ~ "W1-TX",
@@ -172,7 +178,7 @@ axis(1, at = 1:length(region_labels),
 ### Create snmf plot results on map 
 ```{r}
 # read in site data
-site_data <- read.csv("../../data/performance_H2F/MVP23-FieldBags - spawn_trt2.csv")
+site_data <- read.csv("../../data/performance_H2F/MVP23-FieldBags-spawn_trt2.csv")
 
 site_data <- site_data %>%
   mutate(SpawnTrt_Label = case_match(SpawnTrt_Label,
@@ -196,15 +202,15 @@ Q_matrix <- Q(snmf_project, K = 2, run = best_run)  # extract best run into q-ma
 region_labels <- samp_full_subset$ID_SiteDate
 region_labels <- as.data.frame(region_labels)
 colnames(region_labels) <- "ID_SiteDate"
-region_labels <- samp_full_subset[, c("ID_SiteDate", "merge_ID_inds")]
-region_labels$Q1 <- Q_matrix[, 1]  # q matrix ancestry group 1
-region_labels$Q2 <- Q_matrix[, 2]  # q matrix ancestry group 2
+region_labels <- samp_full_subset[, c("ID_SiteDate", "clean_ID")]
+region_labels$Q1 <- Q_matrix[, 1]
+region_labels$Q2 <- Q_matrix[, 2]
 
 colnames(site_data)[2] = "ID_SiteDate"
 
 # Merge ancestry proportions into the full data
 merged_data <- merge(site_data, samp_full_subset, by = "ID_SiteDate")
-merged_data <- merge(region_labels, merged_data, by = "merge_ID_inds", all.x = TRUE)
+merged_data <- merge(region_labels, merged_data, by = "clean_ID", all.x = TRUE)
 ```
 
 ### Make base map
@@ -217,7 +223,7 @@ base_map <- ggplot(data = coastline) +
   geom_sf() +
   theme_minimal() +
   labs(
-    title = "Ancestry Proportions by Parental Group",
+    title = "Ancestry of source populations",
     x = "Longitude", y = "Latitude"
   ) +
   coord_sf(xlim = c(-100, -60), ylim = c(24, 50), expand = FALSE)
@@ -245,10 +251,10 @@ map_with_sites <- base_map +
   geom_scatterpie(
     data = site_data_averaged,
     aes(x = Longitude, y = Latitude, r = 0.9),  
-    cols = c("Q1_avg", "Q2_avg"), 
+    cols = c("Q2_avg", "Q1_avg"), 
     color = NA,
     pie_scale = 1.5) +  
-  scale_fill_manual(name = "Genetic Cluster", breaks = c("Q1_avg", "Q2_avg"), labels = c("Gulf Cluster", "Atlantic Cluster"), values = c("#1565C0", "#81C784")) +  
+  scale_fill_manual(name = "Genetic cluster", breaks = c("Q2_avg", "Q1_avg"), labels = c("Gulf", "Atlantic"), values = c("#1565C0", "#81C784")) +  
   theme(
     legend.position = "inside",
     legend.position.inside = c(.3,.7), 
@@ -261,7 +267,7 @@ map_with_sites <- base_map +
 
 map_with_sites
 
-ggsave("ancestry_map.pdf",
+ggsave("Fig1A_ancestry_map.pdf",
        plot = map_with_sites,
        device = "pdf",
        path = "../../figures/envr_of_origin",
@@ -303,11 +309,11 @@ inset_map <- inset_base +
   geom_point(data = common_garden, aes(x = Longitude, y = Latitude, shape = cg_site, fill = cg_site), size = 4)+
   scale_fill_manual(name = " ", breaks = c("LEW", "YRK"), 
                     values = c("#F06292", "#880E4F"),
-                    labels = str_wrap(c("Lewisetta (LEW): low salinity and disease, LOLA selection site", "York (YRK): higher salinity and disease, DEBY selection site"), width = 35))+
+                    labels = str_wrap(c("Lewisetta: low salinity and disease, LOLA selection site", "York River: higher salinity and disease, DEBY selection site"), width = 35))+
   scale_shape_manual(name = " ", breaks = c("LEW", "YRK"), 
                     values = c(23, 24),
-                    labels = str_wrap(c("Lewisetta (LEW): low salinity and disease, LOLA selection site", "York (YRK): higher salinity and disease, DEBY selection site"), width = 35))+
-  ggtitle("Common Garden Sites")+
+                    labels = str_wrap(c("Lewisetta: low salinity and disease, LOLA selection site", "York River: higher salinity and disease, DEBY selection site"), width = 35))+
+  ggtitle("Common garden sites")+
   scale_x_continuous(breaks = seq(-78, -74, by =1))+
   scale_y_continuous(breaks = seq(36.5, 39.5, by = 1))+
   theme(legend.position = "bottom",
@@ -317,7 +323,7 @@ inset_map <- inset_base +
 
 inset_map
 
-ggsave("inset_map.pdf",
+ggsave("Fig1A_inset_map.pdf",
        plot = inset_map,
        device = "pdf",
        path = "../../figures/envr_of_origin",

@@ -116,16 +116,16 @@ identical(fst_labels_check, samp_labels_check) # TRUE
 fst_data$ID_SiteDate <- samp_full_subset$ID_SiteDate
 
 fst_data <- fst_data %>%
-  mutate(ID_SiteDate = recode(ID_SiteDate,
-                           "DEBY" = "S2-DEBY",
-                           "FL-KingPlan" = "W3-FL",
-                           "LA-SisLake" = "W2-LA",
-                           "LOLA" = "S1-LOLA",
-                           "ME-HogIs" = "W6-ME",
-                           "NH-GrtBay" = "W5-NH",
-                           "TX-CapBay" = "W1-TX",
-                           "VA-DeepWatSh" = "W4-VA"))
-
+  mutate(ID_SiteDate = case_match(ID_SiteDate,
+                                   "TX-CapBay" ~ "W1-TX",
+                                   "LA-SisLake" ~ "W2-LA",
+                                   "FL-KingPlan" ~ "W3-FL",
+                                   "VA-DeepWatSh" ~ "W4-VA",
+                                   "LOLA" ~ "S1-LOLA",
+                                   "DEBY" ~ "S2-DEBY",
+                                   "NH-GrtBay" ~ "W5-NH",
+                                   "ME-HogIs" ~ "W6-ME"
+                                   ))
 # move sample and population columns to front 
 n_cols <- ncol(fst_data)
 fst_data <- fst_data[, c((n_cols-1):n_cols, 1:(n_cols-2))]
@@ -163,10 +163,10 @@ dim(fst_data) # 105358 - sample id col = 105357
 # view results
 #print(fst_results)
 
-#saveRDS(fst_results, file.path("..", "..", "data", "pairwise_differences_analyses", "fst_results.rds"))
+#saveRDS(fst_results, file.path("..", "..", "results", "parental_genetics", "fst_results.rds"))
 
 # load in fst results - after running with HPC
-fst_results <- readRDS(file.path("..", "..", "data", "pairwise_differences_analyses", "20250606_fst_results.rds"))
+fst_results <- readRDS(file.path("..", "..", "results", "parental_genetics", "20250606_fst_results.rds"))
 
 
 # convert the matrix to a long format and edit column names
@@ -258,15 +258,16 @@ basic_stats_data$ID_SiteDate <- samp_full_subset$ID_SiteDate
 
 # edit name format
 basic_stats_data <- basic_stats_data %>%
-  mutate(ID_SiteDate = recode(ID_SiteDate,
-                           "DEBY" = "S2-DEBY",
-                           "FL-KingPlan" = "W3-FL",
-                           "LA-SisLake" = "W2-LA",
-                           "LOLA" = "S1-LOLA",
-                           "ME-HogIs" = "W6-ME",
-                           "NH-GrtBay" = "W5-NH",
-                           "TX-CapBay" = "W1-TX",
-                           "VA-DeepWatSh" = "W4-VA"))
+  mutate(ID_SiteDate = case_match(ID_SiteDate,
+                                   "TX-CapBay" ~ "W1-TX",
+                                   "LA-SisLake" ~ "W2-LA",
+                                   "FL-KingPlan" ~ "W3-FL",
+                                   "VA-DeepWatSh" ~ "W4-VA",
+                                   "LOLA" ~ "S1-LOLA",
+                                   "DEBY" ~ "S2-DEBY",
+                                   "NH-GrtBay" ~ "W5-NH",
+                                   "ME-HogIs" ~ "W6-ME"
+                                   ))
 
 # move sample and population columns to front 
 n_cols <- ncol(basic_stats_data)
@@ -356,15 +357,13 @@ Ho_long$Population <- factor(Ho_long$Population, levels = population_order)
 ggplot(Ho_long, aes(x = Population, y = Ho)) +
   geom_boxplot(fill = "lightblue", alpha = 0.7) +
   labs(
-    title = "Observed Heterozygosity by Population",
+    title = "Observed heterozygosity by population",
     x = "Population",
-    y = "Observed Heterozygosity (Ho)"
+    y = "Observed heterozygosity (Ho)"
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
   
-ggsave(file.path("..", "..", "figures", "parental_genetics", "Ho_boxplot.pdf"), Ho_boxplot, width = 10, height = 8, dpi = 300) 
-
 ```
 
 ```{r}
@@ -391,9 +390,9 @@ avg_het_long <- avg_het_per_pop %>%
 ggplot(avg_het_long, aes(x = factor(Population, levels = population_order), y = Value, group = Type, color = Type)) +
   geom_line(size = 1.2) +  # lines for averages
   geom_point(size = 3) +   # points for each average
-  labs(title = "Average Ho and Hs by Population",
+  labs(title = "Average Ho and Hs by population",
        x = "Population",
-       y = "Average Heterozygosity") +
+       y = "Average heterozygosity") +
   scale_color_manual(values = c("avg_observed_ho" = "blue", "avg_expected_hs" = "orange")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -401,6 +400,7 @@ ggplot(avg_het_long, aes(x = factor(Population, levels = population_order), y = 
 ```
 
 #### Allelic richness
+
 Something might be wrong with this calculation - it's working with 0, 1, and 2s and might be
 inflating allelic richness. 
 
@@ -431,7 +431,7 @@ means <- aggregate(Allelic_Richness ~ Population, data = ar_long, mean)
 # plot allelic richness results
 ggplot(ar_long, aes(x = factor(Population, levels = population_order), y = Allelic_Richness)) +
   geom_boxplot(fill = "lightblue") +
-  labs(title = "Allelic Richness by Population", x = "Population", y = "Allelic Richness") +
+  labs(title = "Allelic richness by population", x = "Population", y = "Allelic richness") +
   geom_point(data = means, aes(x = Population, y = Allelic_Richness, shape = "Mean"), 
              size = 2, color = "black") +  # plot means in addition to medians
   scale_shape_manual(name = "Legend", values = c(16), labels = c("Mean alleleic richness")) + 
@@ -463,7 +463,7 @@ parent_genetic_effects <- merge(avg_het_per_pop, avg_ar_per_pop, by = "Populatio
   mutate(Population = factor(Population, levels = population_order)) %>%
   arrange(Population)
 
-write_csv(parent_genetic_effects, file.path("..", "..", "data", "parent_effects_H2F", "parent_genetic_effects.csv"))
+write_csv(parent_genetic_effects, file.path("..", "..", "results", "parent_effects_H2F", "parent_genetic_effects.csv"))
 
 ```
 
@@ -584,7 +584,7 @@ muts$chrom_position <- paste(muts$Chromosome, a, sep = ".")
 P1$Affx.ID <- P1$LocusName
 joined_P1 <- left_join(P1, muts, by = c("Affx.ID" = "Affx.ID"))
 
-write_csv(joined_P1, file.path("..", "..", "data", "putative_selection", "outflank_results.csv"))
+write_csv(joined_P1, file.path("..", "..", "results", "parental_genetics", "outflank_results.csv"))
 
 ```
 

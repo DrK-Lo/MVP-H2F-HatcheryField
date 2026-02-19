@@ -1,5 +1,5 @@
 new("snmfProject", snmfProject.file = "20250204geno_imputedfile_exp.snmfProject", 
-    projDir = "/Users/madelineeppley/Desktop/cvi-diploid-files/", 
+    projDir = "/Users/kiranbajaj/Desktop/MVP-H2F-HatcheryField/data/parental_genetics_structure/", 
     snmfDir = "20250204geno_imputedfile_exp.snmf/", input.file = "20250204geno_imputedfile_exp.geno", 
     runs = list(), K = c(2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 
     2L), snmfClass.files = c("K2/run1/20250204geno_imputedfile_exp_r1.2.snmfClass", 
@@ -8,5 +8,5 @@ new("snmfProject", snmfProject.file = "20250204geno_imputedfile_exp.snmfProject"
     "K2/run6/20250204geno_imputedfile_exp_r6.2.snmfClass", "K2/run7/20250204geno_imputedfile_exp_r7.2.snmfClass", 
     "K2/run8/20250204geno_imputedfile_exp_r8.2.snmfClass", "K2/run9/20250204geno_imputedfile_exp_r9.2.snmfClass", 
     "K2/run10/20250204geno_imputedfile_exp_r10.2.snmfClass"), 
-    n = 154L, L = 104958L, creationTime = structure(1738682144.33007, class = c("POSIXct", 
+    n = 160L, L = 105356L, creationTime = structure(1771475157.68579, class = c("POSIXct", 
     "POSIXt")))

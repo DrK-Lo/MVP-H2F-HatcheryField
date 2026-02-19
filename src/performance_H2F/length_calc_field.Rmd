@@ -66,7 +66,7 @@ tagsbags6 <- tagsbags5[!(tagsbags5$pop == ""),]
 tagsbags6 <- tagsbags6[!(tagsbags6$pop == "LEW"),]
 tagsbags6 <- tagsbags6[!(tagsbags6$pop == "YORK"),]
 
-write.csv(tagsbags6, "results/lengths_long.csv")
+write.csv(tagsbags6, "data/lengths_long.csv")
 ```
 
 Now that I have prepared the data, I will look at some larger data trends. 
@@ -102,7 +102,7 @@ rownames(event3_bags_df) <- NULL
 lengths_bags_df <- rbind(event1_bags_df, event2_bags_df, event3_bags_df)
 
 # save it
-write.csv(lengths_bags_df, "results/lengths_bags_022025.csv")
+write.csv(lengths_bags_df, "data/performance_H2F/lengths_bags_022025.csv")
 
 # calc pop level averages for each event
 event1_york <- tapply(tagsbags6[tagsbags6$monitoring_event == 1 & tagsbags6$bag_site == "YorkRiver",]$length, 
@@ -167,7 +167,7 @@ york3 <- len_summary[len_summary$monitoring_event == 3 & len_summary$site == "Yo
 york2 <- len_summary[len_summary$monitoring_event == 2 & len_summary$site == "York",]
 york1 <- len_summary[len_summary$monitoring_event == 1 & len_summary$site == "York",]
 
-sink("results/len_sites_02202025.txt")
+sink("results/performance_H2F/len_sites_02202025.txt")
 york1
 york2
 york3
