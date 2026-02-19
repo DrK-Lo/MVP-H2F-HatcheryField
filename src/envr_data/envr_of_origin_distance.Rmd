@@ -1,5 +1,6 @@
 ---
-title: "NM_Envr_Data"
+title: "envr_of_origin_distance"
+author: "Nicole Mongillo"
 output: pdf_document
 date: "2024-03-21"
 ---
@@ -8,13 +9,15 @@ date: "2024-03-21"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+This file calculates environmental distance between environment-of-origin sites based on salinity and temperature
+(NOT quantiles). The most up to date analysis calculates these distances based on quantiles (envr_dist_quantiles.Rmd).
+
 # Set working directory
 ```{r}
 #set working directory to Rmd file location
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 ```
-
 
 ```{r}
 #read in appropriate packages
@@ -24,7 +27,7 @@ library(forcats)
 library(RColorBrewer)
 library(circlize)
 library(BiocManager)
-library(vegan)#for Mantel test
+library(vegan) #for Mantel test
 ```
 
 All the data for each site are in separate csv files. There is one temp and one salinity csv for each site. We need to combine those files into one salinity data frame and one temperature data frame, and then join the salinity and temperature data frames into one to conduct the distance analysis.
@@ -103,7 +106,7 @@ envr.df <- envr.df %>%
   arrange(factor(site_name, levels = c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME")))
 
 #save envr.df as a csv for future analyses
-write.csv(envr.df, "../../data/envr_of_origin/envr_summary_stats.csv")
+write.csv(envr.df, "../../results/environment/envr_summary_stats.csv")
           
 #rename rows with MVP population names
 rownames(envr.df) <- c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME")
@@ -117,7 +120,7 @@ envr.df.dist <- subset(envr.df, select = -c(site_name))
 envr.dist.mat <- as.matrix(dist(envr.df.dist))
 
 #save envr distance matrix as csv
-saveRDS(envr.dist.mat, "../../data/envr_of_origin/envr_dist.rds")
+saveRDS(envr.dist.mat, "../../results/environment/envr_dist.rds")
 
 #View distance matrix
 View(envr.dist.mat)

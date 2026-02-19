@@ -204,8 +204,8 @@ colnames(e0) <- colnames(e1) <- colnames(e2) <- colnames(e3) <- c("bag_site","po
 mort_df <- rbind(e0, e1, e2, e3)
 
 # save all these dataframes
-write.csv(mort_df, paste0("../../results/performance_H2F/mortality_long_popsite_h2f_", Sys.Date(), ".csv"))
-write.csv(surv_df_ord, paste0("../../results/performance_H2F/mortality_bags_h2f_", Sys.Date(), ".csv"))
+write.csv(mort_df, paste0("../../data/performance_H2F/mortality_long_popsite_h2f_", Sys.Date(), ".csv"))
+write.csv(surv_df_ord, paste0("../../data/performance_H2F/mortality_bags_h2f_", Sys.Date(), ".csv"))
 ```
 
 All of my survival data is calculated, now I want to visualize trends in survival.

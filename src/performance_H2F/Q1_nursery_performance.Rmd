@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/performance_H2F")
+#setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/performance_H2F")
 ```
 
 ### Packages
@@ -88,7 +88,7 @@ no_small_df <- no_small_df %>%
            fct_relevel("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME", "H1-HYBRIDMIX"))
 
 #save latestage_df as a csv file for future analyses
-write.csv(no_small_df, "../../data/performance_H2F/latestage_length.csv")
+write.csv(no_small_df, "../../data/performance_H2F/nursery_length.csv")
 ```
 
 #### Calculate mean length and standard error
@@ -170,14 +170,14 @@ predep <- predep %>%
 #plot. fatten = NULL will remove the median lines in each box, allowing me to display the mean instead. Making fatten = NULL will result in warning messages, but that's ok.
 predep_box <- ggplot(data = predep, aes(site_name, shell_length_mm))+
   geom_boxplot(color = c("#3e4989", "#31688e", "#26828e", "#1f9e89","#440154","#482878",  "#35b779", "#6ece58", "#fde725"), fill = c("#3e4989", "#31688e", "#26828e", "#1f9e89","#440154","#482878",  "#35b779", "#6ece58", "#fde725"), linewidth = .2, fatten = NULL)+
-    scale_x_discrete(name = "Parental Group", limits = c("W1_TX", "W2_LA","W3_FL", "W4_VA", "S1_LOLA", "S2_DEBY", "W5_NH", "W6_ME", "H1_HYBRIDMIX"), labels = c("W1-TX","W2-LA","W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME", "H1-HYBRIDMIX"))+
+    scale_x_discrete(name = "Treatment group", limits = c("W1_TX", "W2_LA","W3_FL", "W4_VA", "S1_LOLA", "S2_DEBY", "W5_NH", "W6_ME", "H1_HYBRIDMIX"), labels = c("W1-TX","W2-LA","W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME", "H1-HYBRIDMIX"))+
   stat_summary(fun.data = mean_se, geom = "errorbar", width = 0.2, linewidth = .3, color = c("white", "white", "white", "white", "white", "white", "black", "black", "black"))+
   stat_summary(fun = mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..), width = 0.75, linewidth = .3, linetype = "solid", color = c("white", "white", "white", "white", "white", "white", "black", "black", "black"))+
   ylab("Shell Length (mm)")+
   labs(subtitle = "p < 0.001")+
   ylim(c(0,32))+
   geom_text(data = predep_dt, size = 3, aes(label = predep_cld, y = 29, x = site_name), vjust = -0.5)+
-  ggtitle("Pre-Field-Deployment Shell Lengths")+
+  ggtitle("Shell length, end of nursery stage (day 77)")+
   theme_bw()+
   theme(plot.subtitle = element_text(size = 9), 
         axis.title = element_text(size = 11), 
@@ -188,7 +188,7 @@ predep_box <- ggplot(data = predep, aes(site_name, shell_length_mm))+
 
 predep_box
 
-ggsave("predep_length.pdf",
+ggsave("FigS3_nursery_length.pdf",
        plot = predep_box,
        device = "pdf",
        path = "../../figures/performance_H2F",
