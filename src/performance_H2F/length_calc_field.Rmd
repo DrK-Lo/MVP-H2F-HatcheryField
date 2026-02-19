@@ -1,5 +1,5 @@
 ---
-title: "Oyster_len_calc"
+title: "length_calc_field"
 author: "Camille Rumberger"
 date: "`r Sys.Date()`"
 output: html_document
@@ -7,7 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = "~/MVP_Oyster_Analysis_Camille/MVP_Oysters_Analysis_Camille")
+knitr::opts_knit$set(root.dir = "~/Desktop/GitHub/MVP-H2F-HatcheryField/src")
 
 # load libraries
 library(tidyverse) # for data wrangling
@@ -22,11 +22,11 @@ library(plotrix) # for std error
 This script is to analyze length of oysters in the MVP Field Experiment from 2023-2025. First I need to read in and merge together relevant data. I will then clean this data up to prepare it for analysis by time point, site, population, and more.
 
 ```{r}
-bags <- read.csv("data/ooters_prelim/MVP23-FieldBags - bags.csv")
-expsites <- read.csv("data/ooters_prelim/MVP23-FieldBags - sites.csv")
-spawntrt <- read.csv("data/ooters_prelim/MVP23-FieldBags - spawn_trt2.csv")
-tags <- read.csv("data/ooters_prelim/MVP23-FieldBags - tags.csv")
-tagleng <- read.csv("data/ooters_prelim/MVP23-FieldBags - tagsLength.csv")
+bags <- read.csv("../../data/performance_H2F/MVP23-FieldBags - bags.csv")
+expsites <- read.csv("../../data/performance_H2F/MVP23-FieldBags - sites.csv")
+spawntrt <- read.csv("../../data/performance_H2F/MVP23-FieldBags - spawn_trt2.csv")
+tags <- read.csv("../../data/performance_H2F/MVP23-FieldBags - tags.csv")
+tagleng <- read.csv("../../data/performance_H2F/MVP23-FieldBags - tagsLength.csv")
 
 # split bags to have more detailed bag data
 bags[,5:6] <- str_split_fixed(bags$bags_label, "-", 3)[,2:3]

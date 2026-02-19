@@ -1,5 +1,5 @@
 ---
-title: "ZS_condition_analysis"
+title: "condition_index_analysis"
 author: "Zea Segnitz"
 output: html_document
 date: "2025-04-10"

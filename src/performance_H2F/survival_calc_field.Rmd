@@ -1,5 +1,5 @@
 ---
-title: "Oyster_survival_calc"
+title: "survival_calc_field"
 author: "Camille Rumberger"
 date: "`r Sys.Date()`"
 output: html_document
@@ -25,7 +25,7 @@ First I need to read in and merge together relevant data. I will then clean this
 
 ```{r}
 #set working directory
-setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/performance_H2F")
+#setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/performance_H2F")
 # read in data
 bags <- read.csv("../../data/performance_H2F/MVP23-FieldBags-bags.csv")
 mort <- read.csv("../../data/performance_H2F/MVP23-FieldBags-mortality.csv")
@@ -90,13 +90,11 @@ which(merge4[merge4$event == 3,]$alive_count > merge4[merge4$event == 2,]$alive_
 # all good!
 
 # add pop to df
-merge4_narm$pop <- str_split_fixed(merge4_narm$bags_label, "-", 3)[,2]
+merge4$pop <- str_split_fixed(merge4$bags_label, "-", 3)[,2]
 #merge4_rm$pop <- str_split_fixed(merge4_rm2$bags_label, "-", 3)[,2]
 ```
 
-
 Data is now ready for analysis. I will calculate survival as a proportion of those surviving from the previous timepoint.
-
 
 ```{r}
 # function for survival calculation
@@ -116,9 +114,9 @@ surv_calc_bag <- function(dat, e) {
 }
 
 # calc survival
-e1_surv <- surv_calc_bag(merge4_rm, 1)
-e2_surv <- surv_calc_bag(merge4_rm, 2)
-e3_surv <- surv_calc_bag(merge4_rm, 3)
+e1_surv <- surv_calc_bag(merge4, 1)
+e2_surv <- surv_calc_bag(merge4, 2)
+e3_surv <- surv_calc_bag(merge4, 3)
 
 # long format df
 surv_long <- rbind(e1_surv,e2_surv,e3_surv)
@@ -206,8 +204,8 @@ colnames(e0) <- colnames(e1) <- colnames(e2) <- colnames(e3) <- c("bag_site","po
 mort_df <- rbind(e0, e1, e2, e3)
 
 # save all these dataframes
-write.csv(mort_df, paste0("results/mortality_long_popsite_h2f_",Sys.Date(,".csv")))
-write.csv(surv_df_ord, paste0("results/mortality_bags_h2f_",Sys.Date(,".csv")))
+write.csv(mort_df, paste0("../../results/performance_H2F/mortality_long_popsite_h2f_", Sys.Date(), ".csv"))
+write.csv(surv_df_ord, paste0("../../results/performance_H2F/mortality_bags_h2f_", Sys.Date(), ".csv"))
 ```
 
 All of my survival data is calculated, now I want to visualize trends in survival.
