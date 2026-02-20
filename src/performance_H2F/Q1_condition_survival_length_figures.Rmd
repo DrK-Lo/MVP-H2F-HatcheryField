@@ -179,7 +179,7 @@ ggsave("FigS4_field_ci.pdf",
 Survival calculations and models conducted by CR in len_surv_modeling_ooters.Rmd. Plotting by NM.
 ```{r}
 #final field time-point survival analyses were conducted in len_surv_modeling_ooters.Rmd
-survival <- read.csv("../../data/performance_H2F/field_surv_final_time2026-01-03.csv")[,-c(1, 8)]
+survival <- read.csv("../../data/performance_H2F/field_surv_final_time.csv")[,-c(1, 8)]
 
 #rename columns
 colnames(survival) <- c("pop_site", "site", "population", "bag_label", "t", "survival", "letters")
@@ -251,7 +251,7 @@ ggsave("field_surv.pdf",
 ```
 
 ```{r}
-length <- read.csv("../../data/performance_H2F/field_length_final_time_2026-01-03.csv")[, 2:10]
+length <- read.csv("../../data/performance_H2F/field_length_final_time.csv")[, 2:10]
 
 length$pop <- factor(length$pop, levels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY",  "W5-NH", "W6-ME", "H1-HYBRIDMIX", "H2-SEEDMIX"))
 

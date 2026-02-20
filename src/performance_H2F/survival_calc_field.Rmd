@@ -121,6 +121,10 @@ e3_surv <- surv_calc_bag(merge4, 3)
 # long format df
 surv_long <- rbind(e1_surv,e2_surv,e3_surv)
 
+# save long format bag-level survival
+colnames(surv_long) <- c("bags_label", "event", "surv")
+write.csv(surv_long, "../../data/performance_H2F/mortality_long_bags.csv")
+
 # wide format df
 colnames(e1_surv) <- c("bags_label","event","t1")
 colnames(e2_surv) <- c("bags_label","event","t2")
@@ -204,8 +208,8 @@ colnames(e0) <- colnames(e1) <- colnames(e2) <- colnames(e3) <- c("bag_site","po
 mort_df <- rbind(e0, e1, e2, e3)
 
 # save all these dataframes
-write.csv(mort_df, paste0("../../data/performance_H2F/mortality_long_popsite_h2f_", Sys.Date(), ".csv"))
-write.csv(surv_df_ord, paste0("../../data/performance_H2F/mortality_bags_h2f_", Sys.Date(), ".csv"))
+#write.csv(mort_df, "../../data/performance_H2F/mortality_long_popsite_h2f.csv")
+#write.csv(surv_df_ord, "../../data/performance_H2F/mortality_bags_h2f.csv")
 ```
 
 All of my survival data is calculated, now I want to visualize trends in survival.
