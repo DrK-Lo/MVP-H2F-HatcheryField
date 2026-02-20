@@ -140,7 +140,7 @@ VIF(surv_mod_gen_dist$dist_YRK, surv_mod_gen_dist$ho, surv_mod_gen_dist$ar)
 ```
 VIF is low for all.
 
-Now look at how survival changes with genetics/environment at each time point. Modeling chunks below are based on those by CR with variables switched out as needed.
+Now look at how survival changes with genetics/environment at each time point. Modeling chunks below are based on those by CR (in Q1_field_performance_models) with variables switched out as needed.
 
 ## T1 survival, Lewisetta
 ```{r t1_surv_lew}

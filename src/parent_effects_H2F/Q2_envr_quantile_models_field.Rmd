@@ -138,7 +138,7 @@ VIF(surv_mod_gen_env$ar, surv_mod_gen_env$temp_quantile_10, surv_mod_gen_env$sal
 ```
 VIF is low enough for all remaining variables that I'm not super worried about the borderline collinearity between salinity 0.1 quantile and ho.
 
-Now look at how survival changes with genetics/environment at each time point.
+Now look at how survival changes with genetics/environment at each time point. Modeling chunks below are based on those by CR (in Q1_field_performance_models) with variables switched out as needed.
 
 ## T1 survival, Lewisetta
 ```{r t1_surv_lew}

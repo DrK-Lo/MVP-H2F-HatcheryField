@@ -22,6 +22,7 @@ library(car) # for avPlots(), Anova()
 library(emmeans) # for signif testing
 library(car)
 library(multcompView)
+library(corrplot)
 ```
 
 This script is for modeling differences in survival and length amongst bags/populations/sites/time points in the MVP Field Experiment. 
@@ -35,7 +36,7 @@ First I'll read in and process survival data
 ```{r}
 #setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField")
 # read in data
-surv_long <- read.csv("../../data/performance_H2F/mortality_long_bags_h2f_2025-07-23.csv")[,-1]
+surv_long <- read.csv("../../data/performance_H2F/mortality_long_bags.csv")[,-1]
 bags <- read.csv("../../data/performance_H2F/MVP23-FieldBags-bags.csv")
 
 # split bags to have more detailed bag data
@@ -59,7 +60,7 @@ Now I can use LMMs to look at differences in survival by group.
 ```{r}
 # ensure correct coding of explanatory variables
 surv_mod_ord_rename$t <- as.factor(surv_mod_ord_rename$t)
-write.csv(surv_mod_ord_rename, paste0("../../data/performance_H2F/field_surv_all_times",Sys.Date(),".csv"))
+write.csv(surv_mod_ord_rename, "../../data/performance_H2F/field_surv_all_times.csv")
 
 # analysis of fixed effects
 anova(lm(surv ~ pop + bag_site + t, data = surv_mod_ord_rename)) # all significant
@@ -81,7 +82,7 @@ drop1(lmm2)
 TukeyHSD(aov(lmm2))
 # another way to do this, in em-means package can get Tukey to letters in plot
 
-sink(paste0("../../results/performance_H2F/survival_model_results_",Sys.Date(),".txt"))
+#sink(paste0("../../results/performance_H2F/Q1_survival_model_results_",Sys.Date(),".txt"))
 Anova(lmm1.1, type = "III")
 Anova(lmm2, type = "III")
 sink()
@@ -125,7 +126,7 @@ letters_surv_t3_df_red <- letters_surv_t3_df[,c("letters.Letters","popsite")]
 colnames(letters_surv_t3_df_red) <- c("letters","popsite")
 
 # save these outputs too
-sink(paste0("../../results/performance_H2F/survival_model_results_",Sys.Date(),".txt"))
+sink("../../results/performance_H2F/Q1_survival_model_results.txt")
 Anova(lmm1.1, type = "III")
 Anova(lmm2, type = "III")
 Anova(lmm2.1, type = "III")
@@ -135,7 +136,7 @@ sink()
 # merge
 surv_final_time_rename_mg <- merge(surv_t3, letters_surv_t3_df_red, by = "popsite")
 
-write.csv(surv_final_time_rename_mg, paste0("../../data/performance_H2F/field_surv_final_time",Sys.Date(),".csv"))
+write.csv(surv_final_time_rename_mg, "../../data/performance_H2F/field_surv_final_time.csv")
 
 # plot
 # pop color scheme
@@ -162,7 +163,7 @@ Now I'll try modeling differences in length. I'll start by reading in and proces
 
 ```{r}
 # read in and trim data
-lengths <- read.csv("../../data/performance_H2F/lengths_long.csv")[,-1]
+lengths <- read.csv("../../data/performance_H2F/lengths_long")[,-1]
 head(lengths)
 lengths_mod <- lengths[,c("bag_site","pop","monitoring_event","bags_label","tags_label","length","width")]
 colnames(lengths_mod) <- c("bag_site","pop","t","bags_label","tags_label","length","width")
@@ -187,7 +188,7 @@ lengths_mod_narm_nodead <- lengths_mod_rm_nodead[!(is.na(lengths_mod_rm_nodead$w
 
 unique(lengths_mod_narm_nodead$pop)
 
-write.csv(lengths_mod_narm_nodead, paste0("../../data/performance_H2F/field_length_all_times_",Sys.Date(),".csv"))
+write.csv(lengths_mod_narm_nodead, "../../data/performance_H2F/field_length_all_times_.csv")
 ```
 
 I will now use LMMs to look at differences in length by grouping.
@@ -260,16 +261,16 @@ summary_len_t3 <- lengths_final_time_rename_mg %>%
   arrange()
 
 # save all this 
-sink(paste0("results/performance_H2F/length_model_results_",Sys.Date(),".txt"))
+sink("../../results/performance_H2F/Q1_length_model_results.txt")
 Anova(lmm3, type = "III")
 Anova(lmm4, type = "III")
 anova_len_t3
 letters_len_t3
 sink()
 
-write.csv(lengths_final_time_rename_mg, paste0("data/performance_H2F/field_length_final_time_",Sys.Date(),".csv"))
+write.csv(lengths_final_time_rename_mg, "../../data/performance_H2F/field_length_final_time.csv")
 
-write.csv(letters_len_t3_df, paste0("results/performance_H2F/field_length_letters_",Sys.Date(),".csv"))
+write.csv(letters_len_t3_df, "../../results/performance_H2F/Q1_field_length_letters.csv")
 
 len_final_time_plotting <- merge(lengths_final_time_rename_mg, pop_colors, by = "pop")
 
@@ -282,7 +283,7 @@ len_t3_plot_pop <- ggplot(len_final_time_plotting, aes(x = bag_site, y = length,
   theme_classic()
 len_t3_plot_pop
 
-ggsave(paste0("figures/performance_H2F/length_t3_h2f_",Sys.Date(),".pdf"), plot = len_t3_plot_pop, width = 10, height = 6, dpi = 300)
+#ggsave(paste0("../../figures/performance_H2F/length_t3_h2f_",Sys.Date(),".pdf"), plot = len_t3_plot_pop, width = 10, height = 6, dpi = 300)
 ```
 
 
@@ -293,7 +294,7 @@ For the H2F paper, we want to know how environment and genetics are impacting di
 ```{r}
 # start by putting together a complete dataframe
 # genetic data
-gen_parents <- read.csv("../../data/parent_effects_H2F/parent_genetic_effects.csv")
+gen_parents <- read.csv("../../results/parent_effects_H2F/parent_genetic_effects.csv")
 colnames(gen_parents) <- c("pop","ho","exp_hs","ar")
 surv_mod_gen <- merge(surv_mod_ord_rename, gen_parents, by = "pop")
 
@@ -534,7 +535,7 @@ drop1(surv_GE3.0.york.0) # final model
 
 
 # save everything
-sink(paste0("results_field/survival_GE_model_results_",Sys.Date(),".txt"))
+#sink(paste0("../../results/performance_H2F/survival_GE_model_results_",Sys.Date(),".txt"))
 cat("\nLEWt1 quants\n")
 summary(surv_GE1.2.lew)
 cat("\nLEWt1 sd\n")
@@ -716,7 +717,7 @@ Anova(len_GE3.0.york.0, type = "III") # all signif
 summary(len_GE3.0.york.0)
 step(len_GE3.0.york.0) # final model
 
-sink(paste0("results_field/len_GE_model_results_",Sys.Date(),".txt"))
+#sink(paste0("../../results/performance_H2F/len_GE_model_results_",Sys.Date(),".txt"))
 cat("\nLEWt1 quants\n")
 Anova(len_GE1.0.lew, type = "III")
 cat("\nLEWt1 sd\n")
