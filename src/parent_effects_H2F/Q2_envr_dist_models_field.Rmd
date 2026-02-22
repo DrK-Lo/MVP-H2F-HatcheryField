@@ -79,8 +79,6 @@ colnames(cor_matrix_lew) <- c("Distance to Lewisetta","Heterozygosity","Allelic 
 
 rownames(cor_matrix_lew) <- c("Distance to Lewisetta","Heterozygosity","Allelic Richness")
 
-text_col <- ifelse(abs(cor_matrix_lew) > 0.5, "white", "black")
-
 pdf(file = "../../figures/parent_effects_H2F/FigS8A_corrplot_lew_envr_dist_H0_Ar.pdf")
 
 corrplot_lew <- corrplot(cor_matrix_lew,
@@ -89,7 +87,7 @@ corrplot_lew <- corrplot(cor_matrix_lew,
          tl.col = "black",
          tl.srt = 45,
          title = "Multicollinearity of environmental distance, heterozygosity, and allelic richness (Lewisetta)",
-         addCoef.col = text_col,
+         addCoef.col = 'black',
          mar=c(0,0,2,0))
 dev.off()
 #borderline collinearity with distance to Lew and ar (r = -0.69). 
@@ -100,19 +98,14 @@ colnames(cor_matrix_yrk) <- c("Distance to York River","Heterozygosity","Allelic
 
 rownames(cor_matrix_yrk) <- c("Distance to York","Heterozygosity","Allelic richness")
 
-text_col <- ifelse(abs(cor_matrix_yrk) > 0.5, "white", "black")
-
 pdf(file = "../../figures/parent_effects_H2F/FigS8B_corrplot_york_envr_dist_H0_Ar.pdf")
-text_col <- ifelse(abs(cor_matrix_yrk) > 0.5, "white", "black")
-
-pdf(file = "../../figures/parent_effects_H2F/Yrk-EnvrDist_Genetics_Corrplot.pdf")
 corrplot_yrk <- corrplot(cor_matrix_yrk,
          method = "color",
          type = "upper",
          tl.col = "black",
          tl.srt = 45,
          title = "Multicollinearity of environmental distance, heterozygosity, and allelic richness (York River)",
-         addCoef.col = text_col,
+         addCoef.col = 'black',
          mar=c(0,0,2,0))
 dev.off()
 #nothing collinear
