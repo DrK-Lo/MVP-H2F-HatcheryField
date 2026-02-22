@@ -80,6 +80,7 @@ colnames(cor_matrix_lew) <- c("Distance to Lewisetta","Heterozygosity","Allelic 
 rownames(cor_matrix_lew) <- c("Distance to Lewisetta","Heterozygosity","Allelic Richness")
 
 pdf(file = "../../figures/parent_effects_H2F/FigS8A_corrplot_lew_envr_dist_H0_Ar.pdf")
+
 corrplot_lew <- corrplot(cor_matrix_lew,
          method = "color",
          type = "upper",
@@ -183,6 +184,39 @@ drop1(surv_lew_t3.0) # final model
 surv_t3_lew_s <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(dist_LEW), data = surv_mod_gen_dist[surv_mod_gen_dist$t == 3 & surv_mod_gen_dist$bag_site == "Lewisetta",])
 ```
 
+## Residuals survival, Lewisetta
+```{r}
+# models with gen only
+surv_lew_t1_gen <- lm(surv ~ ho + ar, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 1 & surv_mod_gen_dist$bag_site == "Lewisetta",]) 
+surv_lew_t2_gen <- lm(surv ~ ho + ar, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 2 & surv_mod_gen_dist$bag_site == "Lewisetta",]) 
+surv_lew_t3_gen <- lm(surv ~ ho + ar, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 3 & surv_mod_gen_dist$bag_site == "Lewisetta",]) 
+
+# residuals + environmental distance
+# long data format
+t1_lew <- surv_mod_gen_dist[surv_mod_gen_dist$t == 1 & surv_mod_gen_dist$bag_site == "Lewisetta",]
+t2_lew <- surv_mod_gen_dist[surv_mod_gen_dist$t == 2 & surv_mod_gen_dist$bag_site == "Lewisetta",]
+t3_lew <- surv_mod_gen_dist[surv_mod_gen_dist$t == 3 & surv_mod_gen_dist$bag_site == "Lewisetta",]
+
+surv_lew_resid_dist_df <- data.frame(resid_surv = surv_lew_t1_gen$residuals, 
+                                    dist = t1_lew$dist_LEW, 
+                                    surv = t1_lew$surv, 
+                                    t = 1,
+                                    pop = t1_lew$pop)
+
+# bind rest of the data
+surv_lew_dist <- rbind(surv_lew_resid_dist_df, data.frame(resid_surv = surv_lew_t2_gen$residuals,
+                                        dist = t2_lew$dist_LEW, 
+                                        surv = t2_lew$surv,
+                                        t = 2,
+                                        pop = t2_lew$pop),
+      data.frame(resid_surv = surv_lew_t3_gen$residuals,
+                 dist = t2_lew$dist_LEW, 
+                 surv = t2_lew$surv,
+                 t = 3,
+                 pop = t2_lew$pop))
+surv_lew_dist$bag_site <- "Lewisetta"
+```
+
 ## T1 survival, York
 ```{r t1_surv_lew}
 surv_yrk_t1.0 <- lm(surv ~ ho + ar + dist_YRK, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 1 & surv_mod_gen_dist$bag_site == "YorkRiver",]) 
@@ -224,7 +258,42 @@ drop1(surv_yrk_t3.0) # final model
 
 #make scaled version of final model for plotting
 surv_t3_yrk_s <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(dist_YRK), data = surv_mod_gen_dist[surv_mod_gen_dist$t == 3 & surv_mod_gen_dist$bag_site == "YorkRiver",])
+```
 
+## Residuals survival, York River
+```{r}
+# models with gen only
+surv_yrk_t1_gen <- lm(surv ~ ho + ar, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 1 & surv_mod_gen_dist$bag_site == "YorkRiver",]) 
+surv_yrk_t2_gen <- lm(surv ~ ho + ar, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 2 & surv_mod_gen_dist$bag_site == "YorkRiver",]) 
+surv_yrk_t3_gen <- lm(surv ~ ho + ar, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 3 & surv_mod_gen_dist$bag_site == "YorkRiver",]) 
+
+# residuals + environmental distance
+# long data format
+t1_yrk <- surv_mod_gen_dist[surv_mod_gen_dist$t == 1 & surv_mod_gen_dist$bag_site == "YorkRiver",]
+t2_yrk <- surv_mod_gen_dist[surv_mod_gen_dist$t == 2 & surv_mod_gen_dist$bag_site == "YorkRiver",]
+t3_yrk <- surv_mod_gen_dist[surv_mod_gen_dist$t == 3 & surv_mod_gen_dist$bag_site == "YorkRiver",]
+
+surv_yrk_resid_dist_df <- data.frame(resid_surv = surv_yrk_t1_gen$residuals, 
+                                    dist = t1_yrk$dist_YRK, 
+                                    surv = t1_yrk$surv, 
+                                    t = 1,
+                                    pop = t1_yrk$pop)
+
+# bind rest of the data
+surv_yrk_dist <- rbind(surv_yrk_resid_dist_df, data.frame(resid_surv = surv_yrk_t2_gen$residuals,
+                                        dist = t2_yrk$dist_YRK, 
+                                        surv = t2_yrk$surv,
+                                        t = 2,
+                                        pop = t2_yrk$pop),
+      data.frame(resid_surv = surv_yrk_t3_gen$residuals,
+                 dist = t3_yrk$dist_YRK, 
+                 surv = t3_yrk$surv,
+                 t = 3,
+                 pop = t3_yrk$pop))
+surv_yrk_dist$bag_site <- "YorkRiver"
+```
+
+```{r}
 # save everything
 sink(paste0("../../results_field/survival_GEdistance_model2_results_",Sys.Date(),".txt"))
 cat("\nLEW t1 (May 2023) modeling approach 2\n")
@@ -252,7 +321,14 @@ summary(surv_yrk_t3.0)
 cat("\nYRK t3 (May 2024) scaled modeling approach 2\n")
 summary(surv_t3_yrk_s)
 sink()
+
+# put together lew and york
+surv_resid_dist <- rbind(surv_lew_dist, surv_yrk_dist)
+
+# save residuals as well for supp fig
+#write.csv(surv_resid_dist, "../../data/performance_H2F/residuals_distance_vs_surv.csv", row.names = F)
 ```
+
 
 ## Modeling drivers of differences in length
 
@@ -308,6 +384,34 @@ step(len_lew_t3.1) # final model
 len_t3_lew_s <- lmerTest::lmer(scale(length) ~ scale(ho) + scale(ar) + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site == "Lewisetta",]) 
 ```
 
+## Residuals length, Lewisetta
+```{r}
+# models with gen only
+len_lew_t1_gen <- lm(length ~ ho + ar, data = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "Lewisetta",]) 
+len_lew_t2_gen <- lm(length ~ ho + ar, data = len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "Lewisetta",]) 
+len_lew_t3_gen <- lm(length ~ ho + ar, data = len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site == "Lewisetta",]) 
+
+# long data format
+len_lew_resid_dist_df <- data.frame(resid_len = len_lew_t1_gen$residuals, 
+                                    dist = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "Lewisetta",]$dist_LEW, 
+                                  length = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "Lewisetta",]$length, 
+                                  t = 1,
+                                  pop = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "Lewisetta",]$pop)
+
+# bind rest of the data
+len_lew_dist <- rbind(len_lew_resid_dist_df, data.frame(resid_len = len_lew_t2_gen$residuals,
+                                        dist = len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "Lewisetta",]$dist_LEW, 
+                                  length = len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "Lewisetta",]$length,
+                                  t = 2,
+                                  pop = len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "Lewisetta",]$pop),
+      data.frame(resid_len = len_lew_t3_gen$residuals,
+                                        dist = len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site == "Lewisetta",]$dist_LEW, 
+                                  length = len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site == "Lewisetta",]$length,
+                 t = 3,
+                 pop = len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site == "Lewisetta",]$pop))
+len_lew_dist$bag_site <- "Lewisetta"
+```
+
 ## T1 Length, York
 ```{r t1_len_lew}
 len_yrk_t1.0 <- lmerTest::lmer(length ~ ho + ar + dist_YRK + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
@@ -352,7 +456,39 @@ summary(len_yrk_t3.1)
 step(len_yrk_t3.1) # final model
 
 len_t3_yrk_s <- lmerTest::lmer(scale(length) ~ scale(ho) + scale(ar)  + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
+```
 
+## Residuals length, York River
+```{r}
+# models with gen only
+len_yrk_t1_gen <- lm(length ~ ho + ar, data = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
+len_yrk_t2_gen <- lm(length ~ ho + ar, data = len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
+len_yrk_t3_gen <- lm(length ~ ho + ar, data = len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
+
+# long data format
+len_yrk_resid_dist_df <- data.frame(resid_len = len_yrk_t1_gen$residuals, 
+                                    dist = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "YorkRiver",]$dist_YRK, 
+                                  length = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "YorkRiver",]$length, 
+                                  t = 1,
+                                  pop = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "YorkRiver",]$pop)
+
+# bind rest of the data
+len_yrk_dist <- rbind(len_yrk_resid_dist_df, data.frame(resid_len = len_yrk_t2_gen$residuals,
+                                        dist = len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "YorkRiver",]$dist_YRK, 
+                                  length = len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "YorkRiver",]$length,
+                                  t = 2,
+                                  pop = len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "YorkRiver",]$pop),
+      data.frame(resid_len = len_yrk_t3_gen$residuals,
+                                        dist = len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site == "YorkRiver",]$dist_YRK, 
+                                  length = len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site == "YorkRiver",]$length,
+                 t = 3,
+                 pop = len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site == "YorkRiver",]$pop))
+len_yrk_dist$bag_site <- "YorkRiver"
+
+len_dist_resid <- rbind(len_lew_dist, len_yrk_dist)
+```
+
+```{r}
 #save results
 sink(paste0("../../results_field/length_GEdistance_model2_results_",Sys.Date(),".txt"))
 cat("\nLEW t1 (May 2023) modeling approach 2\n")
@@ -386,6 +522,9 @@ cat("\nYRK t3 (May 2024) scaled modeling approach 2\n")
 summary(len_t3_yrk_s)
 Anova(len_t3_yrk_s)
 sink()
+
+# save residuals as well for supp fig
+#write.csv(len_dist_resid, "../../data/performance_H2F/residuals_distance_vs_length.csv", row.names = F)
 ```
 
 ##Figure product - Lewisetta survival
