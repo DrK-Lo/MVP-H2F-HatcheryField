@@ -1,53 +1,55 @@
 ---
 title: "Q2_models_hatchery_nursery"
+author: "Nicole Mongillo"
 output: pdf_document
 date: "2025-02-20"
 ---
 
-This code analyzes the effect of conditions in the environments-of-origin and parent genetics on offspring oyster survival and shell length in the VIMS ABC hatchery and nursery.
+This file is for modeling the effects of heterozygosity, allelic richness, and temperature and salinity quantiles of environments-of-origin on oyster survival and length in the VIMS ABC hatchery and nursery.
 
 CR: Updated 2025-11-16 with new envr quantiles file.
 
+## Load packages
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+# Set working directory relative to project root
+knitr::opts_knit$set(root.dir = here::here())
+
+if (!require("pacman")) install.packages("pacman")
+
+packages <- c("tidyverse", "here", "ggplot2", "stringr", "broom", "ggstance")
+pacman::p_load(char = packages)
+
+# log versions for reproducibility
+r_version <- paste(R.version$major, R.version$minor, sep = ".")
+lib_ver <- packages %>%
+  map_chr(~ paste0(.x, " (v", packageVersion(.x), ")")) %>%
+  paste(collapse = ", ")
 ```
 
 ```{r}
-#setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/parent_effects_H2F")
+getwd()
 ```
 
-### Load packages
-```{r}
-library(tidyverse)
-library(car)
-library(ggplot2)
-library(gridExtra)
-library(multcompView) #extract significance letters from Tukey-Kramer test
-library(cowplot) #arrange ggplots
-library(ggpmisc)
-library(vegan) #for Mantel tests
-library(broom)#save lm results to tibbles
-library(corrplot)
-library(viridis) #viridis color scheme
-library(ggstance) #for vertical position dodge function
-```
-
-### Load data
+## Load data
 ```{r}
 #this file contains raw lengths of all oysters aged 15-78 days
-length <- read.csv(file.path("../../data/performance_H2F/latestage_length.csv"))
+length <- read.csv("data/performance_H2F/nursery_length.csv")
 
 #this file has 0.1 and 0.9 quantiles for temperature and salinity for the 8 groups
-quantiles <- read.csv("../../data/environment/quantiles_11092025.csv")[, -c(1,9)]
+quantiles <- read.csv("results/environment/envr_quantiles_allsites.csv")[, -c(1,9)]
 
 #this file contains survival rate data for larval oysters up to day 21 post hatching
-survival <-  read.csv("../../data/performance_H2F/CViMVP_larvae_survival.csv")
+survival <-  read.csv("data/performance_H2F/CViMVP_larvae_survival.csv")
 
 #this file contains data on mean heterozygosity and allelic richness in the parent populations
-parent_genetics <- read.csv("../../data/parent_effects_H2F/parent_genetic_effects.csv")
+parent_genetics <- read.csv("results/parent_effects_H2F/parent_genetic_effects.csv")
 ```
 
-### Survival Data Prep
+## Data preparation
+
+### Survival
 ```{r}
 #For survival rates, we only care about survival from day 21 (marked as day_an 15-21), so select those only. Reminder that days 15-21 were grouped for analysis because there were constant larval drops occurring during that time as individuals reached the eyed stage, but the number of drops varied by site_name. Exclude LARMIX, since it has no environmental data.
 surv21 <- survival %>% 
@@ -87,7 +89,7 @@ survival_filter <- surv21_sub[, c("Tank_naming", "Survival_rate_perc")]
 colnames(survival_filter) <- c("site_name", "percent_survival")
 ```
 
-### Length data prep
+### Length
 ```{r length_cleaning_means}
 #select columns with site name, day, and shell length in mm
 length_sub <- length[,c("site_name", "day_an", "shell_length_mm")]
@@ -108,7 +110,7 @@ length_78 <- length_filter %>%
   filter(day_an == "78")
 ```
 
-### Environmental data prep
+### Environment
 ```{r}
 #Replace underscores in site names with hyphens
 quantiles$site_name <- str_replace(quantiles$site_name, "_", "-")
@@ -123,13 +125,14 @@ quant_field <- quantiles %>%
   filter(site_name == "YRK" | site_name == "LEW")
 ```
 
-###Genetics data prep
+###Genetic diversity
 ```{r parent_genetics_cleaning}
 #rename column names 
 colnames(parent_genetics) <- c("site_name", "ho", "avg_expected_hs", "ar")
 ```
 
-###Data product: H_Survival_Envr_Genetics.csv
+
+### Join datasets
 ```{r surv_join_dfs}
 #make df of just genetic and envr data
 envr_gen <- left_join(quant_eoo, parent_genetics, by = "site_name")
@@ -137,10 +140,8 @@ envr_gen <- left_join(quant_eoo, parent_genetics, by = "site_name")
 #merge survival data with genetic and environmental data
 surv_merge <- left_join(survival_filter, envr_gen, by = "site_name")
 
-write.csv(surv_merge, "../../data/parent_effects_H2F/H_Survival_Envr_Genetics.csv", row.names = FALSE)
 ```
 
-#Join length day 21, genetic, and envr data frames
 ```{r len21_join_dfs}
 len_envr_gen <- merge(envr_gen, length_filter, by = c("site_name"))
 
@@ -160,9 +161,6 @@ nrow(length_78) #nrow = 971
 len21_envr_gen$site_name <- as.character(len21_envr_gen$site_name)
 len78_envr_gen$site_name <- as.character(len78_envr_gen$site_name)
 
-write.csv(len21_envr_gen, "../../data/parent_effects_H2F/H_Length21_Envr_Genetics.csv", row.names = FALSE)
-
-write.csv(len78_envr_gen, "../../data/parent_effects_H2F/H_Length78_Envr_Genetics.csv", row.names = FALSE)
 ```
 
 #Check for multicollinearity among explanatory variables
@@ -202,9 +200,11 @@ VIF(envr_gen$ar, envr_gen$temp10, envr_gen$sal10, envr_gen$sal90, envr_gen$ho)
 #VIF_ar = 1.81
 ```
 
-The next chunk includes multiple regressions testing the effects of several environmental and genetic parameters on length and survival in the hatchery/nursery. The explanatory variables are 1) salinity quantile 10, 2) salinity quantile 90, 3) temperature quantile 10, 4) mean observed heterozygosity in the parent oysters from each site (Ho), and 5) mean allelic richness (AR) in the parent oysters from each site.
+The next chunk includes multiple regressions testing the effects of several environmental and genetic parameters on length and survival in the hatchery/nursery. The explanatory variables are 1) salinity quantile 10, 2) salinity quantile 90, 3) temperature quantile 10, 4) mean observed heterozygosity in the parent oysters from each site (Ho), and 5) mean allelic richness (Ar) in the parent oysters from each site.
 
-#Day 21 Length: Multiple regression
+## Multiple regression and model selection
+
+###Day 21 length
 ```{r}
 len21_lm <- lm(length ~ temp10 + sal10+ sal90 + ho + ar, data = len21_envr_gen)
 len21_resid <- len21_lm$residuals
@@ -230,7 +230,10 @@ len21_lm2_scaled <- lm(scale(length) ~ scale(temp10) + scale(sal10) + scale(sal9
 summary(len21_lm2_scaled)
 ```
 
-#Day 78 Length: Multiple regression and model selection 
+###Day 78 length
+
+We call this day 78 here but these measurements are more likely from day 77 (from SK). 
+
 ```{r day78_lm}
 #using all data for day 78
 #day 78 multiple regression
@@ -255,7 +258,7 @@ len78_lm_scaled <- lm(scale(length) ~ scale(temp10) + scale(sal10)+  scale(ho) +
 summary(len78_lm_scaled)
 ```
 
-#Day 21 Survival: Multiple Regression
+###Day 21 survival
 I don't think this model is worth running, too few data points, many outliers, not homoscedastic, but I'll leave it here for now for reference.
 ```{r day21_surv_lm}
 #day 21 survival multiple regression
@@ -276,7 +279,25 @@ drop1(surv_lm2) #dropping nothing at this point results in the lowest AIC, stop 
 
 ```
 
-#### Plot of slopes
+```{r}
+
+# save models
+sink(paste0("results/parent_effects_H2F/models/hatchery_nursery_model_results_", Sys.Date(), ".txt"))
+cat("\nDay 21 length (excluding outlier)\n")
+summary(len21_lm2)
+cat("\nDay 21 length scaled\n")
+summary(len21_lm2_scaled)
+cat("\nDay 77 length (final model)\n")
+summary(len78_lm2)
+cat("\nDay 77 length scaled\n")
+summary(len78_lm_scaled)
+cat("\nDay 21 survival (final model)\n")
+summary(surv_lm2)
+sink()
+
+```
+
+## Plot of slopes
 ```{r}
 #save slopes from each model to one data frame
 slopes <- rbind(tidy(len21_lm2_scaled), tidy(len78_lm_scaled))
@@ -301,7 +322,7 @@ slopes <- slopes_df %>%
   scale_shape_manual(name = "Time", na.translate = F, values = c("15-21" = 15, "78" = 16), labels = c("15-21" = "End hatchery", "78" = "End nursery"))+
   xlim(c(-1,2))+
   ggtitle(str_wrap(c("Slopes of survival vs. environmental quantiles, heterozygosity, and allelic richness"), width = 50))+
-  labs(subtitle = "End of larval stage (days 15-21) and nursery stage (day 78)")+
+  labs(subtitle = "End of larval stage (days 15-21) and nursery stage (day 77)")+
   xlab("Slope on scaled data")+
   ylab("Variable")+
   geom_vline(xintercept = 0, linetype = "dashed")+
@@ -321,7 +342,7 @@ slopes
 ggsave("FigS6_hatchery_nursery_surv_quantiles.pdf",
        plot = slopes,
        device = "pdf",
-       path = "../../figures/parent_effects_H2F",
+       path = "figures/parent_effects_H2F",
        height = 4,
        width = 7)
 

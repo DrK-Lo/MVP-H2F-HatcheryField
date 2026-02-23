@@ -188,7 +188,7 @@ lengths_mod_narm_nodead <- lengths_mod_rm_nodead[!(is.na(lengths_mod_rm_nodead$w
 
 unique(lengths_mod_narm_nodead$pop)
 
-write.csv(lengths_mod_narm_nodead, "../../data/performance_H2F/field_length_all_times_.csv")
+write.csv(lengths_mod_narm_nodead, "../../data/performance_H2F/field_length_all_times.csv")
 ```
 
 I will now use LMMs to look at differences in length by grouping.

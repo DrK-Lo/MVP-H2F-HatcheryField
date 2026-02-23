@@ -5,57 +5,53 @@ date: "2025-07-24"
 output: pdf_document
 ---
 
+This file is for modeling the effects of heterozygosity, allelic richness, and temperature and salinity quantiles of environments-of-origin on oyster survival and length during the MVP field experiment. 
+
+Modeling is based on code from CR.
+
+## Load packages
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = "~/MVP-H2F-HatcheryField")
 
-# load libraries
-library(tidyverse) # for data wrangling
-library(stringr) # for splitting strings
-library(lubridate) # for dates
-library(ggplot2) # for plotting
-library(plotrix) # for std error
-library(lme4) # for lmm
-library(performance) # for lmm
-library(lmerTest) # for lmm
-library(car) # for avPlots(), Anova()
-library(emmeans) # for signif testing
-library(car)
-library(multcompView)
-library(corrplot)
-library(broom) #save lm results as tables
-library(ggstance) #vertical position.dodge function
-library(broom.mixed) #save lmer results as tables
+# Set working directory relative to project root
+knitr::opts_knit$set(root.dir = here::here())
+
+if (!require("pacman")) install.packages("pacman")
+
+packages <- c("tidyverse", "here", "ggplot2", "lme4", "lmerTest", "car", "broom", "broom.mixed", "corrplot", "ggstance", "stringr")
+pacman::p_load(char = packages)
+
+# log versions for reproducibility
+r_version <- paste(R.version$major, R.version$minor, sep = ".")
+lib_ver <- packages %>%
+  map_chr(~ paste0(.x, " (v", packageVersion(.x), ")")) %>%
+  paste(collapse = ", ")
 ```
 
-This script is for modeling differences in survival and length amongst bags/populations/sites/time points in the MVP Field Experiment. Modeling code is based on code structure written by Camille Rumberger with edits by NM for specific variables used in these analyses.
-
-CR: "I intend to use linear (mixed) models to examine how survival and length vary by group and how genetics and environmental history drive these differences in performance."
-
-## Modeling differences in survival
-
-### Read in data
 ```{r}
-#setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/parent_effects_H2F")
-# read in data
-surv_mod_ord_rename <- read.csv("../../data/performance_H2F/field_surv_all_times2026-01-03.csv")[, -1]
+getwd()
+```
 
-lengths_mod_narm_nodead <- read.csv("../../data/performance_H2F/field_length_all_times_2026-01-03.csv")[ ,-1]
+## Read in data
+```{r}
+# read in data
+surv_mod_ord_rename <- read.csv("data/performance_H2F/field_surv_all_times.csv")[, -1]
+
+lengths_mod_narm_nodead <- read.csv("data/performance_H2F/field_length_all_times.csv")[ ,-1]
 
 #parent genetics
-gen_parents <- read.csv("../../data/parent_effects_H2F/parent_genetic_effects.csv")
+gen_parents <- read.csv("results/parent_effects_H2F/parent_genetic_effects.csv")
 
 #environment of origin quantiles
-env_parents <- read.csv("../../data/environment/quantiles_11092025.csv")[,-c(1, 9)]
+env_parents <- read.csv("results/environment/envr_quantiles_allsites.csv")[,-c(1, 9)]
 
-#environmental distance based on scaled envr quantiles
-env_dist <- read.csv("../../data/envr_of_origin/envr_quantiles_dist_all.csv")
 ```
-## Modeling drivers of differences in survival
 
 For the H2F paper, we want to know how environment and genetics are impacting differential survival. I'll start by putting together the complete dataframe.
 
-REMINDER: Because the H1-HYBRIDMIX and H2-SEEDMIX groups have mixed genetic make-ups and therefore no data on parent HO/AR, those groups are excluded from these analyses.
+REMINDER: Because the H1-HYBRIDMIX and H2-SEEDMIX groups have mixed genetic make-ups and therefore no data on parent HO/Ar, those groups are excluded from these analyses.
+
+## Data preparation
 
 ```{r}
 # start by putting together a complete dataframe
@@ -79,7 +75,7 @@ colnames(cor_matrix_all) <- c("Salinity 0.1 quantile", "Salinity 0.9 quantile", 
 
 rownames(cor_matrix_all) <- c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Salinity SD", "Temp 0.1 quantile", "Temp 0.9 quantile", "Temperature SD","Heterozygosity","Allelic richness")
 
-#pdf(file = "../../figures/supplement/corrplot_envr_quantiles_H0_Ar.pdf")
+#pdf(file = "figures/supplement/corrplot_envr_quantiles_H0_Ar.pdf")
 
 corrplot_all <- corrplot(cor_matrix_all,
          method = "color",
@@ -97,7 +93,7 @@ colnames(cor_matrix_quant) <- c("Salinity 0.1 quantile", "Salinity 0.9 quantile"
 
 rownames(cor_matrix_quant) <- c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Temp 0.1 quantile", "Temp 0.9 quantile", "Heterozygosity","Allelic richness")
 
-pdf(file = "../../figures/parent_effects_H2F/FigS2_corrplot_envr_quantiles_H0_Ar.pdf")
+pdf(file = "figures/parent_effects_H2F/FigS2_corrplot_envr_quantiles_H0_Ar.pdf")
 corrplot_quant <- corrplot(cor_matrix_quant,
          method = "color",
          type = "upper",
@@ -111,7 +107,7 @@ dev.off()
 #temp quantile 90 is collinear with Ho (r = 0.72) and ar (r = 0.74). Salinity quantile 10 is borderline collinear with ho (-0.70).
 ```
 
-## Assess VIF
+### Assess VIF
 ```{r}
 #remove temp quantile 90, and see how VIFs look
 VIF <- function(a, b, c, d, e){
@@ -140,7 +136,9 @@ VIF is low enough for all remaining variables that I'm not super worried about t
 
 Now look at how survival changes with genetics/environment at each time point. Modeling chunks below are based on those by CR (in Q1_field_performance_models) with variables switched out as needed.
 
-## T1 survival, Lewisetta
+## Modeling drivers of differences in survival
+
+### t1 survival, Lewisetta
 ```{r t1_surv_lew}
 # RUN ON SITES SEPARATELY
 
@@ -168,7 +166,35 @@ surv_t1_lew_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_qu
 
 ```
 
-## T1 survival, York
+### t2 survival, Lewisetta
+```{r t2_surv_lew}
+surv_GE2.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta",])
+#plot(surv_GE2.lew)
+summary(surv_GE2.lew) # ho, salinity_quantile_10, temp_quantile_10 signif
+drop1(surv_GE2.lew) # get rid of salinity_quantile_90
+
+surv_GE2.0.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta",])
+#plot(surv_GE2.0.lew)
+summary(surv_GE2.0.lew) # intercept, ho, ar, sal10
+drop1(surv_GE2.0.lew) # final model
+
+#make scaled model for plotting
+surv_t2_lew_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + scale(temp_quantile_10), data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta",])
+```
+
+### t3 survival, Lewisetta
+```{r t3_surv_lew}
+# lew t3
+surv_GE3.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "Lewisetta",])
+#plot(surv_GE3.lew)
+summary(surv_GE3.lew) # everything signif
+drop1(surv_GE3.lew) # final model
+
+#make scaled version for plotting
+surv_t3_lew_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + scale(salinity_quantile_90) + scale(temp_quantile_10), data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "Lewisetta",])
+```
+
+### t1 survival, York River
 ```{r t1_surv_yrk}
 # now we go to york
 surv_GE1.york <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "YorkRiver",])
@@ -185,23 +211,7 @@ drop1(surv_GE1.0.york) # final model
 surv_t1_yrk_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + scale(temp_quantile_10), data = surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "YorkRiver",])
 ```
 
-## T2 Survival, Lewisetta
-```{r t2_surv_lew}
-surv_GE2.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta",])
-#plot(surv_GE2.lew)
-summary(surv_GE2.lew) # ho, salinity_quantile_10, temp_quantile_10 signif
-drop1(surv_GE2.lew) # get rid of salinity_quantile_90
-
-surv_GE2.0.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta",])
-#plot(surv_GE2.0.lew)
-summary(surv_GE2.0.lew) # intercept, ho, ar, sal10
-drop1(surv_GE2.0.lew) # final model
-
-#make scaled model for plotting
-surv_t2_lew_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + scale(temp_quantile_10), data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta",])
-```
-
-## T2 Survival, York
+### t2 survival, York River
 ```{r t2_surv_yrk}
 # york t2
 surv_GE2.york <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "YorkRiver",])
@@ -218,19 +228,7 @@ drop1(surv_GE2.0.york) # final model
 surv_t2_yrk_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + scale(temp_quantile_10), data = surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "YorkRiver",])
 ```
 
-## T3 survival, Lewisetta
-```{r t3_surv_lew}
-# lew t3
-surv_GE3.lew <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "Lewisetta",])
-#plot(surv_GE3.lew)
-summary(surv_GE3.lew) # everything signif
-drop1(surv_GE3.lew) # final model
-
-#make scaled version for plotting
-surv_t3_lew_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + scale(salinity_quantile_90) + scale(temp_quantile_10), data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "Lewisetta",])
-```
-
-## T3 Survival, York
+### t3 survival, York River
 ```{r t3_surv_yrk}
 # york t3
 surv_GE3.york <- lm(surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10, data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "YorkRiver",])
@@ -247,30 +245,30 @@ drop1(surv_GE3.0.york) # final model
 surv_t3_yrk_scaled <- lm(scale(surv) ~ scale(ar) + scale(salinity_quantile_10) + scale(salinity_quantile_90) + scale(temp_quantile_10), data = surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "YorkRiver",])
 
 # save everything
-sink(paste0("../../results_field/survival_GE_model1_results_",Sys.Date(),".txt"))
-cat("\nLEW t1 modeling approach 1\n")
+sink(paste0("results/parent_effects_H2F/models/survival_model1_quantiles_results_",Sys.Date(),".txt"))
+cat("\nLewisetta t1 (November 2023) modeling approach 1\n")
 summary(surv_GE1.1.lew)
-cat("\nLEW t1 scaled modeling approach 1\n")
+cat("\nLewisetta t1 (November 2023) scaled modeling approach 1\n")
 summary(surv_t1_lew_scaled)
-cat("\nLEW t2 modeling approach 1\n")
+cat("\nLewisetta t2 (May 2024) modeling approach 1\n")
 summary(surv_GE2.0.lew)
-cat("\nLEW t2 scaled modeling approach 1\n")
+cat("\nLewisetta t2 (May 2024) scaled modeling approach 1\n")
 summary(surv_t2_lew_scaled)
-cat("\nLEW t3 modeling approach 1\n")
+cat("\nLewisetta t3 (November 2024) modeling approach 1\n")
 summary(surv_GE3.lew)
-cat("\nLEW t3 scaled modeling approach 1\n")
+cat("\nLewisetta t3 (November 2024) scaled modeling approach 1\n")
 summary(surv_t3_lew_scaled)
-cat("\nYRK t1 modeling approach 1\n")
+cat("\nYork River t1 (November 2023) modeling approach 1\n")
 summary(surv_GE1.0.york)
-cat("\nYRK t1 scaled modeling approach 1\n")
+cat("\nYork River t1 (November 2023) scaled modeling approach 1\n")
 summary(surv_t1_yrk_scaled)
-cat("\nYRK t2 modeling approach 1\n")
+cat("\nYork River t2 (May 2024) modeling approach 1\n")
 summary(surv_GE2.0.york)
-cat("\nYRK t2 scaled modeling approach 1\n")
+cat("\nYork River t2 (May 2024) scaled modeling approach 1\n")
 summary(surv_t2_yrk_scaled)
-cat("\nYRK t3 modeling approach 1\n")
+cat("\nYork River t3 (November 2024) modeling approach 1\n")
 summary(surv_GE3.0.york)
-cat("\nYRK t3 scaled modeling approach 1\n")
+cat("\nYork River t3 (November 2024) scaled modeling approach 1\n")
 summary(surv_t3_yrk_scaled)
 sink()
 ```
@@ -284,7 +282,7 @@ len_mod_gen <- merge(lengths_mod_narm_nodead, gen_parents, by = "pop")
 len_mod_gen_env <- merge(len_mod_gen, env_parents, by = c("pop"))
 ```
 
-## T1 Length, Lewisetta
+### t1 length, Lewisetta
 ```{r t1_len_lew}
 len_GE1.lew <- lmerTest::lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "Lewisetta",]) 
 #plot(len_GE1.lew) 
@@ -301,7 +299,42 @@ step(len_GE1.0.lew) # final model
 len_t1_lew_scaled <- lmerTest::lmer(scale(length) ~ scale(ho) +  scale(salinity_quantile_10) + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "Lewisetta",]) 
 ```
 
-## T1 length, York
+### t2 length, Lewisetta
+```{r t2_len_lew}
+len_GE2.lew <- lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "Lewisetta",])
+#plot(len_GE2.lew)
+Anova(len_GE2.lew, type = "III") # ho, ar, sal10 signif
+summary(len_GE2.lew)
+step(len_GE2.lew) # drop sal90, temp10
+
+len_GE2.0.lew <- lmer(length ~ ho + ar + salinity_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "Lewisetta",])
+#plot(len_GE2.0.lew)
+Anova(len_GE2.0.lew, type = "III") # all signif
+summary(len_GE2.0.lew)
+step(len_GE2.0.lew) # final model
+
+#make scaled version for plotting
+len_t2_lew_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "Lewisetta",])
+```
+
+### t3 length, Lewisetta
+```{r t3_len_lew}
+len_GE3.lew <- lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "Lewisetta",])
+#plot(len_GE3.lew)
+Anova(len_GE3.lew, type = "III") # everything except temp10 signif
+summary(len_GE3.lew)
+step(len_GE3.lew) # drop temp variable
+
+len_GE3.0.lew <- lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "Lewisetta",])
+Anova(len_GE3.0.lew, type = "III") # all signif
+summary(len_GE3.0.lew)
+step(len_GE3.0.lew) # final model
+
+#make scaled version
+len_t3_lew_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + scale(salinity_quantile_90) + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "Lewisetta",])
+```
+
+### t1 length, York River
 ```{r t1_len_yrk}
 # york t1
 len_GE1.york <- lmerTest::lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "YorkRiver",]) 
@@ -320,25 +353,7 @@ len_t1_yrk_scaled <- lmerTest::lmer(scale(length) ~ scale(ho) + scale(ar) + scal
 
 ```
 
-## T2 Length, Lewisetta
-```{r t2_len_lew}
-len_GE2.lew <- lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "Lewisetta",])
-#plot(len_GE2.lew)
-Anova(len_GE2.lew, type = "III") # ho, ar, sal10 signif
-summary(len_GE2.lew)
-step(len_GE2.lew) # drop sal90, temp10
-
-len_GE2.0.lew <- lmer(length ~ ho + ar + salinity_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "Lewisetta",])
-#plot(len_GE2.0.lew)
-Anova(len_GE2.0.lew, type = "III") # all signif
-summary(len_GE2.0.lew)
-step(len_GE2.0.lew) # final model
-
-#make scaled version for plotting
-len_t2_lew_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "Lewisetta",])
-```
-
-## T2 Length, York
+### t2 length, York River
 ```{r}
 len_GE2.york <- lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "YorkRiver",])
 #plot(len_GE2.york)
@@ -351,24 +366,7 @@ len_t2_yrk_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(salinity
 len_t2_yrk_scaled
 ```
 
-## T3 Length, Lewisetta
-```{r t3_len_lew}
-len_GE3.lew <- lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "Lewisetta",])
-#plot(len_GE3.lew)
-Anova(len_GE3.lew, type = "III") # everything except temp10 signif
-summary(len_GE3.lew)
-step(len_GE3.lew) # drop temp variable
-
-len_GE3.0.lew <- lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "Lewisetta",])
-Anova(len_GE3.0.lew, type = "III") # all signif
-summary(len_GE3.0.lew)
-step(len_GE3.0.lew) # final model
-
-#make scaled version
-len_t3_lew_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + scale(salinity_quantile_90) + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "Lewisetta",])
-```
-
-## T3 Length, York
+### t3 length, York River
 ```{r t3_len_yrk}
 # york t3
 len_GE3.york <- lmer(length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "YorkRiver",])
@@ -387,47 +385,52 @@ len_t3_yrk_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(salinity
 
 Anova(len_t3_yrk_scaled, type = "III")
 
-sink(paste0("../../results_field/length_GE_model1_results_",Sys.Date(),".txt"))
-cat("\nLEW t1 (May 2023) modeling approach 1\n")
+```
+
+```{r}
+
+# save everything
+sink(paste0("results/parent_effects_H2F/models/length_model1_quantiles__results_",Sys.Date(),".txt"))
+cat("\nLewisetta t1 (November 2023) modeling approach 1\n")
 summary(len_GE1.0.lew)
 Anova(len_GE1.0.lew, type = "III")
-cat("\nLEW t1 (May 2023) scaled modeling approach 1\n")
+cat("\nLewisetta t1 (November 2023) scaled modeling approach 1\n")
 summary(len_t1_lew_scaled)
 Anova(len_t1_lew_scaled, type = "III")
-cat("\nLEW t2 (Nov. 2023) modeling approach 1\n")
+cat("\nLewisetta t2 (May 2024) modeling approach 1\n")
 summary(len_GE2.0.lew)
 Anova(len_GE2.0.lew, type = "III")
-cat("\nLEW t2 (Nov. 2023) scaled modeling approach 1\n")
+cat("\nLewisetta t2 (May 2024) scaled modeling approach 1\n")
 summary(len_t2_lew_scaled)
 Anova(len_t2_lew_scaled, type = "III")
-cat("\nLEW t3 (May 2024) modeling approach 1\n")
+cat("\nLewisetta t3 (November 2024) modeling approach 1\n")
 summary(len_GE3.0.lew)
 Anova(len_GE3.0.lew, type = "III")
-cat("\nLEW t3 (May 2024) scaled modeling approach 1\n")
+cat("\nLewisetta t3 (November 2024) scaled modeling approach 1\n")
 summary(len_t3_lew_scaled)
 Anova(len_t3_lew_scaled, type = "III")
-cat("\nYRK t1 (May 2023) modeling approach 1\n")
+cat("\nYork River t1 (November 2023) modeling approach 1\n")
 summary(len_GE1.0.york)
 Anova(len_GE1.0.york, type = "III")
-cat("\nYRK t1 (May 2023) scaled modeling approach 1\n")
+cat("\nYork River t1 (November 2023) scaled modeling approach 1\n")
 summary(len_t1_yrk_scaled)
 Anova(len_t1_yrk_scaled, type = "III")
-cat("\nYRK t2 (Nov. 2023) modeling approach 1\n")
+cat("\nYork River t2 (May 2024) modeling approach 1\n")
 summary(len_GE2.york)
 Anova(len_GE2.york, type = "III")
-cat("\nYRK t2 (Nov. 2023) scaled modeling approach 1\n")
+cat("\nYork River t2 (May 2024) scaled modeling approach 1\n")
 summary(len_t2_yrk_scaled)
 Anova(len_t2_yrk_scaled, type = "III")
-cat("\nYRK t3 (May 2024) modeling approach 1\n")
+cat("\nYork River t3 (November 2024) modeling approach 1\n")
 summary(len_GE3.0.york)
 Anova(len_GE3.0.york, type = "III")
-cat("\nYRK t3 (May 2024) scaled modeling approach 1\n")
+cat("\nYork River t3 (November 2024) scaled modeling approach 1\n")
 summary(len_t3_yrk_scaled)
 Anova(len_t3_yrk_scaled, type = "III")
 sink()
 ```
 
-##Plotting slopes - Lewisetta survival
+##Figure product - Lewisetta survival
 ```{r}
 lew_surv_df <- rbind(tidy(surv_t1_lew_scaled), tidy(surv_t2_lew_scaled), tidy(surv_t3_lew_scaled))
 lew_surv_df$t <- c(rep(c("t1"), 4), rep(c("t2"), 5), rep(c("t3"), 6))
@@ -466,12 +469,12 @@ lew_surv_plot
 ggsave("Fig3A_lew_surv_quantiles.pdf",
        plot = lew_surv_plot,
        device = "pdf",
-       path = "../../figures/parent_effects_H2F",
+       path = "figures/parent_effects_H2F",
        height = 4,
        width = 7)
 ```
 
-#Plotting slopes - York survival
+#Figure product - York survival
 ```{r}
 yrk_surv_df <- rbind(tidy(surv_t1_yrk_scaled), tidy(surv_t2_yrk_scaled), tidy(surv_t3_yrk_scaled))
 yrk_surv_df$t <- c(rep(c("t1"), 5), rep(c("t2"), 5), rep(c("t3"), 5))
@@ -511,7 +514,7 @@ yrk_surv_plot
 ggsave("Fig3C_york_surv_quantiles.pdf",
        plot = yrk_surv_plot,
        device = "pdf",
-       path = "../../figures/parent_effects_H2F",
+       path = "figures/parent_effects_H2F",
        height = 4,
        width = 7)
 ```
@@ -565,7 +568,7 @@ lew_len_plot
 ggsave("FigS5A_lew_length_quantiles.pdf",
        plot = lew_len_plot,
        device = "pdf",
-       path = "../../figures/parent_effects_H2F",
+       path = "figures/parent_effects_H2F",
        height = 4,
        width = 7)
 ```
@@ -618,7 +621,7 @@ yrk_len_plot
 ggsave("FigS5C_york_length_quantiles.pdf",
        plot = yrk_len_plot,
        device = "pdf",
-       path = "../../figures/parent_effects_H2F",
+       path = "figures/parent_effects_H2F",
        height = 4,
        width = 7)
 ```

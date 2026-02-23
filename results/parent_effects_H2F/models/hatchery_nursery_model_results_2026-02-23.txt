@@ -1,0 +1,124 @@
+
+Day 21 length (excluding outlier)
+
+Call:
+lm(formula = length ~ temp10 + sal10 + sal90 + ho + ar, data = len21_envr_gen_sub)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.062002 -0.009162  0.001066  0.010508  0.040334 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  0.4987506  0.0372483  13.390  < 2e-16 ***
+temp10       0.0005312  0.0002756   1.927   0.0544 .  
+sal10        0.0013246  0.0001064  12.448  < 2e-16 ***
+sal90       -0.0011580  0.0001692  -6.844 1.87e-11 ***
+ho           0.1379730  0.0306931   4.495 8.31e-06 ***
+ar          -0.0979168  0.0151458  -6.465 2.07e-10 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.01564 on 612 degrees of freedom
+Multiple R-squared:  0.2365,	Adjusted R-squared:  0.2303 
+F-statistic: 37.91 on 5 and 612 DF,  p-value: < 2.2e-16
+
+
+Day 21 length scaled
+
+Call:
+lm(formula = scale(length) ~ scale(temp10) + scale(sal10) + scale(sal90) + 
+    scale(ho) + scale(ar), data = len21_envr_gen_sub)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-3.4780 -0.5140  0.0598  0.5895  2.2626 
+
+Coefficients:
+                Estimate Std. Error t value Pr(>|t|)    
+(Intercept)   -1.137e-13  3.529e-02   0.000   1.0000    
+scale(temp10)  1.041e-01  5.400e-02   1.927   0.0544 .  
+scale(sal10)   6.570e-01  5.278e-02  12.448  < 2e-16 ***
+scale(sal90)  -4.656e-01  6.802e-02  -6.844 1.87e-11 ***
+scale(ho)      2.888e-01  6.426e-02   4.495 8.31e-06 ***
+scale(ar)     -3.126e-01  4.835e-02  -6.465 2.07e-10 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.8773 on 612 degrees of freedom
+Multiple R-squared:  0.2365,	Adjusted R-squared:  0.2303 
+F-statistic: 37.91 on 5 and 612 DF,  p-value: < 2.2e-16
+
+
+Day 77 length (final model)
+
+Call:
+lm(formula = length ~ temp10 + sal10 + ho + ar, data = len78_envr_gen)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-11.0545  -2.2702  -0.1511   2.1395  13.4035 
+
+Coefficients:
+             Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -34.53891    5.37490  -6.426 2.05e-10 ***
+temp10       -0.42742    0.04044 -10.568  < 2e-16 ***
+sal10         0.28370    0.01753  16.181  < 2e-16 ***
+ho           59.49294    4.99370  11.914  < 2e-16 ***
+ar           10.08422    2.55198   3.952 8.33e-05 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 3.342 on 966 degrees of freedom
+Multiple R-squared:  0.2799,	Adjusted R-squared:  0.2769 
+F-statistic: 93.86 on 4 and 966 DF,  p-value: < 2.2e-16
+
+
+Day 77 length scaled
+
+Call:
+lm(formula = scale(length) ~ scale(temp10) + scale(sal10) + scale(ho) + 
+    scale(ar), data = len78_envr_gen)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.8124 -0.5776 -0.0384  0.5443  3.4099 
+
+Coefficients:
+                Estimate Std. Error t value Pr(>|t|)    
+(Intercept)   -4.821e-14  2.729e-02   0.000        1    
+scale(temp10) -3.847e-01  3.640e-02 -10.568  < 2e-16 ***
+scale(sal10)   6.176e-01  3.817e-02  16.181  < 2e-16 ***
+scale(ho)      5.879e-01  4.935e-02  11.914  < 2e-16 ***
+scale(ar)      1.312e-01  3.320e-02   3.952 8.33e-05 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.8504 on 966 degrees of freedom
+Multiple R-squared:  0.2799,	Adjusted R-squared:  0.2769 
+F-statistic: 93.86 on 4 and 966 DF,  p-value: < 2.2e-16
+
+
+Day 21 survival (final model)
+
+Call:
+lm(formula = percent_survival ~ temp10 + sal10 + ho + ar, data = surv_merge)
+
+Residuals:
+       1        2        3        4        5        6        7        8 
+ 0.01132  0.17617  0.22135 -0.23668  0.38759 -0.17509 -0.09769 -0.28698 
+
+Coefficients:
+             Estimate Std. Error t value Pr(>|t|)  
+(Intercept) -16.69850    6.43517  -2.595   0.0807 .
+temp10        0.23422    0.04354   5.379   0.0126 *
+sal10        -0.11509    0.02251  -5.112   0.0145 *
+ho          -16.24044    6.02055  -2.698   0.0739 .
+ar           10.51505    2.95584   3.557   0.0379 *
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.3692 on 3 degrees of freedom
+Multiple R-squared:  0.9577,	Adjusted R-squared:  0.9013 
+F-statistic: 16.98 on 4 and 3 DF,  p-value: 0.0212
+

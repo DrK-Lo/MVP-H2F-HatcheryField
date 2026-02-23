@@ -5,49 +5,47 @@ date: "2025-07-30"
 output: pdf_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+This file is for modeling the effects of heterozygosity, allelic richness, and environment-of-origin environmental conditions on oyster condition index during the MVP field experiment. Multicollinearity and VIF assessments for these explanatory variables are conducted in Q2_envr_dist_models_field.Rmd and Q2_envr_quantile_models_field.Rmd. 
 
-This script is for modeling the effects of genetics and environment-of-origin environmental conditions on oyster condition index during the MVP field experiment. Multicollinearity and VIF assessments for these explanatory variables are conducted in the F_Surv_Length_Gen_Env.Rmd file.
-
-CI data/calculations come from ZS. Modeling chunks are based on code from CR with variables switched out as needed.
+CI data and calculations are from ZS. Modeling is based on code from CR.
 
 ## Load packages
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Set working directory relative to project root
+knitr::opts_knit$set(root.dir = here::here())
+
+if (!require("pacman")) install.packages("pacman")
+
+packages <- c("tidyverse", "here", "ggplot2", "lme4", "lmerTest", "car", "broom.mixed", "ggstance", "stringr")
+pacman::p_load(char = packages)
+
+# log versions for reproducibility
+r_version <- paste(R.version$major, R.version$minor, sep = ".")
+lib_ver <- packages %>%
+  map_chr(~ paste0(.x, " (v", packageVersion(.x), ")")) %>%
+  paste(collapse = ", ")
+```
+
 ```{r}
-library(tidyverse) # for data wrangling
-library(stringr) # for splitting strings
-library(lubridate) # for dates
-library(ggplot2) # for plotting
-library(plotrix) # for std error
-library(lme4) # for lmm
-library(performance) # for lmm
-library(lmerTest) # for lmm
-library(car) # for avPlots(), Anova()
-library(emmeans) # for signif testing
-library(car)
-library(multcompView)
-library(corrplot)
-library(broom) #save lm results as tables
-library(ggstance) #vertical position.dodge function
-library(broom.mixed) #save lmer results as tables
+getwd()
 ```
 
 ## Read in data
 ```{r}
-#setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/parent_effects_H2F")
 
 #Condition index data
-ci_df <- read_csv("../../data/condition_index_H2F/MVP_phenotyping_final.csv", show_col_types = FALSE)
+ci_df <- read_csv("data/performance_H2F/MVP_phenotyping_final.csv", show_col_types = FALSE)
 
 #parent genetics
-gen_parents <- read.csv("../../data/parent_effects_H2F/parent_genetic_effects.csv")
+gen_parents <- read.csv("results/parent_effects_H2F/parent_genetic_effects.csv")
 
 #environment of origin quantiles
-env_parents <- read.csv("../../data/environment/quantiles_11092025.csv")[,-c(1, 9)]
+env_parents <- read.csv("results/environment/envr_quantiles_allsites.csv")[,-c(1, 9)]
 
 #environmental distance based on scaled envr quantiles
-env_dist <- read.csv("../../data/envr_of_origin/envr_quantiles_dist_all.csv")
+env_dist <- read.csv("results/environment/envr_quantiles_dist_all.csv")
 ```
 
 ## Data preparation
@@ -79,7 +77,7 @@ ci_sub$site <- fct_recode(ci_sub$site, Lewisetta = "LEW", YorkRiver = "YR")
 colnames(ci_sub) <- c("ci", "t", "bag_site", "pop", "bags_label")
 ```
 
-### Combine CI, envr quantile, and genetic data
+### Combine CI, envr quantile, and genetic diversity data
 ```{r}
 colnames(gen_parents) <- c("pop","ho","exp_hs","ar")
 ci_gen <- merge(ci_sub, gen_parents, by = "pop")
@@ -91,7 +89,7 @@ colnames(env_parents) <- c("pop","salinity_quantile_10","salinity_quantile_90","
 ci_gen_env <- merge(ci_gen, env_parents, by = c("pop"))
 ```
 
-### Combine CI, envr distance, and genetic data
+### Combine CI, envr distance, and genetic diversity data
 ```{r}
 #clean env_dist. Remove all columns except distance to Lewisetta and distance to York and remove rows for LEW and YRK.
 env_dist_filter <- env_dist[c(1:8), c("X", "LEW", "YRK")]
@@ -101,9 +99,8 @@ colnames(env_dist_filter) <- c("pop", "dist_LEW", "dist_YRK")
 ci_gen_dist <- merge(ci_gen, env_dist_filter, by = c("pop"))
 ```
 
-
-## Run analyses - Model 1 (Genetics and envr quantiles)
-### T1 CI, Lewisetta
+## Run analyses - Model 1 (Heterozygosity/allelic richness and environmental quantiles)
+### t1, CI + quantiles, Lewisetta
 ```{r t1_ci_lew}
 ci_t1_lew <- lmerTest::lmer(ci ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t1" & ci_gen_env$bag_site == "Lewisetta",])
 
@@ -121,7 +118,7 @@ ci_t1_lew_scaled <- lmerTest::lmer(scale(ci) ~ scale(ho) + (1|bags_label), data 
 summary(ci_t1_lew_scaled)
 ```
 
-### T2 CI, Lewisetta
+### t2, CI + quantiles, Lewisetta
 ```{r t2_ci_lew}
 ci_t2_lew <- lmerTest::lmer(ci ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "Lewisetta",]) 
 #plot(ci_t2_lew) 
@@ -138,7 +135,7 @@ step(ci_t2_lew2) #says to drop random effect, we will keep it for consistency am
 ci_t2_lew_scaled <- lmerTest::lmer(scale(ci) ~ scale(ho) + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "Lewisetta",])
 ```
 
-### T3 CI, Lewisetta
+### t3, CI + quantiles, Lewisetta
 ```{r t3_ci_lew}
 ci_t3_lew <- lmerTest::lmer(ci ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t3" & ci_gen_env$bag_site == "Lewisetta",]) 
 #plot(ci_t3_lew) 
@@ -156,7 +153,7 @@ step(ci_t3_lew2) #final model
 ci_t3_lew_scaled <- lmerTest::lmer(scale(ci) ~ scale(ar) +  scale(salinity_quantile_10) + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t3" & ci_gen_env$bag_site == "Lewisetta",])
 ```
 
-### T1 CI, York
+### t1, CI + quantiles, York River
 ```{r t1_ci_yrk}
 ci_t1_yrk <- lmerTest::lmer(ci ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t1" & ci_gen_env$bag_site == "YorkRiver",]) 
 #plot(ci_t1_yrk) 
@@ -172,7 +169,7 @@ summary(ci_t1_yrk2)
 ci_t1_yrk_scaled <- lmerTest::lmer(scale(ci) ~ scale(ho) + scale(salinity_quantile_10) + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t1" & ci_gen_env$bag_site == "YorkRiver",])
 ```
 
-### T2 CI, York
+### t2, CI + quantiles, York River
 ```{r t2_ci_yrk}
 ci_t2_yrk <- lmerTest::lmer(ci ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "YorkRiver",]) 
 #plot(ci_t2_yrk) 
@@ -189,7 +186,7 @@ summary(ci_t2_yrk2)
 ci_t2_yrk_scaled <- lmerTest::lmer(scale(ci) ~ scale(ar) + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "YorkRiver",])
 ```
 
-### T3 CI, York
+### t3, CI + quantiles, York River
 ```{r t3_ci_yrk}
 ci_t3_yrk <- lmerTest::lmer(ci ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t3" & ci_gen_env$bag_site == "YorkRiver",]) 
 #plot(ci_t3_yrk) 
@@ -205,7 +202,7 @@ step(ci_t3_yrk2) # final model
 
 ci_t3_yrk_scaled <- lmerTest::lmer(scale(ci) ~ scale(ar) + scale(salinity_quantile_10) + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t3" & ci_gen_env$bag_site == "YorkRiver",]) 
 # save everything
-sink(paste0("../../results_field/condition_GE_model1_results_",Sys.Date(),".txt"))
+sink(paste0("results/parent_effects_H2F/models/condition_model1_quantiles_results_",Sys.Date(),".txt"))
 cat("\nLEW t1 (May 2023) modeling approach 1\n")
 summary(ci_t1_lew2)
 Anova(ci_t1_lew2)
@@ -245,8 +242,8 @@ Anova(ci_t3_yrk_scaled)
 sink()
 ```
 
-## Run Analyses- Model 2 (genetic variables and environmental distance)
-### T1 CI Dist, Lewisetta
+## Run Analyses- Model 2 (Heterozygosity/allelic richness and environmental distance)
+### t1, CI + distance, Lewisetta
 ```{r}
 dist_t1_lew <- lmerTest::lmer(ci ~ ho + ar + dist_LEW + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t1" & ci_gen_dist$bag_site == "Lewisetta",]) 
 #plot(dist_t1_lew) 
@@ -260,7 +257,7 @@ summary(dist_t1_lew2) #final model
 dist_t1_lew_scaled <- lmerTest::lmer(scale(ci) ~ scale(ho) + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t1" & ci_gen_dist$bag_site == "Lewisetta",])
 ```
 
-### T2 CI Dist, Lewisetta
+### t2, CI + distance, Lewisetta
 ```{r}
 dist_t2_lew <- lmerTest::lmer(ci ~ ho + ar + dist_LEW + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t2" & ci_gen_dist$bag_site == "Lewisetta",]) 
 #plot(dist_t2_lew) 
@@ -276,7 +273,7 @@ step(dist_t2_lew2) #final model
 dist_t2_lew_scaled <- lmerTest::lmer(scale(ci) ~ scale(ho) + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t2" & ci_gen_dist$bag_site == "Lewisetta",]) 
 ```
 
-### T3 CI Dist, Lewisetta
+### t3, CI + distance, Lewisetta
 ```{r}
 dist_t3_lew <- lmerTest::lmer(ci ~ ho + ar + dist_LEW + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t3" & ci_gen_dist$bag_site == "Lewisetta",]) 
 #plot(dist_t3_lew) 
@@ -287,7 +284,7 @@ step(dist_t3_lew) # says to drop random effect, but ignoring for consistency
 dist_t3_lew_scaled <- lmerTest::lmer(scale(ci) ~ scale(ho) + scale(ar) + scale(dist_LEW) + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t3" & ci_gen_dist$bag_site == "Lewisetta",]) 
 ```
 
-### T1 CI Dist, York
+### t1, CI + distance, York River
 ```{r}
 dist_t1_yrk <- lmerTest::lmer(ci ~ ho + ar + dist_YRK + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t1" & ci_gen_dist$bag_site == "YorkRiver",]) 
 #plot(dist_t1_yrk) 
@@ -302,7 +299,7 @@ Anova(dist_t1_yrk2) #signif effect of bag label
 #plot this as nothing significant, note the significant effect of bag label in figure caption
 ```
 
-### T2 CI Dist, York
+### t2, CI + distance, York River
 ```{r}
 dist_t2_yrk <- lmerTest::lmer(ci ~ ho + ar + dist_YRK + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t2" & ci_gen_dist$bag_site == "YorkRiver",]) 
 #plot(dist_t2_yrk) 
@@ -319,7 +316,7 @@ step(dist_t2_yrk2) #final model
 dist_t2_yrk_scaled <- lmerTest::lmer(scale(ci) ~ scale(ar) + scale(dist_YRK) + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t2" & ci_gen_dist$bag_site == "YorkRiver",]) 
 ```
 
-### T3 CI Dist, York
+### t3, CI + distance, York River
 ```{r}
 dist_t3_yrk <- lmerTest::lmer(ci ~ ho + ar + dist_YRK + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t3" & ci_gen_dist$bag_site == "YorkRiver",]) 
 #plot(dist_t3_yrk) 
@@ -336,7 +333,7 @@ step(dist_t3_yrk2) #final model
 dist_t3_yrk_scaled <- lmerTest::lmer(scale(ci) ~ scale(ar) + scale(ho) + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t3" & ci_gen_dist$bag_site == "YorkRiver",]) 
 
 #save results
-sink(paste0("../../results_field/condition_GEdist_model2_results_",Sys.Date(),".txt"))
+sink(paste0("results/parent_effects_H2F/models/condition_model2_envrdist_results_",Sys.Date(),".txt"))
 cat("\nLEW t1 (May 2023) modeling approach 2\n")
 summary(dist_t1_lew2)
 Anova(dist_t1_lew2)
@@ -373,7 +370,7 @@ Anova(dist_t3_yrk_scaled)
 sink()
 ```
 
-## Plotting - NM
+## Plotting
 ##Figure product - Lewisetta CI model 1 (environmental quantiles)
 ```{r}
 lew_ci1_df <- rbind(broom.mixed::tidy(ci_t1_lew_scaled), tidy(ci_t2_lew_scaled), tidy(ci_t3_lew_scaled))
@@ -429,12 +426,12 @@ lew_ci1_plot
 ggsave("FigS7A_lew_ci_quantiles.pdf",
        plot = lew_ci1_plot,
        device = "pdf",
-       path = "../../figures/parent_effects_H2F",
+       path = "figures/parent_effects_H2F",
        height = 4,
        width = 7)
 ```
 
-#Plotting slopes - York CI model 1 (environmental quantiles)
+#Figure product - York CI model 1 (environmental quantiles)
 ```{r}
 yrk_ci1_df <- rbind(broom.mixed::tidy(ci_t1_yrk_scaled), tidy(ci_t2_yrk_scaled), tidy(ci_t3_yrk_scaled))
 yrk_ci1_df$t <- c(rep(c("t1"), 5), rep(c("t2"), 4), rep(c("t3"), 5))
@@ -488,12 +485,12 @@ yrk_ci1_plot
 ggsave("FigS7C_york_ci_quantiles.pdf",
        plot = yrk_ci1_plot,
        device = "pdf",
-       path = "../../figures/parent_effects_H2F",
+       path = "figures/parent_effects_H2F",
        height = 4,
        width = 7)
 ```
 
-#Plotting slopes - Lewisetta CI model 2
+#Figure product - Lewisetta CI model 2 (environmental distance)
 ```{r}
 #save scaled functions
 lew_ci2_df <- rbind(broom.mixed::tidy(dist_t1_lew_scaled),broom.mixed::tidy(dist_t2_lew_scaled),broom.mixed::tidy(dist_t3_lew_scaled))
@@ -529,7 +526,7 @@ lew_ci2_plot <- lew_ci2_df_sub %>%
   geom_vline(xintercept = 0, linetype = "dashed")+
   scale_y_discrete(name = "Explanatory variable", 
                    limits = c("scale(dist_LEW)", "scale(ho)", "scale(ar)"),
-                   labels = c(str_wrap(c("Environmental distance (EOO to Lewisetta)"), width = 20), "Heterozygosity", "Allelic richness"))+
+                   labels = c(str_wrap(c("Environmental distance (EoO to Lewisetta)"), width = 20), "Heterozygosity", "Allelic richness"))+
   theme_classic()+
     theme(axis.text = element_text(color = "black", size = 14),
         axis.title = element_text(size = 15),
@@ -538,15 +535,15 @@ lew_ci2_plot <- lew_ci2_df_sub %>%
 
 lew_ci2_plot
 
-ggsave("FigS7B_lew_ci_dist.pdf",
+ggsave("FigS7B_lew_ci_envrdist.pdf",
        plot = lew_ci2_plot,
        device = "pdf",
-       path = "../../figures/parent_effects_H2F",
+       path = "figures/parent_effects_H2F",
        height = 4,
        width = 7)
 ```
 
-#Plotting slopes - York length
+#Figure product - York CI model 2 (environmental distance)
 ```{r}
 #save scaled functions, all t1 rows will have to be added manually, as nothing was significant from that model, except bag label
 yrk_ci2_df <- rbind(broom.mixed::tidy(dist_t2_yrk_scaled),broom.mixed::tidy(dist_t3_yrk_scaled))
@@ -588,7 +585,7 @@ yrk_ci2_plot <- yrk_ci2_df_sub %>%
   geom_vline(xintercept = 0, linetype = "dashed")+
    scale_y_discrete(name = "Explanatory variable", 
                    limits = c("scale(dist_YRK)", "scale(ho)", "scale(ar)"),
-                   labels = c(str_wrap(c("Environmental distance (EOO to York River)"), width = 20), "Heterozygosity", "Allelic richness"))+
+                   labels = c(str_wrap(c("Environmental distance (EoO to York River)"), width = 20), "Heterozygosity", "Allelic richness"))+
   theme_classic()+
     theme(axis.text = element_text(color = "black", size = 14),
         axis.title = element_text(size = 15),
@@ -597,10 +594,10 @@ yrk_ci2_plot <- yrk_ci2_df_sub %>%
 
 yrk_ci2_plot
 
-ggsave("FigS7D_york_ci_dist.pdf",
+ggsave("FigS7D_york_ci_envrdist.pdf",
        plot = yrk_ci2_plot,
        device = "pdf",
-       path = "../../figures/parent_effects_H2F",
+       path = "figures/parent_effects_H2F",
        height = 4,
        width = 7)
 ```
