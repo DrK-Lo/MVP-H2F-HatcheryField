@@ -1,25 +1,34 @@
 ---
-title: "pairwise_differences"
+title: "pairwise_differences_analyses"
 author: "Kiran Bajaj"
 output: pdf_document
 date: "`r Sys.Date()`"
 ---
 
-## Overview
 This analysis tests whether pairwise environmental distance between conditions at the environments-of-origin or pairwise genetic distance (Fst) between parent populations predicts differences in survival and shell length.
+
+## Load packages
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+# Set working directory relative to project root
+knitr::opts_knit$set(root.dir = here::here())
+
+if (!require("pacman")) install.packages("pacman")
+
+packages <- c("here", "ggplot2", "tidyverse", "grid", "reshape2", "vegan", "patchwork")
+pacman::p_load(char = packages)
+
+# log versions for reproducibility
+r_version <- paste(R.version$major, R.version$minor, sep = ".")
+lib_ver <- packages %>%
+  map_chr(~ paste0(.x, " (v", packageVersion(.x), ")")) %>%
+  paste(collapse = ", ")
 ```
 
-## Packages
-```{r packages, message=FALSE}
-library(tidyverse)
-library(ggplot2)
-library(grid)
-library(reshape2)
-library(vegan)      # Mantel tests
-library(patchwork)  # combining plots
+```{r}
+getwd()
 ```
 
 ## Global variables
@@ -104,25 +113,25 @@ plot_heatmap <- function(mat, fill_label, title = "") {
 ## Load data
 ```{r load-data}
 # raw lengths of all oysters aged 15-78 days
-hatchery_length <- read.csv(file.path("..", "..", "data", "performance_H2F", "latestage_length.csv"))
+hatchery_length <- read.csv(file.path("data", "performance_H2F", "nursery_length.csv"))
 
 # survival rate data for larval oysters up to day 21 post hatching
-hatchery_survival <-  read.csv(file.path("..", "..", "data", "performance_H2F", "CViMVP_larvae_survival.csv"))
+hatchery_survival <-  read.csv(file.path("data", "performance_H2F", "CViMVP_larvae_survival.csv"))
 
-# lengths of all oysters averaged by bag for field monitoring events 1-3
-field_length <- read.csv(file.path("..", "..", "data", "performance_H2F", "lengths_bags_022025.csv"))
+# lengths of all oysters averaged by bag for field monitoring events 1-3 #GET RIGHT FILE
+field_length <- read.csv(file.path("data", "performance_H2F", "lengths_bags.csv"))
 
-# survival of all oysters averaged by bag for field monitoring events 1-3
-field_survival <- read.csv(file.path("..", "..", "data", "performance_H2F", "mortality_bags_022025.csv"))
+# survival of all oysters averaged by bag for field monitoring events 1-3 #GET RIGHT FILE
+field_survival <- read.csv(file.path("data", "performance_H2F", "mortality_long_bags.csv"))
 
 # summary statistics - temperature and salinity quantiles for the 8 groups 
-envr_summary <-  read.csv(file.path("..", "..", "results", "envr_of_origin", "envr_quantiles_summary.csv"))
+envr_summary <-  read.csv(file.path("results", "environment", "envr_quantiles_summary.csv"))
 
 # matrix of euclidean environmental distances using SCALED data
-envr_dist <- readRDS(file.path("..", "..", "results", "envr_of_origin", "envr_quantiles_dist.rds"))
+envr_dist <- readRDS(file.path("results", "environment", "envr_quantiles_dist.rds"))
 
 # matrix of genetic distances between each group
-fst_mat <- readRDS(file.path("..", "..", "data", "pairwise_differences_analyses", "20250606_fst_results.rds"))
+fst_mat <- readRDS(file.path("results", "parental_genetics", "20250606_fst_results.rds"))
 
 # reorder Fst matrix to match population order
 fst_mat <- fst_mat[POP_ORDER, POP_ORDER]
@@ -139,12 +148,12 @@ For hatchery survival rate, we used survival from day 21, so filter for those va
 surv_day21 <- hatchery_survival %>%
   filter(Day_analysis == "15-21", !grepl("small", Group_Day_Label, ignore.case = TRUE)) %>%
   clean_site_names("Tank_naming") %>%
-  select(site_name = Tank_naming, surv_21 = Survival_rate_perc) %>%
+  dplyr::select(site_name = Tank_naming, surv_21 = Survival_rate_perc) %>%
   order_by_pop()
 
 # shell length at days 21 and 78
 hatchery_length_clean <- hatchery_length %>%
-  select(site_name, day_an, shell_length_mm) %>%
+  dplyr::select(site_name, day_an, shell_length_mm) %>%
   filter(!site_name %in% EXCLUDE_GROUPS)
 
 calc_mean_length <- function(df, day) {

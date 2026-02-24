@@ -5,43 +5,41 @@ date: "2025-10-30"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-```{r}
-#setwd("~/Desktop/MVP-H2F-HatcheryField")
-```
-
-### Objective
-
 The goal of this analysis is to re-annotate SNPs in the mutation-level data frame for our 200K SNP chip.
 This re-annotated SNP data frame can be sliced into thinned and full SNP sets and used for multiple projects. 
 
-### Packages
+## Load packages
 
-```{r}
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 
-# install relevant packages
-#BiocManager::install(c("rtracklayer", "GenomicRanges", "biomaRt"))
+# Set working directory relative to project root
+knitr::opts_knit$set(root.dir = here::here())
 
-library(tidyverse)
-library(dplyr)
-library(readr)
-library(rtracklayer)
-library(GenomicRanges)
-library(biomaRt)
+if (!require("pacman")) install.packages("pacman")
 
+packages <- c("here", "readr", "dplyr", "purrr", "tidyverse", "rtracklayer", "GenomicRanges", "biomaRt")
+pacman::p_load(char = packages)
+
+# log versions for reproducibility
+r_version <- paste(R.version$major, R.version$minor, sep = ".")
+lib_ver <- packages %>%
+  map_chr(~ paste0(.x, " (v", packageVersion(.x), ")")) %>%
+  paste(collapse = ", ")
 ```
 
-### Load data
+```{r}
+getwd()
+```
+
+## Load data
 
 ```{r}
 
 # Load in mutation data frame
 # MGE produced this file in /MVP-H2F-HatcheryField/src/parental_genetics/updated_genetics_experimental.R (big merge file that is also saved in other repos)
 
-muts <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250604_mutmatrix_PASS.rds"))
+muts <- readRDS(file.path("data", "parental_genetics_structure", "20250604_mutmatrix_PASS.rds"))
 
 dim(muts) # 195,025 SNPs and 18 variables
 names(muts)
@@ -67,7 +65,7 @@ Link to download: https://metazoa.ensembl.org/Crassostrea_virginica_gca002022765
 ```{r}
 
 # I have this file saved in the MVP-H2F-HatcheryField repo but you can load it in from anywhere
-gff <- rtracklayer::import(file.path("..", "..", "data", "parental_genetics_structure", "Crassostrea_virginica_gca002022765v4.C_virginica_3.0.62.gff3"))
+gff <- rtracklayer::import(file.path("data", "parental_genetics_structure", "Crassostrea_virginica_gca002022765v4.C_virginica_3.0.62.gff3"))
 
 ```
 
@@ -200,10 +198,10 @@ I want this data frame to be one row per SNP. So we need to find a way to collap
 
 # this collpases the data frame into one row per SNP
 snp_collapsed <- snp_annotated %>%
-  group_by(Affx.ID, Name, Sequence, ) %>%
+  group_by(Affx.ID, Name, Sequence) %>%
   summarise(
-    Chromosome = first(Chromosome),
-    Position = first(Position),
+    Chromosome = dplyr::first(Chromosome),
+    Position = dplyr::first(Position),
     genes = list(unique(na.omit(gene_id))),
     descriptions = list(unique(na.omit(description))),
     go_ids = list(unique(unlist(go_id))),
@@ -224,14 +222,14 @@ snp_collapsed_export <- snp_collapsed %>%
 # data export
 write_csv(
   snp_collapsed_export,
-  file.path("..", "..", "supp files", "20251029_muts_reannotated.csv")
+  file.path("supp files", "20251029_muts_reannotated.csv")
 )
 
 ```
 
 ```{r}
 # to recover the list structure, use this code: 
-snp_reloaded <- read_csv(file.path("..", "..", "supp files", "20251029_muts_reannotated.csv")) %>%
+snp_reloaded <- read_csv(file.path("supp files", "20251029_muts_reannotated.csv")) %>%
   mutate(
     genes = strsplit(genes, "; "),
     go_terms = strsplit(go_terms, "; ")

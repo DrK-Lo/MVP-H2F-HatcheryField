@@ -5,51 +5,47 @@ output: html_document
 date: "2025-02-04"
 ---
 
+This file is for calculating pairwise Fst, allelic richness, observed heterozygosity, and running OutFLANK to test for Fst outliers. The analysis uses SNP chip data from the experimental parents for the H2F paper. MGE generated SNP sets and genotype matrices. 
+
+## Load packages
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+# Set working directory relative to project root
+knitr::opts_knit$set(root.dir = here::here())
+
+if (!require("pacman")) install.packages("pacman")
+
+packages <- c("here", "ggplot2", "hierfstat", "reshape2", "dplyr", "tidyr", "readr", "adegenet", "viridis", "OutFLANK")
+pacman::p_load(char = packages)
+
+# log versions for reproducibility
+r_version <- paste(R.version$major, R.version$minor, sep = ".")
+lib_ver <- packages %>%
+  map_chr(~ paste0(.x, " (v", packageVersion(.x), ")")) %>%
+  paste(collapse = ", ")
 ```
 
 ```{r}
-#setwd("~/Desktop/MVP-H2F-HatcheryField")
+getwd()
 ```
 
-### Packages
-
-```{r}
-
-library(dplyr)
-library(bigsnpr)
-library(bigstatsr)
-library(robustbase)
-library(ggplot2)
-library(ggrepel)
-library(hierfstat)
-library(reshape2)
-library(adegenet)
-library(viridis)
-library(pegas)
-library(tidyverse)
-library(colorspace)
-library(OutFLANK)
-library(CMplot)
-
-```
-
-### Load data
+## Load data
 
 ```{r}
 
 # full SNP set
-full_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250606_FULLSNPs_exp_labeled.rds"))
+full_snps <- readRDS(file.path("data", "parental_genetics_structure", "20250606_FULLSNPs_exp_labeled.rds"))
 
 # SNP set thinned for LD
-thinned_snps <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250606_THINNEDSNPs_exp_labeled.rds"))
+thinned_snps <- readRDS(file.path("data", "parental_genetics_structure", "20250606_THINNEDSNPs_exp_labeled.rds"))
 
 # SNP info
-muts_maf_filtered <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250604_FULLmuts_exp.rds"))
+muts_maf_filtered <- readRDS(file.path("data", "parental_genetics_structure", "20250604_FULLmuts_exp.rds"))
 
 # sample info
-samp_full_subset <- readRDS(file.path("..", "..", "data", "parental_genetics_structure", "20250604_samp_full_subset_exp.rds"))
+samp_full_subset <- readRDS(file.path("data", "parental_genetics_structure", "20250604_samp_full_subset_exp.rds"))
 
 ```
 
@@ -66,9 +62,9 @@ dim(muts) # full mutation-level info - 154102 SNPs
 
 ```
 
-### Calculating Fst 
+## Calculating Fst 
 
-#### Data preparation
+### Data preparation
 
 ```{r}
 
@@ -152,21 +148,21 @@ dim(fst_data) # 105358 - sample id col = 105357
 
 ```
 
-#### Data product: Fst matrix 
+### Data product: Fst matrix 
 
 ```{r}
 
-# run Fst calculation - HPC only
+# run Fst calculation - cluster only
 #fst_results <- pairwise.WCfst(fst_data)
 #fst_results[is.na(fst_results)] <- 0
 
 # view results
 #print(fst_results)
 
-#saveRDS(fst_results, file.path("..", "..", "results", "parental_genetics", "fst_results.rds"))
+#saveRDS(fst_results, file.path("results", "parental_genetics", "fst_results.rds"))
 
-# load in fst results - after running with HPC
-fst_results <- readRDS(file.path("..", "..", "results", "parental_genetics", "20250606_fst_results.rds"))
+# load in fst results - after running with cluster
+fst_results <- readRDS(file.path("results", "parental_genetics", "20250606_fst_results.rds"))
 
 
 # convert the matrix to a long format and edit column names
@@ -196,9 +192,9 @@ fig_fst_heatmap
 
 ```
 
-### Basic stats with hierfstat
+## Basic stats with hierfstat
 
-#### Data preparation
+### Data preparation
 
 Same steps as before but with full SNP set. 
 
@@ -311,7 +307,7 @@ div <- basic.stats(hierfstat_obj)
 
 ```
 
-#### Observed and expected heterozygosity
+### Observed and expected heterozygosity
 
 ```{r}
 
@@ -399,7 +395,7 @@ ggplot(avg_het_long, aes(x = factor(Population, levels = population_order), y = 
 
 ```
 
-#### Allelic richness
+### Allelic richness
 
 Something might be wrong with this calculation - it's working with 0, 1, and 2s and might be
 inflating allelic richness. 
@@ -453,7 +449,7 @@ print(avg_ar_per_pop)
 
 ```
 
-#### Data product: AR, Ho, Hs
+### Data product: AR, Ho, Hs
 
 This will get used in a linear model that includes temperature, salinity, AR, and Ho. It is saved to the "parent_effects_H2F" folder under "data."
 
@@ -463,13 +459,13 @@ parent_genetic_effects <- merge(avg_het_per_pop, avg_ar_per_pop, by = "Populatio
   mutate(Population = factor(Population, levels = population_order)) %>%
   arrange(Population)
 
-write_csv(parent_genetic_effects, file.path("..", "..", "results", "parent_effects_H2F", "parent_genetic_effects.csv"))
+write_csv(parent_genetic_effects, file.path("results", "parent_effects_H2F", "parent_genetic_effects.csv"))
 
 ```
 
-### Fst outliers with OutFLANK
+## Fst outliers with OutFLANK
 
-#### Data preparation
+### Data preparation
 
 ```{r}
 
@@ -506,7 +502,7 @@ make_outflank_input(outflank_data)
 
 ```
 
-#### Data checks
+### Data checks
 
 ```{r}
 
@@ -518,7 +514,7 @@ plot(FstDataFrame$FST, FstDataFrame$FSTNoCorr) # uncorrected Fst is always large
 
 ```
 
-#### Run OutFLANK
+### Run OutFLANK
 
 ```{r}
 
@@ -549,7 +545,7 @@ hist(out_trim$results$pvaluesRightTail)
 
 ```
 
-#### Calculate p-values
+### Calculate p-values
 
 ```{r}
 
@@ -572,7 +568,7 @@ hist(P1$pvaluesRightTail)
 
 ```
 
-#### Data product: OutFLANK results, SNP info
+### Data product: OutFLANK results, SNP info
 
 ```{r}
 
@@ -584,7 +580,7 @@ muts$chrom_position <- paste(muts$Chromosome, a, sep = ".")
 P1$Affx.ID <- P1$LocusName
 joined_P1 <- left_join(P1, muts, by = c("Affx.ID" = "Affx.ID"))
 
-write_csv(joined_P1, file.path("..", "..", "results", "parental_genetics", "outflank_results.csv"))
+write_csv(joined_P1, file.path("results", "parental_genetics", "outflank_results.csv"))
 
 ```
 

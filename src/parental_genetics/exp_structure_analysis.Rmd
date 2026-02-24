@@ -1,28 +1,38 @@
 ---
 title: "exp_structure_analysis"
+authors: "Nicole Mongillo and Madeline Eppley"
 date: "2025-05-23"
 output: pdf_document
 ---
 
+This file creates an sNMF admixture plots and ancestry pie charts. The analysis is from MGE's 
+code in "updated_genetics_experimental.R." NM modified the code for plotting for this project. 
+
+## Load packages
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+# Set working directory relative to project root
+knitr::opts_knit$set(root.dir = here::here())
+
+if (!require("pacman")) install.packages("pacman")
+
+packages <- c("here", "ggplot2", "LEA", "scatterpie", "sf", "rnaturalearth", "rnaturalearthdata", "dplyr", "stringr")
+pacman::p_load(char = packages)
+
+# log versions for reproducibility
+r_version <- paste(R.version$major, R.version$minor, sep = ".")
+lib_ver <- packages %>%
+  map_chr(~ paste0(.x, " (v", packageVersion(.x), ")")) %>%
+  paste(collapse = ", ")
 ```
 
-### Loading packages
 ```{r}
-library(ggplot2)
-library(LEA)
-library(scatterpie)
-library(sf)
-library(rnaturalearthdata)
-library(rnaturalearth)
-library(dplyr)
-library(stringr)
+getwd()
 ```
 
-### Set region colors
+## Set region colors
 ```{r}
-#setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/parental_genetics")
 
 # can update region colors to whatever we want to see here
 region_colors <- c(
@@ -37,10 +47,8 @@ region_colors <- c(
   )
 ```
 
-MGE wrote this code. Code was adapted by NM to format figures for H2F. 
-
 ```{r}
-pca_data <- read.csv("../../data/parental_genetics_structure/20250604_pca_data_exp.csv")
+pca_data <- read.csv("results/parental_genetics/20250604_pca_data_exp.csv")
 
 #rename values in ID_SiteDate to match naming scheme
 pca_data <- pca_data %>%
@@ -91,7 +99,7 @@ pca_plot3
 ggsave("parental_pca.pdf",
        plot = pca_plot3,
        device = "pdf",
-       path = "../../figures/envr_of_origin",
+       path = "figures/envr_of_origin",
        height = 4,
        width = 5)
 ```
@@ -113,25 +121,25 @@ pca_plot4 <- ggplot(pca_data, aes(x = PC3, y = PC4, color = ID_SiteDate)) +
 pca_plot4
 ```
 
-### snmf ancestry analysis
+## snmf ancestry analysis
 
 ```{r}
 # subset the last geno matrix that we made (GEN_filtered) with our thinned SNPs list from the auto_SVD function
 
 # load imputed genotype matrix and thinned SNP indices
-GEN_imputed <- readRDS("../../data/parental_genetics_structure/20250604_FULLSNPs_exp.rds")
-thinned_snps <- readRDS("../../data/parental_genetics_structure/20250604_THINNEDSNPs_exp.rds")
+GEN_imputed <- readRDS("data/parental_genetics_structure/20250604_FULLSNPs_exp.rds")
+thinned_snps <- readRDS("data/parental_genetics_structure/20250604_THINNEDSNPs_exp.rds")
 
 # subset to LD-thinned SNPs
 gen_filtered_subset <- GEN_imputed[, thinned_snps]
 
 # save as .geno format for snmf analysis
-write.geno(gen_filtered_subset, "../../data/parental_genetics_structure/20250204geno_imputedfile_exp.geno")
+write.geno(gen_filtered_subset, "data/parental_genetics_structure/20250204geno_imputedfile_exp.geno")
 ```
 
 ```{r}
 # now generate the snmf project for our plate
-snmf_exp <- snmf("../../data/parental_genetics_structure/20250204geno_imputedfile_exp.geno", K = 2, repetitions = 10, ploidy = 2, entropy = TRUE, project = "new")
+snmf_exp <- snmf("data/parental_genetics_structure/20250204geno_imputedfile_exp.geno", K = 2, repetitions = 10, ploidy = 2, entropy = TRUE, project = "new")
 
 # plot cross-entropy criterion of all runs of the project
 plot(snmf_exp, cex = 1.2, col = "#1565C0", pch = 19)
@@ -142,19 +150,9 @@ ce = cross.entropy(snmf_exp, K = 2)
 # select the run with the lowest cross-entropy for k=2
 best = which.min(ce)
 
-# display the q-matrix
-
-my.colors <- c("#81C784", "#1565C0")
-
-# plot the ancestry proportions
-bp <- barchart(snmf_exp, K = 2, run = best, 
-         border = NA, space = 0, col = my.colors, 
-         xlab = "Individuals", ylab = "Ancestry proportions", 
-         main = "Ancestry matrix for Experimental Samples",
-         sort.by.Q = T)
 
 #read in RDS file
-samp_full_subset <- readRDS("../../data/parental_genetics_structure/20250604_samp_full_subset_exp.rds")
+samp_full_subset <- readRDS("data/parental_genetics_structure/20250604_samp_full_subset_exp.rds")
 samp_full_subset <- samp_full_subset %>%
   mutate(ID_SiteDate = case_match(ID_SiteDate,
                                    "TX-CapBay" ~ "W1-TX",
@@ -166,19 +164,77 @@ samp_full_subset <- samp_full_subset %>%
                                    "NH-GrtBay" ~ "W5-NH",
                                    "ME-HogIs" ~ "W6-ME"
                                    ))
-#extract region labels
-region_labels <- samp_full_subset$ID_SiteDate
 
-reordered_labels <- region_labels[bp$order]
+# extract Q-matrix from best run
+Q_mat <- Q(snmf_exp, K = 2, run = best)
 
-axis(1, at = 1:length(region_labels), 
-     labels = reordered_labels, las = 3, cex.axis = .4)
+# build data frame with population labels
+q_df <- data.frame(
+  ind = 1:nrow(Q_mat),
+  Q1 = Q_mat[, 1],
+  Q2 = Q_mat[, 2],
+  pop = samp_full_subset$ID_SiteDate
+)
+
+# define population order (top to bottom in horizontal plot = this factor order)
+pop_order <- c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME")
+q_df$pop <- factor(q_df$pop, levels = pop_order)
+
+# order by population only, keep original individual order within each pop
+q_df <- q_df %>%
+  arrange(pop) %>%
+  mutate(rank = row_number())
+
+# pivot to long format for ggplot
+q_long <- q_df %>%
+  tidyr::pivot_longer(cols = c(Q1, Q2), names_to = "cluster", values_to = "proportion")
+
+# calculate population boundaries for dividing lines
+pop_counts <- q_df %>% group_by(pop) %>% summarise(n = n())
+pop_counts$cumsum <- cumsum(pop_counts$n)
+pop_breaks <- head(pop_counts$cumsum, -1) + 0.5
+
+# calculate midpoints for population labels
+pop_counts$mid <- pop_counts$cumsum - pop_counts$n / 2
+
+# plot
+snmf_plot <- ggplot(q_long, aes(x = rank, y = proportion, fill = cluster)) +
+  geom_bar(stat = "identity", width = 1, linewidth = 0, color = NA) +
+  geom_vline(xintercept = pop_breaks, color = "black", linewidth = 0.5) +
+  scale_fill_manual(values = c("Q2" = "#81C784", "Q1" = "#1565C0")) +
+  scale_x_continuous(
+    breaks = pop_counts$mid,
+    labels = pop_counts$pop,
+    expand = c(0, 0)
+  ) +
+  scale_y_continuous(expand = c(0, 0)) +
+  coord_flip() +
+  labs(x = NULL, y = "Individual ancestry proportions") +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    panel.grid = element_blank(),
+    axis.text.y = element_text(color = "black", size = 11, face = "bold"),
+    axis.text.x = element_text(color = "black", size = 10),
+    axis.title.x = element_text(size = 12),
+    axis.ticks = element_line(color = "black"),
+    axis.ticks.length = unit(0.15, "cm")
+  )
+
+snmf_plot
+
+ggsave("FigS1_snmf_ancestry.pdf",
+       plot = snmf_plot,
+       device = "pdf",
+       path = "figures/envr_of_origin",
+       height = 6,
+       width = 4)
 ```
 
-### Create snmf plot results on map 
+## Create snmf plot results on map 
 ```{r}
 # read in site data
-site_data <- read.csv("../../data/performance_H2F/MVP23-FieldBags-spawn_trt2.csv")
+site_data <- read.csv("data/performance_H2F/MVP23-FieldBags-spawn_trt2.csv")
 
 site_data <- site_data %>%
   mutate(SpawnTrt_Label = case_match(SpawnTrt_Label,
@@ -193,8 +249,8 @@ site_data <- site_data %>%
                                    ))
 
 # get the Q-matrix from snmf results
-geno <- read.geno("../../data/parental_genetics_structure/20250204geno_imputedfile_exp.geno")
-snmf_project <- load.snmfProject("../../data/parental_genetics_structure/20250204geno_imputedfile_exp.snmfProject")
+geno <- read.geno("data/parental_genetics_structure/20250204geno_imputedfile_exp.geno")
+snmf_project <- load.snmfProject("data/parental_genetics_structure/20250204geno_imputedfile_exp.snmfProject")
 best_run <- which.min(cross.entropy(snmf_project, K = 2))  # choose the best run
 Q_matrix <- Q(snmf_project, K = 2, run = best_run)  # extract best run into q-matrix
 
@@ -251,10 +307,10 @@ map_with_sites <- base_map +
   geom_scatterpie(
     data = site_data_averaged,
     aes(x = Longitude, y = Latitude, r = 0.9),  
-    cols = c("Q2_avg", "Q1_avg"), 
+    cols = c("Q1_avg", "Q2_avg"), 
     color = NA,
     pie_scale = 1.5) +  
-  scale_fill_manual(name = "Genetic cluster", breaks = c("Q2_avg", "Q1_avg"), labels = c("Gulf", "Atlantic"), values = c("#1565C0", "#81C784")) +  
+  scale_fill_manual(name = "Genetic cluster", breaks = c("Q2_avg", "Q1_avg"), labels = c("Atlantic", "Gulf"), values = c("#81C784", "#1565C0")) +  
   theme(
     legend.position = "inside",
     legend.position.inside = c(.3,.7), 
@@ -270,16 +326,13 @@ map_with_sites
 ggsave("Fig1A_ancestry_map.pdf",
        plot = map_with_sites,
        device = "pdf",
-       path = "../../figures/envr_of_origin",
+       path = "figures/envr_of_origin",
        height = 4.2,
        width = 6)
 ```
 
 ### Common garden sites inset map
 ```{r}
-
-# load US coastline 
-coastline <- ne_coastline(scale = "medium", returnclass = "sf")
 
 # now plot on the map - create a base map with Chesapeake Bay coastline as the outline of the plot
 inset_base <- ggplot(data = coastline) +
@@ -326,7 +379,7 @@ inset_map
 ggsave("Fig1A_inset_map.pdf",
        plot = inset_map,
        device = "pdf",
-       path = "../../figures/envr_of_origin",
+       path = "figures/envr_of_origin",
        height = 3,
        width = 4)
 ```

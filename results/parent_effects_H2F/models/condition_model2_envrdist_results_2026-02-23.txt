@@ -1,5 +1,5 @@
 
-LEW t1 (May 2023) modeling approach 2
+Lewisetta t1 (November 2023) modeling approach 2
 Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
 Formula: ci ~ ho + (1 | bags_label)
    Data: ci_gen_dist[ci_gen_dist$t == "t1" & ci_gen_dist$bag_site == "Lewisetta",      ]
@@ -34,7 +34,7 @@ ho 7.4157  1   0.006466 **
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-LEW t1 (May 2023) scaled modeling approach 2
+Lewisetta t1 (November 2023) scaled modeling approach 2
 Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
 Formula: scale(ci) ~ scale(ho) + (1 | bags_label)
    Data: ci_gen_dist[ci_gen_dist$t == "t1" & ci_gen_dist$bag_site == "Lewisetta",      ]
@@ -69,7 +69,7 @@ scale(ho) 7.4157  1   0.006466 **
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-LEW t2 (Nov. 2023) modeling approach 2
+Lewisetta t2 (May 2024) modeling approach 2
 Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
 Formula: ci ~ ho + (1 | bags_label)
    Data: ci_gen_dist[ci_gen_dist$t == "t2" & ci_gen_dist$bag_site == "Lewisetta",      ]
@@ -104,7 +104,7 @@ ho 12.32  1  0.0004483 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-LEW t2 (Nov. 2023) scaled modeling approach 2
+Lewisetta t2 (May 2024) scaled modeling approach 2
 Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
 Formula: scale(ci) ~ scale(ho) + (1 | bags_label)
    Data: ci_gen_dist[ci_gen_dist$t == "t2" & ci_gen_dist$bag_site == "Lewisetta",      ]
@@ -139,7 +139,7 @@ scale(ho) 12.32  1  0.0004483 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-LEW t3 (May 2024) modeling approach 2
+Lewisetta t3 (November 2024) modeling approach 2
 Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
 Formula: ci ~ ho + ar + dist_LEW + (1 | bags_label)
    Data: ci_gen_dist[ci_gen_dist$t == "t3" & ci_gen_dist$bag_site == "Lewisetta",      ]
@@ -180,7 +180,7 @@ dist_LEW 4.3637  1   0.036712 *
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-LEW t3 (May 2024) scaled modeling approach 2
+Lewisetta t3 (November 2024) scaled modeling approach 2
 Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
 Formula: scale(ci) ~ scale(ho) + scale(ar) + scale(dist_LEW) + (1 | bags_label)
    Data: ci_gen_dist[ci_gen_dist$t == "t3" & ci_gen_dist$bag_site == "Lewisetta",      ]
@@ -221,7 +221,7 @@ scale(dist_LEW) 4.3637  1   0.036712 *
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-YRK t1 (May 2023) modeling approach 2
+York River t1 (November 2023) modeling approach 2
 
 Call:
 lm(formula = ci ~ bags_label, data = ci_gen_dist[ci_gen_dist$t == 
@@ -273,7 +273,7 @@ Residuals  178.783 94
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-YRK t2 (Nov. 2023) modeling approach 2
+York River t2 (May 2024) modeling approach 2
 Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
 Formula: ci ~ ar + dist_YRK + (1 | bags_label)
    Data: ci_gen_dist[ci_gen_dist$t == "t2" & ci_gen_dist$bag_site == "YorkRiver",      ]
@@ -311,7 +311,7 @@ dist_YRK  6.3715  1     0.0116 *
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-YRK t2 (Nov. 2023) scaled modeling approach 2
+York River t2 (May 2024) scaled modeling approach 2
 Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
 Formula: scale(ci) ~ scale(ar) + scale(dist_YRK) + (1 | bags_label)
    Data: ci_gen_dist[ci_gen_dist$t == "t2" & ci_gen_dist$bag_site == "YorkRiver",      ]
@@ -349,7 +349,7 @@ scale(dist_YRK)  6.3715  1     0.0116 *
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-YRK t3 (May 2024) modeling approach 2
+York River t3 (November 2024) modeling approach 2
 Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
 Formula: ci ~ ar + ho + (1 | bags_label)
    Data: ci_gen_dist[ci_gen_dist$t == "t3" & ci_gen_dist$bag_site == "YorkRiver",      ]
@@ -387,7 +387,7 @@ ho 11.4676  1  0.0007082 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-YRK t3 (May 2024) scaled modeling approach 2
+York River t3 (November 2024) scaled modeling approach 2
 Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
 Formula: scale(ci) ~ scale(ar) + scale(ho) + (1 | bags_label)
    Data: ci_gen_dist[ci_gen_dist$t == "t3" & ci_gen_dist$bag_site == "YorkRiver",      ]

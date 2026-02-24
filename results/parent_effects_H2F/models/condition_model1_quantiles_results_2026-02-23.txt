@@ -1,5 +1,5 @@
 
-LEW t1 (May 2023) modeling approach 1
+Lewisetta t1 (November 2023) modeling approach 1
 Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
 Formula: ci ~ ho + (1 | bags_label)
    Data: ci_gen_env[ci_gen_env$t == "t1" & ci_gen_env$bag_site == "Lewisetta",      ]
@@ -34,7 +34,7 @@ ho 7.4157  1   0.006466 **
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-LEW t1 (May 2023) scaled modeling approach 1
+Lewisetta t1 (November 2023) scaled modeling approach 1
 Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
 Formula: scale(ci) ~ scale(ho) + (1 | bags_label)
    Data: ci_gen_env[ci_gen_env$t == "t1" & ci_gen_env$bag_site == "Lewisetta",      ]
@@ -69,7 +69,7 @@ scale(ho) 7.4157  1   0.006466 **
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-LEW t2 (Nov. 2023) modeling approach 1
+Lewisetta t2 (May 2024) modeling approach 1
 Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
 Formula: ci ~ temp_quantile_10 + ho + (1 | bags_label)
    Data: ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "Lewisetta",      ]
@@ -107,7 +107,7 @@ ho               8.5068  1   0.003538 **
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-LEW t2 (Nov. 2023) scaled modeling approach 1
+Lewisetta t2 (May 2024) scaled modeling approach 1
 Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
 Formula: scale(ci) ~ scale(ho) + (1 | bags_label)
    Data: ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "Lewisetta",      ]
@@ -142,7 +142,7 @@ scale(ho) 12.32  1  0.0004483 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-LEW t3 (May 2024) modeling approach 1
+Lewisetta t3 (November 2024) modeling approach 1
 Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
 Formula: ci ~ ar + salinity_quantile_10 + (1 | bags_label)
    Data: ci_gen_env[ci_gen_env$t == "t3" & ci_gen_env$bag_site == "Lewisetta",      ]
@@ -180,7 +180,7 @@ salinity_quantile_10 20.5680  1  5.755e-06 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-LEW t3 (May 2024) scaled modeling approach 1
+Lewisetta t3 (November 2024) scaled modeling approach 1
 Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
 Formula: scale(ci) ~ scale(ar) + scale(salinity_quantile_10) + (1 | bags_label)
    Data: ci_gen_env[ci_gen_env$t == "t3" & ci_gen_env$bag_site == "Lewisetta",      ]
@@ -218,7 +218,7 @@ scale(salinity_quantile_10) 20.5680  1  5.755e-06 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-YRK t1 (May 2023) modeling approach 1
+York River t1 (November 2023) modeling approach 1
 Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
 Formula: ci ~ ho + salinity_quantile_10 + (1 | bags_label)
    Data: ci_gen_env[ci_gen_env$t == "t1" & ci_gen_env$bag_site == "YorkRiver",      ]
@@ -256,7 +256,7 @@ salinity_quantile_10 6.6574  1   0.009875 **
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-YRK t1 (May 2023) scaled modeling approach 1
+York River t1 (November 2023) scaled modeling approach 1
 Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
 Formula: scale(ci) ~ scale(ho) + scale(salinity_quantile_10) + (1 | bags_label)
    Data: ci_gen_env[ci_gen_env$t == "t1" & ci_gen_env$bag_site == "YorkRiver",      ]
@@ -294,7 +294,7 @@ scale(salinity_quantile_10) 6.6574  1   0.009875 **
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-YRK t2 (Nov. 2023) modeling approach 1
+York River t2 (May 2024) modeling approach 1
 Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
 Formula: ci ~ ar + (1 | bags_label)
    Data: ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "YorkRiver",      ]
@@ -329,7 +329,7 @@ ar 8.682  1   0.003214 **
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-YRK t2 (Nov. 2023) scaled modeling approach 1
+York River t2 (May 2024) scaled modeling approach 1
 Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
 Formula: scale(ci) ~ scale(ar) + (1 | bags_label)
    Data: ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "YorkRiver",      ]
@@ -364,7 +364,7 @@ scale(ar) 8.682  1   0.003214 **
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-YRK t3 (May 2024) modeling approach 1
+York River t3 (November 2024) modeling approach 1
 Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
 Formula: ci ~ ar + salinity_quantile_10 + (1 | bags_label)
    Data: ci_gen_env[ci_gen_env$t == "t3" & ci_gen_env$bag_site == "YorkRiver",      ]
@@ -402,7 +402,7 @@ salinity_quantile_10 17.2846  1  3.218e-05 ***
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-YRK t3 (May 2024) scaled modeling approach 1
+York River t3 (November 2024) scaled modeling approach 1
 Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
 Formula: scale(ci) ~ scale(ar) + scale(salinity_quantile_10) + (1 | bags_label)
    Data: ci_gen_env[ci_gen_env$t == "t3" & ci_gen_env$bag_site == "YorkRiver",      ]
