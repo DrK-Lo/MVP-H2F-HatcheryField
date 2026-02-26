@@ -60,7 +60,7 @@ ci_filter <- ci_df %>%
   filter(population != "H1-LARMIX" & population != "H2-SEEDMIX" & population != "NA")
 
 # put the populations in correct factor order
-ci_df$population <- factor(ci_df$population, levels = c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME"))
+ci_df$population <- factor(ci_df$population, levels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME"))
 
 #select only relevant columns
 ci_sub <- subset(ci_filter, select = c("CI", "samplingTimePoint", "site", "population", "bagID"))

@@ -5,37 +5,44 @@ output: pdf_document
 date: "2024-02-22"
 ---
 
+This script is for modeling differences in shell length during the nursery stage. I intend to use linear (mixed) models to examine how survival and length vary by group.
+
+## Load packages
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+# Set working directory relative to project root
+knitr::opts_knit$set(root.dir = here::here())
+
+if (!require("pacman")) install.packages("pacman")
+
+packages <- c("tidyverse", "multcompView", "car")
+pacman::p_load(char = packages)
+
+# log versions for reproducibility
+r_version <- paste(R.version$major, R.version$minor, sep = ".")
+lib_ver <- packages %>%
+  map_chr(~ paste0(.x, " (v", packageVersion(.x), ")")) %>%
+  paste(collapse = ", ")
 ```
 
 ```{r}
-#setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/src/performance_H2F")
+getwd()
 ```
 
-### Packages
-```{r}
-#load necessary packages
-library(tidyverse)
-library(ggplot2)
-library(gridExtra)
-library(multcompView)
-library(car) #upload package with Anova function
-library(cowplot)
-```
-
-### Load data
+## Load data
 ```{r}
 #download spawn treatment data
-spawn <- read.csv("../../data/performance_H2F/CviMVP_Larvae_Growth-spawn_trt.csv")
+spawn <- read.csv("data/performance_H2F/CviMVP_Larvae_Growth-spawn_trt.csv")
 #download group data
-group <- read.csv("../../data/performance_H2F/CviMVP_Larvae_Growth-group.csv")
+group <- read.csv("data/performance_H2F/CviMVP_Larvae_Growth-group.csv")
 #download length data
-larvae_img <- read.csv("../../data/performance_H2F/CviMVP_Larvae_Growth-larvae_img.csv")
+larvae_img <- read.csv("data/performance_H2F/CviMVP_Larvae_Growth-larvae_img.csv")
 ```
 
-### Data preparation
-#### Merge dataframes
+## Data preparation
+### Merge dataframes
 ```{r}
 #combine larvae_img and group dfs
 len_df <-group %>%
@@ -45,7 +52,7 @@ len_df <-group %>%
 len_analysis_df <- subset(len_df, select = -c(Ind_ID, Group_Day_Label.y, Image_Key, Img_Notes,SpawnTrt_Key, Filter_size_µm, Sample_count, Group_count, Vial_label, Notes, Survival_rate_perc, Image_num, Num_Larvae_in_img, Hinge_Length_µm, Tank))
 ```
 
-#### Subset data
+### Subset data
 
 We use day 78 as the end of the nursery stage here, as this was what was recorded in the original dataset. This was likely actually day 77 according to SK -KEB. 
 
@@ -63,7 +70,7 @@ colnames(latestage) <- c("site_name", "site_day_key", "site_day_label", "day_trt
 latestage$shell_length_mm <- (latestage$shell_length_um)/1000
 ```
 
-#### Data product: latestage_length.csv
+### Data product: nursery_length.csv
 ```{r}
 #prep data for ANOVA
 
@@ -88,10 +95,10 @@ no_small_df <- no_small_df %>%
            fct_relevel("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME", "H1-HYBRIDMIX"))
 
 #save latestage_df as a csv file for future analyses
-write.csv(no_small_df, "../../data/performance_H2F/nursery_length.csv")
+write.csv(no_small_df, "data/performance_H2F/nursery_length.csv")
 ```
 
-#### Calculate mean length and standard error
+### Calculate mean length and standard error
 ```{r}
 #calculate mean oyster length per site_name per day using aggregate
 
@@ -136,7 +143,7 @@ predep.anova3 <- Anova(lm(shell_length_mm ~ site_name, data = predep), type = 3)
 predep.anova3
 ```
 
-#### Run Tukey Kramer post-hoc test
+### Run Tukey Kramer post-hoc test
 ```{r}
 predep.anova <- aov(lm(shell_length_mm ~ site_name, data = predep))
 summary(predep.anova) 
@@ -191,7 +198,7 @@ predep_box
 ggsave("FigS3_nursery_length.pdf",
        plot = predep_box,
        device = "pdf",
-       path = "../../figures/performance_H2F",
+       path = "figures/performance_H2F",
        height = 4,
        width = 6)
 ```

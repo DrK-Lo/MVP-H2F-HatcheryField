@@ -42,8 +42,8 @@ surv_mod_ord_rename <- read.csv("data/performance_H2F/field_surv_all_times.csv")
 env_dist <- read.csv("results/environment/envr_quantiles_dist_all.csv")
 
 # residuals of models looking at env dist/gen vs survival (without dist)
-resid_surv <- read.csv("results/performance_H2F/residuals_distance_vs_surv.csv")
-resid_len <- read.csv("results/performance_H2F/residuals_distance_vs_length.csv")
+resid_surv <- read.csv("results/parent_effects_H2F/residuals_distance_vs_surv.csv")
+resid_len <- read.csv("results/parent_effects_H2F/residuals_distance_vs_length.csv")
 ```
 
 ## Data preparation
@@ -325,12 +325,12 @@ yrk_length3 <- resid_len %>%
   theme_classic()
 
 plots <- list(
-  "lew_length_envrdist_residuals_t1" = lew_surv1,
-  "lew_length_envrdist_residuals_t2" = lew_surv2,
-  "FigS9B_lew_length_envrdist_residuals_t3" = lew_surv3,
-  "york_length_envrdist_residuals_t1" = yrk_surv1,
-  "york_length_envrdist_residuals_t2" = yrk_surv2,
-  "FigS9D_york_length_envrdist_residuals_t3" = yrk_surv3
+  "lew_length_envrdist_residuals_t1" = lew_length1,
+  "lew_length_envrdist_residuals_t2" = lew_length2,
+  "FigS9B_lew_length_envrdist_residuals_t3" = lew_length3,
+  "york_length_envrdist_residuals_t1" = yrk_length1,
+  "york_length_envrdist_residuals_t2" = yrk_length2,
+  "FigS9D_york_length_envrdist_residuals_t3" = yrk_length3
 )
 
 # We will only save plots we are using in the supplement

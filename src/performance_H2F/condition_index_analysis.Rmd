@@ -5,34 +5,37 @@ output: html_document
 date: "2025-04-10"
 ---
 
+This file is for analysis of condition index across sites and populations for the MVP field experiment juveniles. It also looks individually at shell and tissue weights. 
+
+## Load packages
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
 
-### Load in libraries
+# Set working directory relative to project root
+knitr::opts_knit$set(root.dir = here::here())
+
+if (!require("pacman")) install.packages("pacman")
+
+packages <- c("here", "tidyverse", "lme4", "lmerTest", "pbkrtest", "emmeans", "multcomp", "multcompView", "fitdistrplus", "effects", "ggsignif", "cowplot", "patchwork")
+pacman::p_load(char = packages)
+
+# log versions for reproducibility
+r_version <- paste(R.version$major, R.version$minor, sep = ".")
+lib_ver <- packages %>%
+  map_chr(~ paste0(.x, " (v", packageVersion(.x), ")")) %>%
+  paste(collapse = ", ")
+```
 
 ```{r}
-library(fitdistrplus)
-library(dplyr)
-library(lme4)
-library(lmerTest)
-library(pbkrtest)
-library(emmeans)
-library(multcompView)
-library(multcomp)
-library(tidyverse)
-library(lme4) 
-library(effects)
-library(ggsignif) 
-library(renv)
-library(readr)
+getwd()
 ```
 
-### Set up data 
+## Set up data 
 
 ```{r}
 # load in dataset 
-MVP_phenotyping_final <- read_csv("../data/condition_index_H2F/MVP_phenotyping_final.csv", show_col_types = FALSE)
+MVP_phenotyping_final <- read_csv("data/performance_H2F/MVP_phenotyping_final.csv", show_col_types = FALSE)
 
 # put the populations in correct factor order
 MVP_phenotyping_final$population <- factor(MVP_phenotyping_final$population, levels = c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME", "H1-LARMIX","H2-SEEDMIX"))
@@ -51,7 +54,7 @@ data202405$population <- factor(data202405$population, levels = c("W1-TX", "W2-L
 data202411$population <- factor(data202411$population, levels = c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME", "H1-LARMIX", "H2-SEEDMIX"))
 ```
 
-### Plots
+## Plots
 This creates boxplots of the condition index by population, with unique colors for LEW and YR. 
 
 ```{r}

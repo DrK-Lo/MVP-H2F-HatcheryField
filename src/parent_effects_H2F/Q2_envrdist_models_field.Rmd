@@ -207,10 +207,10 @@ surv_lew_dist <- rbind(surv_lew_resid_dist_df, data.frame(resid_surv = surv_lew_
                                         t = 2,
                                         pop = t2_lew$pop),
       data.frame(resid_surv = surv_lew_t3_gen$residuals,
-                 dist = t2_lew$dist_LEW, 
-                 surv = t2_lew$surv,
+                 dist = t3_lew$dist_LEW, 
+                 surv = t3_lew$surv,
                  t = 3,
-                 pop = t2_lew$pop))
+                 pop = t3_lew$pop))
 surv_lew_dist$bag_site <- "Lewisetta"
 ```
 
@@ -525,7 +525,7 @@ Anova(len_t3_yrk_s)
 sink()
 
 # save residuals as well for supp fig
-write.csv(len_dist_resid, "results/performance_H2F/residuals_distance_vs_length.csv", row.names = F)
+write.csv(len_dist_resid, "results/parent_effects_H2F/residuals_distance_vs_length.csv", row.names = F)
 ```
 
 ##Figure product - Lewisetta survival

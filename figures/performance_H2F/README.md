@@ -1,2 +1,0 @@
-# Performance in the Hatchery and Field
-Figures in this folder describe oyster performance in terms of shell length and survival in the VIMS ABC nursery and hatchery and in the field sites in the York and Lewisetta Rivers. They help answer the question: What is the extent of differences in survival and growth among oysters from different parental groups through time in the hatchery and at different field sites?
