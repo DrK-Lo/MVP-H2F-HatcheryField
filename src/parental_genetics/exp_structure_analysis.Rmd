@@ -6,7 +6,7 @@ output: pdf_document
 ---
 
 This file creates an sNMF admixture plots and ancestry pie charts. The analysis is from MGE's 
-code in "updated_genetics_experimental.R." NM modified the code for plotting for this project. 
+code in "updated_genetics_experimental.R." NM modified the code for plotting for this project.
 
 ## Load packages
 ```{r setup, include=FALSE}
@@ -96,12 +96,12 @@ pca_plot3 <- ggplot(pca_data, aes(x = PC1, y = PC2, color = ID_SiteDate)) +
 
 pca_plot3
 
-ggsave("parental_pca.pdf",
-       plot = pca_plot3,
-       device = "pdf",
-       path = "figures/envr_of_origin",
-       height = 4,
-       width = 5)
+# ggsave("parental_pca.pdf",
+#        plot = pca_plot3,
+#        device = "pdf",
+#        path = "figures/envr_of_origin",
+#        height = 4,
+#        width = 5)
 ```
 
 ```{r}

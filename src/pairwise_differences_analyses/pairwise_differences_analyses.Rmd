@@ -139,33 +139,6 @@ fst_mat <- readRDS(file.path("results", "parental_genetics", "20250606_fst_resul
 fst_mat <- fst_mat[POP_ORDER, POP_ORDER]
 ```
 
-```{r}
-
-
-# Compute bag means from new individual-level data
-new_bag_means <- field_length %>%
-  group_by(bags_label, t) %>%
-  summarise(new_mean = mean(length, na.rm = TRUE),
-            n_new = n(), .groups = "drop") %>%
-  arrange(bags_label, t)
-
-# Load old bag means
-old_data <- read.csv("data/performance_H2F/lengths_bags_022025.csv", row.names = 1)
-
-# Join and compare
-comparison <- old_data %>%
-  rename(bags_label = bag, old_mean = length) %>%
-  left_join(new_bag_means, by = c("bags_label", "monitoring_event" = "t")) %>%
-  mutate(diff = round(new_mean - old_mean, 4))
-
-# Show any mismatches
-comparison %>% filter(abs(diff) > 0.001)
-
-# If there are differences, it's the input data
-# If they match perfectly, it's something in the downstream code
-
-```
-
 ## Data preparation
 
 ### Hatchery data
@@ -209,7 +182,7 @@ clean_field <- function(df) {
     dplyr::rename(site_name = pop, monitoring_event = t)
 }
 
-# field length: two-step average (individual → bag mean → group mean)
+# field length: two-step average (individual, bag mean, group mean)
 field_length_list <- field_length %>%
   clean_field() %>%
   group_by(monitoring_event, bag_site, site_name, bags_label) %>%
@@ -225,7 +198,8 @@ field_survival_list <- field_survival %>%
   summarise(value = mean(surv, na.rm = TRUE), .groups = "drop") %>%
   split_field_data("surv", "bag_site")
 ```
-### Environmental-of-origin
+
+### Environment-of-origin
 ```{r envr-data}
 # add sampling site latitudes from Table 1 of Nicole's thesis
 envr <- envr_summary %>%
@@ -239,7 +213,6 @@ surv_length_envr <- envr %>%
   left_join(means_mm_78 %>% dplyr::rename(mean_length_mm_78 = mean_length), by = "site_name") %>%
   left_join(surv_day21, by = "site_name")
 
-#write.csv(surv_length_envr, file.path("data", "parent_effects_H2F", "survival_length_envr_data.csv"), row.names = FALSE)
 ```
 
 ## Build distance matrices
@@ -316,8 +289,8 @@ ggsave(file.path("figures", "pairwise_differences_analyses", "Fig4B_envr_dist_he
 response_heatmaps <- list(
   FigS10A_length_lew = plot_heatmap(dist_matrices$len_event3_lewisetta, "Euclidean distance\nin shell length"),
   FigS10B_length_york = plot_heatmap(dist_matrices$len_event3_yorkriver, "Euclidean distance\nin shell length"),
-  Fig3C_survival_lew = plot_heatmap(dist_matrices$surv_event3_lewisetta, "Euclidean distance\nin survival"),
-  Fig3D_survival_york = plot_heatmap(dist_matrices$surv_event3_yorkriver, "Euclidean distance\nin survival")
+  Fig4C_survival_lew = plot_heatmap(dist_matrices$surv_event3_lewisetta, "Euclidean distance\nin survival"),
+  Fig4D_survival_york = plot_heatmap(dist_matrices$surv_event3_yorkriver, "Euclidean distance\nin survival")
 )
 
 iwalk(response_heatmaps, ~ ggsave(
