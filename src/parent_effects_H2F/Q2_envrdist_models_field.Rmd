@@ -727,3 +727,200 @@ ggsave("FigS5D_york_len_envrdist.pdf",
        height = 4,
        width = 7)
 ```
+
+# Supp table of all Q2 models
+
+```{r}
+
+## Generate supplementary table of all Q2 model results
+## Run this AFTER all model chunks in Q2_envr_quantile_models_field.Rmd,
+## Q2_envrdist_models_field.Rmd, and Q2_condition_index_models_field.Rmd have executed.
+
+library(broom)
+library(broom.mixed)
+library(dplyr)
+library(car)
+
+# helper for lm models (survival)
+extract_lm <- function(mod, mod_scaled, response, site, timepoint, model_type, dropped) {
+  # unscaled
+  u <- tidy(mod) %>% filter(term != "(Intercept)")
+  # scaled
+  s <- tidy(mod_scaled) %>% filter(term != "(Intercept)")
+  
+  # clean up scaled term names to match unscaled
+  s$term_clean <- gsub("scale\\(|\\)", "", s$term)
+  u$term_clean <- u$term
+  
+  merged <- left_join(u, s, by = "term_clean", suffix = c("", "_scaled"))
+  
+  data.frame(
+    response = response,
+    site = site,
+    timepoint = timepoint,
+    model_approach = model_type,
+    predictor = merged$term,
+    estimate = round(merged$estimate, 4),
+    se = round(merged$std.error, 4),
+    test_stat = round(merged$statistic, 3),
+    test_type = "t",
+    p_value = signif(merged$p.value, 4),
+    scaled_estimate = round(merged$estimate_scaled, 4),
+    scaled_se = round(merged$std.error_scaled, 4),
+    dropped_vars = dropped,
+    stringsAsFactors = FALSE
+  )
+}
+
+# helper function for lmer models (length, CI) — uses Wald chi-sq from car::Anova
+extract_lmer <- function(mod, mod_scaled, response, site, timepoint, model_type, dropped) {
+  # unscaled fixed effects
+  u <- broom.mixed::tidy(mod) %>% 
+    filter(effect == "fixed", term != "(Intercept)")
+  # scaled fixed effects
+  s <- broom.mixed::tidy(mod_scaled) %>% 
+    filter(effect == "fixed", term != "(Intercept)")
+  
+  # Wald chi-sq from unscaled model
+  aov_tab <- as.data.frame(Anova(mod))
+  aov_tab$term <- rownames(aov_tab)
+  
+  # clean names for matching
+  s$term_clean <- gsub("scale\\(|\\)", "", s$term)
+  u$term_clean <- u$term
+  
+  merged <- left_join(u, s, by = "term_clean", suffix = c("", "_scaled"))
+  
+  # match anova results
+  merged <- left_join(merged, aov_tab, by = c("term_clean" = "term"))
+  
+  data.frame(
+    response = response,
+    site = site,
+    timepoint = timepoint,
+    model_approach = model_type,
+    predictor = merged$term,
+    estimate = round(merged$estimate, 4),
+    se = round(merged$std.error, 4),
+    test_stat = round(merged$Chisq, 3),
+    test_type = "chisq",
+    p_value = signif(merged$`Pr(>Chisq)`, 4),
+    scaled_estimate = round(merged$estimate_scaled, 4),
+    scaled_se = round(merged$std.error_scaled, 4),
+    dropped_vars = dropped,
+    stringsAsFactors = FALSE
+  )
+}
+
+# MODEL 1: ENVIRONMENTAL QUANTILES
+
+# Survival (lm)
+surv_rows <- bind_rows(
+  extract_lm(surv_GE1.1.lew, surv_t1_lew_scaled, "Survival", "Lewisetta", "t1 (Nov 2023)", "Quantiles", "sal_Q90, temp_Q10"),
+  extract_lm(surv_GE2.0.lew, surv_t2_lew_scaled, "Survival", "Lewisetta", "t2 (May 2024)", "Quantiles", "sal_Q90"),
+  extract_lm(surv_GE3.lew,   surv_t3_lew_scaled, "Survival", "Lewisetta", "t3 (Nov 2024)", "Quantiles", "none"),
+  extract_lm(surv_GE1.0.york, surv_t1_yrk_scaled, "Survival", "York River", "t1 (Nov 2023)", "Quantiles", "sal_Q90"),
+  extract_lm(surv_GE2.0.york, surv_t2_yrk_scaled, "Survival", "York River", "t2 (May 2024)", "Quantiles", "sal_Q90"),
+  extract_lm(surv_GE3.0.york, surv_t3_yrk_scaled, "Survival", "York River", "t3 (Nov 2024)", "Quantiles", "ho")
+)
+
+# Length (lmer)
+len_rows <- bind_rows(
+  extract_lmer(len_GE1.0.lew, len_t1_lew_scaled, "Length", "Lewisetta", "t1 (Nov 2023)", "Quantiles", "ar, sal_Q90, temp_Q10"),
+  extract_lmer(len_GE2.0.lew, len_t2_lew_scaled, "Length", "Lewisetta", "t2 (May 2024)", "Quantiles", "sal_Q90, temp_Q10"),
+  extract_lmer(len_GE3.0.lew, len_t3_lew_scaled, "Length", "Lewisetta", "t3 (Nov 2024)", "Quantiles", "temp_Q10"),
+  extract_lmer(len_GE1.0.york, len_t1_yrk_scaled, "Length", "York River", "t1 (Nov 2023)", "Quantiles", "sal_Q90, temp_Q10"),
+  extract_lmer(len_GE2.york,   len_t2_yrk_scaled, "Length", "York River", "t2 (May 2024)", "Quantiles", "none"),
+  extract_lmer(len_GE3.0.york, len_t3_yrk_scaled, "Length", "York River", "t3 (Nov 2024)", "Quantiles", "sal_Q90")
+)
+
+# Condition index (lmer)
+ci_rows <- bind_rows(
+  extract_lmer(ci_t1_lew2, ci_t1_lew_scaled, "Condition Index", "Lewisetta", "t1 (Nov 2023)", "Quantiles", "ar, sal_Q10, sal_Q90, temp_Q10"),
+  extract_lmer(ci_t2_lew2, ci_t2_lew_scaled, "Condition Index", "Lewisetta", "t2 (May 2024)", "Quantiles", "ar, sal_Q10, sal_Q90"),
+  extract_lmer(ci_t3_lew2, ci_t3_lew_scaled, "Condition Index", "Lewisetta", "t3 (Nov 2024)", "Quantiles", "ho, sal_Q90, temp_Q10"),
+  extract_lmer(ci_t1_yrk2, ci_t1_yrk_scaled, "Condition Index", "York River", "t1 (Nov 2023)", "Quantiles", "ar, sal_Q90, temp_Q10"),
+  extract_lmer(ci_t2_yrk2, ci_t2_yrk_scaled, "Condition Index", "York River", "t2 (May 2024)", "Quantiles", "ho, sal_Q10, sal_Q90, temp_Q10"),
+  extract_lmer(ci_t3_yrk2, ci_t3_yrk_scaled, "Condition Index", "York River", "t3 (Nov 2024)", "Quantiles", "ho, sal_Q90, temp_Q10")
+)
+
+# MODEL 2: ENVIRONMENTAL DISTANCE
+
+# Survival (lm)
+surv_dist_rows <- bind_rows(
+  extract_lm(surv_lew_t1.0, surv_t1_lew_s, "Survival", "Lewisetta", "t1 (Nov 2023)", "Env. Distance", "none"),
+  extract_lm(surv_lew_t2.0, surv_t2_lew_s, "Survival", "Lewisetta", "t2 (May 2024)", "Env. Distance", "none"),
+  extract_lm(surv_lew_t3.0, surv_t3_lew_s, "Survival", "Lewisetta", "t3 (Nov 2024)", "Env. Distance", "none"),
+  extract_lm(surv_yrk_t1.1, surv_t1_yrk_s, "Survival", "York River", "t1 (Nov 2023)", "Env. Distance", "ho"),
+  extract_lm(surv_yrk_t2.1, surv_t2_yrk_s, "Survival", "York River", "t2 (May 2024)", "Env. Distance", "ho"),
+  extract_lm(surv_yrk_t3.0, surv_t3_yrk_s, "Survival", "York River", "t3 (Nov 2024)", "Env. Distance", "none")
+)
+
+# Length (lmer)
+len_dist_rows <- bind_rows(
+  extract_lmer(len_lew_t1.0, len_t1_lew_s, "Length", "Lewisetta", "t1 (Nov 2023)", "Env. Distance", "none"),
+  extract_lmer(len_lew_t2.1, len_t2_lew_s, "Length", "Lewisetta", "t2 (May 2024)", "Env. Distance", "dist_LEW"),
+  extract_lmer(len_lew_t3.1, len_t3_lew_s, "Length", "Lewisetta", "t3 (Nov 2024)", "Env. Distance", "dist_LEW"),
+  extract_lmer(len_yrk_t1.0, len_t1_yrk_s, "Length", "York River", "t1 (Nov 2023)", "Env. Distance", "none"),
+  extract_lmer(len_yrk_t2.0, len_t2_yrk_s, "Length", "York River", "t2 (May 2024)", "Env. Distance", "none"),
+  extract_lmer(len_yrk_t3.1, len_t3_yrk_s, "Length", "York River", "t3 (Nov 2024)", "Env. Distance", "dist_YRK")
+)
+
+# Condition index (lmer)
+ci_dist_rows <- bind_rows(
+  extract_lmer(dist_t1_lew2, dist_t1_lew_scaled, "Condition Index", "Lewisetta", "t1 (Nov 2023)", "Env. Distance", "ar, dist_LEW"),
+  extract_lmer(dist_t2_lew2, dist_t2_lew_scaled, "Condition Index", "Lewisetta", "t2 (May 2024)", "Env. Distance", "ar, dist_LEW"),
+  extract_lmer(dist_t3_lew,  dist_t3_lew_scaled, "Condition Index", "Lewisetta", "t3 (Nov 2024)", "Env. Distance", "none"),
+  # YR t1 had nothing significant — note this
+  extract_lmer(dist_t2_yrk2, dist_t2_yrk_scaled, "Condition Index", "York River", "t2 (May 2024)", "Env. Distance", "ho"),
+  extract_lmer(dist_t3_yrk2, dist_t3_yrk_scaled, "Condition Index", "York River", "t3 (Nov 2024)", "Env. Distance", "dist_YRK")
+)
+
+# Add a note row for YR t1 CI distance model (nothing significant)
+yr_t1_ci_note <- data.frame(
+  response = "Condition Index", site = "York River", timepoint = "t1 (Nov 2023)",
+  model_approach = "Env. Distance", predictor = "none retained",
+  estimate = NA, se = NA, test_stat = NA, test_type = NA, p_value = NA,
+  scaled_estimate = NA, scaled_se = NA,
+  dropped_vars = "ho, ar, dist_YRK (only bag effect significant)",
+  stringsAsFactors = FALSE
+)
+
+ci_dist_rows <- bind_rows(yr_t1_ci_note, ci_dist_rows)
+
+# COMBINE ALL
+
+supp_table <- bind_rows(
+  surv_rows, len_rows, ci_rows,
+  surv_dist_rows, len_dist_rows, ci_dist_rows
+)
+
+# add significance stars
+supp_table$significance <- case_when(
+  supp_table$p_value < 0.001 ~ "***",
+  supp_table$p_value < 0.01  ~ "**",
+  supp_table$p_value < 0.05  ~ "*",
+  supp_table$p_value < 0.1   ~ ".",
+  TRUE ~ ""
+)
+
+# add model type column (lm vs lmer)
+supp_table$model_class <- ifelse(supp_table$response == "Survival", "lm", "lmer (bag random effect)")
+
+# reorder columns
+supp_table <- supp_table %>%
+  dplyr::select(response, model_approach, site, timepoint, model_class,
+         predictor, estimate, se, scaled_estimate, scaled_se,
+         test_type, test_stat, p_value, significance, dropped_vars)
+
+# sort
+supp_table <- supp_table %>%
+  arrange(model_approach, response, site, timepoint)
+
+# preview
+print(supp_table, n = 20)
+
+# Save
+write.csv(supp_table, "supp_files/4-Q2_all_model_results.csv", row.names = FALSE)
+
+```

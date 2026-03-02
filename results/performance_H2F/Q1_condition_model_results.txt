@@ -1,0 +1,296 @@
+Mixed model 3: CI ~ site * population + (1|bagID)
+
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: CI ~ site * population + (1 | bagID)
+   Data: data202411
+
+REML criterion at convergence: 762.5
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-1.9901 -0.6258 -0.0125  0.4861  6.9079 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ bagID    (Intercept) 0.06948  0.2636  
+ Residual             0.80022  0.8946  
+Number of obs: 286, groups:  bagID, 60
+
+Fixed effects:
+                               Estimate Std. Error        df t value Pr(>|t|)    
+(Intercept)                    2.970001   0.276603 37.173018  10.737 6.01e-13 ***
+siteYR                        -1.561497   0.391176 37.173018  -3.992 0.000297 ***
+populationW2-LA               -0.412163   0.391176 37.173018  -1.054 0.298844    
+populationW3-FL                0.828916   0.391176 37.173018   2.119 0.040830 *  
+populationW4-VA                0.585410   0.391176 37.173018   1.497 0.142957    
+populationS1-LOLA              0.101409   0.391176 37.173018   0.259 0.796879    
+populationS2-DEBY              0.210459   0.391176 37.173018   0.538 0.593774    
+populationW5-NH               -0.593367   0.417833 44.898149  -1.420 0.162484    
+populationW6-ME                0.618835   0.408755 43.287121   1.514 0.137307    
+populationH1-HYBRIDMIX         0.410340   0.391176 37.173018   1.049 0.300956    
+populationH2-SEEDMIX          -0.001588   0.391176 37.173018  -0.004 0.996783    
+siteYR:populationW2-LA         0.134539   0.553207 37.173018   0.243 0.809188    
+siteYR:populationW3-FL         0.527244   0.553207 37.173018   0.953 0.346711    
+siteYR:populationW4-VA         0.323535   0.553207 37.173018   0.585 0.562192    
+siteYR:populationS1-LOLA       0.084407   0.556795 38.047793   0.152 0.880308    
+siteYR:populationS2-DEBY       1.647753   0.556795 38.047793   2.959 0.005280 ** 
+siteYR:populationW5-NH         0.761866   0.589322 45.847464   1.293 0.202563    
+siteYR:populationW6-ME        -0.044370   0.569282 41.094273  -0.078 0.938253    
+siteYR:populationH1-HYBRIDMIX  0.922418   0.553207 37.173018   1.667 0.103839    
+siteYR:populationH2-SEEDMIX    0.748711   0.553207 37.173018   1.353 0.184100    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+
+Type III Wald chi-square tests
+
+Analysis of Deviance Table (Type III Wald chisquare tests)
+
+Response: CI
+                  Chisq Df Pr(>Chisq)    
+(Intercept)     115.292  1  < 2.2e-16 ***
+site             15.934  1  6.557e-05 ***
+population       22.097  9   0.008576 ** 
+site:population  15.856  9   0.069952 .  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+
+ Pairwise comparisons: site.pop (Tukey-adjusted) 
+
+$emmeans
+ site.pop    emmean    SE   df lower.CL upper.CL
+ LEW.DEBY      3.18 0.277 37.3    2.620     3.74
+ LEW.FL        3.80 0.277 37.3    3.239     4.36
+ LEW.LA        2.56 0.277 37.3    1.998     3.12
+ LEW.LARMIX    3.38 0.277 37.3    2.820     3.94
+ LEW.LOLA      3.07 0.277 37.3    2.511     3.63
+ LEW.ME        3.59 0.301 49.7    2.984     4.19
+ LEW.NH        2.38 0.314 52.7    1.747     3.01
+ LEW.SEEDMIX   2.97 0.277 37.3    2.408     3.53
+ LEW.TX        2.97 0.277 37.3    2.410     3.53
+ LEW.VA        3.56 0.277 37.3    2.995     4.12
+ YR.DEBY       3.27 0.284 40.8    2.693     3.84
+ YR.FL         2.76 0.277 37.3    2.204     3.32
+ YR.LA         1.13 0.277 37.3    0.571     1.69
+ YR.LARMIX     2.74 0.277 37.3    2.181     3.30
+ YR.LOLA       1.59 0.284 40.8    1.021     2.17
+ YR.ME         1.98 0.284 40.8    1.410     2.56
+ YR.NH         1.58 0.310 57.3    0.956     2.20
+ YR.SEEDMIX    2.16 0.277 37.3    1.595     2.72
+ YR.TX         1.41 0.277 37.3    0.848     1.97
+ YR.VA         2.32 0.277 37.3    1.757     2.88
+
+Degrees-of-freedom method: kenward-roger 
+Confidence level used: 0.95 
+
+$contrasts
+ contrast                 estimate    SE   df t.ratio p.value
+ LEW.DEBY - LEW.FL        -0.61846 0.391 37.3  -1.581  0.9845
+ LEW.DEBY - LEW.LA         0.62262 0.391 37.3   1.592  0.9834
+ LEW.DEBY - LEW.LARMIX    -0.19988 0.391 37.3  -0.511  1.0000
+ LEW.DEBY - LEW.LOLA       0.10905 0.391 37.3   0.279  1.0000
+ LEW.DEBY - LEW.ME        -0.40838 0.409 43.4  -0.999  1.0000
+ LEW.DEBY - LEW.NH         0.80383 0.418 45.0   1.921  0.9154
+ LEW.DEBY - LEW.SEEDMIX    0.21205 0.391 37.3   0.542  1.0000
+ LEW.DEBY - LEW.TX         0.21046 0.391 37.3   0.538  1.0000
+ LEW.DEBY - LEW.VA        -0.37495 0.391 37.3  -0.959  1.0000
+ LEW.DEBY - YR.DEBY       -0.08626 0.396 39.0  -0.218  1.0000
+ LEW.DEBY - YR.FL          0.41579 0.391 37.3   1.063  0.9999
+ LEW.DEBY - YR.LA          2.04958 0.391 37.3   5.240  0.0009
+ LEW.DEBY - YR.LARMIX      0.43920 0.391 37.3   1.123  0.9997
+ LEW.DEBY - YR.LOLA        1.58614 0.396 39.0   4.002  0.0294
+ LEW.DEBY - YR.ME          1.19749 0.396 39.0   3.022  0.2702
+ LEW.DEBY - YR.NH          1.60346 0.416 46.9   3.857  0.0378
+ LEW.DEBY - YR.SEEDMIX     1.02483 0.391 37.3   2.620  0.5099
+ LEW.DEBY - YR.TX          1.77196 0.391 37.3   4.530  0.0074
+ LEW.DEBY - YR.VA          0.86301 0.391 37.3   2.206  0.7794
+ LEW.FL - LEW.LA           1.24108 0.391 37.3   3.173  0.2050
+ LEW.FL - LEW.LARMIX       0.41858 0.391 37.3   1.070  0.9999
+ LEW.FL - LEW.LOLA         0.72751 0.391 37.3   1.860  0.9321
+ LEW.FL - LEW.ME           0.21008 0.409 43.4   0.514  1.0000
+ LEW.FL - LEW.NH           1.42228 0.418 45.0   3.400  0.1203
+ LEW.FL - LEW.SEEDMIX      0.83050 0.391 37.3   2.123  0.8249
+ LEW.FL - LEW.TX           0.82892 0.391 37.3   2.119  0.8270
+ LEW.FL - LEW.VA           0.24351 0.391 37.3   0.622  1.0000
+ LEW.FL - YR.DEBY          0.53220 0.396 39.0   1.343  0.9975
+ LEW.FL - YR.FL            1.03425 0.391 37.3   2.644  0.4939
+ LEW.FL - YR.LA            2.66804 0.391 37.3   6.821  <.0001
+ LEW.FL - YR.LARMIX        1.05765 0.391 37.3   2.704  0.4547
+ LEW.FL - YR.LOLA          2.20460 0.396 39.0   5.563  0.0003
+ LEW.FL - YR.ME            1.81595 0.396 39.0   4.582  0.0060
+ LEW.FL - YR.NH            2.22191 0.416 46.9   5.345  0.0004
+ LEW.FL - YR.SEEDMIX       1.64329 0.391 37.3   4.201  0.0182
+ LEW.FL - YR.TX            2.39041 0.391 37.3   6.111  0.0001
+ LEW.FL - YR.VA            1.48147 0.391 37.3   3.787  0.0524
+ LEW.LA - LEW.LARMIX      -0.82250 0.391 37.3  -2.103  0.8354
+ LEW.LA - LEW.LOLA        -0.51357 0.391 37.3  -1.313  0.9980
+ LEW.LA - LEW.ME          -1.03100 0.409 43.4  -2.521  0.5755
+ LEW.LA - LEW.NH           0.18120 0.418 45.0   0.433  1.0000
+ LEW.LA - LEW.SEEDMIX     -0.41058 0.391 37.3  -1.050  0.9999
+ LEW.LA - LEW.TX          -0.41216 0.391 37.3  -1.054  0.9999
+ LEW.LA - LEW.VA          -0.99757 0.391 37.3  -2.550  0.5568
+ LEW.LA - YR.DEBY         -0.70888 0.396 39.0  -1.789  0.9515
+ LEW.LA - YR.FL           -0.20683 0.391 37.3  -0.529  1.0000
+ LEW.LA - YR.LA            1.42696 0.391 37.3   3.648  0.0733
+ LEW.LA - YR.LARMIX       -0.18342 0.391 37.3  -0.469  1.0000
+ LEW.LA - YR.LOLA          0.96352 0.396 39.0   2.431  0.6372
+ LEW.LA - YR.ME            0.57487 0.396 39.0   1.451  0.9939
+ LEW.LA - YR.NH            0.98083 0.416 46.9   2.360  0.6858
+ LEW.LA - YR.SEEDMIX       0.40221 0.391 37.3   1.028  0.9999
+ LEW.LA - YR.TX            1.14933 0.391 37.3   2.938  0.3151
+ LEW.LA - YR.VA            0.24039 0.391 37.3   0.615  1.0000
+ LEW.LARMIX - LEW.LOLA     0.30893 0.391 37.3   0.790  1.0000
+ LEW.LARMIX - LEW.ME      -0.20850 0.409 43.4  -0.510  1.0000
+ LEW.LARMIX - LEW.NH       1.00371 0.418 45.0   2.399  0.6592
+ LEW.LARMIX - LEW.SEEDMIX  0.41193 0.391 37.3   1.053  0.9999
+ LEW.LARMIX - LEW.TX       0.41034 0.391 37.3   1.049  0.9999
+ LEW.LARMIX - LEW.VA      -0.17507 0.391 37.3  -0.448  1.0000
+ LEW.LARMIX - YR.DEBY      0.11362 0.396 39.0   0.287  1.0000
+ LEW.LARMIX - YR.FL        0.61568 0.391 37.3   1.574  0.9852
+ LEW.LARMIX - YR.LA        2.24946 0.391 37.3   5.751  0.0002
+ LEW.LARMIX - YR.LARMIX    0.63908 0.391 37.3   1.634  0.9785
+ LEW.LARMIX - YR.LOLA      1.78602 0.396 39.0   4.507  0.0074
+ LEW.LARMIX - YR.ME        1.39737 0.396 39.0   3.526  0.0951
+ LEW.LARMIX - YR.NH        1.80334 0.416 46.9   4.338  0.0097
+ LEW.LARMIX - YR.SEEDMIX   1.22471 0.391 37.3   3.131  0.2223
+ LEW.LARMIX - YR.TX        1.97184 0.391 37.3   5.041  0.0017
+ LEW.LARMIX - YR.VA        1.06289 0.391 37.3   2.717  0.4461
+ LEW.LOLA - LEW.ME        -0.51743 0.409 43.4  -1.265  0.9989
+ LEW.LOLA - LEW.NH         0.69478 0.418 45.0   1.661  0.9764
+ LEW.LOLA - LEW.SEEDMIX    0.10300 0.391 37.3   0.263  1.0000
+ LEW.LOLA - LEW.TX         0.10141 0.391 37.3   0.259  1.0000
+ LEW.LOLA - LEW.VA        -0.48400 0.391 37.3  -1.237  0.9991
+ LEW.LOLA - YR.DEBY       -0.19531 0.396 39.0  -0.493  1.0000
+ LEW.LOLA - YR.FL          0.30675 0.391 37.3   0.784  1.0000
+ LEW.LOLA - YR.LA          1.94053 0.391 37.3   4.961  0.0022
+ LEW.LOLA - YR.LARMIX      0.33015 0.391 37.3   0.844  1.0000
+ LEW.LOLA - YR.LOLA        1.47709 0.396 39.0   3.727  0.0590
+ LEW.LOLA - YR.ME          1.08844 0.396 39.0   2.747  0.4262
+ LEW.LOLA - YR.NH          1.49441 0.416 46.9   3.595  0.0744
+ LEW.LOLA - YR.SEEDMIX     0.91578 0.391 37.3   2.341  0.6967
+ LEW.LOLA - YR.TX          1.66291 0.391 37.3   4.251  0.0159
+ LEW.LOLA - YR.VA          0.75396 0.391 37.3   1.927  0.9103
+ LEW.ME - LEW.NH           1.21220 0.435 51.2   2.786  0.3939
+ LEW.ME - LEW.SEEDMIX      0.62042 0.409 43.4   1.517  0.9905
+ LEW.ME - LEW.TX           0.61883 0.409 43.4   1.513  0.9908
+ LEW.ME - LEW.VA           0.03342 0.409 43.4   0.082  1.0000
+ LEW.ME - YR.DEBY          0.32212 0.414 45.2   0.778  1.0000
+ LEW.ME - YR.FL            0.82417 0.409 43.4   2.015  0.8787
+ LEW.ME - YR.LA            2.45795 0.409 43.4   6.010  0.0001
+ LEW.ME - YR.LARMIX        0.84757 0.409 43.4   2.072  0.8527
+ LEW.ME - YR.LOLA          1.99452 0.414 45.2   4.819  0.0024
+ LEW.ME - YR.ME            1.60587 0.414 45.2   3.880  0.0365
+ LEW.ME - YR.NH            2.01183 0.432 53.5   4.652  0.0032
+ LEW.ME - YR.SEEDMIX       1.43321 0.409 43.4   3.504  0.0957
+ LEW.ME - YR.TX            2.18033 0.409 43.4   5.331  0.0005
+ LEW.ME - YR.VA            1.27139 0.409 43.4   3.109  0.2251
+ LEW.NH - LEW.SEEDMIX     -0.59178 0.418 45.0  -1.414  0.9957
+ LEW.NH - LEW.TX          -0.59337 0.418 45.0  -1.418  0.9956
+ LEW.NH - LEW.VA          -1.17878 0.418 45.0  -2.818  0.3779
+ LEW.NH - YR.DEBY         -0.89008 0.423 46.8  -2.103  0.8386
+ LEW.NH - YR.FL           -0.38803 0.418 45.0  -0.927  1.0000
+ LEW.NH - YR.LA            1.24575 0.418 45.0   2.978  0.2868
+ LEW.NH - YR.LARMIX       -0.36463 0.418 45.0  -0.872  1.0000
+ LEW.NH - YR.LOLA          0.78231 0.423 46.8   1.849  0.9385
+ LEW.NH - YR.ME            0.39367 0.423 46.8   0.930  1.0000
+ LEW.NH - YR.NH            0.79963 0.441 54.9   1.812  0.9499
+ LEW.NH - YR.SEEDMIX       0.22101 0.418 45.0   0.528  1.0000
+ LEW.NH - YR.TX            0.96813 0.418 45.0   2.314  0.7155
+ LEW.NH - YR.VA            0.05919 0.418 45.0   0.141  1.0000
+ LEW.SEEDMIX - LEW.TX     -0.00159 0.391 37.3  -0.004  1.0000
+ LEW.SEEDMIX - LEW.VA     -0.58700 0.391 37.3  -1.501  0.9910
+ LEW.SEEDMIX - YR.DEBY    -0.29830 0.396 39.0  -0.753  1.0000
+ LEW.SEEDMIX - YR.FL       0.20375 0.391 37.3   0.521  1.0000
+ LEW.SEEDMIX - YR.LA       1.83753 0.391 37.3   4.697  0.0046
+ LEW.SEEDMIX - YR.LARMIX   0.22715 0.391 37.3   0.581  1.0000
+ LEW.SEEDMIX - YR.LOLA     1.37409 0.396 39.0   3.467  0.1087
+ LEW.SEEDMIX - YR.ME       0.98544 0.396 39.0   2.487  0.5996
+ LEW.SEEDMIX - YR.NH       1.39141 0.416 46.9   3.347  0.1337
+ LEW.SEEDMIX - YR.SEEDMIX  0.81279 0.391 37.3   2.078  0.8476
+ LEW.SEEDMIX - YR.TX       1.55991 0.391 37.3   3.988  0.0317
+ LEW.SEEDMIX - YR.VA       0.65096 0.391 37.3   1.664  0.9744
+ LEW.TX - LEW.VA          -0.58541 0.391 37.3  -1.497  0.9912
+ LEW.TX - YR.DEBY         -0.29672 0.396 39.0  -0.749  1.0000
+ LEW.TX - YR.FL            0.20534 0.391 37.3   0.525  1.0000
+ LEW.TX - YR.LA            1.83912 0.391 37.3   4.702  0.0045
+ LEW.TX - YR.LARMIX        0.22874 0.391 37.3   0.585  1.0000
+ LEW.TX - YR.LOLA          1.37568 0.396 39.0   3.471  0.1077
+ LEW.TX - YR.ME            0.98703 0.396 39.0   2.491  0.5969
+ LEW.TX - YR.NH            1.39300 0.416 46.9   3.351  0.1325
+ LEW.TX - YR.SEEDMIX       0.81437 0.391 37.3   2.082  0.8456
+ LEW.TX - YR.TX            1.56150 0.391 37.3   3.992  0.0314
+ LEW.TX - YR.VA            0.65255 0.391 37.3   1.668  0.9738
+ LEW.VA - YR.DEBY          0.28869 0.396 39.0   0.728  1.0000
+ LEW.VA - YR.FL            0.79075 0.391 37.3   2.021  0.8734
+ LEW.VA - YR.LA            2.42453 0.391 37.3   6.198  0.0001
+ LEW.VA - YR.LARMIX        0.81415 0.391 37.3   2.081  0.8459
+ LEW.VA - YR.LOLA          1.96109 0.396 39.0   4.949  0.0020
+ LEW.VA - YR.ME            1.57244 0.396 39.0   3.968  0.0322
+ LEW.VA - YR.NH            1.97841 0.416 46.9   4.759  0.0027
+ LEW.VA - YR.SEEDMIX       1.39978 0.391 37.3   3.578  0.0861
+ LEW.VA - YR.TX            2.14691 0.391 37.3   5.488  0.0005
+ LEW.VA - YR.VA            1.23796 0.391 37.3   3.165  0.2082
+ YR.DEBY - YR.FL           0.50205 0.396 39.0   1.267  0.9988
+ YR.DEBY - YR.LA           2.13584 0.396 39.0   5.390  0.0005
+ YR.DEBY - YR.LARMIX       0.52545 0.396 39.0   1.326  0.9979
+ YR.DEBY - YR.LOLA         1.67240 0.401 40.8   4.167  0.0182
+ YR.DEBY - YR.ME           1.28375 0.401 40.8   3.199  0.1906
+ YR.DEBY - YR.NH           1.68971 0.420 48.8   4.018  0.0237
+ YR.DEBY - YR.SEEDMIX      1.11109 0.396 39.0   2.804  0.3906
+ YR.DEBY - YR.TX           1.85821 0.396 39.0   4.689  0.0044
+ YR.DEBY - YR.VA           0.94927 0.396 39.0   2.395  0.6613
+ YR.FL - YR.LA             1.63378 0.391 37.3   4.177  0.0194
+ YR.FL - YR.LARMIX         0.02340 0.391 37.3   0.060  1.0000
+ YR.FL - YR.LOLA           1.17034 0.396 39.0   2.953  0.3052
+ YR.FL - YR.ME             0.78170 0.396 39.0   1.973  0.8944
+ YR.FL - YR.NH             1.18766 0.416 46.9   2.857  0.3527
+ YR.FL - YR.SEEDMIX        0.60904 0.391 37.3   1.557  0.9867
+ YR.FL - YR.TX             1.35616 0.391 37.3   3.467  0.1108
+ YR.FL - YR.VA             0.44722 0.391 37.3   1.143  0.9997
+ YR.LA - YR.LARMIX        -1.61038 0.391 37.3  -4.117  0.0227
+ YR.LA - YR.LOLA          -0.46344 0.396 39.0  -1.169  0.9996
+ YR.LA - YR.ME            -0.85209 0.396 39.0  -2.150  0.8114
+ YR.LA - YR.NH            -0.44612 0.416 46.9  -1.073  0.9999
+ [ reached getOption("max.print") -- omitted 24 rows ]
+
+Degrees-of-freedom method: kenward-roger 
+P value adjustment: tukey method for comparing a family of 20 estimates 
+
+
+
+ Mixed model 4: CI ~ site * population * timepoint + (1|bagID) ===
+
+Type III Analysis of Variance Table with Satterthwaite's method
+                                  Sum Sq Mean Sq NumDF  DenDF F value    Pr(>F)    
+site                              21.615  21.615     1  29.48 20.9985 7.822e-05 ***
+population                        78.218   8.691     9  29.41  8.4432 4.201e-06 ***
+samplingTimePoint                 66.569  66.569     1 497.11 64.6720 6.522e-15 ***
+site:population                    4.437   0.493     9  29.41  0.4789    0.8769    
+site:samplingTimePoint            39.010  39.010     1 497.11 37.8979 1.537e-09 ***
+population:samplingTimePoint      56.088   6.232     9 444.11  6.0544 4.937e-08 ***
+site:population:samplingTimePoint 21.316   2.368     9 444.11  2.3010    0.0156 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+
+ Step reduction 
+
+Backward reduced random-effect table:
+
+            Eliminated npar  logLik    AIC    LRT Df Pr(>Chisq)  
+<none>                   42 -830.41 1744.8                       
+(1 | bagID)          0   41 -832.66 1747.3 4.4942  1    0.03401 *
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Backward reduced fixed-effect table:
+Degrees of freedom method: Satterthwaite 
+
+                                  Eliminated Sum Sq Mean Sq NumDF  DenDF F value Pr(>F)  
+site:population:samplingTimePoint          0 21.317  2.3685     9 444.11   2.301 0.0156 *
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Model found:
+CI ~ site * population * samplingTimePoint + (1 | bagID)

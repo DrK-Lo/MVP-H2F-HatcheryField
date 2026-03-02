@@ -171,7 +171,7 @@ This will be used to make a supplementary file for H2F and will be used to look 
 
 ```{r}
 
-write_csv(snp_annotated, file.path("supp files", "full_SNPs_outliers_annotated.csv"))
+write_csv(snp_annotated, file.path("supp_files", "5-full_SNPs_outliers_annotated.csv"))
 
 ```
 
@@ -243,8 +243,6 @@ snp_annotated_outliers <- snp_annotated %>%
   dplyr::select(LocusName, FST, gene_id, description)      # keep only SNP ID, Fst, and gene name
 
 length(unique(snp_annotated_outliers$LocusName)) # this is 6928 unique loci, with some repeats (data frame = 6981 rows)
-
-write_csv(snp_annotated, file.path("data", "putative_selection", "outlier_SNPs.csv"))
 
 ```
 

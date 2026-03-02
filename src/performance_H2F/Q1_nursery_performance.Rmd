@@ -116,6 +116,36 @@ se_mm <- aggregate(shell_length_mm ~ site_name + day_an, FUN = se, data = no_sma
 colnames(se_mm) <- c("site_name", "days", "se_length_mm")
 ```
 
+### End of hatchery shell length ANOVA
+
+```{r}
+
+# subset for days 15-21
+earlystage <- subset(no_small_df, day_an == "15-21")
+
+# ANOVA
+earlystage$site_name <- gsub("-", "_", earlystage$site_name)
+earlystage.lm <- lm(shell_length_mm ~ site_name, data = earlystage)
+shapiro.test(earlystage.lm$residuals)
+
+earlystage.anova3 <- Anova(lm(shell_length_mm ~ site_name, data = earlystage), type = 3)
+earlystage.anova3
+
+# Tukey post-hoc
+earlystage.anova <- aov(lm(shell_length_mm ~ site_name, data = earlystage))
+summary(earlystage.anova)
+earlystage_pval <- summary(earlystage.anova)[[1]][["Pr(>F)"]][1]
+
+earlystage.tuk <- TukeyHSD(x = earlystage.anova, conf.level = 0.95)
+earlystage_cld <- multcompLetters4(earlystage.anova, earlystage.tuk)
+earlystage_dt <- group_by(earlystage, site_name) %>%
+  summarise(m = mean(shell_length_mm)) %>%
+  arrange(desc(m))
+earlystage_cld <- as.data.frame.list(earlystage_cld$site_name)
+earlystage_dt$earlystage_cld <- earlystage_cld$Letters
+
+```
+
 ### Prepare pre-deployment (day 78) data
 ```{r subset_ages}
 #convert site_name and day from chr to factor
@@ -127,7 +157,7 @@ str(no_small_df)
 predep <- subset(no_small_df, day_an == "78")
 ```
 
-### Run ANOVA for end of hatchery (day 78) shell lengths
+### Run ANOVA for end of nursery (day 78) shell lengths
 ```{r}
 predep.lm <- lm(shell_length_mm ~ site_name, data = predep) #fit to lm
 predep.lm.resid <- predep.lm$residuals #save residuals

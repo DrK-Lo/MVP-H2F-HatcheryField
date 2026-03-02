@@ -74,7 +74,7 @@ data202411$population <- factor(data202411$population, levels = c("W1-TX", "W2-L
 ```{r}
 mixed.model.3 <- lmer(CI ~ site*population + (1 | bagID), data = data202411)
 summary(mixed.model.3)
-mm3_anova <- Anova(mixed.model.3, type = 3, ddf = "Satterthwaite")
+mm3_anova <- Anova(mixed.model.3, type = 3)
 
 mixed.model.3.site.pop = lmer(CI ~ site.pop + (1 | bagID), data = data202411) # build this as well to be able to compute pairwise differences between every site.pop combination 
 ```
@@ -108,6 +108,26 @@ mixed.model.4 = lmer(CI ~ site*population*samplingTimePoint + (1 | bagID), data 
 anova(mixed.model.4)
 step(mixed.model.4)
 ### confirms that current model is the best one 
+
+
+# sink model results
+sink("results/performance_H2F/Q1_condition_model_results.txt")
+
+cat("Mixed model 3: CI ~ site * population + (1|bagID)\n\n")
+print(summary(mixed.model.3))
+cat("\n\nType III Wald chi-square tests\n\n")
+print(mm3_anova)
+
+cat("\n\n Pairwise comparisons: site.pop (Tukey-adjusted) \n\n")
+print(mm3.site.pop.emmeans)
+
+cat("\n\n Mixed model 4: CI ~ site * population * timepoint + (1|bagID) ===\n\n")
+print(anova(mixed.model.4))
+
+cat("\n\n Step reduction \n\n")
+print(step(mixed.model.4))
+
+sink()
 ```
 
 ### Figure product: Condition index vs parental group
