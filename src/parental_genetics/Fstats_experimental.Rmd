@@ -17,7 +17,7 @@ knitr::opts_knit$set(root.dir = here::here())
 
 if (!require("pacman")) install.packages("pacman")
 
-packages <- c("here", "ggplot2", "hierfstat", "reshape2", "dplyr", "tidyr", "readr", "adegenet", "viridis", "OutFLANK")
+packages <- c("here", "ggplot2", "hierfstat", "reshape2", "dplyr", "tidyr", "readr", "adegenet", "viridis", "OutFLANK", "purrr")
 pacman::p_load(char = packages)
 
 # log versions for reproducibility
@@ -59,6 +59,63 @@ muts <- muts_maf_filtered
 # check dimensions
 dim(gen) # thinned - 160 individuals and 105356 SNPs
 dim(muts) # full mutation-level info - 154102 SNPs
+
+```
+
+## Generate supplementary SNP files
+
+We want one file that lists the SNPs and another file with the SNP ID and imputed matrix of genotypes, ideally as a vcf file. Let's add a column to the full SNP set that lists the SNPs that indicates whether or not the SNP is in the thinned SNP set.
+
+```{r}
+
+# file 1: SNP info with column indicating if the SNP is in the thinned set
+thinned_snp_ids <- colnames(gen)
+muts$in_thinned_set <- ifelse(muts$Affx.ID %in% thinned_snp_ids, "T", "F")
+table(muts$in_thinned_set)
+write.csv(muts, "supp_files/2-supplementary_snp_info.csv", row.names = FALSE)
+
+# file 2: VCF of full genotype matrix
+snp_ids <- colnames(full)
+snp_info <- muts[match(snp_ids, muts$Affx.ID), ]
+
+# extract REF and ALT from Sequence column (e.g., "...[C/T]...")
+snp_info$REF <- gsub(".*\\[([A-Z])/[A-Z]\\].*", "\\1", snp_info$Sequence)
+snp_info$ALT <- gsub(".*\\[[A-Z]/([A-Z])\\].*", "\\1", snp_info$Sequence)
+
+# convert 0/1/2 -> GT format
+gt_matrix <- apply(full, c(1, 2), function(x) {
+  switch(as.character(x), "0" = "0/0", "1" = "0/1", "2" = "1/1", "./.")
+})
+
+# build VCF
+vcf_df <- data.frame(
+  `#CHROM` = snp_info$Chromosome,
+  POS      = snp_info$Position,
+  ID       = snp_ids,
+  REF      = snp_info$REF,
+  ALT      = snp_info$ALT,
+  QUAL     = ".",
+  FILTER   = "PASS",
+  INFO     = ".",
+  FORMAT   = "GT",
+  check.names = FALSE
+)
+
+# append genotype columns
+gt_df <- as.data.frame(t(gt_matrix))
+colnames(gt_df) <- rownames(full)
+vcf_df <- cbind(vcf_df, gt_df)
+
+# write VCF
+vcf_file <- "supp_files/3-supplementary_genotypes.vcf"
+writeLines(c(
+  "##fileformat=VCFv4.2",
+  '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">',
+  '##INFO=<ID=.,Number=.,Type=.,Description="No additional info">',
+  '##source=Affymetrix_OysterCVI200K_array'
+), vcf_file)
+write.table(vcf_df, vcf_file, append = TRUE, sep = "\t",
+            row.names = FALSE, quote = FALSE)
 
 ```
 

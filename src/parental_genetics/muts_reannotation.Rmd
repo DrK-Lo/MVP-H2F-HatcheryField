@@ -222,14 +222,14 @@ snp_collapsed_export <- snp_collapsed %>%
 # data export
 write_csv(
   snp_collapsed_export,
-  file.path("supp files", "20251029_muts_reannotated.csv")
+  file.path("supp_files", "all_SNPs_reannotated.csv")
 )
 
 ```
 
 ```{r}
 # to recover the list structure, use this code: 
-snp_reloaded <- read_csv(file.path("supp files", "20251029_muts_reannotated.csv")) %>%
+snp_reloaded <- read_csv(file.path("supp_files", "all_SNPs_reannotated.csv")) %>%
   mutate(
     genes = strsplit(genes, "; "),
     go_terms = strsplit(go_terms, "; ")
