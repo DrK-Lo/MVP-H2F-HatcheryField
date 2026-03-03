@@ -1,5 +1,5 @@
 ---
-title: "Dermo_RFTM_H2F_NMedit"
+title: "Dermo_MSX_Field_H2F"
 author: "Nicole Mongillo & Camille Rumberger"
 date: "2026-02-13"
 output: pdf_document
@@ -9,7 +9,7 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-This Rmd is based on code produced by Madeline Eppley in the H2Fdisease_barplots.R file. NM has edited their code to create a plot of RFTM results for Dermo prevalence in Lewisetta and York River that matches H2F plot formatting.
+This Rmd is based on code produced by Madeline Eppley in the H2Fdisease_barplots.R file. NM has edited their code to create a plot of RFTM results for Dermo prevalence in Lewisetta and York River that matches H2F plot formatting. CR has added MSX prevalence.
 
 ##Load packages
 ```{r}
@@ -20,7 +20,7 @@ library(dplyr)
 ##Read in data
 ```{r}
 #set working directory
-setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField/data/disease")
+setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField")
 
 dermo_york <- read.csv("./H2F_dermo_york_RFTM.csv")
 dermo_lew <- read.csv("./H2F_lewisetta_dermo.csv")
