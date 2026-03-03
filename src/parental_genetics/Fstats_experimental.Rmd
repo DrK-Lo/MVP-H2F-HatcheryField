@@ -72,7 +72,7 @@ We want one file that lists the SNPs and another file with the SNP ID and impute
 thinned_snp_ids <- colnames(gen)
 muts$in_thinned_set <- ifelse(muts$Affx.ID %in% thinned_snp_ids, "T", "F")
 table(muts$in_thinned_set)
-write.csv(muts, "supp_files/2-supplementary_snp_info.csv", row.names = FALSE)
+write.csv(muts, "supp_files/1-supplementary_snp_info.csv", row.names = FALSE)
 
 # file 2: VCF of full genotype matrix
 snp_ids <- colnames(full)
@@ -107,7 +107,7 @@ colnames(gt_df) <- rownames(full)
 vcf_df <- cbind(vcf_df, gt_df)
 
 # write VCF
-vcf_file <- "supp_files/3-supplementary_genotypes.vcf"
+vcf_file <- "supp_files/2-supplementary_genotypes.vcf"
 writeLines(c(
   "##fileformat=VCFv4.2",
   '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">',

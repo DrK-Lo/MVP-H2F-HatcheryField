@@ -41,6 +41,20 @@ Then I can use LMMs to look at differences in survival by group.
 surv_mod_ord_rename <- read.csv("data/performance_H2F/field_surv_all_times.csv")[, -1]
 surv_mod_ord_rename$t <- as.factor(surv_mod_ord_rename$t)
 
+# calculate group min and max
+
+survival_range <- surv_mod_ord_rename %>%
+  group_by(bag_site, pop, t) %>%
+  summarise(
+    mean_surv = mean((surv*100), na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  filter(t == 3)
+
+```
+
+```{r}
+
 # analysis of fixed effects
 anova(lm(surv ~ pop + bag_site + t, data = surv_mod_ord_rename)) # all significant
 
@@ -144,6 +158,21 @@ I will then use LMMs to look at differences in length by grouping.
 
 ```{r}
 lengths_mod_narm_nodead <- read.csv("data/performance_H2F/field_length_all_times.csv")[, -1]
+lengths_mod_narm_nodead$t <- as.factor(lengths_mod_narm_nodead$t)
+
+# calculate group min and max
+
+length_range <- lengths_mod_narm_nodead %>%
+  group_by(bag_site, pop, t) %>%
+  summarise(
+    means_len = mean(length, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  filter(t == 3)
+
+```
+
+```{r}
 
 # analysis of fixed effects
 lengths_mod_narm_nodead$t <- as.factor(lengths_mod_narm_nodead$t)

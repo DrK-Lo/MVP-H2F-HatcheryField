@@ -57,22 +57,32 @@ env_dist <- read.csv("results/environment/envr_quantiles_dist_all.csv")
 colnames(gen_parents) <- c("pop","ho","exp_hs","ar")
 surv_mod_gen <- merge(surv_mod_ord_rename, gen_parents, by = "pop")
 
+length_summarized <- lengths_mod_narm_nodead %>%
+  group_by(bag_site, pop, t, bags_label) %>%
+  summarise(
+    mean_len = mean(length, na.rm = TRUE),
+    .groups = "drop"
+  ) 
+
+surv_len_mod_gen <- merge(length_summarized, surv_mod_gen,
+      by = c("pop", "bag_site", "bags_label", "t"))
+
 #clean env_dist. Remove all columns except distance to Lewisetta and distance to York and remove rows for LEW and YRK.
 env_dist_filter <- env_dist[c(1:8), c("X", "LEW", "YRK")]
 colnames(env_dist_filter) <- c("pop", "dist_LEW", "dist_YRK")
 
 #add environmental data to df
-surv_mod_gen_dist <- merge(surv_mod_gen, env_dist_filter, by = c("pop"))
+surv_mod_gen_dist <- merge(surv_len_mod_gen, env_dist_filter, by = c("pop"))
 ```
 
 ## Assess multicollinearity
 ```{r}
-cor_matrix_lew <- cor(surv_mod_gen_dist[,c("dist_LEW", "ho", "ar")])
+cor_matrix_lew <- cor(surv_mod_gen_dist[,c("dist_LEW", "ho", "ar", "surv", "mean_len")])
 
 #rename rows and columns
-colnames(cor_matrix_lew) <- c("Distance to Lewisetta","Heterozygosity","Allelic Richness")
+colnames(cor_matrix_lew) <- c("Distance to Lewisetta","Heterozygosity","Allelic richness", "Survival", "Mean length")
 
-rownames(cor_matrix_lew) <- c("Distance to Lewisetta","Heterozygosity","Allelic Richness")
+rownames(cor_matrix_lew) <- c("Distance to Lewisetta","Heterozygosity","Allelic richness", "Survival", "Mean length")
 
 pdf(file = "figures/parent_effects_H2F/FigS8A_corrplot_lew_envrdist_H0_Ar.pdf")
 
@@ -87,11 +97,11 @@ corrplot_lew <- corrplot(cor_matrix_lew,
 dev.off()
 #borderline collinearity with distance to Lew and ar (r = -0.69). 
 
-cor_matrix_yrk <- cor(surv_mod_gen_dist[,c("dist_YRK", "ho", "ar")])
+cor_matrix_yrk <- cor(surv_mod_gen_dist[,c("dist_YRK", "ho", "ar", "surv", "mean_len")])
 
-colnames(cor_matrix_yrk) <- c("Distance to York River","Heterozygosity","Allelic richness")
+colnames(cor_matrix_yrk) <- c("Distance to York River","Heterozygosity","Allelic richness", "Survival", "Mean length")
 
-rownames(cor_matrix_yrk) <- c("Distance to York","Heterozygosity","Allelic richness")
+rownames(cor_matrix_yrk) <- c("Distance to York River","Heterozygosity","Allelic richness", "Survival", "Mean length")
 
 pdf(file = "figures/parent_effects_H2F/FigS8B_corrplot_york_envrdist_H0_Ar.pdf")
 corrplot_yrk <- corrplot(cor_matrix_yrk,
@@ -921,6 +931,6 @@ supp_table <- supp_table %>%
 print(supp_table, n = 20)
 
 # Save
-write.csv(supp_table, "supp_files/4-Q2_all_model_results.csv", row.names = FALSE)
+write.csv(supp_table, "supp_files/3-Q2_all_model_results.csv", row.names = FALSE)
 
 ```

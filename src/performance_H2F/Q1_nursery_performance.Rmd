@@ -198,23 +198,80 @@ predep_dt$predep_cld <- predep_cld$Letters
 predep$shell_length_mm <- as.numeric(predep$shell_length_mm)
 ```
 
+### Figure product: hatchery length boxplot (day 15-21)
+```{r}
+earlystage <- earlystage %>% 
+  mutate(site_name = site_name %>% 
+           fct_relevel("W1_TX", "W2_LA", "W3_FL", "W4_VA", "S1_LOLA", "S2_DEBY", "W5_NH", "W6_ME", "H1_HYBRIDMIX"))
+
+earlystage$shell_length_mm <- as.numeric(earlystage$shell_length_mm)
+
+# plot
+earlystage_box <- ggplot(data = earlystage, aes(site_name, shell_length_mm)) +
+  geom_boxplot(
+    color = c("black"),
+    fill = c("#3e4989", "#31688e", "#26828e", "#1f9e89", "#440154", "#482878", "#35b779", "#6ece58", "#fde725"),
+    linewidth = .2) +
+  scale_x_discrete(
+    name = "Treatment group",
+    limits = c("W1_TX", "W2_LA", "W3_FL", "W4_VA", "S1_LOLA", "S2_DEBY", "W5_NH", "W6_ME", "H1_HYBRIDMIX"),
+    labels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME", "H1-HYBRIDMIX")
+  ) +
+  #  stat_summary(
+  #   fun.data = mean_se, fun.args = list(mult = 2), geom = "errorbar", width = 0.2, linewidth = .3,
+  #   color = c("white", "white", "white", "white", "white", "white", "black", "black", "black")
+  # ) +
+  # stat_summary(
+  #   fun = mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..),
+  #   width = 0.75, linewidth = .3, linetype = "solid",
+  #   color = c("white", "white", "white", "white", "white", "white", "black", "black", "black")
+  # ) +
+  ylab("Shell length (mm)") +
+  geom_text(data = earlystage_dt, size = 3, aes(label = earlystage_cld, y = Inf, x = site_name), vjust = 1.5) +
+  theme_bw() +
+  theme(
+    plot.subtitle = element_text(size = 9),
+    axis.title = element_text(size = 11),
+    axis.text = element_text(color = "black", size = 10),
+    axis.text.x = element_text(angle = 30, hjust = 1),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+earlystage_box
+
+ggsave("FigS3_hatchery_length.pdf",
+       plot = earlystage_box,
+       device = "pdf",
+       path = "figures/performance_H2F",
+       height = 4,
+       width = 6)
+```
+
 ### Figure product: pre-deployment length boxplot
 ```{r predep_boxplot}
 predep <- predep %>% 
   mutate(site_name = site_name %>% 
            fct_relevel("W1_TX", "W2_LA", "W3_FL", "W4_VA", "S1_LOLA", "S2_DEBY", "W5_NH", "W6_ME", "H1_HYBRIDMIX"))
 
-#plot. fatten = NULL will remove the median lines in each box, allowing me to display the mean instead. Making fatten = NULL will result in warning messages, but that's ok.
 predep_box <- ggplot(data = predep, aes(site_name, shell_length_mm))+
-  geom_boxplot(color = c("#3e4989", "#31688e", "#26828e", "#1f9e89","#440154","#482878",  "#35b779", "#6ece58", "#fde725"), fill = c("#3e4989", "#31688e", "#26828e", "#1f9e89","#440154","#482878",  "#35b779", "#6ece58", "#fde725"), linewidth = .2, fatten = NULL)+
-    scale_x_discrete(name = "Treatment group", limits = c("W1_TX", "W2_LA","W3_FL", "W4_VA", "S1_LOLA", "S2_DEBY", "W5_NH", "W6_ME", "H1_HYBRIDMIX"), labels = c("W1-TX","W2-LA","W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME", "H1-HYBRIDMIX"))+
-  stat_summary(fun.data = mean_se, geom = "errorbar", width = 0.2, linewidth = .3, color = c("white", "white", "white", "white", "white", "white", "black", "black", "black"))+
-  stat_summary(fun = mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..), width = 0.75, linewidth = .3, linetype = "solid", color = c("white", "white", "white", "white", "white", "white", "black", "black", "black"))+
-  ylab("Shell Length (mm)")+
-  labs(subtitle = "p < 0.001")+
-  ylim(c(0,32))+
-  geom_text(data = predep_dt, size = 3, aes(label = predep_cld, y = 29, x = site_name), vjust = -0.5)+
-  ggtitle("Shell length, end of nursery stage (day 77)")+
+  geom_boxplot(color = c("black"), fill = c("#3e4989", "#31688e", "#26828e", "#1f9e89","#440154","#482878",  "#35b779", "#6ece58", "#fde725"), linewidth = .2)+
+    scale_x_discrete(
+    name = "Treatment group",
+    limits = c("W1_TX", "W2_LA", "W3_FL", "W4_VA", "S1_LOLA", "S2_DEBY", "W5_NH", "W6_ME", "H1_HYBRIDMIX"),
+    labels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME", "H1-HYBRIDMIX")
+  ) +
+  # stat_summary(
+  #   fun.data = mean_se, fun.args = list(mult = 2), geom = "errorbar", width = 0.2, linewidth = .3,
+  #   color = c("white", "white", "white", "white", "white", "white", "black", "black", "black")
+  # ) +
+  # stat_summary(
+  #   fun = mean, geom = "errorbar", aes(ymax = ..y.., ymin = ..y..),
+  #   width = 0.75, linewidth = .3, linetype = "solid",
+  #   color = c("white", "white", "white", "white", "white", "white", "black", "black", "black")
+  # ) +
+  ylab("Shell length (mm)")+
+  geom_text(data = predep_dt, size = 3, aes(label = predep_cld, y = Inf, x = site_name), vjust = 1.5)+
   theme_bw()+
   theme(plot.subtitle = element_text(size = 9), 
         axis.title = element_text(size = 11), 
