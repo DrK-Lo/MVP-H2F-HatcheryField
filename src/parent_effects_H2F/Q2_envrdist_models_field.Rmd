@@ -73,11 +73,15 @@ colnames(env_dist_filter) <- c("pop", "dist_LEW", "dist_YRK")
 
 #add environmental data to df
 surv_mod_gen_dist <- merge(surv_len_mod_gen, env_dist_filter, by = c("pop"))
+
+# Subset by deployment site
+df_lew <- surv_mod_gen_dist %>% filter(bag_site == "Lewisetta")
+df_yrk <- surv_mod_gen_dist %>% filter(bag_site == "YorkRiver")
 ```
 
 ## Assess multicollinearity
 ```{r}
-cor_matrix_lew <- cor(surv_mod_gen_dist[,c("dist_LEW", "ho", "ar", "surv", "mean_len")])
+cor_matrix_lew <- cor(df_lew[,c("dist_LEW", "ho", "ar", "surv", "mean_len")])
 
 #rename rows and columns
 colnames(cor_matrix_lew) <- c("Distance to Lewisetta","Heterozygosity","Allelic richness", "Survival", "Mean length")
@@ -97,7 +101,7 @@ corrplot_lew <- corrplot(cor_matrix_lew,
 dev.off()
 #borderline collinearity with distance to Lew and ar (r = -0.69). 
 
-cor_matrix_yrk <- cor(surv_mod_gen_dist[,c("dist_YRK", "ho", "ar", "surv", "mean_len")])
+cor_matrix_yrk <- cor(df_yrk[,c("dist_YRK", "ho", "ar", "surv", "mean_len")])
 
 colnames(cor_matrix_yrk) <- c("Distance to York River","Heterozygosity","Allelic richness", "Survival", "Mean length")
 

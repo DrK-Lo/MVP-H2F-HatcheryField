@@ -5,27 +5,36 @@ date: "2026-02-13"
 output: pdf_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 This Rmd is based on code produced by Madeline Eppley in the H2Fdisease_barplots.R file. NM has edited their code to create a plot of RFTM results for Dermo prevalence in Lewisetta and York River that matches H2F plot formatting. CR has added MSX prevalence.
 
 ##Load packages
-```{r}
-library(ggplot2)
-library(dplyr)
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Set working directory relative to project root
+knitr::opts_knit$set(root.dir = here::here())
+
+if (!require("pacman")) install.packages("pacman")
+
+packages <- c("tidyverse", "here", "ggplot2")
+pacman::p_load(char = packages)
+
+# log versions for reproducibility
+r_version <- paste(R.version$major, R.version$minor, sep = ".")
+lib_ver <- packages %>%
+  map_chr(~ paste0(.x, " (v", packageVersion(.x), ")")) %>%
+  paste(collapse = ", ")
 ```
 
-##Read in data
 ```{r}
-#set working directory
-setwd("~/Desktop/GitHub/MVP-H2F-HatcheryField")
+getwd()
+```
 
-dermo_york <- read.csv("./H2F_dermo_york_RFTM.csv")
-dermo_lew <- read.csv("./H2F_lewisetta_dermo.csv")
-
-dis_yrk <- read.csv("./H2F_prev_york_bothdiseases.csv")
+##Load data
+```{r}
+dermo_york <- read.csv("data/disease/H2F_dermo_york_RFTM.csv")
+dermo_lew <- read.csv("data/disease/H2F_lewisetta_dermo.csv")
+dis_yrk <- read.csv("data/disease/H2F_prev_york_bothdiseases.csv")
 ```
 
 ##Prep data
