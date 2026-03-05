@@ -422,7 +422,7 @@ S2_DEBY_monthly_temp <- S2_DEBY_monthly_temp[, !duplicated(names(S2_DEBY_monthly
 print(S2_DEBY_monthly_temp)
 
 # Write to the combined file with all sites 
-write.table(S2_DEBY_temp, "/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/all_temperature.csv", sep = ",", append = TRUE, col.names = FALSE, row.names = FALSE) # The column names should be changed to FALSE after 1st row is added to the data frame
+write.table(S2_DEBY_temp, "data/environment/all_temperature.csv", sep = ",", append = TRUE, col.names = FALSE, row.names = FALSE) # The column names should be changed to FALSE after 1st row is added to the data frame
 
 # Write to a unique new CSV file
 write.csv(S2_DEBY_temp, "/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/S2_DEBY_temperature.csv")

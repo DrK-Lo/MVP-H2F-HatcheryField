@@ -1,27 +1,37 @@
 ---
-title: "W3_FL - Processed Environmental Data"
+title: "W3-FL-EnvrData"
 author: "Madeline Eppley"
 date: "9/13/2023"
 output: github_document
 ---
 
+`## Load packages
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+# Set working directory relative to project root
+knitr::opts_knit$set(root.dir = here::here())
+
+if (!require("pacman")) install.packages("pacman")
+
+packages <- c("purrr", "dplyr", "lubridate", "readr", "here", "ggplot2", "stringr")
+pacman::p_load(char = packages)
+
+# log versions for reproducibility
+r_version <- paste(R.version$major, R.version$minor, sep = ".")
+lib_ver <- packages %>%
+  map_chr(~ paste0(.x, " (v", packageVersion(.x), ")")) %>%
+  paste(collapse = ", ")
 ```
 
 ```{r}
-setwd("/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment")
+getwd()
 ```
 
-### Load required packages. 
-```{r}
-library("dplyr") #Used for working with data frames
-library("lubridate") #Used for time-date conversions
-library("readr") #Used to read the CSV file
-library("ggplot2") 
-```
+Note the date of data download and source. All available data should be used for each site regardless of year. Note from the CSV file how often the site was sampled, and if there are replicates in the data. Also describe if the sampling occurred at only low tide, only high tide, or continuously.  
 
-### Note the date of data download and source. All available data should be used for each site regardless of year. Note from the CSV file how often the site was sampled, and if there are replicates in the data. Also describe if the sampling occurred at only low tide, only high tide, or continuously.  
+## Download info
+
 ```{r}
 #Data was downloaded on 9/13/2023
 #Source - https://irma.nps.gov/AQWebPortal/Data/Location/Summary/Location/TIMUking01/Interval/Latest
@@ -34,11 +44,14 @@ site_name <- ("W3_FL") #Use site code with site number based on lat position and
 collection_type <- ("continuous")
 ```
 
-### Use the file path name in your working directory or desktop, see example below. Or, import data set through the "Files" window in R studio. Store the file in a variable with the "raw_ID_Site" format. If salinity and temperature data are in separate files, read in both and store them with "_sal" or "_temp" in the variable names. 
+## Data preparation
+
+Use the file path name in your working directory or desktop, see example below. Or, import data set through the "Files" window in R studio. Store the file in a variable with the "raw_ID_Site" format. If salinity and temperature data are in separate files, read in both and store them with "_sal" or "_temp" in the variable names. 
+
 ```{r}
 #The file we will be working with is from Lower Cedar Point, Maryland. The ID_Site for this site is W3_FL. 
-raw_W3_FL_sal <- read_csv("/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/W3-FL-raw_sal.csv")
-raw_W3_FL_temp <- read_csv("/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/W3-FL-raw_temp.csv")
+raw_W3_FL_sal <- read_csv("data/environment/W3-FL-raw_sal.csv")
+raw_W3_FL_temp <- read_csv("data/environment/W3-FL-raw_temp.csv")
 
 # View how the data is stored. Note the variable names and the format and units that the data are stored in.  
 #spec(raw_W3_FL_sal)
@@ -48,7 +61,8 @@ raw_W3_FL_temp <- read_csv("/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/d
 #View(raw_W3_FL_temp)
 ```
 
-### Start with the date and time of collection. We will use the lubridate package to standardize all values into the date-time format called POSIXct. This format stores the date and time in number of seconds since a past point (1/1/1970). This makes comparisons easy and helps to standardizes values. 
+Start with the date and time of collection. We will use the lubridate package to standardize all values into the date-time format called POSIXct. This format stores the date and time in number of seconds since a past point (1/1/1970). This makes comparisons easy and helps to standardizes values. 
+
 ```{r}
 
 #Convert to POSIXct format. Store it into a column named datetime in the data frame.
@@ -60,7 +74,8 @@ head(raw_W3_FL_sal)
 head(raw_W3_FL_temp)
 ```
 
-### Analyze the ranges of all of our variables of interest - time, salinity, and temperature. Make sure that the latitude and longitude values are consistent for a static collection site. This is a quick check so we can determine how to conduct the next filtering step. 
+Analyze the ranges of all of our variables of interest - time, salinity, and temperature. Make sure that the latitude and longitude values are consistent for a static collection site. This is a quick check so we can determine how to conduct the next filtering step. 
+
 ```{r}
 #Standardize column and variable names. We will use "temp" for temperature in degrees C, "salinity" for salinity in parts per thousand (ppt), "lat" for latitude in degrees, and "lon" for longitude in degrees. 
 #Use the dyplr format to rename multiple columns in the format "dataframe %>% rename("new name 1" = "old name 1", "new name 2", "old name 2")
@@ -86,7 +101,8 @@ finalyear <- 2022
 ```
 
 
-### Filter any of the variables that have data points outside of normal range. We will use 0-40 as the accepted range for salinity (ppt) and temperature (C) values. Note, in the summer, salinity values can sometimes exceed 40. Check to see if there are values above 40. In this case, adjust the range or notify someone that the site has particularly high salinity values. 
+Filter any of the variables that have data points outside of normal range. We will use 0-40 as the accepted range for salinity (ppt) and temperature (C) values. Note, in the summer, salinity values can sometimes exceed 40. Check to see if there are values above 40. In this case, adjust the range or notify someone that the site has particularly high salinity values. 
+
 ```{r}
 #Filter the data between the values of 0 and 40 for both salinity and temperature. 
 filtered_W3_FL_sal <- raw_W3_FL_sal %>%
@@ -105,7 +121,7 @@ W3_FL_sal <- filtered_W3_FL_sal
 
 ```
 
-### Visualize the salinity, temperature, and date ranges over time. This can help us see if there are any anomalies or gaps in the data and make sure the filtering was done correctly. Sanity check - do the temperature and salinity ranges look appropriate for the geography of the site (ex. near full ocean salinity for coastal sites, lower salinity for estuaries or near rivers)?
+Visualize the salinity, temperature, and date ranges over time. This can help us see if there are any anomalies or gaps in the data and make sure the filtering was done correctly. Sanity check - do the temperature and salinity ranges look appropriate for the geography of the site (ex. near full ocean salinity for coastal sites, lower salinity for estuaries or near rivers)?
 
 ```{r salinity-plot}
 salplot <- ggplot(W3_FL_sal, aes(x = datetime)) +
@@ -131,7 +147,10 @@ tempplot <- ggplot(W3_FL_temp, aes(x = datetime)) +
 tempplot
 ```
 
-### We need to calculate the mean, maximum, and minimum values for salinity and temperature per month and year. First make two data frames to contain each of the annual and monthly averages.
+## Monthly and yearly means
+
+We need to calculate the mean, maximum, and minimum values for salinity and temperature per month and year. First make two data frames to contain each of the annual and monthly averages.
+
 ```{r}
 #Calculate the mean, maximum, and minimum values for salinity and temperature for each month. 
 W3_FL_envrmonth_sal <- W3_FL_sal %>%
@@ -177,7 +196,6 @@ print(W3_FL_envryear_sal)
 print(W3_FL_envryear_temp)
 ```
 
-
 ```{r}
 #Calculate the mean, maximum, and minimum values for salinity and temperature for each day. 
 W3_FL_envrday_sal <- W3_FL_sal %>%
@@ -204,8 +222,7 @@ print(W3_FL_envrday_temp)
 
 ```
 
-
-### Plot the months and years of data collection to check if there are any collection gaps in the data.
+Plot the months and years of data collection to check if there are any collection gaps in the data.
 ```{r timeplot - salinity}
 timeplot <- ggplot(W3_FL_envrmonth_sal, aes(x = year)) +
     geom_point(aes(y = month, color = length_salinity), size = 4) +
@@ -216,7 +233,7 @@ timeplot <- ggplot(W3_FL_envrmonth_sal, aes(x = year)) +
 timeplot
 ```
 
-### Plot the months and years of data collection to check if there are any collection gaps in the data.
+Plot the months and years of data collection to check if there are any collection gaps in the data.
 ```{r timeplot - temperature}
 timeplot <- ggplot(W3_FL_envrmonth_temp, aes(x = year)) +
     geom_point(aes(y = month, color = length_temp), size = 4) +
@@ -227,7 +244,10 @@ timeplot <- ggplot(W3_FL_envrmonth_temp, aes(x = year)) +
 timeplot
 ```
 
-# Calculate days above and below thresholds and plot
+## Stress calculations
+
+Calculate days above and below thresholds and plot
+
 ```{r}
 # open up a blank data frame that spans all 12 months for all years of data collection for this site
 # we will merge this with the observations so that we can plot over time 
@@ -239,7 +259,7 @@ complete_year_month <- expand.grid(
 
 ```
 
-# start with low salinity stress 
+### Low salinity stress 
 ```{r low-sal-stress}
 # first calculate for low salinity
 W3_FL_sal$low_sal_stress <- W3_FL_sal$salinity < 12
@@ -290,7 +310,7 @@ ggplot(low_sal_complete_data, aes(x = factor(month), y = low_sal_stress)) +
   theme_minimal()
 ```
 
-# now calculate for high salinity stress
+### High salinity stress
 ```{r high-sal-stress}
 W3_FL_sal$high_sal_stress <- W3_FL_sal$salinity > 35
 
@@ -366,7 +386,7 @@ ggplot() +
 ```
 
 
-# high temp stress calculations
+### Hight temp stress
 ```{r high-temp-stress}
 W3_FL_temp$high_temp_stress <- W3_FL_temp$temp > 28
 
@@ -416,7 +436,9 @@ ggplot(high_temp_complete_data, aes(x = factor(month), y = high_temp_stress)) +
 
 ```
 
-### We can now calculate a list of variables that we will have collected for all sites. This will allow us to compare sites easily. We will calculate the number of observations from each site, the mean annual, maximum annual, and minimum annual value for all variables. 
+## Summary stats
+
+We can now calculate a list of variables that we will have collected for all sites. This will allow us to compare sites easily. We will calculate the number of observations from each site, the mean annual, maximum annual, and minimum annual value for all variables. 
 
 Our list of variables includes: 
 
@@ -471,13 +493,13 @@ W3_FL_monthly_temp <- W3_FL_monthly_temp[, !duplicated(names(W3_FL_monthly_temp)
 print(W3_FL_monthly_temp)
 
 # Write to the combined file with all sites 
-write.table(W3_FL_temp, "/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/all_temperature.csv", sep = ",", append = TRUE, col.names = FALSE, row.names = FALSE) # The column names should be changed to FALSE after 1st row is added to the data frame
+write.table(W3_FL_temp, "data/environment/all_temperature.csv", sep = ",", append = TRUE, col.names = FALSE, row.names = FALSE) # The column names should be changed to FALSE after 1st row is added to the data frame
 
 # Write to a unique new CSV file
-write.csv(W3_FL_temp, "/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/W3_FL_temperature.csv")
+write.csv(W3_FL_temp, "data/environment/W3-FL/W3_FL_temperature.csv")
 
 # Write all montly data to a unique new CSV file
-write.csv(W3_FL_monthly_temp, "/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/W3_FL_monthly_temp.csv")
+write.csv(W3_FL_monthly_temp, "data/environment/W3-FL/W3_FL_monthly_temp.csv")
 
 ```
 
@@ -520,11 +542,11 @@ W3_FL_monthly_sal <- W3_FL_monthly_sal[, !duplicated(names(W3_FL_monthly_sal))]
 print(W3_FL_monthly_sal)
 
 # Write to the combined file with all sites 
-write.table(W3_FL_salinity, "/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/all_salinity.csv", sep = ",", append = TRUE, col.names = FALSE, row.names = FALSE) # The column names should be changed to FALSE after 1st row is added to the data frame
+write.table(W3_FL_salinity, "data/environment/all_salinity.csv", sep = ",", append = TRUE, col.names = FALSE, row.names = FALSE) # The column names should be changed to FALSE after 1st row is added to the data frame
 
 # Write all year data to a unique new CSV file
-write.csv(W3_FL_salinity, "/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/W3_FL_salinity.csv")
+write.csv(W3_FL_salinity, "data/environment/W3-FL/W3_FL_salinity.csv")
 # Write all montly data to a unique new CSV file
-write.csv(W3_FL_monthly_sal, "/Users/madelineeppley/GitHub/MVP-H2F-HatcheryField/data/environment/W3_FL_monthly_sal.csv")
+write.csv(W3_FL_monthly_sal, "data/environment/W3-FL/W3_FL_monthly_sal.csv")
 
 ```
