@@ -17,7 +17,7 @@ knitr::opts_knit$set(root.dir = here::here())
 
 if (!require("pacman")) install.packages("pacman")
 
-packages <- c("here", "ggplot2", "tidyverse", "grid", "reshape2", "vegan", "patchwork")
+packages <- c("purrr", "here", "ggplot2", "tidyverse", "grid", "reshape2", "vegan", "patchwork")
 pacman::p_load(char = packages)
 
 # log versions for reproducibility
@@ -86,16 +86,16 @@ summarize_field_data <- function(df, value_col, group_col = "bag_site") {
 # split field summary data into a list of named data frames 
 # one data frame per monitoring event per site per variable 
 split_field_data <- function(df, prefix, group_col = "bag_site") {
-  df %>%
-    group_split(monitoring_event, .data[[group_col]]) %>%
-    setNames(
-      df %>%
-        group_keys(monitoring_event, .data[[group_col]]) %>%
-        mutate(name = paste0(prefix, "_event", monitoring_event, "_", 
-                            tolower(gsub(" ", "", .data[[group_col]])))) %>%
-        pull(name)
-    ) %>%
-    map(~ .x %>% order_by_pop() %>% dplyr::select(site_name, value))
+  nested <- df %>%
+    group_by(monitoring_event, .data[[group_col]]) %>%
+    nest() %>%
+    mutate(
+      name = paste0(prefix, "_event", monitoring_event, "_",
+                    tolower(gsub(" ", "", .data[[group_col]]))),
+      data = map(data, ~ .x %>% order_by_pop() %>% dplyr::select(site_name, value))
+    )
+
+  setNames(nested$data, nested$name)
 }
 
 # create a heatmap from a distance matrix
@@ -240,7 +240,7 @@ stopifnot(all(map_lgl(dist_matrices, ~ identical(rownames(.x), POP_ORDER))))
 message("All matrices have correct row/column ordering.")
 ```
 
-## Partial Mantel tests
+e## Partial Mantel tests
 ```{r mantel-tests}
 # test genetic distance effect (controlling for environment)
 genetic_results <- map(dist_matrices, ~ mantel.partial(

@@ -1,36 +1,45 @@
 ---
-title: "LEW_Data_Comparisons"
+title: "LEW_corrections"
+author: "Nicole Mongillo and Camille Rumberger"
 output: pdf_document
 date: "2025-11-05"
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-This code examines the differences between environmental data for LOLA/Lewisetta. The data sources are:
+This code examines the differences between environmental data for the LOLA/Lewisetta sites, located in the 
+Coan River, Virginia, as part of the MVP H2F project. The data sources are:
 
 1. Willy Reay's data (VIMS data) from the Coan River
 2. NOAA National Buoy Data Center (NDBC), Station 44042 (Potomac, MD) for salinity
 3. NOAA National Buoy Data Center (NDBC), Station 8635750 (Lewisetta, VA) for temp
 
-```{r setwd}
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+## Load packages
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Set working directory relative to project root
+knitr::opts_knit$set(root.dir = here::here())
+
+if (!require("pacman")) install.packages("pacman")
+
+packages <- c("purrr", "dplyr", "lubridate", "readr", "here", "ggplot2", "stringr")
+pacman::p_load(char = packages)
+
+# log versions for reproducibility
+r_version <- paste(R.version$major, R.version$minor, sep = ".")
+lib_ver <- packages %>%
+  map_chr(~ paste0(.x, " (v", packageVersion(.x), ")")) %>%
+  paste(collapse = ", ")
 ```
 
-```{r packages}
-library("dplyr") #Used for working with data frames
-library("lubridate") #Used for time-date conversions
-library("readr") #Used to read the CSV file
-library("ggplot2") 
-library("stringr")
+```{r}
+getwd()
 ```
 
-#NDBC Data Upload and Cleaning
+##NDBC data upload and cleaning
 ```{r NDBC}
 # directory for files
-lew_sonde <- "data/EnvDat/exp/lew_raw/lew_sonde" 
-pot_sonde <- "data/EnvDat/exp/lew_raw/potomac_sonde"
+lew_sonde <- "data/environment/Lewisetta/lew_raw/lew_sonde" 
+pot_sonde <- "data/environment/Lewisetta/lew_raw/potomac_sonde"
 
 # Get a list of all .txt files in the directory
 files_lew <- list.files(path = lew_sonde, pattern = "\\.txt$", full.names = T)
@@ -78,11 +87,11 @@ filtered_check_lewisetta <- filtered_check_lewisetta %>%
     filter(between(temp, 0, 40))
 ```
 
-#VIMS Data Upload and Cleaning
+##VIMS data upload and cleaning
 
 ```{r VIMS_cleaning}
 # read in data
-lew <- read.csv("data/EnvDat/exp/lew_raw/lewisetta_coandat.csv")[,-1]
+lew <- read.csv("data/environment/Lewisetta/lew_raw/lewisetta_coandat.csv")[,-1]
 
 # vims data is every 15 mins vs more every hour at noaa buoys -- use daily averages to calculate the other summary stats
 filtered_check_lewisetta$date <- as.Date(filtered_check_lewisetta$datetime, tz = "EST")
@@ -107,7 +116,6 @@ colnames(noaa_day_filtered) <- c("datetime", "temp_noaa", "sal_noaa", "date", "m
 lew_mg <- merge(noaa_day_filtered, lola_day_filtered, by = c("datetime", "date"), all = T)
 ```
 
-
 Plot to visualize differences in salinity & temperature:
 
 ```{r env plot}
@@ -127,6 +135,8 @@ filter_salplot <- ggplot(lew_mg, aes(x=datetime, y = mean_daily_sal, color = "VI
 filter_salplot # trends follow, but need a large correction
 ```
 
+##Corrections
+
 Now we correct the NDBC data
 
 ```{r correction_value}
@@ -135,10 +145,10 @@ lew_mg <- lew_mg %>%
   mutate(temp_diff = mean_daily_temp-mean_daily_temp_noaa, sal_diff = mean_daily_sal -mean_daily_sal_noaa)
 
 temp_correction <- mean(lew_mg$temp_diff)
-# VIMS data (from Willy Coan) is 0.09287575ºC above NOAA data, apply this correction to past NOAA data (2014-2020)
+# VIMS data (from Willy Reay) is 0.09287575ºC above NOAA data, apply this correction to past NOAA data (2014-2020)
 
 sal_correction <- mean(lew_mg$sal_diff)
-# VIMS data (from Willy Coan) is -1.192284 below NOAA data, apply this correction to past NOAA data (2014-2020)
+# VIMS data (from Willy Reay) is -1.192284 below NOAA data, apply this correction to past NOAA data (2014-2020)
 
 # apply correction
 day_check_lewisetta$temp_corrected <- day_check_lewisetta$mean_daily_temp + 0.09287575
@@ -147,7 +157,7 @@ day_check_lewisetta$sal_corrected <- day_check_lewisetta$mean_daily_sal - 1.1922
 # write it out
 lew_correct <- day_check_lewisetta
 lew_correct <- lew_correct[!(is.na(lew_correct$datetime)),]
-write.csv(lew_correct, "../../../../data/envr_of_origin/raw_envr_data/lewisetta_corrected.csv", row.names = F)
+write.csv(lew_correct, "data/environment/Lewisetta/lewisetta_corrected.csv", row.names = F)
 
 # summary of these data
 lew_correct_yr <- lew_correct %>%

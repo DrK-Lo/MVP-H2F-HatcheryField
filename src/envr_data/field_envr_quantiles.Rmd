@@ -5,13 +5,7 @@ output: pdf_document
 date: "2024-10-08"
 ---
 
-This file compiles salinity data from all environment-of-origin sites
-and common garden field sites, computes temperature and salinity quantile
-summaries, and produces visualization panels (violin plots and heatmaps) for
-Figure 1 of H2F. It also creates disease pressure heatmaps for Dermo and MSX at
-each site. The main data product is `envr_quantiles_allsites.csv`, which is
-used by downstream modeling scripts (Q2_envr_quantile_models_field.Rmd,
-Q2_condition_index_models_field.Rmd, Q2_models_hatchery_nursery.Rmd).
+This file compiles temperature and salinity data from all environment-of-origin (EoO) sites and common garden field sites (LEW, YRK), computes quantile summaries (10th and 90th percentiles), and produces visualization panels for Figure 1 of H2F: violin plots with boxplots for salinity distributions (Fig 1B, 1C) and single-row heatmaps for temperature and salinity quantiles at both EoO and field sites. The main data product is `envr_quantiles_allsites.csv`, used by downstream modeling scripts (Q2_envr_quantile_models_field.Rmd, Q2_condition_index_models_field.Rmd, Q2_models_hatchery_nursery.Rmd).
 
 ## Load packages
 ```{r setup, include=FALSE}
