@@ -43,7 +43,7 @@ lengths_mod_narm_nodead <- read.csv("data/performance_H2F/field_length_all_times
 gen_parents <- read.csv("results/parent_effects_H2F/parent_genetic_effects.csv")
 
 #environment of origin quantiles
-env_parents <- read.csv("results/environment/envr_quantiles_allsites.csv")[,-c(1, 9)]
+env_parents <- read.csv("results/environment/envr_quantiles_allsites.csv")
 
 ```
 
@@ -60,7 +60,7 @@ colnames(gen_parents) <- c("pop","ho","exp_hs","ar")
 surv_mod_gen <- merge(surv_mod_ord_rename, gen_parents, by = "pop")
 
 #clean env_parents
-colnames(env_parents) <- c("pop","salinity_quantile_10","salinity_quantile_90","Salinity_st_dev","temp_quantile_10","temp_quantile_90","Temperature_st_dev")
+colnames(env_parents) <- c("pop","salinity_quantile_10","salinity_quantile_90","Salinity_st_dev","temp_quantile_10","temp_quantile_90","Temperature_st_dev", "salinity")
 
 #add environmental data to df
 surv_mod_gen_env <- merge(surv_mod_gen, env_parents, by = c("pop"))

@@ -146,7 +146,7 @@ VIF(surv_mod_gen_dist$ar, surv_mod_gen_dist$dist_YRK, surv_mod_gen_dist$ho)
 #VIF ar = 2.41
 
 VIF(surv_mod_gen_dist$dist_YRK, surv_mod_gen_dist$ho, surv_mod_gen_dist$ar)
-#VIF dist_LEW = 1.78
+#VIF dist_YRK = 1.78
 ```
 VIF is low for all.
 
@@ -172,7 +172,7 @@ surv_t1_lew_s <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(dist_LEW), data 
 ```
 
 ### t2 survival, Lewisetta
-```{r t1_surv_lew}
+```{r t2_surv_lew}
 surv_lew_t2.0 <- lm(surv ~ ho + ar + dist_LEW, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 2 & surv_mod_gen_dist$bag_site == "Lewisetta",]) 
 
 #plot(surv_lew_t2.0)
@@ -184,7 +184,7 @@ surv_t2_lew_s <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(dist_LEW), data 
 ```
 
 ### t3 survival, Lewisetta
-```{r t1_surv_lew}
+```{r t3_surv_lew}
 surv_lew_t3.0 <- lm(surv ~ ho + ar + dist_LEW, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 3 & surv_mod_gen_dist$bag_site == "Lewisetta",]) 
 
 #plot(surv_lew_t3.0)
@@ -229,7 +229,7 @@ surv_lew_dist$bag_site <- "Lewisetta"
 ```
 
 ### t1 survival, York River
-```{r t1_surv_lew}
+```{r t1_surv_yrk}
 surv_yrk_t1.0 <- lm(surv ~ ho + ar + dist_YRK, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 1 & surv_mod_gen_dist$bag_site == "YorkRiver",]) 
 #plot(surv_yrk_t1.0)
 summary(surv_yrk_t1.0) # ar, dist_YRK significant
@@ -245,7 +245,7 @@ surv_t1_yrk_s <- lm(scale(surv) ~ scale(ar) + scale(dist_YRK), data = surv_mod_g
 ```
 
 ### t2 survival, York River
-```{r t1_surv_lew}
+```{r t2_surv_yrk}
 surv_yrk_t2.0 <- lm(surv ~ ho + ar + dist_YRK, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 2 & surv_mod_gen_dist$bag_site == "YorkRiver",]) 
 #plot(surv_yrk_t2.0)
 summary(surv_yrk_t2.0) # ar, dist_YRK significant
@@ -261,7 +261,7 @@ surv_t2_yrk_s <- lm(scale(surv) ~ scale(ar) + scale(dist_YRK), data = surv_mod_g
 ```
 
 ### t3 survival, York River
-```{r t1_surv_lew}
+```{r t3_surv_yrk}
 surv_yrk_t3.0 <- lm(surv ~ ho + ar + dist_YRK, data = surv_mod_gen_dist[surv_mod_gen_dist$t == 3 & surv_mod_gen_dist$bag_site == "YorkRiver",]) 
 #plot(surv_yrk_t3.0)
 summary(surv_yrk_t3.0) # ar, dist to YRK significant
@@ -361,7 +361,7 @@ len_t1_lew_s <- lmerTest::lmer(scale(length) ~ scale(ho) + scale(ar) + scale(dis
 ```
 
 ### t2 length, Lewisetta
-```{r t1_len_lew}
+```{r t2_len_lew}
 len_lew_t2.0 <- lmerTest::lmer(length ~ ho + ar + dist_LEW + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "Lewisetta",]) 
 #plot(len_lew_t2.0) #one weird outlier here
 Anova(len_lew_t2.0, type = "III") # ho, ar signif
@@ -378,7 +378,7 @@ len_t2_lew_s <- lmerTest::lmer(scale(length) ~ scale(ho) + scale(ar) + (1|bags_l
 ```
 
 ### t3 length, Lewisetta
-```{r t1_len_lew}
+```{r t3_len_lew}
 len_lew_t3.0 <- lmerTest::lmer(length ~ ho + ar + dist_LEW + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site == "Lewisetta",]) 
 #plot(len_lew_t3.0) 
 Anova(len_lew_t3.0, type = "III") # ho, ar signif
@@ -423,7 +423,7 @@ len_lew_dist$bag_site <- "Lewisetta"
 ```
 
 ### t1 length, York River
-```{r t1_len_lew}
+```{r t1_len_yrk}
 len_yrk_t1.0 <- lmerTest::lmer(length ~ ho + ar + dist_YRK + (1|bags_label), data = len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "YorkRiver",]) 
 #plot(len_yrk_t1.0) 
 Anova(len_yrk_t1.0, type = "III") # all signif
@@ -935,6 +935,6 @@ supp_table <- supp_table %>%
 print(supp_table, n = 20)
 
 # Save
-write.csv(supp_table, "supp_files/3-Q2_all_model_results.csv", row.names = FALSE)
+write.csv(supp_table, "supp_files/3-Q2_all_model_results2.csv", row.names = FALSE)
 
 ```

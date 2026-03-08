@@ -132,11 +132,8 @@ field_length <- read.csv(file.path("data", "performance_H2F", "field_length_all_
 # survival of all oysters averaged by bag for field monitoring events 1-3 
 field_survival <- read.csv(file.path("data", "performance_H2F", "field_surv_all_times.csv"), row.names = 1)
 
-# summary statistics - temperature and salinity quantiles for the 8 groups 
-envr_summary <-  read.csv(file.path("results", "environment", "envr_quantiles_summary.csv"))
-
-# matrix of euclidean environmental distances using SCALED data
-envr_dist <- readRDS(file.path("results", "environment", "envr_quantiles_dist.rds"))
+# matrix of euclidean environmental distances using SCALED data for environment-of-origin sites only
+envr_dist <- readRDS(file.path("results", "environment", "envr_quantiles_dist_origin.rds"))
 
 # matrix of genetic distances between each group
 fst_mat <- readRDS(file.path("results", "parental_genetics", "20250606_fst_results.rds"))
@@ -203,22 +200,6 @@ field_survival_list <- field_survival %>%
   group_by(monitoring_event, bag_site, site_name) %>%
   summarise(value = mean(surv, na.rm = TRUE), .groups = "drop") %>%
   split_field_data("surv", "bag_site")
-```
-
-### Environment-of-origin
-```{r envr-data}
-# add sampling site latitudes
-envr <- envr_summary %>%
-  mutate(lat = c(28.096, 29.240, 30.440, 37.150, 37.980, 37.249, 43.054, 44.013))
-```
-
-## Data product: hatchery survival, hatchery length, environment-of-origin
-```{r export}
-surv_length_envr <- envr %>%
-  left_join(means_mm_21 %>% dplyr::rename(mean_length_mm_21 = mean_length), by = "site_name") %>%
-  left_join(means_mm_78 %>% dplyr::rename(mean_length_mm_78 = mean_length), by = "site_name") %>%
-  left_join(surv_day21, by = "site_name")
-
 ```
 
 ## Build distance matrices

@@ -37,8 +37,8 @@ getwd()
 #this file contains raw lengths of all oysters aged 15-78 days
 length <- read.csv("data/performance_H2F/nursery_length.csv")
 
-#this file has 0.1 and 0.9 quantiles for temperature and salinity for the 8 groups
-quantiles <- read.csv("results/environment/envr_quantiles_allsites.csv")[, -c(1,9)]
+#this file has 0.1 and 0.9 quantiles for temperature and salinity for all groups including field sites
+quantiles <- read.csv("results/environment/envr_quantiles_allsites.csv")
 
 #this file contains survival rate data for larval oysters up to day 21 post hatching
 survival <-  read.csv("data/performance_H2F/CViMVP_larvae_survival.csv")
@@ -112,10 +112,8 @@ length_78 <- length_filter %>%
 
 ### Environment
 ```{r}
-#Replace underscores in site names with hyphens
-quantiles$site_name <- str_replace(quantiles$site_name, "_", "-")
 
-colnames(quantiles) <- c("site_name", "sal10", "sal90", "sal_sd", "temp10", "temp90", "temp_sd")
+colnames(quantiles) <- c("site_name", "sal10", "sal90", "sal_sd", "temp10", "temp90", "temp_sd", "salinity")
 
 #filter out YRK and LEW from quantiles
 quant_eoo <- quantiles %>% 

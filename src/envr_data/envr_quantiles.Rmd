@@ -1,0 +1,438 @@
+---
+title: "envr_quantiles"
+author: "Nicole Mongillo"
+output: pdf_document
+date: "2024-10-08"
+---
+
+This file compiles temperature and salinity data from all environment-of-origin (EoO) sites and common garden field sites (LEW, YRK), computes quantile summaries (10th and 90th percentiles), and produces visualization panels for Figure 1 of H2F: violin plots with boxplots for salinity distributions (Fig 1B, 1C) and single-row heatmaps for temperature and salinity quantiles at both EoO and field sites. The main data product is `envr_quantiles_allsites.csv`, used by downstream modeling scripts (Q2_envr_quantile_models_field.Rmd, Q2_condition_index_models_field.Rmd, Q2_models_hatchery_nursery.Rmd).
+
+## Load packages
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# set working directory relative to project root
+knitr::opts_knit$set(root.dir = here::here())
+
+if (!require("pacman")) install.packages("pacman")
+
+packages <- c("tidyverse", "here")
+pacman::p_load(char = packages)
+
+# log versions for reproducibility
+r_version <- paste(R.version$major, R.version$minor, sep = ".")
+lib_ver <- packages %>%
+  map_chr(~ paste0(.x, " (v", packageVersion(.x), ")")) %>%
+  paste(collapse = ", ")
+```
+
+```{r}
+getwd()
+```
+
+## Load data
+
+First, all temperature and salinity summary files need to be combined into one large summary file for all sites. It is important to run this AFTER all individual site EnvrData.Rmd scripts have been run. This replaces the append = TRUE approach and avoids duplicate rows.
+
+```{r}
+# define all site temperature CSV paths
+temp_files <- c(
+  "data/environment/W1-TX/W1-TX_temperature.csv",
+  "data/environment/W2-LA/W2-LA_temperature.csv",
+  "data/environment/W3-FL/W3-FL_temperature.csv",
+  "data/environment/W4-VA/W4-VA_temperature.csv",
+  "data/environment/W5-NH/W5-NH_temperature.csv",
+  "data/environment/W6-ME/W6-ME_temperature.csv",
+  "data/environment/S1-LOLA/S1-LOLA_temperature.csv",
+  "data/environment/S2-DEBY/S2-DEBY_temperature.csv",
+  "data/environment/Lewisetta/LEW_temperature.csv",
+  "data/environment/York-River/YRK_temperature.csv"
+)
+
+# define all site salinity CSV paths
+sal_files <- c(
+  "data/environment/W1-TX/W1-TX_salinity.csv",
+  "data/environment/W2-LA/W2-LA_salinity.csv",
+  "data/environment/W3-FL/W3-FL_salinity.csv",
+  "data/environment/W4-VA/W4-VA_salinity.csv",
+  "data/environment/W5-NH/W5-NH_salinity.csv",
+  "data/environment/W6-ME/W6-ME_salinity.csv",
+  "data/environment/S1-LOLA/S1-LOLA_salinity.csv",
+  "data/environment/S2-DEBY/S2-DEBY_salinity.csv",
+  "data/environment/Lewisetta/LEW_salinity.csv",
+  "data/environment/York-River/YRK_salinity.csv"
+)
+
+# read and combine all temperature summaries
+all_temperature <- temp_files %>%
+  lapply(function(f) {
+    if (file.exists(f)) {
+      read.csv(f, stringsAsFactors = FALSE)
+    } else {
+      warning(paste("File not found:", f))
+      return(NULL)
+    }
+  }) %>%
+  bind_rows()
+
+# read and combine all salinity summaries
+all_salinity <- sal_files %>%
+  lapply(function(f) {
+    if (file.exists(f)) {
+      read.csv(f, stringsAsFactors = FALSE)
+    } else {
+      warning(paste("File not found:", f))
+      return(NULL)
+    }
+  }) %>%
+  bind_rows()
+
+# write combined files (overwrites, no append)
+write.csv(all_temperature, "data/environment/all_temperature.csv", row.names = FALSE)
+write.csv(all_salinity, "data/environment/all_salinity.csv", row.names = FALSE)
+
+cat("Combined", nrow(all_temperature), "temperature rows and", nrow(all_salinity), "salinity rows.\n")
+cat("Expected: 10 rows each (one per site).\n")
+```
+
+All `_full` files now have a standardized structure: `site_name`, `datetime`, and either `temp` or `salinity`. File paths point to the `data/environment/` directory with site-specific subdirectories.
+
+```{r}
+# read in salinity _full files from standardized locations
+TX_sal <- read.csv("data/environment/W1-TX/W1-TX_sal_full.csv")
+LA_sal <- read.csv("data/environment/W2-LA/W2-LA_sal_full.csv")
+FL_sal <- read.csv("data/environment/W3-FL/W3-FL_sal_full.csv")
+VA_sal <- read.csv("data/environment/W4-VA/W4-VA_sal_full.csv")
+LOLA_sal <- read.csv("data/environment/S1-LOLA/S1-LOLA_sal_full.csv")
+DEBY_sal <- read.csv("data/environment/S2-DEBY/S2-DEBY_sal_full.csv")
+NH_sal <- read.csv("data/environment/W5-NH/W5-NH_sal_full.csv")
+ME_sal <- read.csv("data/environment/W6-ME/W6-ME_sal_full.csv")
+LEW_sal <- read.csv("data/environment/Lewisetta/LEW_sal_full.csv")
+YRK_sal <- read.csv("data/environment/York-River/YRK_sal_full.csv")
+
+# read in data frames with salinity and temp summary stats (including quantiles) for each eoo and field site
+temp_all <- read.csv("data/environment/all_temperature.csv")
+sal_all <- read.csv("data/environment/all_salinity.csv")
+```
+
+## Data preparation
+
+### POSIXct date time
+```{r}
+# all _full files write datetime in the same format from write.csv, so we can use a single conversion
+# write.csv outputs POSIXct as "%Y-%m-%d %H:%M:%S" or "%Y-%m-%d" for date-only
+all_sal_dfs <- list(TX_sal, LA_sal, FL_sal, VA_sal, LOLA_sal, DEBY_sal, NH_sal, ME_sal, LEW_sal, YRK_sal)
+all_sal_names <- c("TX_sal", "LA_sal", "FL_sal", "VA_sal", "LOLA_sal", "DEBY_sal", "NH_sal", "ME_sal", "LEW_sal", "YRK_sal")
+
+for (i in seq_along(all_sal_dfs)) {
+  all_sal_dfs[[i]]$datetime <- as.POSIXct(all_sal_dfs[[i]]$datetime, tz = "UTC")
+  assign(all_sal_names[i], all_sal_dfs[[i]])
+}
+```
+
+### Merge and clean data
+```{r}
+# merge all salinity data frames — all have the same columns (site_name, datetime, salinity)
+full_sal <- bind_rows(TX_sal, LA_sal, FL_sal, VA_sal, LOLA_sal, DEBY_sal, NH_sal, ME_sal, LEW_sal, YRK_sal)
+
+# make all salinity variables numeric
+full_sal$salinity <- as.numeric(full_sal$salinity)
+
+# check for NAs
+na_full_sal <- is.na(full_sal)
+summary(na_full_sal)
+# remove NAs
+full_sal <- na.omit(full_sal) 
+
+# filter out salinity values below 0 and above 44 (this already happens in each separate file - most are above 40 but W1-TX is high salinity so it gets filtered with 44 as the upper bound)
+filtered_sal <- full_sal %>%
+    filter(between(salinity, 0, 44)) 
+
+# convert site_name to factor with desired level order (names already hyphenated from EnvrData scripts)
+filtered_sal$site_name <- factor(filtered_sal$site_name, 
+  levels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME", "LEW", "YRK"))
+```
+
+### Data product: Quantiles
+```{r}
+# combine quantile data from the separate temp and salinity data frames
+# site names are already in hyphenated format from the EnvrData scripts
+
+# select relevant columns and join
+temp_quant <- temp_all %>% 
+  select(site_name, temp_quantile_10, temp_quantile_90, Temperature_st_dev)
+sal_quant <- sal_all %>% 
+  select(site_name, salinity_quantile_10, salinity_quantile_90, Salinity_st_dev)
+quantiles <- left_join(sal_quant, temp_quant, by = "site_name")
+
+# calculate mean salinity and save in quantiles
+mean_sal <- filtered_sal %>% 
+  aggregate(salinity ~ site_name, FUN = mean)
+quantiles <- left_join(quantiles, mean_sal, by = "site_name")
+
+# reorder levels
+quantiles$site_name <-
+  factor(quantiles$site_name, levels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME", "LEW", "YRK"))
+
+quantiles <- quantiles[order(quantiles$site_name),]
+
+# write to csv
+write.csv(quantiles, file = "results/environment/envr_quantiles_allsites.csv", row.names = FALSE)
+```
+
+### Subset quantiles for EOO and field sites
+```{r}
+# filter out YRK and LEW from quantiles
+quant_eoo <- quantiles %>% 
+  filter(site_name != "YRK" & site_name != "LEW")
+# quantiles for only YRK and LEW
+quant_field <- quantiles %>% 
+  filter(site_name == "YRK" | site_name == "LEW")
+```
+
+## Figures
+
+### Environment of origin salinity violin plot
+```{r}
+eoo_sal_violin <- filtered_sal %>% 
+  filter(site_name != "YRK" & site_name != "LEW") %>% 
+  ggplot(aes(site_name, salinity)) +
+  geom_violin() +
+  geom_boxplot(width = .1) +
+  geom_errorbar(data = quant_eoo, aes(ymin = salinity_quantile_10, ymax = salinity_quantile_90), width=.3, color = "blue")+
+  ggtitle("Environments-of-origin")+
+  ylab("Salinity (ppt)")+
+  ylim(c(0,44))+
+  scale_x_discrete(name = "Group", limits = c("W1-TX","W2-LA","W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME"))+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        axis.ticks.x = element_blank(), 
+        axis.text.x = element_blank(), 
+        axis.title.x = element_blank(),
+        axis.text.y = element_text(color = "black", size = 10),
+        axis.title.y = element_text(size = 12))
+
+eoo_sal_violin
+
+ggsave("Fig1B_eoo_salinity_violin.pdf",
+       plot = eoo_sal_violin,
+       device = "pdf",
+       path = "figures/envr_of_origin",
+       height = 4,
+       width = 9.25)
+```
+
+### Common gardens salinity violin plot
+```{r}
+field_sal_violin <- filtered_sal %>% 
+  filter(site_name == "YRK" | site_name == "LEW") %>% 
+  ggplot(aes(site_name, salinity)) +
+  geom_violin() +
+  geom_boxplot(width = .1) +
+  geom_errorbar(data = quant_field, aes(ymin = salinity_quantile_10, ymax = salinity_quantile_90), width=.3, color = "blue")+
+  ggtitle("Common garden sites")+
+  ylab("Salinity (ppt)")+
+  ylim(c(0, 44))+
+  scale_x_discrete(limits = c("LEW", "YRK"))+
+  theme_bw()+
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        axis.ticks.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.title.x = element_blank())
+
+field_sal_violin
+
+ggsave("Fig_1C_field_salinity_violin.pdf",
+       plot = field_sal_violin,
+       device = "pdf",
+       path = "figures/envr_of_origin",
+       height = 4,
+       width = 2.5)
+```
+
+### EoO 0.1 salinity quantile heatmap
+```{r}
+eoo_sal_10_heatmap <- ggplot(quant_eoo, aes(site_name, 1, fill = salinity_quantile_10)) +
+  geom_tile()+
+  geom_text(aes(label = round(salinity_quantile_10, digits = 1)), color = "white", size = 5)+
+  scale_fill_viridis_c(option = "G", limits = c(0,38), direction=-1)+
+  scale_x_discrete(limits = c("W1-TX","W2-LA","W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME"))+
+  labs(fill = "Salinity (ppt)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.ticks.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank(), 
+        panel.grid = element_blank(), 
+        legend.position = "none")
+
+eoo_sal_10_heatmap
+```
+
+### EoO 0.9 salinity quantile heatmap
+```{r}
+eoo_sal_90_heatmap <- ggplot(quant_eoo, aes(site_name, 1, fill = salinity_quantile_90)) +
+  geom_tile()+
+  geom_text(aes(label = round(salinity_quantile_90, digits = 1)), color = "white", size = 5)+
+  scale_fill_viridis_c(option = "G", limits = c(0,38), direction = -1)+
+  scale_x_discrete(limits = c("W1-TX","W2-LA","W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME"))+
+  labs(fill = "Salinity (ppt)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.ticks.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank(), 
+        panel.grid = element_blank(), 
+        legend.position = "none")
+
+eoo_sal_90_heatmap
+```
+
+### EoO 0.1 temperature quantile heatmap
+```{r}
+eoo_temp_10_heatmap <- ggplot(quant_eoo, aes(site_name, 1, fill = temp_quantile_10)) +
+  geom_tile()+
+  geom_text(aes(label = round(temp_quantile_10, digits = 1)), color = "white", size = 5)+
+  scale_fill_viridis_c(option = "C", limits = c(5,32))+
+  scale_x_discrete(limits = c("W1-TX","W2-LA","W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME"))+
+  labs(fill = "Temperature °C ") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.ticks.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank(), 
+        panel.grid = element_blank(), 
+        legend.position = "none")
+
+eoo_temp_10_heatmap
+
+ggsave("Fig1B_eoo_temp10_heatmap.pdf",
+       plot = eoo_temp_10_heatmap,
+       device = "pdf",
+       path = "figures/envr_of_origin",
+       height = 1.9,
+       width = 9)
+```
+
+### EoO 0.9 temperature quantile heatmap
+```{r}
+eoo_temp_90_heatmap <- ggplot(quant_eoo, aes(site_name, 1, fill = temp_quantile_90), height = 2, width = 7) +
+  geom_tile()+
+  geom_text(aes(label = round(temp_quantile_90, digits = 1)), size = 5)+
+  scale_fill_viridis_c(option = "C", limits = c(5,32)) +
+  scale_x_discrete(limits = c("W1-TX","W2-LA","W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME"))+
+  labs(fill = "Temperature °C ") +
+  theme_minimal() +
+ theme(axis.text.x = element_text(angle = 45, hjust = 1, color = "black"), 
+       axis.ticks.y = element_blank(), 
+       axis.text.y = element_blank(), 
+       axis.title.y = element_blank(), 
+       panel.grid = element_blank(), 
+       legend.position = "none")
+
+eoo_temp_90_heatmap
+
+ggsave("Fig1B_eoo_temp_90_heatmap.pdf",
+       plot = eoo_temp_90_heatmap,
+       device = "pdf",
+       path = "figures/envr_of_origin",
+       height = 1.9,
+       width = 9)
+```
+
+### Common gardens 0.1 salinity quantile heatmap
+```{r}
+field_sal_10_heatmap <- ggplot(quant_field, aes(site_name, 1, fill = salinity_quantile_10)) +
+  geom_tile()+
+  geom_text(aes(label = round(salinity_quantile_10, digits = 1)), color = "white", size = 5)+
+  scale_fill_viridis_c(option = "G", limits = c(0,38), direction = -1) +
+  scale_x_discrete(limits = c("LEW", "YRK"))+
+  labs(fill = "Salinity (ppt)") +
+  theme_minimal() +
+   theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+         axis.ticks.y = element_blank(), 
+         axis.text.y = element_blank(), 
+         axis.title.y = element_blank(), 
+         panel.grid = element_blank(), 
+         legend.key.size = unit(.4, 'cm'), 
+         legend.title = element_text(size = 10), 
+         legend.text = element_text(size = 10))
+field_sal_10_heatmap
+```
+
+### Common gardens 0.9 salinity quantile heatmap
+```{r}
+field_sal_90_heatmap <- ggplot(quant_field, aes(site_name, 1, fill = salinity_quantile_90)) +
+  geom_tile()+
+  geom_text(aes(label = round(salinity_quantile_90, digits = 1)), color = "white", size = 5)+
+  scale_fill_viridis_c(option = "G", limits = c(0,38), direction = -1) +
+  scale_x_discrete(limits = c("LEW", "YRK"))+
+  labs(fill = "Salinity (ppt)") +
+  theme_minimal() +
+   theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+         axis.ticks.y = element_blank(), 
+         axis.text.y = element_blank(), 
+         axis.title.y = element_blank(), 
+         panel.grid = element_blank(), 
+         legend.key.size = unit(.4, 'cm'), 
+         legend.title = element_text(size = 10), 
+         legend.text = element_text(size = 10))
+field_sal_90_heatmap
+```
+
+### Common gardens 0.1 temperature quantile heatmap
+```{r}
+field_temp_10_heatmap <- ggplot(quant_field, aes(site_name, 1, fill = temp_quantile_10)) +
+  geom_tile()+
+  geom_text(aes(label = round(temp_quantile_10, digits = 1)), color = "white", size = 5)+
+  scale_fill_viridis_c(option = "C", limits = c(5,32)) +
+  scale_x_discrete(limits = c("LEW", "YRK"))+
+  labs(fill = "Temp °C ") +
+  theme_minimal() +
+   theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+         axis.ticks.y = element_blank(), 
+         axis.text.y = element_blank(), 
+         axis.title.y = element_blank(), 
+         panel.grid = element_blank(), 
+         legend.key.size = unit(.4, 'cm'), 
+         legend.title = element_text(size = 10), 
+         legend.text = element_text(size = 10))
+field_temp_10_heatmap
+
+ggsave("Fig1C_field_temp10_heatmap.pdf",
+       plot = field_temp_10_heatmap,
+       device = "pdf",
+       path = "figures/envr_of_origin",
+       height = 1.7,
+       width = 3.4)
+```
+
+### Common gardens 0.9 temperature quantile heatmap
+```{r}
+field_temp_90_heatmap <- ggplot(quant_field, aes(site_name, 1, fill = temp_quantile_90), height = 2, width = 7) +
+  geom_tile()+
+  geom_text(aes(label = round(temp_quantile_90, digits = 1)), size = 5)+
+  scale_fill_viridis_c(option = "C", limits = c(5,32)) +
+  scale_x_discrete(limits = c("LEW", "YRK"))+
+  labs(fill = "Temp °C ") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.ticks.y = element_blank(), 
+        axis.text.y = element_blank(), 
+        axis.title.y = element_blank(), 
+        panel.grid = element_blank(), 
+        legend.key.size = unit(.4, 'cm'), 
+        legend.title = element_text(size = 10), 
+        legend.text = element_text(size = 10))
+
+field_temp_90_heatmap
+
+ggsave("Fig1C_field_temp_90_heatmap.pdf",
+       plot = field_temp_90_heatmap,
+       device = "pdf",
+       path = "figures/envr_of_origin",
+       height = 1.7,
+       width = 3.4)
+```

@@ -42,7 +42,7 @@ ci_df <- read_csv("data/performance_H2F/MVP_phenotyping_final.csv", show_col_typ
 gen_parents <- read.csv("results/parent_effects_H2F/parent_genetic_effects.csv")
 
 #environment of origin quantiles
-env_parents <- read.csv("results/environment/envr_quantiles_allsites.csv")[,-c(1, 9)]
+env_parents <- read.csv("results/environment/envr_quantiles_allsites.csv")
 
 #environmental distance based on scaled envr quantiles
 env_dist <- read.csv("results/environment/envr_quantiles_dist_all.csv")

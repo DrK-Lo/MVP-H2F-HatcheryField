@@ -1,0 +1,486 @@
+
+Lewisetta t1 (November 2023) modeling approach 2
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: length ~ ho + ar + dist_LEW + (1 | bags_label)
+   Data: len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site ==  
+    "Lewisetta", ]
+
+REML criterion at convergence: 7290.3
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-3.04782 -0.66820  0.00738  0.60603  2.91860 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 10.56    3.249   
+ Residual               51.94    7.207   
+Number of obs: 1069, groups:  bags_label, 24
+
+Fixed effects:
+             Estimate Std. Error        df t value Pr(>|t|)   
+(Intercept) -117.0359    46.6247   19.8808  -2.510   0.0208 * 
+ho            69.3827    21.1319   20.1135   3.283   0.0037 **
+ar            49.5250    20.4554   19.9097   2.421   0.0252 * 
+dist_LEW       1.8892     0.8064   19.9879   2.343   0.0296 * 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+         (Intr) ho     ar    
+ho        0.335              
+ar       -0.985 -0.488       
+dist_LEW -0.724 -0.167  0.683
+Analysis of Deviance Table (Type II Wald chisquare tests)
+
+Response: length
+           Chisq Df Pr(>Chisq)   
+ho       10.7802  1   0.001026 **
+ar        5.8618  1   0.015473 * 
+dist_LEW  5.4885  1   0.019142 * 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Lewisetta t1 (November 2023) scaled modeling approach 2
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: scale(length) ~ scale(ho) + scale(ar) + scale(dist_LEW) + (1 |      bags_label)
+   Data: len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site ==  
+    "Lewisetta", ]
+
+REML criterion at convergence: 2681.9
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-3.04782 -0.66820  0.00738  0.60603  2.91860 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 0.1379   0.3713  
+ Residual               0.6783   0.8236  
+Number of obs: 1069, groups:  bags_label, 24
+
+Fixed effects:
+                Estimate Std. Error       df t value Pr(>|t|)   
+(Intercept)      0.01517    0.08003 19.92544   0.190   0.8515   
+scale(ho)        0.30654    0.09336 20.11354   3.283   0.0037 **
+scale(ar)        0.31146    0.12864 19.90968   2.421   0.0252 * 
+scale(dist_LEW)  0.26369    0.11256 19.98791   2.343   0.0296 * 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) scl(h) scl(r)
+scale(ho)   -0.036              
+scale(ar)   -0.017 -0.488       
+scl(ds_LEW) -0.026 -0.167  0.683
+Analysis of Deviance Table (Type II Wald chisquare tests)
+
+Response: scale(length)
+                  Chisq Df Pr(>Chisq)   
+scale(ho)       10.7802  1   0.001026 **
+scale(ar)        5.8618  1   0.015473 * 
+scale(dist_LEW)  5.4885  1   0.019142 * 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Lewisetta t2 (May 2024) modeling approach 2
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: length ~ ho + ar + (1 | bags_label)
+   Data: len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site ==  
+    "Lewisetta", ]
+
+REML criterion at convergence: 6635.2
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.2097 -0.6994 -0.0874  0.6438  3.5707 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept)  6.029   2.455   
+ Residual               54.592   7.389   
+Number of obs: 967, groups:  bags_label, 24
+
+Fixed effects:
+            Estimate Std. Error     df t value Pr(>|t|)    
+(Intercept)   -33.38      25.55  21.07  -1.306 0.205509    
+ho             67.83      16.51  21.05   4.109 0.000498 ***
+ar             19.13      11.86  21.02   1.613 0.121596    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+   (Intr) ho    
+ho  0.312       
+ar -0.974 -0.518
+Analysis of Deviance Table (Type II Wald chisquare tests)
+
+Response: length
+     Chisq Df Pr(>Chisq)    
+ho 16.8853  1  3.971e-05 ***
+ar  2.6026  1     0.1067    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Lewisetta t2 (May 2024) scaled modeling approach 2
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: scale(length) ~ scale(ho) + scale(ar) + (1 | bags_label)
+   Data: len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site ==  
+    "Lewisetta", ]
+
+REML criterion at convergence: 2543.2
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.2097 -0.6994 -0.0874  0.6438  3.5707 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 0.08534  0.2921  
+ Residual               0.77280  0.8791  
+Number of obs: 967, groups:  bags_label, 24
+
+Fixed effects:
+             Estimate Std. Error        df t value Pr(>|t|)    
+(Intercept) -0.002177   0.066037 20.997918  -0.033 0.974015    
+scale(ho)    0.314847   0.076621 21.052235   4.109 0.000498 ***
+scale(ar)    0.123834   0.076760 21.024434   1.613 0.121596    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+          (Intr) scl(h)
+scale(ho) -0.025       
+scale(ar)  0.016 -0.518
+Analysis of Deviance Table (Type II Wald chisquare tests)
+
+Response: scale(length)
+            Chisq Df Pr(>Chisq)    
+scale(ho) 16.8853  1  3.971e-05 ***
+scale(ar)  2.6026  1     0.1067    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Lewisetta t3 (November 2024) modeling approach 2
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: length ~ ho + ar + (1 | bags_label)
+   Data: len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site ==  
+    "Lewisetta", ]
+
+REML criterion at convergence: 6246.1
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.5198 -0.6143  0.0165  0.6541  3.2103 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept)  52.49    7.245  
+ Residual               156.56   12.513  
+Number of obs: 787, groups:  bags_label, 24
+
+Fixed effects:
+            Estimate Std. Error      df t value Pr(>|t|)   
+(Intercept)  -244.36      71.43   21.12  -3.421  0.00255 **
+ho            165.04      45.90   20.67   3.596  0.00173 **
+ar            101.34      33.12   21.02   3.060  0.00594 **
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+   (Intr) ho    
+ho  0.312       
+ar -0.974 -0.516
+Analysis of Deviance Table (Type II Wald chisquare tests)
+
+Response: length
+     Chisq Df Pr(>Chisq)    
+ho 12.9314  1  0.0003231 ***
+ar  9.3626  1  0.0022145 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Lewisetta t3 (November 2024) scaled modeling approach 2
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: scale(length) ~ scale(ho) + scale(ar) + (1 | bags_label)
+   Data: len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site ==  
+    "Lewisetta", ]
+
+REML criterion at convergence: 1786.3
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.5198 -0.6143  0.0165  0.6541  3.2103 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 0.1749   0.4182  
+ Residual               0.5216   0.7222  
+Number of obs: 787, groups:  bags_label, 24
+
+Fixed effects:
+            Estimate Std. Error       df t value Pr(>|t|)   
+(Intercept) -0.01154    0.08936 20.78539  -0.129  0.89851   
+scale(ho)    0.37481    0.10423 20.66758   3.596  0.00173 **
+scale(ar)    0.30912    0.10102 21.01862   3.060  0.00594 **
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+          (Intr) scl(h)
+scale(ho)  0.027       
+scale(ar)  0.021 -0.516
+Analysis of Deviance Table (Type II Wald chisquare tests)
+
+Response: scale(length)
+            Chisq Df Pr(>Chisq)    
+scale(ho) 12.9314  1  0.0003231 ***
+scale(ar)  9.3626  1  0.0022145 ** 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+York River t1 (November 2023) modeling approach 2
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: length ~ ho + ar + dist_YRK + (1 | bags_label)
+   Data: len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site ==  
+    "YorkRiver", ]
+
+REML criterion at convergence: 7304.3
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.4472 -0.4220  0.0770  0.6465  2.6941 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 10.68    3.267   
+ Residual               53.69    7.327   
+Number of obs: 1066, groups:  bags_label, 24
+
+Fixed effects:
+            Estimate Std. Error      df t value Pr(>|t|)  
+(Intercept)  -73.092     43.096  19.958  -1.696   0.1054  
+ho           -48.388     23.975  20.072  -2.018   0.0571 .
+ar            50.256     19.899  19.975   2.526   0.0201 *
+dist_YRK       2.072      1.032  20.032   2.008   0.0584 .
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+         (Intr) ho     ar    
+ho        0.528              
+ar       -0.985 -0.662       
+dist_YRK -0.661 -0.487  0.656
+Analysis of Deviance Table (Type II Wald chisquare tests)
+
+Response: length
+          Chisq Df Pr(>Chisq)  
+ho       4.0735  1    0.04356 *
+ar       6.3786  1    0.01155 *
+dist_YRK 4.0307  1    0.04468 *
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+York River t1 (November 2023) scaled modeling approach 2
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: scale(length) ~ scale(ho) + scale(ar) + scale(dist_YRK) + (1 |      bags_label)
+   Data: len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site ==  
+    "YorkRiver", ]
+
+REML criterion at convergence: 2870
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.4472 -0.4220  0.0770  0.6465  2.6941 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 0.1622   0.4027  
+ Residual               0.8156   0.9031  
+Number of obs: 1066, groups:  bags_label, 24
+
+Fixed effects:
+                 Estimate Std. Error        df t value Pr(>|t|)  
+(Intercept)      0.007759   0.086782 20.010175   0.089   0.9296  
+scale(ho)       -0.233980   0.115930 20.071537  -2.018   0.0571 .
+scale(ar)        0.343178   0.135881 19.975294   2.526   0.0201 *
+scale(dist_YRK)  0.232164   0.115639 20.032458   2.008   0.0584 .
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) scl(h) scl(r)
+scale(ho)   -0.006              
+scale(ar)   -0.017 -0.662       
+scl(ds_YRK) -0.015 -0.487  0.656
+Analysis of Deviance Table (Type II Wald chisquare tests)
+
+Response: scale(length)
+                 Chisq Df Pr(>Chisq)  
+scale(ho)       4.0735  1    0.04356 *
+scale(ar)       6.3786  1    0.01155 *
+scale(dist_YRK) 4.0307  1    0.04468 *
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+York River t2 (May 2024) modeling approach 2
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: length ~ ho + ar + dist_YRK + (1 | bags_label)
+   Data: len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site ==  
+    "YorkRiver", ]
+
+REML criterion at convergence: 5965.1
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.0873 -0.6583 -0.0014  0.6602  3.3141 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept)  8.724   2.954   
+ Residual               33.424   5.781   
+Number of obs: 934, groups:  bags_label, 24
+
+Fixed effects:
+            Estimate Std. Error       df t value Pr(>|t|)   
+(Intercept) -86.7662    38.7261  19.9031  -2.241  0.03663 * 
+ho          -48.9444    21.4811  19.7843  -2.278  0.03395 * 
+ar           58.2371    17.8692  19.8687   3.259  0.00395 **
+dist_YRK      2.1606     0.9252  19.8095   2.335  0.03017 * 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+         (Intr) ho     ar    
+ho        0.526              
+ar       -0.985 -0.660       
+dist_YRK -0.660 -0.486  0.655
+Analysis of Deviance Table (Type II Wald chisquare tests)
+
+Response: length
+           Chisq Df Pr(>Chisq)   
+ho        5.1915  1   0.022697 * 
+ar       10.6216  1   0.001118 **
+dist_YRK  5.4534  1   0.019531 * 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+York River t2 (May 2024) scaled modeling approach 2
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: scale(length) ~ scale(ho) + scale(ar) + scale(dist_YRK) + (1 |      bags_label)
+   Data: len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site ==  
+    "YorkRiver", ]
+
+REML criterion at convergence: 2444.9
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.0873 -0.6583 -0.0014  0.6602  3.3141 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 0.1954   0.4421  
+ Residual               0.7488   0.8653  
+Number of obs: 934, groups:  bags_label, 24
+
+Fixed effects:
+                  Estimate Std. Error         df t value Pr(>|t|)   
+(Intercept)     -0.0008075  0.0946157 19.8988331  -0.009  0.99328   
+scale(ho)       -0.2885734  0.1266511 19.7843054  -2.278  0.03395 * 
+scale(ar)        0.4720908  0.1448541 19.8686682   3.259  0.00395 **
+scale(dist_YRK)  0.2959612  0.1267369 19.8094903   2.335  0.03017 * 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) scl(h) scl(r)
+scale(ho)   -0.008              
+scale(ar)    0.021 -0.660       
+scl(ds_YRK)  0.019 -0.486  0.655
+Analysis of Deviance Table (Type II Wald chisquare tests)
+
+Response: scale(length)
+                  Chisq Df Pr(>Chisq)   
+scale(ho)        5.1915  1   0.022697 * 
+scale(ar)       10.6216  1   0.001118 **
+scale(dist_YRK)  5.4534  1   0.019531 * 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+York River t3 (November 2024) modeling approach 2
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: length ~ ho + ar + (1 | bags_label)
+   Data: len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site ==  
+    "YorkRiver", ]
+
+REML criterion at convergence: 4022.3
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.3336 -0.5497  0.0691  0.6779  2.6615 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept)  20.3     4.506  
+ Residual               128.6    11.339  
+Number of obs: 521, groups:  bags_label, 24
+
+Fixed effects:
+            Estimate Std. Error      df t value Pr(>|t|)    
+(Intercept)  -187.67      49.51   23.31  -3.790 0.000928 ***
+ho            -71.99      30.97   20.64  -2.324 0.030403 *  
+ar            112.08      22.71   22.33   4.935 5.93e-05 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+   (Intr) ho    
+ho  0.281       
+ar -0.975 -0.487
+Analysis of Deviance Table (Type II Wald chisquare tests)
+
+Response: length
+     Chisq Df Pr(>Chisq)    
+ho  5.4026  1    0.02011 *  
+ar 24.3499  1  8.033e-07 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+York River t3 (November 2024) scaled modeling approach 2
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: scale(length) ~ scale(ho) + scale(ar) + (1 | bags_label)
+   Data: len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site ==  
+    "YorkRiver", ]
+
+REML criterion at convergence: 1365.7
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.3336 -0.5497  0.0691  0.6779  2.6615 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 0.1174   0.3426  
+ Residual               0.7436   0.8623  
+Number of obs: 521, groups:  bags_label, 24
+
+Fixed effects:
+             Estimate Std. Error        df t value Pr(>|t|)    
+(Intercept) -0.004514   0.081093 21.017853  -0.056   0.9561    
+scale(ho)   -0.209382   0.090082 20.642639  -2.324   0.0304 *  
+scale(ar)    0.416961   0.084498 22.331522   4.935 5.93e-05 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+          (Intr) scl(h)
+scale(ho) -0.019       
+scale(ar)  0.122 -0.487
+Analysis of Deviance Table (Type II Wald chisquare tests)
+
+Response: scale(length)
+            Chisq Df Pr(>Chisq)    
+scale(ho)  5.4026  1    0.02011 *  
+scale(ar) 24.3499  1  8.033e-07 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1

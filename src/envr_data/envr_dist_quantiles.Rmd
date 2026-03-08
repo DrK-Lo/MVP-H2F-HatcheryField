@@ -5,9 +5,8 @@ output: pdf_document
 date: "25-10-19"
 ---
 
-## Overview
-This analysis calcualtes pairwise environmental distances between sites based on scaled 
-temperature and salinity quantiles (10th and 90th percentiles).
+This analysis calculates pairwise environmental distances between sites based on scaled 
+temperature and salinity quantiles (10th and 90th quantiles).
 This produces two distance matrices: one with all sites + one excluding field sites.
 
 ## Edit history:
@@ -17,7 +16,7 @@ This produces two distance matrices: one with all sites + one excluding field si
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-# Set working directory relative to project root
+# set working directory relative to project root
 knitr::opts_knit$set(root.dir = here::here())
 
 if (!require("pacman")) install.packages("pacman")
@@ -45,18 +44,19 @@ ALL_SITES <- c(POP_ORDER, FIELD_SITES)
 
 # columns used for distance calculation (10th/90th quantiles for temp and salinity)
 DIST_COLS <- c("salinity_quantile_10", "salinity_quantile_90", "temp_quantile_10", "temp_quantile_90")
-
 ```
 
 ## Helper functions
 ```{r helpers}
-#' calculate scaled Euclidean distance matrix from environmental data
-    # df: data frame with site_name and environmental variables
-    # cols: columns to use for distance calculation
-    # sites: vector of site names for row/column labels
+# calculate scaled Euclidean distance matrix from environmental data
+# scaling is done via z-score normalization (scale()) so that temperature and salinity contribute equally regardless of raw units/ranges. Note that scaling is computed independently for each input, so the 8-site and 10-site matrices use slightly different z-scores.
+
+#' @param df data frame with site_name and environmental variables
+#' @param cols columns to use for distance calculation
+#' @param sites vector of site names for row/column labels
 calc_envr_dist <- function(df, cols, sites) {
   df %>%
-    dplyr::select(all_of(cols)) %>%
+    select(all_of(cols)) %>%
     scale() %>%
     dist() %>%
     as.matrix() %>%
@@ -67,19 +67,15 @@ calc_envr_dist <- function(df, cols, sites) {
 
 ## Data preparation
 ```{r load-data}
-# SD, 10th, and 90th quantiles for temp/salinity
-# includes 8 environment-of-origin sites + 2 field experiment sites
-envr_quants_raw <- read_csv(file.path("..", "..", "data", "environment", "quantiles_11092025.csv"),
-                            show_col_types = FALSE) %>%
-  dplyr::select(-1, -9)  # remove index and unused columns
+# read quantiles produced by envr_quantiles.Rmd
+# includes SD, 10th, and 90th quantiles for temp/salinity
+# covers 8 environment-of-origin sites + 2 field experiment sites
+envr_quants_raw <- read_csv("results/environment/envr_quantiles_allsites.csv",
+                            show_col_types = FALSE)
 
 # create ordered versions
 envr_all <- envr_quants_raw %>% arrange(factor(site_name, levels = ALL_SITES))
 envr_origin <- envr_all %>% filter(!site_name %in% FIELD_SITES)
-
-# export summary of environment-of-origin sites only
-write.csv(envr_origin, file.path("..", "..", "results", "environment", "envr_quantiles_summary.csv"),
-          row.names = FALSE)
 ```
 
 ## Run distance analysis
@@ -94,12 +90,12 @@ envr_dist_origin <- calc_envr_dist(envr_origin, DIST_COLS, POP_ORDER)
 ## Save results
 ```{r export}
 # distance matrix with all sites
-write.csv(envr_dist_all, file.path("..", "..", "results", "environment", "envr_quantiles_dist_all.csv"))
+write.csv(envr_dist_all, "results/environment/envr_quantiles_dist_all.csv")
 
-# distance matrix for environment-of-origin sites sites only for downstream analysis
-saveRDS(envr_dist_origin, file.path("..", "..", "results", "environment", "envr_quantiles_dist.rds"))
+# distance matrix for environment-of-origin sites only for downstream analysis
+saveRDS(envr_dist_origin, "results/environment/envr_quantiles_dist_origin.rds")
 
-# Display matrices
+# display matrices
 envr_dist_all
 envr_dist_origin
 ```
