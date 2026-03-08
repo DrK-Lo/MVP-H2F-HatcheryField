@@ -119,6 +119,25 @@ W5_NH <- filtered_W5_NH
 
 ```
 
+## Datasets for violin plots
+```{r}
+#add site name and create new data frame with full envr data set
+W5_NH <- W5_NH %>% 
+  mutate(site_name, site_name = "W4_VA")
+
+#reorder columns with site_name first
+W5_NH <- W5_NH[, c(6, 1, 2, 3, 4, 5)]
+
+W5_NH_temp_full <-W5_NH[, c(1,2,3,5)]
+
+W5_NH_sal_full <- W5_NH[, c(1,2,4,6)]
+
+#save W4_VA as csv for future analyses
+write.csv(W5_NH_temp_full, "data/envr_of_origin/full_temp/W5_NH_temp_full.csv", row.names = FALSE)
+
+write.csv(W5_NH_sal_full, "data/envr_of_origin/full_sal/W5_NH_sal_full.csv", row.names = FALSE)
+```
+
 Visualize the salinity, temperature, and date ranges over time. This can help us see if there are any anomalies or gaps in the data and make sure the filtering was done correctly. Sanity check - do the temperature and salinity ranges look appropriate for the geography of the site (ex. near full ocean salinity for coastal sites, lower salinity for estuaries or near rivers)?
 
 ```{r salinity-plot}

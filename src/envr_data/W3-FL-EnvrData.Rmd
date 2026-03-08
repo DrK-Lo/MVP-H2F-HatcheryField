@@ -120,6 +120,30 @@ W3_FL_temp <- filtered_W3_FL_temp
 W3_FL_sal <- filtered_W3_FL_sal
 
 ```
+## Datasets for violin plots
+```{r}
+#add site name and create new data frame with full envr data set
+W3_FL_temp_full <- W3_FL_temp %>% 
+  mutate(site_name = "W3_FL")
+
+#make temp df
+W3_FL_temp_full <- W3_FL_temp_full %>% 
+  select(site_name, Timestamp, temp) %>%
+  rename(datetime = Timestamp)
+
+#make sal df
+W3_FL_sal_full <- W3_FL_sal %>% 
+  mutate(site_name = "W3_FL")
+
+W3_FL_sal_full <- W3_FL_sal_full %>% 
+  select(site_name, Timestamp, salinity) %>%
+  rename(datetime = Timestamp)
+
+#save W3_FL as csv for future analyses
+write.csv(W3_FL_temp_full, "data/envr_of_origin/full_temp/W3_FL_temp_full.csv", row.names = FALSE)
+
+write.csv(W3_FL_sal_full, "data/envr_of_origin/full_sal/W3_FL_sal_full.csv", row.names = FALSE)
+```
 
 Visualize the salinity, temperature, and date ranges over time. This can help us see if there are any anomalies or gaps in the data and make sure the filtering was done correctly. Sanity check - do the temperature and salinity ranges look appropriate for the geography of the site (ex. near full ocean salinity for coastal sites, lower salinity for estuaries or near rivers)?
 

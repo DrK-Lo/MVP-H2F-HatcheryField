@@ -2,7 +2,7 @@
 title: "envr_dist_quantiles"
 author: "Kiran Bajaj"
 output: pdf_document
-date: "`r Sys.Date()`"
+date: "25-10-19"
 ---
 
 ## Overview
@@ -13,13 +13,27 @@ This produces two distance matrices: one with all sites + one excluding field si
 ## Edit history:
  - 2025-11-10: NM updated environmental quantiles
 
+## Load packages
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+# Set working directory relative to project root
+knitr::opts_knit$set(root.dir = here::here())
+
+if (!require("pacman")) install.packages("pacman")
+
+packages <- c("tidyverse", "here")
+pacman::p_load(char = packages)
+
+# log versions for reproducibility
+r_version <- paste(R.version$major, R.version$minor, sep = ".")
+lib_ver <- packages %>%
+  map_chr(~ paste0(.x, " (v", packageVersion(.x), ")")) %>%
+  paste(collapse = ", ")
 ```
 
-## Packages
-```{r packages, message=FALSE}
-library(tidyverse)
+```{r}
+getwd()
 ```
 
 ## Global variables

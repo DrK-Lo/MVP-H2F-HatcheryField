@@ -115,19 +115,24 @@ summary(count.nas_env) # we have no NAs in datetime
 ```{r}
 #add site name and create new data frame with full envr data set
 W4_VA <- W4_VA %>% 
-  mutate(site_name, site_name = "W4_VA")
+  mutate(site_name = "W4_VA")
 
-#reorder columns with site_name first
-W4_VA <- W4_VA[, c(6, 1, 2, 3, 4, 5)]
+#reorder columns with site_name first, then everything else
+W4_VA <- W4_VA %>% 
+  select(site_name, everything())
 
-W4_VA_temp_full <-W4_VA[, c(1,2,3,5)]
+#create temp subset: site_name, datetime, temp, corrected_temp
+W4_VA_temp_full <- W4_VA %>% 
+  select(site_name, datetime, temp, corrected_temp)
 
-W4_VA_sal_full <- W4_VA[, c(1,2,4,6)]
+#create salinity subset: site_name, datetime, salinity, corrected_salinity
+W4_VA_sal_full <- W4_VA %>% 
+  select(site_name, datetime, salinity, corrected_salinity)
 
 #save W4_VA as csv for future analyses
-#write.csv(W4_VA_temp_full, "data/envr_of_origin/full_temp/W4-VA_temp_full.csv", row.names = FALSE)
+write.csv(W4_VA_temp_full, "data/envr_of_origin/full_temp/W4-VA_temp_full.csv", row.names = FALSE)
 
-#write.csv(W4_VA_sal_full, "data/envr_of_origin/full_sal/W4-VA_sal_full.csv", row.names = FALSE)
+write.csv(W4_VA_sal_full, "data/envr_of_origin/full_sal/W4-VA_sal_full.csv", row.names = FALSE)
 ```
 
 Visualize the salinity, temperature, and date ranges over time. This can help us see if there are any anomalies or gaps in the data and make sure the filtering was done correctly. Sanity check - do the temperature and salinity ranges look appropriate for the geography of the site (ex. near full ocean salinity for coastal sites, lower salinity for estuaries or near rivers)?

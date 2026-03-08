@@ -1,0 +1,2 @@
+"site_name","download_date","source_description","lat","lon","firstyear","finalyear","Mean_Annual_Temperature_C","Mean_max_temperature_C","Mean_min_temperature_C","Temperature_st_dev","Temperature_n","Temperature_years","collection_type"
+"VA","10-01-2024","NOAA National Buoy Data Center (NDBC), Chesapeake Bay Interpretive Buoy System with values corrected based on data from VIMS Water Quality Data","37.211","-76.787","2008","2019","18.5346352267756","26.8416666666667","1.75833333333333","8.48879806824356","109712","12","continuous"

@@ -1,0 +1,2 @@
+"site_name","download_date","source_description","lat","lon","firstyear","finalyear","Mean_Annual_Salinity_ppt","Mean_max_Salinity_ppt","Mean_min_Salinity_ppt","Salinity_st_dev","Salinity_n","Salinity_years","collection_type"
+"JR","10-01-2024","NOAA National Buoy Data Center (NBDC), Chesapeake Bay Interpretive Buoy System with values corrected based on data from VIMS Water Quality Data","37.211","-76.787","2008","2019","15.2082260828351","22.1833333333333","12.5416666666667","2.70141647539953","109712","12","continuous"
