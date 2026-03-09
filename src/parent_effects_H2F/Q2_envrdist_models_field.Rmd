@@ -52,73 +52,65 @@ env_dist <- read.csv("results/environment/envr_quantiles_dist_all.csv")
 
 ## Data preparation
 ```{r}
-# start by putting together a complete dataframe
 # genetic data
 colnames(gen_parents) <- c("pop","ho","exp_hs","ar")
 surv_mod_gen <- merge(surv_mod_ord_rename, gen_parents, by = "pop")
 
+# summarize length to match survival data (per pop/bag_site/bags_label/t)
 length_summarized <- lengths_mod_narm_nodead %>%
   group_by(bag_site, pop, t, bags_label) %>%
   summarise(
     mean_len = mean(length, na.rm = TRUE),
     .groups = "drop"
-  ) 
+  )
 
+# merge survival and summarized length
 surv_len_mod_gen <- merge(length_summarized, surv_mod_gen,
       by = c("pop", "bag_site", "bags_label", "t"))
 
-#clean env_dist. Remove all columns except distance to Lewisetta and distance to York and remove rows for LEW and YRK.
-env_dist_filter <- env_dist[c(1:8), c("X", "LEW", "YRK")]
-colnames(env_dist_filter) <- c("pop", "dist_LEW", "dist_YRK")
+# clean env_parents
+colnames(env_parents) <- c("pop","salinity_quantile_10","salinity_quantile_90","Salinity_st_dev","temp_quantile_10","temp_quantile_90","Temperature_st_dev", "salinity")
 
-#add environmental data to df
-surv_mod_gen_dist <- merge(surv_len_mod_gen, env_dist_filter, by = c("pop"))
-
-# Subset by deployment site
-df_lew <- surv_mod_gen_dist %>% filter(bag_site == "Lewisetta")
-df_yrk <- surv_mod_gen_dist %>% filter(bag_site == "YorkRiver")
+# add environmental data to df
+surv_len_mod_gen_env <- merge(surv_len_mod_gen, env_parents, by = c("pop"))
 ```
+
+Then update the correlation matrices to include survival and mean length:
 
 ## Assess multicollinearity
 ```{r}
-cor_matrix_lew <- cor(df_lew[,c("dist_LEW", "ho", "ar", "surv", "mean_len")])
+cor_matrix_all <- cor(surv_len_mod_gen_env[,c("salinity_quantile_10","salinity_quantile_90","Salinity_st_dev","temp_quantile_10","temp_quantile_90","Temperature_st_dev", "ho", "ar", "surv", "mean_len")])
 
-#rename rows and columns
-colnames(cor_matrix_lew) <- c("Distance to Lewisetta","Heterozygosity","Allelic richness", "Survival", "Mean length")
+colnames(cor_matrix_all) <- c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Salinity SD", "Temp 0.1 quantile", "Temp 0.9 quantile", "Temperature SD","Heterozygosity","Allelic richness", "Survival", "Mean length")
+rownames(cor_matrix_all) <- colnames(cor_matrix_all)
 
-rownames(cor_matrix_lew) <- c("Distance to Lewisetta","Heterozygosity","Allelic richness", "Survival", "Mean length")
-
-pdf(file = "figures/parent_effects_H2F/FigS8A_corrplot_lew_envrdist_H0_Ar.pdf")
-
-corrplot_lew <- corrplot(cor_matrix_lew,
+corrplot_all <- corrplot(cor_matrix_all,
          method = "color",
          type = "upper",
          tl.col = "black",
          tl.srt = 45,
-         title = "Multicollinearity of environmental distance, heterozygosity, and allelic richness (Lewisetta)",
+         title = "Pairwise correlations among environmental quantiles, genetic diversity, and performance",
          addCoef.col = 'black',
          mar=c(0,0,2,0))
-dev.off()
-#borderline collinearity with distance to Lew and ar (r = -0.69). 
 
-cor_matrix_yrk <- cor(df_yrk[,c("dist_YRK", "ho", "ar", "surv", "mean_len")])
+cor_matrix_quant <- cor(surv_len_mod_gen_env[,c("salinity_quantile_10","salinity_quantile_90","temp_quantile_10","temp_quantile_90","ho", "ar", "surv", "mean_len")])
 
-colnames(cor_matrix_yrk) <- c("Distance to York River","Heterozygosity","Allelic richness", "Survival", "Mean length")
+colnames(cor_matrix_quant) <- c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Temp 0.1 quantile", "Temp 0.9 quantile", "Heterozygosity","Allelic richness", "Survival", "Mean length")
+rownames(cor_matrix_quant) <- colnames(cor_matrix_quant)
 
-rownames(cor_matrix_yrk) <- c("Distance to York River","Heterozygosity","Allelic richness", "Survival", "Mean length")
-
-pdf(file = "figures/parent_effects_H2F/FigS8B_corrplot_york_envrdist_H0_Ar.pdf")
-corrplot_yrk <- corrplot(cor_matrix_yrk,
+pdf(file = "figures/parent_effects_H2F/FigS2_corrplot_envr_quantiles_H0_Ar.pdf")
+corrplot_quant <- corrplot(cor_matrix_quant,
          method = "color",
          type = "upper",
          tl.col = "black",
          tl.srt = 45,
-         title = "Multicollinearity of environmental distance, heterozygosity, and allelic richness (York River)",
+         title = "Pairwise correlations among environmental quantiles, genetic diversity, and performance",
          addCoef.col = 'black',
          mar=c(0,0,2,0))
 dev.off()
-#nothing collinear
 ```
+
+The key changes are: reading in the length data, summarizing it to mean length per bag/pop/site/timepoint, merging it with the survival data before joining environmental variables, and adding `"surv"` and `"mean_len"` to both correlation matrices. I also updated the titles from "Multicollinearity" to "Pairwise correlations" since the matrices now include response variables.
 
 ### Assess VIF - Lewisetta
 ```{r}

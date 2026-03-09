@@ -64,6 +64,7 @@ colnames(env_parents) <- c("pop","salinity_quantile_10","salinity_quantile_90","
 
 #add environmental data to df
 surv_mod_gen_env <- merge(surv_mod_gen, env_parents, by = c("pop"))
+
 ```
 
 ## Assess multicollinearity

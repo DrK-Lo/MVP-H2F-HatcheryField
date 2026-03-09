@@ -42,6 +42,10 @@ getwd()
 ##VIMS data upload and cleaning
 ```{r VIMS_cleaning}
 
+#Data was downloaded by Missy Southworth and emailed to M.Eppley on 9/15/2023
+#Source - Missy Southworth, VIMS Annual Summer Environmental Data Collection, https://www.vims.edu/research/units/labgroups/molluscan_ecology/publications/
+#The site was sampled intermittently
+
 VIMS_raw <- read_csv("data/envr_of_origin/raw_envr_data/VA1-VIMS-raw.csv")
 
 # View how the data are stored. Note the variable names and the format and units that the data are stored in.  

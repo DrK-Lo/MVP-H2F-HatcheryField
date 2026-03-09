@@ -86,8 +86,8 @@ msx_sub$sampling_date <- paste(msx_sub$Month, msx_sub$Year, sep = "-")
   scale_x_discrete(limits = c("7-2023", "11-2023", "7-2024", "11-2024"))+
   ylim (c(0, 105))+
   ggtitle("Dermo Prevalence through Field Experiment")+
-  xlab("Sampling Date")+
-  ylab("RFTM Dermo Prevalence (%)")+
+  xlab("Sampling date")+
+  ylab("RFTM Dermo prevalence (%)")+
   #geom_text(aes(label = Dermo_prev), stat = "identity", position = position_dodge(width = .8), vjust = 0)+
   theme_bw()+
   theme(panel.grid = element_blank(),
@@ -116,8 +116,8 @@ ggsave("figures/disease/Fig2A_dermo_field_H2F.pdf",
   scale_x_discrete(limits = c("7-2023", "11-2023", "7-2024", "11-2024"))+
   ylim (c(0, 105))+
   ggtitle("MSX Prevalence through Field Experiment")+
-  xlab("Sampling Date")+
-  ylab("RFTM MSX Prevalence (%)")+
+  xlab("Sampling date")+
+  ylab("MSX prevalence (%)")+
   #geom_text(aes(label = Dermo_prev), stat = "identity", position = position_dodge(width = .8), vjust = 0)+
   theme_bw()+
   theme(panel.grid = element_blank(),
