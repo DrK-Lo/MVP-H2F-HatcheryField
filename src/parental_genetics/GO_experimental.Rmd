@@ -171,7 +171,7 @@ This will be used to make a supplementary file for H2F and will be used to look 
 
 ```{r}
 
-write_csv(snp_annotated, file.path("supp_files", "full_SNPs_outliers_annotated.csv"))
+write_csv(snp_annotated, file.path("supp_files", "5-full_SNPs_outliers_annotated.csv"))
 
 ```
 
@@ -321,7 +321,7 @@ enriched_split <- enriched %>%
 
 # rename gene column for merge
 genes <- genes %>%
-  rename(gene = Pasted)
+  dplyr::rename(gene = Pasted)
 
 # join enriched pathway genes with full gene info from the other dataframe
 enriched_joined <- enriched_split %>%
