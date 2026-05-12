@@ -521,3 +521,85 @@ ggsave(file.path("figures", "putative_selection", "Fig5B_GO_lollipop_plot.pdf"),
 lollipop_plot
 
 ```
+
+## Data product: annotated full SNP set with outlier status and thinned status
+For BCO-DMO 260510
+
+```{r}
+
+snp_info_thinned_status <- read.csv(file.path("supp_files", "1-supplementary_snp_info.csv"))
+snp_info_outlier_status_annotated <- snp_annotated
+
+# collapse multi-gene SNPs to one row per SNP
+# use across() for the columns that vary, keep everything else via first()
+collapse_unique <- function(x) paste(unique(na.omit(x)), collapse = ";")
+
+outlier_collapsed <- snp_info_outlier_status_annotated %>%
+  group_by(LocusName) %>%
+  summarise(
+    across(c(gene_id, description, go_id, go_term), collapse_unique),
+    across(-c(gene_id, description, go_id, go_term), first),  # keep all other columns
+    .groups = "drop"
+  )
+
+nrow(outlier_collapsed)  # should be 154102
+
+# now merge in the thinned status
+merged <- outlier_collapsed %>%
+  left_join(
+    snp_info_thinned_status %>% dplyr::select(Affx.ID, in_thinned_set),
+    by = "Affx.ID"
+  )
+
+# change column order
+merged <- merged %>%
+  relocate(in_thinned_set, .after = LocusName) %>%
+  relocate(gene_id, description, go_id, go_term, .after = last_col())
+
+# make everything match with madeline and megha's data frame where possible
+merged <- merged %>%
+  # rename to match reference
+  rename(
+    Affx_ID = Affx.ID,
+    `AX-ID` = Name,
+    gene_description = description,
+    go_ids = go_id,
+    go_terms = go_term,
+    thinned_dataset = in_thinned_set
+  ) %>%
+  # select and reorder to match reference
+  dplyr::select(
+    Affx_ID,
+    `AX-ID`,
+    Chromosome,
+    Position,
+    FST,
+    He,
+    pvalues,
+    pvaluesRightTail,
+    qvalues,
+    OutlierFlag,
+    gene_id,
+    gene_description,
+    go_ids,
+    go_terms,
+    SNPType,
+    Tile_Std,
+    Tile_max,
+    Tile_v3,
+    Replicates,
+    Rank,
+    Group,
+    organism,
+    cust_id,
+    on_oystercv,
+    mutID,
+    chrom_position,
+    scaffold,
+    Sequence,
+    thinned_dataset
+  )
+
+write_csv(merged, file.path("supp_files", "snp_metadata_BCODMO"))
+
+```
