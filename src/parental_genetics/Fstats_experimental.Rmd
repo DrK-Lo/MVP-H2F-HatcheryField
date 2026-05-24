@@ -49,6 +49,14 @@ samp_full_subset <- readRDS(file.path("data", "parental_genetics_structure", "20
 
 ```
 
+## Data product (BCODMO): full SNPs genotypes in csv format
+
+```{r}
+
+write.csv(full_snps, file.path("data", "parental_genetics_structure", "20250606_FULLSNPs_exp_labeled.csv"), row.names = FALSE)
+
+```
+
 ```{r}
 
 # rename datasets for processing

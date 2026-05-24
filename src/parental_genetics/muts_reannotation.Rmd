@@ -196,7 +196,7 @@ I want this data frame to be one row per SNP. So we need to find a way to collap
 
 ```{r}
 
-# this collpases the data frame into one row per SNP
+# this collapses the data frame into one row per SNP
 snp_collapsed <- snp_annotated %>%
   group_by(Affx.ID, Name, Sequence) %>%
   summarise(

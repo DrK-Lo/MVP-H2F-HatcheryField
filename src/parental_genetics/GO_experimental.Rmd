@@ -522,8 +522,7 @@ lollipop_plot
 
 ```
 
-## Data product: annotated full SNP set with outlier status and thinned status
-For BCO-DMO 260510
+## Data product (BCODMO): annotated full SNPs metadata with outlier status and thinned status
 
 ```{r}
 
@@ -598,6 +597,11 @@ merged <- merged %>%
     scaffold,
     Sequence,
     thinned_dataset
+  ) %>%
+  # round long decimals
+  mutate(
+    across(c(FST, He), \(x) round(x, 4)),
+    across(c(pvalues, pvaluesRightTail, qvalues), \(x) signif(x, 4))
   )
 
 write_csv(merged, file.path("supp_files", "snp_metadata_BCODMO"))
