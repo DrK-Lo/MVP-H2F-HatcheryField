@@ -8,6 +8,7 @@ date: "2025-02-20"
 This file is for modeling the effects of heterozygosity, allelic richness, and temperature and salinity quantiles of environments-of-origin on oyster survival and length in the VIMS ABC hatchery and nursery.
 
 CR: Updated 2025-11-16 with new envr quantiles file.
+260610: KEB: that these analyses were run with heterozygosity and allelic richness data that was calculated incorrectly. This needs to be fixed. 
 
 ## Load packages
 ```{r setup, include=FALSE}
@@ -43,8 +44,9 @@ quantiles <- read.csv("results/environment/envr_quantiles_allsites.csv")
 #this file contains survival rate data for larval oysters up to day 21 post hatching
 survival <-  read.csv("data/performance_H2F/CViMVP_larvae_survival.csv")
 
-#this file contains data on mean heterozygosity and allelic richness in the parent populations
+#this file contains data on mean heterozygosity and allelic richness in the parent populations - this needs to be updated to be calculated correctly
 parent_genetics <- read.csv("results/parent_effects_H2F/parent_genetic_effects.csv")
+
 ```
 
 ## Data preparation

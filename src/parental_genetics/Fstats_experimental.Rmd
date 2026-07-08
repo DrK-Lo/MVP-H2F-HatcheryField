@@ -5,7 +5,7 @@ output: html_document
 date: "2025-02-04"
 ---
 
-This file is for calculating pairwise Fst, allelic richness, observed heterozygosity, and running OutFLANK to test for Fst outliers. The analysis uses SNP chip data from the experimental parents for the H2F paper. MGE generated SNP sets and genotype matrices. 
+This file is for calculating pairwise Fst, allelic richness, observed heterozygosity, and running OutFLANK to test for Fst outliers. The analysis uses SNP chip data from the experimental PARENTS for the H2F paper. MGE generated SNP sets and genotype matrices. 
 
 ## Load packages
 
@@ -17,7 +17,7 @@ knitr::opts_knit$set(root.dir = here::here())
 
 if (!require("pacman")) install.packages("pacman")
 
-packages <- c("here", "ggplot2", "hierfstat", "reshape2", "dplyr", "tidyr", "readr", "adegenet", "viridis", "OutFLANK", "purrr")
+packages <- c("here", "ggplot2", "hierfstat", "reshape2", "dplyr", "tidyr", "readr", "adegenet", "viridis", "OutFLANK", "purrr", "tibble")
 pacman::p_load(char = packages)
 
 # log versions for reproducibility
@@ -127,6 +127,53 @@ write.table(vcf_df, vcf_file, append = TRUE, sep = "\t",
 
 ```
 
+## Shared genotype conversion function
+
+This function converts a 0/1/2 genotype matrix to a genind object via string genotypes ("11"/"12"/"22"). This avoids hierfstat misreading raw 0/1/2 as triallelic. Defined once here and used for both Fst (thinned) and basic stats (full).
+
+```{r}
+
+genotypes_to_genind <- function(numeric_genotypes, pop_labels) {
+  geno_numeric <- as.matrix(numeric_genotypes)
+  
+  geno_strings <- matrix(NA_character_, 
+                         nrow = nrow(geno_numeric), 
+                         ncol = ncol(geno_numeric))
+  geno_strings[geno_numeric == 0] <- "11"
+  geno_strings[geno_numeric == 1] <- "12"
+  geno_strings[geno_numeric == 2] <- "22"
+  
+  geno_strings <- as.data.frame(geno_strings)
+  colnames(geno_strings) <- colnames(geno_numeric)
+  
+  df2genind(geno_strings, pop = pop_labels, ploidy = 2, ncode = 1)
+}
+
+```
+
+## Shared population recoding
+
+Used for both Fst and basic stats sections to keep labels consistent.
+
+```{r}
+
+recode_pop <- function(labels) {
+  dplyr::case_match(labels,
+    "TX-CapBay"    ~ "W1-TX",
+    "LA-SisLake"   ~ "W2-LA",
+    "FL-KingPlan"  ~ "W3-FL",
+    "VA-DeepWatSh" ~ "W4-VA",
+    "LOLA"         ~ "S1-LOLA",
+    "DEBY"         ~ "S2-DEBY",
+    "NH-GrtBay"    ~ "W5-NH",
+    "ME-HogIs"     ~ "W6-ME"
+  )
+}
+
+population_order <- c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME")
+
+```
+
 ## Calculating Fst 
 
 ### Data preparation
@@ -142,74 +189,30 @@ dim(GEN_filtered_fst) # 0 columns removed
 
 ```
 
-``` {r}
+```{r}
 
-# rename for processing
-fst_data <- GEN_filtered_fst
+# match sample order between genotype matrix and metadata
+samp_ordered <- samp_full_subset[match(rownames(GEN_filtered_fst), samp_full_subset$clean_ID), ]
 
-# make sample IDs into a real column (instead of rownames)
-sample_IDs <- rownames(fst_data)
-fst_data$clean_ID <- sample_IDs # "clean_ID" is the column name in samp_full_subset
+# verify alignment
+identical(rownames(GEN_filtered_fst), as.character(samp_ordered$clean_ID)) # should be TRUE
 
-# reset the rownames to empty
-rownames(fst_data) <- NULL
-
-# make sure labels in fst data still line up with sample data
-if(!identical((fst_data$clean_ID),samp_full_subset$clean_ID)){
-    print("Error sample names don't line up")
-    break
-   } # passes
-
-# store data to check labels 
-fst_labels_check <- fst_data$clean_ID
-head(fst_labels_check)
-samp_labels_check <- samp_full_subset$clean_ID
-head(samp_labels_check)
-
-# check that labels are still all lined up
-identical(fst_labels_check, samp_labels_check) # TRUE
+# build population labels for Fst
+fst_pop_labels <- recode_pop(samp_ordered$ID_SiteDate)
+table(fst_pop_labels) # check sample counts per population
 
 ```
 
 ```{r}
 
-# add population labels to fst data
-fst_data$ID_SiteDate <- samp_full_subset$ID_SiteDate
+# convert thinned genotype matrix to genind -> hierfstat
+genind_fst <- genotypes_to_genind(GEN_filtered_fst, pop_labels = fst_pop_labels)
 
-fst_data <- fst_data %>%
-  mutate(ID_SiteDate = case_match(ID_SiteDate,
-                                   "TX-CapBay" ~ "W1-TX",
-                                   "LA-SisLake" ~ "W2-LA",
-                                   "FL-KingPlan" ~ "W3-FL",
-                                   "VA-DeepWatSh" ~ "W4-VA",
-                                   "LOLA" ~ "S1-LOLA",
-                                   "DEBY" ~ "S2-DEBY",
-                                   "NH-GrtBay" ~ "W5-NH",
-                                   "ME-HogIs" ~ "W6-ME"
-                                   ))
-# move sample and population columns to front 
-n_cols <- ncol(fst_data)
-fst_data <- fst_data[, c((n_cols-1):n_cols, 1:(n_cols-2))]
+# verify biallelic: should be 2 columns per locus
+ncol(genind_fst@tab) / ncol(GEN_filtered_fst) # should be 2
 
-# sanity check: number of columns 
-dim(fst_data) # number of SNPs (105356) + sample col + pop col = 105358
-
-# check number of samples per population
-population_counts <- table(fst_data$ID_SiteDate)
-population_counts # no samples missing from any population
-
-```
-
-```{r}
-
-# remove sample ID column (first column) for Fst calculation
-fst_data <- fst_data[, -1]
-
-# convert population to factor
-fst_data$ID_SiteDate <- as.factor(fst_data$ID_SiteDate)
-
-# check dimensions one more time
-dim(fst_data) # 105358 - sample id col = 105357
+hierfstat_fst <- genind2hierfstat(genind_fst)
+dim(hierfstat_fst) # col 1 is pop, rest are loci
 
 ```
 
@@ -218,7 +221,7 @@ dim(fst_data) # 105358 - sample id col = 105357
 ```{r}
 
 # run Fst calculation - cluster only
-#fst_results <- pairwise.WCfst(fst_data)
+#fst_results <- pairwise.WCfst(hierfstat_fst, diploid = TRUE)
 #fst_results[is.na(fst_results)] <- 0
 
 # view results
@@ -233,9 +236,6 @@ fst_results <- readRDS(file.path("results", "parental_genetics", "20250606_fst_r
 # convert the matrix to a long format and edit column names
 fst_plotting <- melt(fst_results, na.rm = TRUE)
 colnames(fst_plotting) <- c("Var1", "Var2", "value")
-
-# create a vector for the desired order of populations
-population_order <- c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME")
 
 # reorder the Var1 and Var2 columns based on the defined order
 fst_plotting$Var1 <- factor(fst_plotting$Var1, levels = population_order)
@@ -275,197 +275,195 @@ dim(full) # 154102 SNPs
 ```{r}
 
 # filter SNPs that are all heterozygous (all 1s)
-keep_snps_fst <- apply(full, 2, function(col) !all(col == 1))
+keep_snps_bs <- apply(full, 2, function(col) !all(col == 1))
 
 # filter genotype matrix for these SNPs
-FULL_filtered <- full[, keep_snps_fst]
+FULL_filtered <- full[, keep_snps_bs]
 dim(FULL_filtered) # 0 columns removed
 
 ```
 
 ```{r}
 
-# rename for processing
-basic_stats_data <- FULL_filtered
+# reorder to match metadata
+FULL_filtered <- FULL_filtered[match(samp_full_subset$clean_ID, rownames(FULL_filtered)), ]
 
-# make sample IDs into a real column (instead of rownames)
-sample_IDs <- rownames(basic_stats_data)
-basic_stats_data$clean_ID <- sample_IDs # "clean_ID" is the column name in samp_full_subset
+# verify alignment
+identical(rownames(FULL_filtered), as.character(samp_full_subset$clean_ID)) # should be TRUE
 
-# reset the rownames to empty
-rownames(basic_stats_data) <- NULL
-
-# make sure labels in fst data still line up with sample data
-if(!identical((basic_stats_data$clean_ID),samp_full_subset$clean_ID)){
-    print("Error sample names don't line up")
-    break
-   } # passes
-
-# store data to check labels 
-fst_labels_check <- basic_stats_data$clean_ID
-head(fst_labels_check)
-samp_labels_check <- samp_full_subset$clean_ID
-head(samp_labels_check)
-
-# check everything is all lined up 
-identical(fst_labels_check, samp_labels_check) # TRUE
-
-```
-
-```{r}
-
-# add population labels to outflank data
-basic_stats_data$ID_SiteDate <- samp_full_subset$ID_SiteDate
-
-# edit name format
-basic_stats_data <- basic_stats_data %>%
-  mutate(ID_SiteDate = case_match(ID_SiteDate,
-                                   "TX-CapBay" ~ "W1-TX",
-                                   "LA-SisLake" ~ "W2-LA",
-                                   "FL-KingPlan" ~ "W3-FL",
-                                   "VA-DeepWatSh" ~ "W4-VA",
-                                   "LOLA" ~ "S1-LOLA",
-                                   "DEBY" ~ "S2-DEBY",
-                                   "NH-GrtBay" ~ "W5-NH",
-                                   "ME-HogIs" ~ "W6-ME"
-                                   ))
-
-# move sample and population columns to front 
-n_cols <- ncol(basic_stats_data)
-basic_stats_data <- basic_stats_data[, c((n_cols-1):n_cols, 1:(n_cols-2))]
-
-# sanity check: number of columns 
-dim(basic_stats_data) # number of SNPs (154102) + sample col + pop col = 154104
+# build population labels for basic stats
+bs_pop_labels <- recode_pop(samp_full_subset$ID_SiteDate)
 
 # check number of samples per population
-population_counts <- table(basic_stats_data$ID_SiteDate)
-population_counts
+table(bs_pop_labels)
+
+# check for any NAs in population labels
+sum(is.na(bs_pop_labels)) # should be 0
 
 ```
 
 ```{r}
 
-# remove sample ID column (first column) for basic stats calculation
-basic_stats_data <- basic_stats_data[, -1]
+# convert full genotype matrix to genind -> hierfstat (uses shared function defined above)
+genind_obj <- genotypes_to_genind(FULL_filtered, pop_labels = bs_pop_labels)
 
-# convert population to factor
-basic_stats_data$ID_SiteDate <- as.factor(basic_stats_data$ID_SiteDate)
-
-# check dimensions one more time
-dim(basic_stats_data) # 154104 - sample id col = 154103
-
-# convert data frame to a genind object using df2genind
-genind_obj<- df2genind(basic_stats_data[, -1],   # exclude population column
-                        pop = basic_stats_data$ID_SiteDate, # provide population column here
-                        ploidy = 2,             # specify ploidy (2 for diploids)
-                        ncode = 1) 
+# verify biallelic: should be 2 columns per locus
+ncol(genind_obj@tab) / ncol(FULL_filtered) # should be 2
 
 ```
 
 ```{r}
 
-# convert to hierfstat object using genind2hierfstat
-hierfstat_obj <- genind2hierfstat(genind_obj) 
+# convert to hierfstat obj
+hierfstat_obj <- genind2hierfstat(genind_obj)
 
 # run basic stats
-div <- basic.stats(hierfstat_obj) 
+div <- basic.stats(hierfstat_obj)
+
+# quick sanity check on the new values
+ho_pop <- colMeans(div$Ho, na.rm = TRUE)
+hs_pop <- colMeans(div$Hs, na.rm = TRUE)
+
+data.frame(
+  Population = names(ho_pop),
+  Ho = round(ho_pop, 3),
+  Hs = round(hs_pop, 3),
+  FIS_implied = round(1 - ho_pop/hs_pop, 3)
+)
 
 ```
 
 ### Observed and expected heterozygosity
 
 ```{r}
-
-# extract values
+# extract values from basic.stats output
 Ho <- div$Ho # one value per SNP per population
 Hs <- div$Hs # one value per SNP per population
+```
 
-# convert observed heterozygosity values to a data frame
-Ho_df <- as.data.frame(Ho)
-Ho_df$Locus <- rownames(Ho_df)
+#### Sanity checks
 
-# convert expected heterozygosity values to a data frame
-Hs_df <- as.data.frame(Hs)
-Hs_df$Locus <- rownames(Hs_df)
+```{r}
+# range checks: are values within expected bounds?
+summary(unlist(Ho))
+summary(unlist(Hs))
 
-# reshape data frames to long format
-Ho_long_pop <- Ho_df %>%
-  pivot_longer(cols = -Locus, names_to = "Population", values_to = "Ho") 
-Hs_long_pop <- Hs_df %>%
+# any out-of-range values?
+cat("Ho > 1:", sum(Ho > 1, na.rm = TRUE), "\n")
+cat("Ho < 0:", sum(Ho < 0, na.rm = TRUE), "\n")
+cat("Hs > 0.5:", sum(Hs > 0.5, na.rm = TRUE), 
+    "(small excess OK due to sample-size correction)\n")
+```
+
+```{r}
+# population assignments: do they match between input and hierfstat object?
+table(hierfstat_obj[, 1])
+table(bs_pop_labels)
+```
+
+```{r}
+# population-level summary of Ho, Hs, and implied FIS
+ho_pop <- colMeans(div$Ho, na.rm = TRUE)
+hs_pop <- colMeans(div$Hs, na.rm = TRUE)
+
+pop_summary <- data.frame(
+  Population = names(ho_pop),
+  Ho = round(ho_pop, 4),
+  Hs = round(hs_pop, 4),
+  FIS_implied = round(1 - ho_pop/hs_pop, 4)
+)
+pop_summary
+```
+
+```{r}
+# monomorphic loci per population
+monomorphic_per_pop <- apply(div$Hs, 2, function(x) sum(x == 0, na.rm = TRUE))
+monomorphic_per_pop
+```
+
+```{r}
+# convert Ho and Hs matrices to long-format data frames
+Ho_long <- as.data.frame(Ho) %>%
+  tibble::rownames_to_column("Locus") %>%
+  pivot_longer(cols = -Locus, names_to = "Population", values_to = "Ho")
+
+Hs_long <- as.data.frame(Hs) %>%
+  tibble::rownames_to_column("Locus") %>%
   pivot_longer(cols = -Locus, names_to = "Population", values_to = "Hs")
 
-# merge observed and expected data by populations and loci
-pop_data <- merge(Ho_long_pop, Hs_long_pop, by = c("Locus", "Population"))
+# merge into one long-format dataframe
+pop_data <- merge(Ho_long, Hs_long, by = c("Locus", "Population"))
 
-# combine into long format for plotting
+# set population factor levels for consistent plotting order
+pop_data$Population <- factor(pop_data$Population, levels = population_order)
+
+# also reshape for paired Ho/Hs boxplot
 pop_long <- pop_data %>%
   pivot_longer(cols = c("Ho", "Hs"), names_to = "Type", values_to = "Value")
+```
 
-# plot values by population
-ggplot(pop_long, aes(x = factor(Population, levels = population_order), y = Value, fill = Type)) +
+#### Plot 1: Ho and Hs distributions by population (boxplot)
+
+```{r}
+ggplot(pop_long, aes(x = Population, y = Value, fill = Type)) +
   geom_boxplot() +
-  labs(title = "Observed and Expected Heterozygosity by Population",
+  labs(title = "Observed and expected heterozygosity by population",
        x = "Population",
        y = "Heterozygosity") +
   scale_fill_manual(values = c("Ho" = "blue", "Hs" = "orange")) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
-
-# convert Population to factor with levels
-Ho_long$Population <- factor(Ho_long$Population, levels = population_order)
-
-# plot
-ggplot(Ho_long, aes(x = Population, y = Ho)) +
-  geom_boxplot(fill = "lightblue", alpha = 0.7) +
-  labs(
-    title = "Observed heterozygosity by population",
-    x = "Population",
-    y = "Observed heterozygosity (Ho)"
-  ) +
-  theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-  
 ```
 
 ```{r}
+# curious what the high outlier dots are
 
-# calculate average observed and expected heterozygosity per population
+# how many SNPs have Ho > 0.75 in each population?
+high_ho_counts <- apply(div$Ho, 2, function(x) sum(x > 0.75, na.rm = TRUE))
+high_ho_counts
+
+# what fraction of total SNPs is that?
+high_ho_counts / nrow(div$Ho)
+```
+
+#### Plot 2: Ho distribution by population (boxplot)
+
+```{r}
+ggplot(pop_data, aes(x = Population, y = Ho)) +
+  geom_boxplot(fill = "lightblue", alpha = 0.7) +
+  labs(title = "Observed heterozygosity by population",
+       x = "Population",
+       y = "Observed heterozygosity (Ho)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+#### Plot 3: Mean Ho and Hs by population (line plot)
+
+```{r}
+# calculate population means
 avg_het_per_pop <- pop_data %>%
   group_by(Population) %>%
   summarise(
-    avg_observed_ho = mean(Ho, na.rm = TRUE),
-    avg_expected_hs = mean(Hs, na.rm = TRUE)
-  )
+    Ho = mean(Ho, na.rm = TRUE),
+    Hs = mean(Hs, na.rm = TRUE)
+  ) %>%
+  pivot_longer(cols = c(Ho, Hs), names_to = "Type", values_to = "Value")
 
-print(avg_het_per_pop)
-
-```
-
-```{r}
-
-# reshape average heterozygosity data for plotting
-avg_het_long <- avg_het_per_pop %>%
-  pivot_longer(cols = c(avg_observed_ho, avg_expected_hs), names_to = "Type", values_to = "Value")
-
-# plot by population
-ggplot(avg_het_long, aes(x = factor(Population, levels = population_order), y = Value, group = Type, color = Type)) +
-  geom_line(size = 1.2) +  # lines for averages
-  geom_point(size = 3) +   # points for each average
-  labs(title = "Average Ho and Hs by population",
+ggplot(avg_het_per_pop, aes(x = Population, y = Value, group = Type, color = Type)) +
+  geom_line(size = 1.2) +
+  geom_point(size = 3) +
+  labs(title = "Mean Ho and Hs by population",
        x = "Population",
-       y = "Average heterozygosity") +
-  scale_color_manual(values = c("avg_observed_ho" = "blue", "avg_expected_hs" = "orange")) +
+       y = "Mean heterozygosity") +
+  scale_color_manual(values = c("Ho" = "blue", "Hs" = "orange")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
-
 ```
 
-### Allelic richness
+### Allelic richness 
 
-Something might be wrong with this calculation - it's working with 0, 1, and 2s and might be
-inflating allelic richness. 
-
-Total number of unique alleles present in a population. Results are close to whole numbers because of small adjustments from rarefaction. 
+This should be fixed with the new hierfstat object that reads SNPs as biallelic.
 
 ```{r}
 
@@ -487,19 +485,49 @@ means <- aggregate(Allelic_Richness ~ Population, data = ar_long, mean)
 
 ```
 
+#### Plot 1: Mean
+
 ```{r}
 
-# plot allelic richness results
-ggplot(ar_long, aes(x = factor(Population, levels = population_order), y = Allelic_Richness)) +
-  geom_boxplot(fill = "lightblue") +
-  labs(title = "Allelic richness by population", x = "Population", y = "Allelic richness") +
-  geom_point(data = means, aes(x = Population, y = Allelic_Richness, shape = "Mean"), 
-             size = 2, color = "black") +  # plot means in addition to medians
-  scale_shape_manual(name = "Legend", values = c(16), labels = c("Mean alleleic richness")) + 
+ggplot(means, aes(x = factor(Population, levels = population_order), 
+                  y = Allelic_Richness)) +
+  geom_point(size = 4, color = "darkblue") +
+  geom_hline(yintercept = 2, linetype = "dashed", color = "grey50") +
+  labs(title = "Mean allelic richness by population",
+       x = "Population", 
+       y = "Mean allelic richness") +
+  coord_cartesian(ylim = c(1.5, 2)) +  # zoom in
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 ```
+
+#### Plot 2: Proportion of polymorphic SNPs 
+
+```{r}
+
+poly_props <- ar_long %>%
+  group_by(Population) %>%
+  summarise(prop_polymorphic = mean(Allelic_Richness > 1.5, na.rm = TRUE))
+
+ggplot(poly_props, aes(x = factor(Population, levels = population_order),
+                       y = prop_polymorphic)) +
+  geom_col(fill = "lightblue") +
+  labs(title = "Proportion of polymorphic SNPs by population",
+       x = "Population",
+       y = "Proportion polymorphic") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+```{r}
+
+# make sure allelic richness is never greater than 2
+max(ar_long$Allelic_Richness, na.rm = TRUE)  # should be 2
+
+```
+
 
 ```{r}
 
@@ -516,32 +544,42 @@ print(avg_ar_per_pop)
 
 ### Data product: AR, Ho, Hs
 
-This will get used in a linear model that includes temperature, salinity, AR, and Ho. It is saved to the "parent_effects_H2F" folder under "data."
+This will get used in a linear model that includes temperature, salinity, AR, and Ho. It is saved to the "parent_effects_H2F" folder under "data." This is for the JUVENILE data though, not parents.
 
 ```{r}
 
-parent_genetic_effects <- merge(avg_het_per_pop, avg_ar_per_pop, by = "Population") %>%
+# reshape avg_het_per_pop back to wide format for merging
+avg_het_wide <- avg_het_per_pop %>%
+  pivot_wider(names_from = Type, values_from = Value) %>%
+  rename(avg_observed_ho = Ho, avg_expected_hs = Hs)
+
+# merge with allelic richness data
+parent_genetic_effects <- merge(avg_het_wide, avg_ar_per_pop, by = "Population") %>%
   mutate(Population = factor(Population, levels = population_order)) %>%
   arrange(Population)
 
-write_csv(parent_genetic_effects, file.path("results", "parent_effects_H2F", "parent_genetic_effects.csv"))
+write_csv(parent_genetic_effects, file.path("results", "parent_effects_H2F", "260707_parent_genetic_effects.csv"))
 
 ```
 
-## Fst outliers with OutFLANK
+## Fst outliers with OutFLANK - NOT RERUN FOR JUVENILES
 
 ### Data preparation
 
 ```{r}
 
-# rename for processing
-outflank_data <- basic_stats_data
+# rename for processing - using the full filtered matrix and pop labels from basic stats
+outflank_data <- as.data.frame(FULL_filtered)
+outflank_data$pop <- bs_pop_labels
+
+# move pop column to front
+outflank_data <- outflank_data[, c(ncol(outflank_data), 1:(ncol(outflank_data)-1))]
 
 # convert population to factor
-outflank_data$ID_SiteDate <- as.factor(outflank_data$ID_SiteDate)
+outflank_data$pop <- as.factor(outflank_data$pop)
 
 # check dimensions one more time
-dim(outflank_data) # 154103
+dim(outflank_data)
 
 ```
 
@@ -557,7 +595,7 @@ make_outflank_input <- function(df) {
   SNPmat[is.na(SNPmat)] <- 9            # replace missing with 9
   
   locus_names <- colnames(df)[-1]       # SNP names
-  pop_names <- df$ID_SiteDate           # population IDs
+  pop_names <- df$pop           # population IDs
   
   FstDataFrame <- MakeDiploidFSTMat(SNPmat, locus_names, pop_names)
   return(FstDataFrame)
@@ -648,4 +686,3 @@ joined_P1 <- left_join(P1, muts, by = c("Affx.ID" = "Affx.ID"))
 write_csv(joined_P1, file.path("results", "parental_genetics", "outflank_results.csv"))
 
 ```
-

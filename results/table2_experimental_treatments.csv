@@ -1,0 +1,11 @@
+treatment,treatment_type,source_population,geographic_origin,relative_geographic_origin,primary_genetic_ancestry,latitude,longitude
+W1-TX,wild monoculture,W1-TX,"Copano Bay, Texas",Southern,Gulf,28.096,-97.174
+W2-LA,wild monoculture,W2-LA,"Sister Lake, Louisiana",Southern,Gulf,29.239925,-90.911362
+W3-FL,wild monoculture,W3-FL,"Timucuan Preserve, Florida",Southern,Atlantic,30.44003,-81.43638
+W4-VA,wild monoculture,W4-VA,"James River, Virginia",Local (to both gardens),Atlantic,37.1501163,-76.638923
+S1-LOLA,selection line monoculture,S1-LOLA,"Coan River, Virginia",Local (to Lewisetta),Gulf,37.9803,-76.4619
+S2-DEBY,selection line monoculture,S2-DEBY,"York River, Virginia",Local (to York River),Atlantic,37.249107,-76.497032
+W5-NH,wild monoculture,W5-NH,"Great Bay, New Hampshire",Northern,Atlantic,43.053746,-70.911544
+W6-ME,wild monoculture,W6-ME,"Hog Island, Maine",Northern,Atlantic,44.0133,-69.541689
+H1-HYBRIDMIX,polyculture with outcrossing,all source populations,Created by crossing sperm from each individual male from with a pool of eggs in equal proportions from all females from all the monoculture treatments. The resulting zygotes were then pooled and raised in the hatchery.,,,,
+H2-SEEDMIX,polyculture,all source populations,"Prior to field deployment of experimental treatments, created by mixing nursery seed from each monoculture treatment in equal proportions.",,,,

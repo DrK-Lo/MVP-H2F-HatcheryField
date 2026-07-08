@@ -9,6 +9,8 @@ This file compares survival and length of each treatment group at each common ga
 
 NM initially created 6 figure panels for of survival vs. environmental distance. CR then plotted the residuals of the multiple regression models from Q2 to see which sites are driving the positive relationships - this is now Fig S9. 
 
+260610: KEB: that these analyses were run with heterozygosity and allelic richness data that was calculated incorrectly. This needs to be fixed. 
+
 ## Load packages
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
