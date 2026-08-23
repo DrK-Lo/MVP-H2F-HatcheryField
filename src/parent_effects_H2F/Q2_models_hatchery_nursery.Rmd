@@ -8,13 +8,13 @@ date: "2025-02-20"
 This file is for modeling the effects of heterozygosity, allelic richness, and temperature and salinity quantiles of environments-of-origin on oyster survival and length in the VIMS ABC hatchery and nursery.
 
 CR: Updated 2025-11-16 with new envr quantiles file.
-260610: KEB: that these analyses were run with heterozygosity and allelic richness data that was calculated incorrectly. This needs to be fixed. 
+KEB: Updated 2026-08-22 with heterozygosity and allelic richness data that was calculated correctly on recoded data.
 
 ## Load packages
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-# Set working directory relative to project root
+# set working directory relative to project root
 knitr::opts_knit$set(root.dir = here::here())
 
 if (!require("pacman")) install.packages("pacman")
@@ -35,176 +35,162 @@ getwd()
 
 ## Load data
 ```{r}
-#this file contains raw lengths of all oysters aged 15-78 days
+# this file contains raw lengths of all oysters aged 15-78 days
 length <- read.csv("data/performance_H2F/nursery_length.csv")
 
-#this file has 0.1 and 0.9 quantiles for temperature and salinity for all groups including field sites
+# this file has 0.1 and 0.9 quantiles for temperature and salinity for all groups including field sites
 quantiles <- read.csv("results/environment/envr_quantiles_allsites.csv")
 
-#this file contains survival rate data for larval oysters up to day 21 post hatching
+# this file contains survival rate data for larval oysters up to day 21 post hatching
 survival <-  read.csv("data/performance_H2F/CViMVP_larvae_survival.csv")
 
-#this file contains data on mean heterozygosity and allelic richness in the parent populations - this needs to be updated to be calculated correctly
-parent_genetics <- read.csv("results/parent_effects_H2F/parent_genetic_effects.csv")
+# KEB: 260822 - now calculated correctly with recoded data
+parent_genetics <- read.csv("results/parent_effects_H2F/parent_genetic_effects_full.csv")
 
 ```
 
 ## Data preparation
 
 ### Survival
+
+For survival rates, select only survival from day 21 as this is the "final" hatchery survival (marked as day_an 15-21). Reminder that days 15-21 were grouped for analysis because there were constant larval drops occurring during that time as individuals reached the eyed stage, but the number of drops varied by population. Exclude LARMIX, since it has no environmental data. Exclude groups labelled "small" and only keep measurements from eyed larvae. 
+
 ```{r}
-#For survival rates, we only care about survival from day 21 (marked as day_an 15-21), so select those only. Reminder that days 15-21 were grouped for analysis because there were constant larval drops occurring during that time as individuals reached the eyed stage, but the number of drops varied by site_name. Exclude LARMIX, since it has no environmental data.
-surv21 <- survival %>% 
-  filter(Day_analysis == "15-21") %>% 
-  filter(Tank_naming != "MVP-LARMIX")
 
-#Exclude any groups with "small" in their label. The length data only considers the eyed oysters.
-small <- grep("small", surv21$Group_Day_Label, ignore.case = TRUE)
+surv21_sub <- survival %>%
+  # keep the 15-21 day window, drop LARMIX
+  filter(
+    Day_analysis == "15-21",
+    Tank_naming != "MVP-LARMIX",
+    # drop "small" groups
+    !str_detect(Group_Day_Label, regex("small", ignore_case = TRUE))
+  )
 
-#make new dataframe WITHOUT any indices saved in small
-surv21_sub <- surv21[-small, ]
+survival_filter <- surv21_sub %>%
+  # rename each population: W1-W6 (wild) or S1-S2 (selection line)
+  # NOTE: JR is the VA site, so it maps straight to the wild VA label here
+  mutate(site_name = case_match(
+    Tank_naming,
+    "MVP-TX" ~ "W1-TX",
+    "MVP-LA" ~ "W2-LA",
+    "MVP-FL" ~ "W3-FL",
+    "MVP-JR" ~ "W4-VA",
+    "MVP-NH" ~ "W5-NH",
+    "MVP-ME" ~ "W6-ME",
+    "MVP-LOLA" ~ "S1-LOLA",
+    "MVP-DEBY" ~ "S2-DEBY",
+    .default = Tank_naming
+  )) %>%
+  # keep only site name + survival, and rename the survival column
+  select(site_name, percent_survival = Survival_rate_perc)
 
-#replace JR with updated group name "VA"
-surv21_sub["Tank_naming"][surv21_sub["Tank_naming"] == "MVP-JR"] <- "MVP-VA"
-
-#exclude "MVP" from group names and add in W or S labels
-groups <- c(unique(surv21_sub$Tank_naming))
-wild <- substring(groups[c(2,1,6,5,4,3)], 5)
-w_label <- paste(paste("W", 1:6,  sep = ""), wild, sep = "-")
-
-for(x in wild){
-    surv21_sub["Tank_naming"][surv21_sub["Tank_naming"] == paste("MVP", x, sep = "-")] <- w_label[grep(x, w_label)]
-}
-
-#rename selection line sites to include S1-S2 labels
-selection <- substring(groups[7:8], 5)
-s_label <- paste(paste("S", 1:2, sep = ""), selection, sep = "-")
-
-for(x in selection){
-    surv21_sub["Tank_naming"][surv21_sub["Tank_naming"] == paste("MVP", x, sep = "-")] <- s_label[grep(x, s_label)]
-}
-
-#select only tank naming and survival rate columns
-survival_filter <- surv21_sub[, c("Tank_naming", "Survival_rate_perc")]
-
-#rename columns
-colnames(survival_filter) <- c("site_name", "percent_survival")
 ```
 
 ### Length
-```{r length_cleaning_means}
-#select columns with site name, day, and shell length in mm
-length_sub <- length[,c("site_name", "day_an", "shell_length_mm")]
 
-colnames(length_sub) <- c("site_name", "day_an", "length")
+Split into end of hatchery stage (day 21) and end of nursery stage (78).
 
-#filter out LARMIX from group
-length_filter <- length_sub %>% 
-  filter(site_name != "H1-HYBRIDMIX") %>% 
-  mutate(site_name = fct_relevel(site_name, c("W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME")))
+```{r}
 
-#make data frame for day 21 length
-length_21 <- length_filter %>% 
-  filter(day_an == "15-21")
+length_filter <- length %>%
+  select(site_name, day_an, length = shell_length_mm) %>%
+  filter(site_name != "H1-HYBRIDMIX") %>%
+  mutate(site_name = fct_relevel(
+    site_name,
+    "W1-TX", "W2-LA", "W3-FL", "S1-LOLA", "S2-DEBY", "W4-VA", "W5-NH", "W6-ME"
+  ))
 
-#make data frame for day 78 length
-length_78 <- length_filter %>% 
-  filter(day_an == "78")
+# split out day-21 and day-78 length
+length_21 <- length_filter %>% filter(day_an == "15-21")
+length_78 <- length_filter %>% filter(day_an == "78")
+
 ```
 
 ### Environment
+
+Make separate environmental data frames for everything except field sites/only field sites.
+
 ```{r}
 
+# rename all columns
 colnames(quantiles) <- c("site_name", "sal10", "sal90", "sal_sd", "temp10", "temp90", "temp_sd", "salinity")
 
-#filter out YRK and LEW from quantiles
-quant_eoo <- quantiles %>% 
-  filter(site_name != "YRK" & site_name != "LEW")
-#filter only for YRK and LEW
-quant_field <- quantiles %>% 
-  filter(site_name == "YRK" | site_name == "LEW")
+# split into everything except YRK/LEW vs. only YRK/LEW
+quant_eoo   <- quantiles %>% filter(!site_name %in% c("YRK", "LEW"))
+quant_field <- quantiles %>% filter(site_name %in% c("YRK", "LEW"))
+
 ```
 
-###Genetic diversity
-```{r parent_genetics_cleaning}
-#rename column names 
+### Genetic diversity
+
+```{r}
+
+# rename columns 
 colnames(parent_genetics) <- c("site_name", "ho", "avg_expected_hs", "ar")
-```
 
+```
 
 ### Join datasets
-```{r surv_join_dfs}
-#make df of just genetic and envr data
-envr_gen <- left_join(quant_eoo, parent_genetics, by = "site_name")
 
-#merge survival data with genetic and environmental data
+Combine environmental, genetic, survival, and shell-length data into per-analysis data frames, keyed on site_name, for the downstream models.
+
+```{r}
+
+# environment + genetics, then add survival
+envr_gen <- left_join(quant_eoo, parent_genetics, by = "site_name")
 surv_merge <- left_join(survival_filter, envr_gen, by = "site_name")
 
-```
+# add length data and split by day
+len_envr_gen <- left_join(length_filter, envr_gen, by = "site_name")
 
-```{r len21_join_dfs}
-len_envr_gen <- merge(envr_gen, length_filter, by = c("site_name"))
+len21_envr_gen <- len_envr_gen %>%
+  filter(day_an == "15-21") %>%
+  mutate(site_name = as.character(site_name))
+len78_envr_gen <- len_envr_gen %>%
+  filter(day_an == "78") %>%
+  mutate(site_name = as.character(site_name))
 
-len21_envr_gen <- len_envr_gen %>% 
-  filter(day_an == "15-21")
+# sanity check: row counts should match the pre-join length frames (619 / 971)
+stopifnot(
+  nrow(len21_envr_gen) == nrow(length_21),
+  nrow(len78_envr_gen) == nrow(length_78)
+)
 
-len78_envr_gen <- len_envr_gen %>% 
-  filter(day_an == "78")
-
-#Sanity check- make sure row numbers match between the original length_21 and length_78 data frames and the new ones with the added columns
-nrow(len21_envr_gen) #nrow = 619
-nrow(length_21) #nrow = 619
-nrow(len78_envr_gen) #nrow = 971
-nrow(length_78) #nrow = 971
-
-#make site_name a character
-len21_envr_gen$site_name <- as.character(len21_envr_gen$site_name)
-len78_envr_gen$site_name <- as.character(len78_envr_gen$site_name)
+nrow(len21_envr_gen)
+nrow(len78_envr_gen)
 
 ```
 
-#Check for multicollinearity among explanatory variables
-```{r multicollinearity}
+### Multicollinearity
+
+With heterozygosity/allelic richness calculated on the recoded data, nothing is collinear. When you keep all the predictors in, VIF is super inflated.
+
+```{r}
+
 par(mfrow = c(1,1))
 cor_matrix <- cor(envr_gen[,c("temp10", "temp90", "sal10", "sal90", "ho", "ar")])
 
-#rename rows and columns
+# for supplement, rename variables for a cleaner graph 
 colnames(cor_matrix) <- c("Temp 0.1 quantile", "Temp 0.9 quantile", "Salinity 0.1 quantile", "Salinity 0.9 quantile", "Heterozygosity", "Allelic Richness")
+
 rownames(cor_matrix) <- c("Temp 0.1 quantile", "Temp 0.9 quantile", "Salinity 0.1 quantile", "Salinity 0.9 quantile", "Heterozygosity", "Allelic Richness")
-#for supplemental material, rename variables for a cleaner graph (temp 0.1 quantile, temp 0.9 quantile, salinity 0.1 quantile, salinity ..., heterozygosity, allelic richness)
 
-#temp quantile 90 is collinear with Ho (r = 0.74) and ar (r = 0.76). Salinity quantile 10 is borderline collinear with ho (-0.69). Remove temp quantile 90 and check VIF.
+#calculate variance inflation factor (VIF)
+vif_vars <- c("temp10", "temp90", "sal10", "sal90", "ho", "ar")
 
-#calculate variance inflation factor (VIF)- create VIF function
-VIF <- function(a, b, c, d, e){
-  1/(1-summary(lm(a ~ b + c + d + e))$r.squared)
-}
+vif_all <- sapply(vif_vars, function(v) {
+  others <- setdiff(vif_vars, v)
+  1 / (1 - summary(lm(reformulate(others, response = v), data = envr_gen))$r.squared)
+})
+round(vif_all, 2)
 
-#get VIF for temp quantile 10
-VIF(envr_gen$temp10, envr_gen$sal10, envr_gen$sal90, envr_gen$ho, envr_gen$ar)
-#VIF temp10 = 2.50
-
-VIF(envr_gen$sal10, envr_gen$sal90, envr_gen$ho, envr_gen$ar, envr_gen$temp10)
-#VIF sal10 = 2.39
-
-#VIF for salinity quantile 90
-VIF(envr_gen$sal90, envr_gen$ho, envr_gen$ar, envr_gen$temp10, envr_gen$sal10)
-#VIF_sal90 = 2.81
-
-#VIF for ho
-VIF(envr_gen$ho, envr_gen$ar, envr_gen$temp10, envr_gen$sal10, envr_gen$sal90)
-#VIF_ho = 3.43
-
-#VIF for average allelic richness
-VIF(envr_gen$ar, envr_gen$temp10, envr_gen$sal10, envr_gen$sal90, envr_gen$ho)
-#VIF_ar = 1.81
 ```
 
-The next chunk includes multiple regressions testing the effects of several environmental and genetic parameters on length and survival in the hatchery/nursery. The explanatory variables are 1) salinity quantile 10, 2) salinity quantile 90, 3) temperature quantile 10, 4) mean observed heterozygosity in the parent oysters from each site (Ho), and 5) mean allelic richness (Ar) in the parent oysters from each site.
+KEB 260822: ***Not updated from here*** We decided to remove the hatchery/nursery models from the paper because the data is pseudoreplicated as we can't get a random effect.
 
 ## Multiple regression and model selection
 
-###Day 21 length
+### Day 21 length
 ```{r}
 len21_lm <- lm(length ~ temp10 + sal10+ sal90 + ho + ar, data = len21_envr_gen)
 len21_resid <- len21_lm$residuals

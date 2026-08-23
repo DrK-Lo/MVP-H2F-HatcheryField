@@ -9,7 +9,7 @@ This file is for modeling the effects of heterozygosity, allelic richness, and t
 
 Modeling is based on code from CR.
 
-260610: KEB: that these analyses were run with heterozygosity and allelic richness data that was calculated incorrectly. This needs to be fixed. 
+260716: KEB: these models are run with the juvenile heterozygosity and allelic richness data which is calculated correctly.
 
 ## Load packages
 ```{r setup, include=FALSE}
@@ -41,8 +41,8 @@ surv_mod_ord_rename <- read.csv("data/performance_H2F/field_surv_all_times.csv")
 
 lengths_mod_narm_nodead <- read.csv("data/performance_H2F/field_length_all_times.csv")[ ,-1]
 
-#parent genetics
-gen_parents <- read.csv("results/parent_effects_H2F/parent_genetic_effects.csv")
+#this file contains data on mean heterozygosity and allelic richness in the juvenile populations
+juv_genetics <- read.csv("results/parent_effects_H2F/juvenile_genetic_effects_thinned.csv")
 
 #environment of origin quantiles
 env_parents <- read.csv("results/environment/envr_quantiles_allsites.csv")
@@ -58,8 +58,8 @@ REMINDER: Because the H1-HYBRIDMIX and H2-SEEDMIX groups have mixed genetic make
 ```{r}
 # start by putting together a complete dataframe
 # genetic data
-colnames(gen_parents) <- c("pop","ho","exp_hs","ar")
-surv_mod_gen <- merge(surv_mod_ord_rename, gen_parents, by = "pop")
+colnames(juv_genetics) <- c("pop","ho","exp_hs","ar")
+surv_mod_gen <- merge(surv_mod_ord_rename, juv_genetics, by = "pop")
 
 #clean env_parents
 colnames(env_parents) <- c("pop","salinity_quantile_10","salinity_quantile_90","Salinity_st_dev","temp_quantile_10","temp_quantile_90","Temperature_st_dev", "salinity")

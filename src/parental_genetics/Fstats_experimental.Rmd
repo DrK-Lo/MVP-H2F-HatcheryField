@@ -315,10 +315,10 @@ ncol(genind_obj@tab) / ncol(FULL_filtered) # should be 2
 ```{r}
 
 # convert to hierfstat obj
-hierfstat_obj <- genind2hierfstat(genind_obj)
+#hierfstat_obj <- genind2hierfstat(genind_obj)
 
-# run basic stats
-div <- basic.stats(hierfstat_obj)
+# run basic stats - change here to run on thinned
+div <- basic.stats(hierfstat_fst)
 
 # quick sanity check on the new values
 ho_pop <- colMeans(div$Ho, na.rm = TRUE)
@@ -558,7 +558,7 @@ parent_genetic_effects <- merge(avg_het_wide, avg_ar_per_pop, by = "Population")
   mutate(Population = factor(Population, levels = population_order)) %>%
   arrange(Population)
 
-write_csv(parent_genetic_effects, file.path("results", "parent_effects_H2F", "260707_parent_genetic_effects.csv"))
+write_csv(parent_genetic_effects, file.path("results", "parent_effects_H2F", "parent_genetic_effects_thinned.csv"))
 
 ```
 
