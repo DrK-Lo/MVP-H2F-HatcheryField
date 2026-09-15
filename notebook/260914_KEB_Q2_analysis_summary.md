@@ -21,7 +21,7 @@ Q2a and Q2b are restricted to monocultures because polyculture bags mix multiple
 ## Changes to methods
 
 **1. Mixed models with a population-level random effect.**
-The genetic and environmental predictors vary only across source populations (8, or 10 for Q2c), not across individual bags or oysters. Previous analysis treated each bag or individual as independent. I changed the models to include a random effect at the population level so that population-level predictors are tested against the number of independent source populations:
+The genetic and environmental predictors vary only across source populations (8, or 10 for Q2c), not across individual bags or oysters. Previous analysis treated each bag or individual as independent. I changed the models to include a random effect at the population level so that population-level predictors are tested against the number of independent source populations.
 
 - Survival: `response ~ predictors + (1|Population)`
 - Length & Condition index: `response ~ predictors + (1|Population/Bag)`
@@ -33,7 +33,7 @@ All predictors are retained in every model rather than dropped by `step()`/`drop
 Of the four environmental quantiles, I dropped temperature Q10 to keep VIF lower. The retained Q2a set is temperature Q90, salinity Q10, salinity Q90 (plus HO and Ar).
 
 **4. Low statistical power**
-Because predictors vary across only 8–10 source populations, the degrees of freedom for population-level terms are low (≈ 2 for Q2a/Q2b, ≈ 7 for Q2c). Confidence intervals are also wide.
+Because predictors vary across only 8–10 source populations, the degrees of freedom for population-level terms are low (= 2 for Q2a/Q2b, = 7 for Q2c). Confidence intervals are also wide.
 
 **5. P-values and confidence intervals on figures are aligned**
 P-values come from Satterthwaite-approximated t-tests (lmerTest). Figure error bars are t-based 95% confidence intervals using the same degrees of freedom, so a bar crossing zero corresponds to a non-significant effect.
@@ -44,9 +44,9 @@ P-values come from Satterthwaite-approximated t-tests (lmerTest). Figure error b
 
 _Model: `response ~ HO + Ar + TemperatureQ90 + SalinityQ10 + SalinityQ90 + (1|Population[/Bag])`
 
-**Temperature Q90 is a consistent driver of survival.** It was positive and among the strongest predictors in all six survival models (both sites, all timepoints), with the effect strengthening over time. No other predictor genetic or environmental showed a strong independent effect on survival once population-level replication was accounted for.
+**Temperature Q90 is a consistent driver of survival.** It was positive and among the strongest predictors in all six survival models (both sites, all timepoints). No other predictor showed a strong effect on survival once population-level replication was accounted for.
 
-**Length** No predictor was significant for length. Warm-origin populations both survive better and trend larger, but only the survival effect is strong enough to detect with 8 populations.
+**Length** No predictor was significant for length. Warm-origin populations both survive better and trend larger, but only the survival effect is strong enough to detect.
 
 **Condition index** showed no consistent significant predictor.
 
@@ -75,9 +75,9 @@ _Correlation matrix (Fig S2):_
 
 _Model: `response ~ HO + Ar + [environmental distance] + (1|Population[/Bag])`
 
-This approach collapses the four environmental quantiles into a single measure — the Euclidean distance between each source population's environment-of-origin and the field site.
+This approach collapses the four environmental quantiles into a single measure (Euclidean distance between each source population's environment-of-origin and the field site).
 
-**Collinearity:** heterozygosity and environmental distance are moderately correlated (r ≈ −0.71 to −0.78; VIF ≤ 3.4). This means the diversity and distance effects share variance and are harder to fully separate from each other.
+**Collinearity:** heterozygosity and environmental distance are moderately correlated (r = −0.71 to −0.78; VIF ≤ 3.4). This means the diversity and distance effects share variance and are harder to fully separate from each other.
 
 ### Figures — Q2b
 
@@ -104,7 +104,7 @@ _Model: `response ~ HO + Ar + (1|Population[/Bag])`
 
 This is the only approach that includes the polyculture groups (HYBRIDMIX, SEEDMIX), since it uses genetic diversity alone. The two mix groups have the highest heterozygosity values in the dataset.
 
-**Genetic diversity shows no direct effect on any response.** Across all 18 models (3 responses × 2 sites × 3 timepoints), neither HO nor Ar was significant for survival or condition index at any site or time. This is consistent with Q2a and Q2b: genetic diversity did not emerge as a driver of field performance once population-level replication was handled.s
+**Genetic diversity shows no direct effect on any response.** Across all 18 models (3 responses × 2 sites × 3 timepoints), neither HO nor Ar was significant for survival or condition index at any site or time. This is consistent with Q2a and Q2b: genetic diversity was not a driver of field performance once population-level replication was handled.
 
 ### Figures — Q2c
 
@@ -127,13 +127,13 @@ _Condition index, Lewisetta / York:_
 
 ## Overall takeaways
 
-1. **High temperature at environment-of-origin is the clearest signal.**.
+1. **High temperature at environment-of-origin is the clearest signal.**
 
 2. **Genetic diversity effects are not detectable.**
 
 3. **The design limits power.**
 
-4. **Results are robust to how environment is represented.** The quantile (Q2a) and distance (Q2b) models tell a consistent story.
+4. **Results are robust to how environment is represented.** The quantile (Q2a) and distance (Q2b) models are consistent.
 
 ---
 
