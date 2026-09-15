@@ -44,7 +44,7 @@ P-values come from Satterthwaite-approximated t-tests (lmerTest). Figure error b
 
 _Model: `response ~ HO + Ar + TemperatureQ90 + SalinityQ10 + SalinityQ90 + (1|Population[/Bag])`
 
-**Temperature Q90 is a consistent driver of survival.** It was positive and among the strongest predictors in all six survival models (both sites, all timepoints). No other predictor showed a strong effect on survival once population-level replication was accounted for.
+**Temperature Q90.** It was positive and among the strongest predictors in all six survival models (both sites, all timepoints). No other predictor showed a strong effect on survival once population-level replication was accounted for.
 
 **Length** No predictor was significant for length. Warm-origin populations both survive better and trend larger, but only the survival effect is strong enough to detect.
 
