@@ -1,0 +1,478 @@
+---
+title: "Q2b_JUV_envrdist_models_field"
+author: "Kiran Bajaj"
+date: "2026-08-23"
+output: pdf_document
+---
+
+This file contains analyses that address Q2b: effects of offspring genetic diversity (heterozygosity, allelic richness) and environmental distance on oyster survival and length at a given timepoint (monocultures only).
+
+Modeling is based on code from CR.
+
+260823 KEB: updated these models to include juvenile heterozygosity and allelic richness data which is calculated correctly based on the recoded genotype matrix.
+
+## Load packages
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = here::here())
+
+if (!require("pacman")) install.packages("pacman")
+
+packages <- c("tidyverse", "here", "ggplot2", "lme4", "lmerTest", "car", "broom", "broom.mixed", "corrplot", "ggstance", "stringr")
+pacman::p_load(char = packages)
+
+r_version <- paste(R.version$major, R.version$minor, sep = ".")
+lib_ver <- packages %>%
+  map_chr(~ paste0(.x, " (v", packageVersion(.x), ")")) %>%
+  paste(collapse = ", ")
+
+```
+
+```{r}
+getwd()
+```
+
+
+## Read in data
+
+```{r}
+
+# survival
+surv_mod_ord_rename <- read.csv("data/performance_H2F/field_surv_all_times.csv")[, -1]
+
+# length
+lengths_mod_narm_nodead <- read.csv("data/performance_H2F/field_length_all_times.csv")[ ,-1]
+
+# juvenile heterozygosity and allelic richness (recoded genotype matrix)
+juv_genetics <- read.csv("results/juvenile_effects_H2F/juvenile_genetic_effects_full.csv")
+
+# pairwise environmental distance matrix (scaled envr quantiles); LEW/YRK cols = distance to each field site
+env_dist <- read.csv("results/environment/envr_quantiles_dist_all.csv")
+
+```
+
+Because the H1-HYBRIDMIX and H2-SEEDMIX groups do not have a single environment-of-origin, they are excluded from these analyses.
+
+## Data preparation
+
+```{r}
+
+# genetic data
+colnames(juv_genetics) <- c("pop", "ho", "exp_hs", "ar")
+
+# reshape the distance matrix: keep only distance-to-field-site columns
+# env_dist$X is the source population; LEW/YRK are distances to each field site.
+env_dist_long <- env_dist %>%
+  select(pop = X, Lewisetta = LEW, YorkRiver = YRK) %>%
+  pivot_longer(cols = c(Lewisetta, YorkRiver),
+               names_to = "bag_site", values_to = "dist")
+
+# survival + genetics
+surv_mod_gen <- merge(surv_mod_ord_rename, juv_genetics, by = "pop")
+
+# add the site-matched distance (join on pop AND bag_site so each row gets
+# the distance from its source pop to the field site it's deployed at)
+surv_mod_gen_dist <- merge(surv_mod_gen, env_dist_long, by = c("pop", "bag_site"))
+
+# length + genetics + site-matched distance (per-individual rows kept)
+len_mod_gen      <- merge(lengths_mod_narm_nodead, juv_genetics, by = "pop")
+len_mod_gen_dist <- merge(len_mod_gen, env_dist_long, by = c("pop", "bag_site"))
+
+# confirm the mixed-origin groups are gone and we have 8 pops per site
+unique(surv_mod_gen_dist$pop)
+table(surv_mod_gen_dist$pop, surv_mod_gen_dist$bag_site)
+
+```
+
+## Assess collinearity
+
+```{r}
+# build a survival + mean-length + genetics + distance frame for the corrplots
+length_summarized <- lengths_mod_narm_nodead %>%
+  group_by(bag_site, pop, t, bags_label) %>%
+  summarise(mean_len = mean(length, na.rm = TRUE), .groups = "drop")
+
+surv_len_gen      <- merge(length_summarized, surv_mod_gen, by = c("pop", "bag_site", "bags_label", "t"))
+surv_len_gen_dist <- merge(surv_len_gen, env_dist_long, by = c("pop", "bag_site"))
+
+cor_vars   <- c("dist", "ho", "ar", "surv", "mean_len")
+cor_labels <- c("Environmental distance", "Heterozygosity", "Allelic richness", "Survival", "Mean length")
+
+# Lewisetta
+lew_mat <- cor(surv_len_gen_dist[surv_len_gen_dist$bag_site == "Lewisetta", cor_vars])
+dimnames(lew_mat) <- list(cor_labels, cor_labels)
+
+pdf(file = "figures/juvenile_effects_H2F/FigS2_corrplot_envrdist_lew.pdf")
+corrplot(lew_mat, method = "color", type = "upper", tl.col = "black", tl.srt = 45,
+         title = "Pairwise correlations Q2b — Lewisetta",
+         addCoef.col = "black", mar = c(0,0,2,0))
+dev.off()
+
+# also show inline
+corrplot(lew_mat, method = "color", type = "upper", tl.col = "black", tl.srt = 45,
+         title = "Pairwise correlations Q2b — Lewisetta",
+         addCoef.col = "black", mar = c(0,0,2,0))
+
+# York River
+yrk_mat <- cor(surv_len_gen_dist[surv_len_gen_dist$bag_site == "YorkRiver", cor_vars])
+dimnames(yrk_mat) <- list(cor_labels, cor_labels)
+
+pdf(file = "figures/juvenile_effects_H2F/FigS2_corrplot_envrdist_yrk.pdf")
+corrplot(yrk_mat, method = "color", type = "upper", tl.col = "black", tl.srt = 45,
+         title = "Pairwise correlations Q2b — York River",
+         addCoef.col = "black", mar = c(0,0,2,0))
+dev.off()
+
+corrplot(yrk_mat, method = "color", type = "upper", tl.col = "black", tl.srt = 45,
+         title = "Pairwise correlations Q2b — York River",
+         addCoef.col = "black", mar = c(0,0,2,0))
+```
+
+```{r}
+
+# only three predictors here (ho, ar, dist), but check briefly for each site. 
+# predictors vary across only 8 source populations.
+cor_vars <- c("ho", "ar", "dist")
+
+# Lewisetta
+cor(surv_mod_gen_dist[surv_mod_gen_dist$bag_site == "Lewisetta", cor_vars])
+# York
+cor(surv_mod_gen_dist[surv_mod_gen_dist$bag_site == "YorkRiver", cor_vars])
+
+# quick VIF (3-predictor models)
+VIF <- function(a, b, c) 1 / (1 - summary(lm(a ~ b + c))$r.squared)
+
+d_lew <- surv_mod_gen_dist[surv_mod_gen_dist$bag_site == "Lewisetta", ]
+VIF(d_lew$ho,  d_lew$ar,  d_lew$dist)  # ho
+VIF(d_lew$ar,  d_lew$ho,  d_lew$dist)  # ar
+VIF(d_lew$dist, d_lew$ho, d_lew$ar)    # dist
+
+d_yrk <- surv_mod_gen_dist[surv_mod_gen_dist$bag_site == "YorkRiver", ]
+VIF(d_yrk$ho,  d_yrk$ar,  d_yrk$dist)  # ho
+VIF(d_yrk$ar,  d_yrk$ho,  d_yrk$dist)  # ar
+VIF(d_yrk$dist, d_yrk$ho, d_yrk$ar)    # dist
+```
+
+## Modeling drivers of differences in survival
+
+### t1 survival, Lewisetta
+
+```{r t1_surv_lew}
+
+# full model, no selection. (1|pop) accounts for bags within the 8 source
+# populations. Predictors are population-level.
+lew_t1 <- surv_mod_gen_dist[surv_mod_gen_dist$t == 1 & surv_mod_gen_dist$bag_site == "Lewisetta", ]
+
+surv_GE1.lew <- lmer(surv ~ ho + ar + dist + (1 | pop), data = lew_t1)
+isSingular(surv_GE1.lew)
+summary(surv_GE1.lew)
+
+surv_t1_lew_scaled <- lmer(scale(surv) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop), data = lew_t1)
+isSingular(surv_t1_lew_scaled)
+
+```
+
+### t2 survival, Lewisetta
+
+```{r t2_surv_lew}
+
+lew_t2 <- surv_mod_gen_dist[surv_mod_gen_dist$t == 2 & surv_mod_gen_dist$bag_site == "Lewisetta", ]
+
+surv_GE2.lew <- lmer(surv ~ ho + ar + dist + (1 | pop), data = lew_t2)
+isSingular(surv_GE2.lew)
+summary(surv_GE2.lew)
+
+surv_t2_lew_scaled <- lmer(scale(surv) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop), data = lew_t2)
+isSingular(surv_t2_lew_scaled)
+
+```
+
+### t3 survival, Lewisetta
+
+```{r t3_surv_lew}
+
+lew_t3 <- surv_mod_gen_dist[surv_mod_gen_dist$t == 3 & surv_mod_gen_dist$bag_site == "Lewisetta", ]
+
+surv_GE3.lew <- lmer(surv ~ ho + ar + dist + (1 | pop), data = lew_t3)
+isSingular(surv_GE3.lew)
+summary(surv_GE3.lew)
+
+surv_t3_lew_scaled <- lmer(scale(surv) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop), data = lew_t3)
+isSingular(surv_t3_lew_scaled)
+
+```
+
+### t1 survival, York River
+
+```{r t1_surv_yrk}
+
+yrk_t1 <- surv_mod_gen_dist[surv_mod_gen_dist$t == 1 & surv_mod_gen_dist$bag_site == "YorkRiver", ]
+
+surv_GE1.york <- lmer(surv ~ ho + ar + dist + (1 | pop), data = yrk_t1)
+isSingular(surv_GE1.york)
+summary(surv_GE1.york)
+
+surv_t1_yrk_scaled <- lmer(scale(surv) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop), data = yrk_t1)
+isSingular(surv_t1_yrk_scaled)
+
+```
+
+### t2 survival, York River
+
+```{r t2_surv_yrk}
+
+yrk_t2 <- surv_mod_gen_dist[surv_mod_gen_dist$t == 2 & surv_mod_gen_dist$bag_site == "YorkRiver", ]
+
+surv_GE2.york <- lmer(surv ~ ho + ar + dist + (1 | pop), data = yrk_t2)
+isSingular(surv_GE2.york)
+summary(surv_GE2.york)
+
+surv_t2_yrk_scaled <- lmer(scale(surv) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop), data = yrk_t2)
+isSingular(surv_t2_yrk_scaled)
+
+```
+
+### t3 survival, York River
+
+```{r t3_surv_yrk}
+
+yrk_t3 <- surv_mod_gen_dist[surv_mod_gen_dist$t == 3 & surv_mod_gen_dist$bag_site == "YorkRiver", ]
+
+surv_GE3.york <- lmer(surv ~ ho + ar + dist + (1 | pop), data = yrk_t3)
+isSingular(surv_GE3.york)
+summary(surv_GE3.york)
+
+surv_t3_yrk_scaled <- lmer(scale(surv) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop), data = yrk_t3)
+isSingular(surv_t3_yrk_scaled)
+
+# save everything
+sink(paste0("results/juvenile_effects_H2F/models/survival_Q2b_envrdist_results_", Sys.Date(), ".txt"))
+cat("\nLewisetta t1 (November 2023) modeling approach 2\n")
+cat("singular fit:", isSingular(surv_GE1.lew), "\n"); print(summary(surv_GE1.lew))
+cat("\nLewisetta t1 (November 2023) scaled modeling approach 2\n"); print(summary(surv_t1_lew_scaled))
+cat("\nLewisetta t2 (May 2024) modeling approach 2\n")
+cat("singular fit:", isSingular(surv_GE2.lew), "\n"); print(summary(surv_GE2.lew))
+cat("\nLewisetta t2 (May 2024) scaled modeling approach 2\n"); print(summary(surv_t2_lew_scaled))
+cat("\nLewisetta t3 (November 2024) modeling approach 2\n")
+cat("singular fit:", isSingular(surv_GE3.lew), "\n"); print(summary(surv_GE3.lew))
+cat("\nLewisetta t3 (November 2024) scaled modeling approach 2\n"); print(summary(surv_t3_lew_scaled))
+cat("\nYork River t1 (November 2023) modeling approach 2\n")
+cat("singular fit:", isSingular(surv_GE1.york), "\n"); print(summary(surv_GE1.york))
+cat("\nYork River t1 (November 2023) scaled modeling approach 2\n"); print(summary(surv_t1_yrk_scaled))
+cat("\nYork River t2 (May 2024) modeling approach 2\n")
+cat("singular fit:", isSingular(surv_GE2.york), "\n"); print(summary(surv_GE2.york))
+cat("\nYork River t2 (May 2024) scaled modeling approach 2\n"); print(summary(surv_t2_yrk_scaled))
+cat("\nYork River t3 (November 2024) modeling approach 2\n")
+cat("singular fit:", isSingular(surv_GE3.york), "\n"); print(summary(surv_GE3.york))
+cat("\nYork River t3 (November 2024) scaled modeling approach 2\n"); print(summary(surv_t3_yrk_scaled))
+sink()
+```
+
+## Modeling drivers of differences in length
+
+### t1 length, Lewisetta
+
+```{r t1_len_lew}
+
+# individuals within bags within populations; (1|pop/bags_label)
+len_lew_t1 <- len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "Lewisetta", ]
+
+len_GE1.lew <- lmer(length ~ ho + ar + dist + (1 | pop / bags_label), data = len_lew_t1)
+isSingular(len_GE1.lew); VarCorr(len_GE1.lew); summary(len_GE1.lew)
+
+len_t1_lew_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop / bags_label), data = len_lew_t1)
+isSingular(len_t1_lew_scaled)
+
+```
+
+### t2 length, Lewisetta
+
+```{r t2_len_lew}
+
+len_lew_t2 <- len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "Lewisetta", ]
+
+len_GE2.lew <- lmer(length ~ ho + ar + dist + (1 | pop / bags_label), data = len_lew_t2)
+isSingular(len_GE2.lew); VarCorr(len_GE2.lew); summary(len_GE2.lew)
+
+len_t2_lew_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop / bags_label), data = len_lew_t2)
+isSingular(len_t2_lew_scaled)
+
+```
+
+### t3 length, Lewisetta
+
+```{r t3_len_lew}
+
+len_lew_t3 <- len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site == "Lewisetta", ]
+
+len_GE3.lew <- lmer(length ~ ho + ar + dist + (1 | pop / bags_label), data = len_lew_t3)
+isSingular(len_GE3.lew); VarCorr(len_GE3.lew); summary(len_GE3.lew)
+
+len_t3_lew_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop / bags_label), data = len_lew_t3)
+isSingular(len_t3_lew_scaled)
+
+```
+
+### t1 length, York River
+
+```{r t1_len_yrk}
+
+len_yrk_t1 <- len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "YorkRiver", ]
+
+len_GE1.york <- lmer(length ~ ho + ar + dist + (1 | pop / bags_label), data = len_yrk_t1)
+isSingular(len_GE1.york); VarCorr(len_GE1.york); summary(len_GE1.york)
+
+len_t1_yrk_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop / bags_label), data = len_yrk_t1)
+isSingular(len_t1_yrk_scaled)
+
+```
+
+### t2 length, York River
+
+```{r t2_len_yrk}
+
+len_yrk_t2 <- len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "YorkRiver", ]
+
+len_GE2.york <- lmer(length ~ ho + ar + dist + (1 | pop / bags_label), data = len_yrk_t2)
+isSingular(len_GE2.york); VarCorr(len_GE2.york); summary(len_GE2.york)
+
+len_t2_yrk_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop / bags_label), data = len_yrk_t2)
+isSingular(len_t2_yrk_scaled)
+
+```
+
+### t3 length, York River
+
+```{r t3_len_yrk}
+
+len_yrk_t3 <- len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site == "YorkRiver", ]
+
+len_GE3.york <- lmer(length ~ ho + ar + dist + (1 | pop / bags_label), data = len_yrk_t3)
+isSingular(len_GE3.york); VarCorr(len_GE3.york); summary(len_GE3.york)
+
+len_t3_yrk_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop / bags_label), data = len_yrk_t3)
+isSingular(len_t3_yrk_scaled)
+
+# save everything
+sink(paste0("results/juvenile_effects_H2F/models/length_Q2b_envrdist_results_", Sys.Date(), ".txt"))
+cat("\nLewisetta t1 (November 2023) modeling approach 2\n")
+cat("singular fit:", isSingular(len_GE1.lew), "\n"); print(VarCorr(len_GE1.lew)); print(summary(len_GE1.lew))
+cat("\nLewisetta t1 (November 2023) scaled modeling approach 2\n"); print(summary(len_t1_lew_scaled))
+cat("\nLewisetta t2 (May 2024) modeling approach 2\n")
+cat("singular fit:", isSingular(len_GE2.lew), "\n"); print(VarCorr(len_GE2.lew)); print(summary(len_GE2.lew))
+cat("\nLewisetta t2 (May 2024) scaled modeling approach 2\n"); print(summary(len_t2_lew_scaled))
+cat("\nLewisetta t3 (November 2024) modeling approach 2\n")
+cat("singular fit:", isSingular(len_GE3.lew), "\n"); print(VarCorr(len_GE3.lew)); print(summary(len_GE3.lew))
+cat("\nLewisetta t3 (November 2024) scaled modeling approach 2\n"); print(summary(len_t3_lew_scaled))
+cat("\nYork River t1 (November 2023) modeling approach 2\n")
+cat("singular fit:", isSingular(len_GE1.york), "\n"); print(VarCorr(len_GE1.york)); print(summary(len_GE1.york))
+cat("\nYork River t1 (November 2023) scaled modeling approach 2\n"); print(summary(len_t1_yrk_scaled))
+cat("\nYork River t2 (May 2024) modeling approach 2\n")
+cat("singular fit:", isSingular(len_GE2.york), "\n"); print(VarCorr(len_GE2.york)); print(summary(len_GE2.york))
+cat("\nYork River t2 (May 2024) scaled modeling approach 2\n"); print(summary(len_t2_yrk_scaled))
+cat("\nYork River t3 (November 2024) modeling approach 2\n")
+cat("singular fit:", isSingular(len_GE3.york), "\n"); print(VarCorr(len_GE3.york)); print(summary(len_GE3.york))
+cat("\nYork River t3 (November 2024) scaled modeling approach 2\n"); print(summary(len_t3_yrk_scaled))
+sink()
+```
+
+## Figures
+
+```{r}
+
+# helper: tidy scaled models, tag time, build t-based 95% CIs (Satterthwaite df ~2)
+build_slope_df <- function(m_t1, m_t2, m_t3) {
+  bind_rows(
+    tidy(m_t1, effects = "fixed") %>% mutate(t = "t1"),
+    tidy(m_t2, effects = "fixed") %>% mutate(t = "t2"),
+    tidy(m_t3, effects = "fixed") %>% mutate(t = "t3")
+  ) %>%
+    filter(term != "(Intercept)") %>%
+    mutate(tmult = qt(0.975, df),
+           lower = estimate - tmult * std.error,
+           upper = estimate + tmult * std.error) %>%
+    select(explanatory = term, slope = estimate, lower, upper, t)
+}
+
+# three predictors now. Distance is the site-specific term
+y_limits <- c("scale(dist)", "scale(ho)", "scale(ar)")
+y_labels <- c(str_wrap("Environmental distance (EoO to field site)", width = 20),
+              "Heterozygosity", "Allelic richness")
+time_labels <- c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024")
+
+plot_slopes <- function(df, point_color) {
+  ggplot(df, aes(x = slope, y = explanatory)) +
+    geom_point(aes(alpha = t, shape = t), color = point_color, size = 3.5,
+               position = position_dodge2v(height = .85, reverse = T, preserve = "total")) +
+    geom_errorbarh(aes(xmax = upper, xmin = lower, alpha = t), color = point_color,
+                   height = 0, size = 1.2,
+                   position = position_dodgev(height = -.85, preserve = "total")) +
+    scale_alpha_manual(name = "Time", na.translate = F,
+                       values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = time_labels) +
+    scale_shape_manual(name = "Time", na.translate = F,
+                       values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = time_labels) +
+    coord_cartesian(xlim = c(-1.6, 2)) +
+    xlab("Slope on scaled data") + ylab("Variable") +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    scale_y_discrete(name = "Explanatory variable", limits = y_limits, labels = y_labels) +
+    theme_classic() +
+    theme(axis.text = element_text(color = "black", size = 14),
+          axis.title = element_text(size = 15),
+          legend.text = element_text(size = 14),
+          legend.title = element_text(size = 15))
+}
+
+lew_surv_df <- build_slope_df(surv_t1_lew_scaled, surv_t2_lew_scaled, surv_t3_lew_scaled)
+lew_surv_plot <- plot_slopes(lew_surv_df, "#F06292"); lew_surv_plot
+ggsave("Fig3B_lew_surv_envrdist.pdf", plot = lew_surv_plot, device = "pdf",
+       path = "figures/juvenile_effects_H2F", height = 4, width = 7)
+
+yrk_surv_df <- build_slope_df(surv_t1_yrk_scaled, surv_t2_yrk_scaled, surv_t3_yrk_scaled)
+yrk_surv_plot <- plot_slopes(yrk_surv_df, "#880E4F"); yrk_surv_plot
+ggsave("Fig3D_york_surv_envrdist.pdf", plot = yrk_surv_plot, device = "pdf",
+       path = "figures/juvenile_effects_H2F", height = 4, width = 7)
+
+lew_len_df <- build_slope_df(len_t1_lew_scaled, len_t2_lew_scaled, len_t3_lew_scaled)
+lew_len_plot <- plot_slopes(lew_len_df, "#F06292"); lew_len_plot
+ggsave("FigS5B_lew_len_envrdist.pdf", plot = lew_len_plot, device = "pdf",
+       path = "figures/juvenile_effects_H2F", height = 4, width = 7)
+
+yrk_len_df <- build_slope_df(len_t1_yrk_scaled, len_t2_yrk_scaled, len_t3_yrk_scaled)
+yrk_len_plot <- plot_slopes(yrk_len_df, "#880E4F"); yrk_len_plot
+ggsave("FigS5D_york_len_envrdist.pdf", plot = yrk_len_plot, device = "pdf",
+       path = "figures/juvenile_effects_H2F", height = 4, width = 7)
+
+```
+
+## Check assumptions
+
+```{r}
+
+surv_models <- list(
+  "surv Lew t1" = surv_GE1.lew, "surv Lew t2" = surv_GE2.lew, "surv Lew t3" = surv_GE3.lew,
+  "surv Yrk t1" = surv_GE1.york, "surv Yrk t2" = surv_GE2.york, "surv Yrk t3" = surv_GE3.york
+)
+len_models <- list(
+  "len Lew t1" = len_GE1.lew, "len Lew t2" = len_GE2.lew, "len Lew t3" = len_GE3.lew,
+  "len Yrk t1" = len_GE1.york, "len Yrk t2" = len_GE2.york, "len Yrk t3" = len_GE3.york
+)
+all_models <- c(surv_models, len_models)
+
+op <- par(mfrow = c(2, 2), mar = c(4, 4, 2, 1))
+for (nm in names(all_models)) {
+  m <- all_models[[nm]]
+  plot(fitted(m), resid(m), main = paste(nm, "- resid vs fitted"),
+       xlab = "Fitted", ylab = "Residual", pch = 19, col = rgb(0,0,0,0.3))
+  abline(h = 0, lty = 2)
+  qqnorm(resid(m), main = paste(nm, "- QQ")); qqline(resid(m))
+}
+par(op)
+
+sapply(all_models, function(m) {
+  r <- resid(m)
+  c(shapiro_p = tryCatch(shapiro.test(r)$p.value, error = function(e) NA), n = length(r))
+})
+
+```

@@ -1,0 +1,713 @@
+---
+title: "Q2a_JUV_envr_quantile_models_field"
+author: "Kiran Bajaj"
+date: "2026-08-23"
+output: pdf_document
+---
+
+This file contains analyses that address Q2a: effects of offspring genetic diversity (heterozygosity, allelic richness) and absolute environmental variables (temperature and salinity quantiles of environments-of-origin) on oyster survival and length at a given timepoint (monocultures only).
+
+Modeling is based on code from CR.
+
+260823 KEB: updated these models to include juvenile heterozygosity and allelic richness data which is calculated correctly based on the recoded genotype matrix.
+
+## Load packages
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = here::here())
+
+if (!require("pacman")) install.packages("pacman")
+
+packages <- c("tidyverse", "here", "ggplot2", "lme4", "lmerTest", "car", "broom", "broom.mixed", "corrplot", "ggstance", "stringr")
+pacman::p_load(char = packages)
+
+r_version <- paste(R.version$major, R.version$minor, sep = ".")
+lib_ver <- packages %>%
+  map_chr(~ paste0(.x, " (v", packageVersion(.x), ")")) %>%
+  paste(collapse = ", ")
+
+```
+
+```{r}
+getwd()
+```
+
+## Read in data
+
+```{r}
+
+# survival
+surv_mod_ord_rename <- read.csv("data/performance_H2F/field_surv_all_times.csv")[, -1]
+
+# length
+lengths_mod_narm_nodead <- read.csv("data/performance_H2F/field_length_all_times.csv")[ ,-1]
+
+# this file contains data on mean heterozygosity and allelic richness in the juvenile populations
+juv_genetics <- read.csv("results/juvenile_effects_H2F/juvenile_genetic_effects_full.csv")
+
+# environment of origin quantiles
+env_parents <- read.csv("results/environment/envr_quantiles_allsites.csv")
+
+```
+
+For the H2F paper, we want to know how environment and genetics are impacting differential survival. I'll start by putting together the complete dataframe.
+
+Because the H1-HYBRIDMIX and H2-SEEDMIX groups do not have a single environment-of-origin, those groups are excluded from these analyses.
+
+## Modeling drivers of differences in survival
+
+### Data preparation
+
+Combine environmental, genetic, and survival data into a data frame for the downstream models.
+
+```{r}
+
+# genetic data
+colnames(juv_genetics) <- c("pop","ho","exp_hs","ar")
+surv_mod_gen <- merge(surv_mod_ord_rename, juv_genetics, by = "pop")
+
+# clean env_parents
+colnames(env_parents) <- c("pop","salinity_quantile_10","salinity_quantile_90","Salinity_st_dev","temp_quantile_10","temp_quantile_90","Temperature_st_dev", "salinity")
+
+# survival + genetics + environment (used for the survival models)
+surv_mod_gen_env <- merge(surv_mod_gen, env_parents, by = "pop")
+
+# also build a survival + length frame for the correlation matrix only
+# summarize length to mean per pop/bag_site/bags_label/t so it matches survival
+length_summarized <- lengths_mod_narm_nodead %>%
+  group_by(bag_site, pop, t, bags_label) %>%
+  summarise(mean_len = mean(length, na.rm = TRUE), .groups = "drop")
+
+surv_len_mod_gen     <- merge(length_summarized, surv_mod_gen,
+                              by = c("pop", "bag_site", "bags_label", "t"))
+surv_len_mod_gen_env <- merge(surv_len_mod_gen, env_parents, by = "pop")
+
+```
+
+### Assess multicollinearity and calculate pairwise correlations
+
+KEB 260823: Using the recoded juvenile genetic data to calculate heterozygosity and allelic richness, nothing is correlated.
+
+```{r}
+
+# full matrix incl. SD terms, survival, and mean length
+cor_matrix_all <- cor(surv_len_mod_gen_env[,c("salinity_quantile_10","salinity_quantile_90","Salinity_st_dev","temp_quantile_10","temp_quantile_90","Temperature_st_dev", "ho", "ar", "surv", "mean_len")])
+colnames(cor_matrix_all) <- c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Salinity SD", "Temperature 0.1 quantile", "Temperature 0.9 quantile", "Temperature SD", "Heterozygosity", "Allelic richness", "Survival", "Mean length")
+rownames(cor_matrix_all) <- colnames(cor_matrix_all)
+
+corrplot_all <- corrplot(cor_matrix_all,
+         method = "color", type = "upper", tl.col = "black", tl.srt = 45,
+         title = "Pairwise correlations Q2a",
+         addCoef.col = 'black', mar = c(0,0,2,0))
+
+# reduced matrix: quantiles only (no SD), plus survival and mean length
+cor_matrix_quant <- cor(surv_len_mod_gen_env[,c("salinity_quantile_10","salinity_quantile_90","temp_quantile_10","temp_quantile_90","ho", "ar", "surv", "mean_len")])
+colnames(cor_matrix_quant) <- c("Salinity 0.1 quantile", "Salinity 0.9 quantile", "Temperature 0.1 quantile", "Temperature 0.9 quantile", "Heterozygosity", "Allelic richness", "Survival", "Mean length")
+rownames(cor_matrix_quant) <- colnames(cor_matrix_quant)
+
+pdf(file = "figures/juvenile_effects_H2F/FigS2_corrplot_envr_quantiles_H0_Ar.pdf")
+corrplot(cor_matrix_quant,
+         method = "color", type = "upper", tl.col = "black", tl.srt = 45,
+         title = "Pairwise correlations Q2a",
+         addCoef.col = 'black', mar = c(0,0,2,0))
+dev.off() 
+
+```
+
+### Assess VIF
+
+```{r}
+
+# Collinearity check. Predictors vary across only 8 source populations
+VIF <- function(a, b, c, d, e){
+  1/(1-summary(lm(a ~ b + c + d + e))$r.squared)
+}
+
+d <- surv_mod_gen_env
+
+# predictor set retaining temp Q90 (excluding temp Q10)
+VIF(d$temp_quantile_90,     d$salinity_quantile_10, d$salinity_quantile_90, d$ho, d$ar)  # temp90
+VIF(d$salinity_quantile_10, d$salinity_quantile_90, d$temp_quantile_90,     d$ho, d$ar)  # sal10
+VIF(d$salinity_quantile_90, d$salinity_quantile_10, d$temp_quantile_90,     d$ho, d$ar)  # sal90
+VIF(d$ho, d$salinity_quantile_10, d$salinity_quantile_90, d$temp_quantile_90, d$ar)      # ho
+VIF(d$ar, d$salinity_quantile_10, d$salinity_quantile_90, d$temp_quantile_90, d$ho)      # ar
+
+# alternative set retaining temp Q10 (excluding temp Q90), for comparison
+VIF(d$temp_quantile_10,     d$salinity_quantile_10, d$salinity_quantile_90, d$ho, d$ar)  # temp10
+VIF(d$salinity_quantile_10, d$salinity_quantile_90, d$temp_quantile_10,     d$ho, d$ar)  # sal10
+VIF(d$salinity_quantile_90, d$salinity_quantile_10, d$temp_quantile_10,     d$ho, d$ar)  # sal90
+VIF(d$ho, d$salinity_quantile_10, d$salinity_quantile_90, d$temp_quantile_10, d$ar)      # ho
+VIF(d$ar, d$salinity_quantile_10, d$salinity_quantile_90, d$temp_quantile_10, d$ho)      # ar
+
+```
+
+I think we can move forward with all predictors except for temperature Q10.
+
+### t1 survival, Lewisetta
+
+```{r t1_surv_lew}
+
+# t1 survival, Lewisetta
+# temp_quantile_10 excluded (collinearity); all retained VIF < 2
+# (1|pop) accounts for 3 bags nested within each of 8 populations —
+# predictors are constant within population, so this is where the real
+# replication lives. Watch for a singular fit (8 groups is few).
+lew_t1 <- surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "Lewisetta", ]
+
+surv_GE1.lew <- lmer(
+  surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_90 +
+    (1 | pop),
+  data = lew_t1
+)
+isSingular(surv_GE1.lew)          # TRUE = pop variance ~0; fall back to population means
+summary(surv_GE1.lew)             # fixed effects; p-values via Satterthwaite (lmerTest)
+
+surv_t1_lew_scaled <- lmer(
+  scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +
+    scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 | pop),
+  data = lew_t1
+)
+isSingular(surv_t1_lew_scaled)
+
+```
+
+### t2 survival, Lewisetta
+
+```{r t2_surv_lew}
+
+lew_t2 <- surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "Lewisetta", ]
+
+surv_GE2.lew <- lmer(
+  surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_90 +
+    (1 | pop),
+  data = lew_t2
+)
+isSingular(surv_GE2.lew)
+summary(surv_GE2.lew)
+
+surv_t2_lew_scaled <- lmer(
+  scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +
+    scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 | pop),
+  data = lew_t2
+)
+isSingular(surv_t2_lew_scaled)
+
+```
+
+### t3 survival, Lewisetta
+
+```{r t3_surv_lew}
+
+lew_t3 <- surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "Lewisetta", ]
+
+surv_GE3.lew <- lmer(
+  surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_90 +
+    (1 | pop),
+  data = lew_t3
+)
+isSingular(surv_GE3.lew)
+summary(surv_GE3.lew)
+
+surv_t3_lew_scaled <- lmer(
+  scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +
+    scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 | pop),
+  data = lew_t3
+)
+isSingular(surv_t3_lew_scaled)
+
+```
+
+### t1 survival, York River
+
+```{r t1_surv_yrk}
+
+yrk_t1 <- surv_mod_gen_env[surv_mod_gen_env$t == 1 & surv_mod_gen_env$bag_site == "YorkRiver", ]
+
+surv_GE1.york <- lmer(
+  surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_90 +
+    (1 | pop),
+  data = yrk_t1
+)
+isSingular(surv_GE1.york)
+summary(surv_GE1.york)
+
+surv_t1_yrk_scaled <- lmer(
+  scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +
+    scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 | pop),
+  data = yrk_t1
+)
+isSingular(surv_t1_yrk_scaled)
+
+```
+
+### t2 survival, York River
+
+```{r t2_surv_yrk}
+
+yrk_t2 <- surv_mod_gen_env[surv_mod_gen_env$t == 2 & surv_mod_gen_env$bag_site == "YorkRiver", ]
+
+surv_GE2.york <- lmer(
+  surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_90 +
+    (1 | pop),
+  data = yrk_t2
+)
+isSingular(surv_GE2.york)
+summary(surv_GE2.york)
+
+surv_t2_yrk_scaled <- lmer(
+  scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +
+    scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 | pop),
+  data = yrk_t2
+)
+isSingular(surv_t2_yrk_scaled)
+
+```
+
+### t3 survival, York River
+
+```{r t3_surv_yrk}
+
+yrk_t3 <- surv_mod_gen_env[surv_mod_gen_env$t == 3 & surv_mod_gen_env$bag_site == "YorkRiver", ]
+
+surv_GE3.york <- lmer(
+  surv ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_90 +
+    (1 | pop),
+  data = yrk_t3
+)
+isSingular(surv_GE3.york)
+summary(surv_GE3.york)
+
+surv_t3_yrk_scaled <- lmer(
+  scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +
+    scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 | pop),
+  data = yrk_t3
+)
+isSingular(surv_t3_yrk_scaled)
+
+# save everything
+sink(paste0("results/juvenile_effects_H2F/models/survival_Q2a_quantiles_results_", Sys.Date(), ".txt"))
+cat("\nLewisetta t1 (November 2023) modeling approach 1\n")
+cat("singular fit:", isSingular(surv_GE1.lew), "\n")
+print(summary(surv_GE1.lew))
+cat("\nLewisetta t1 (November 2023) scaled modeling approach 1\n")
+print(summary(surv_t1_lew_scaled))
+cat("\nLewisetta t2 (May 2024) modeling approach 1\n")
+cat("singular fit:", isSingular(surv_GE2.lew), "\n")
+print(summary(surv_GE2.lew))
+cat("\nLewisetta t2 (May 2024) scaled modeling approach 1\n")
+print(summary(surv_t2_lew_scaled))
+cat("\nLewisetta t3 (November 2024) modeling approach 1\n")
+cat("singular fit:", isSingular(surv_GE3.lew), "\n")
+print(summary(surv_GE3.lew))
+cat("\nLewisetta t3 (November 2024) scaled modeling approach 1\n")
+print(summary(surv_t3_lew_scaled))
+cat("\nYork River t1 (November 2023) modeling approach 1\n")
+cat("singular fit:", isSingular(surv_GE1.york), "\n")
+print(summary(surv_GE1.york))
+cat("\nYork River t1 (November 2023) scaled modeling approach 1\n")
+print(summary(surv_t1_yrk_scaled))
+cat("\nYork River t2 (May 2024) modeling approach 1\n")
+cat("singular fit:", isSingular(surv_GE2.york), "\n")
+print(summary(surv_GE2.york))
+cat("\nYork River t2 (May 2024) scaled modeling approach 1\n")
+print(summary(surv_t2_yrk_scaled))
+cat("\nYork River t3 (November 2024) modeling approach 1\n")
+cat("singular fit:", isSingular(surv_GE3.york), "\n")
+print(summary(surv_GE3.york))
+cat("\nYork River t3 (November 2024) scaled modeling approach 1\n")
+print(summary(surv_t3_yrk_scaled))
+sink()
+
+```
+
+## Modeling drivers of differences in length
+
+```{r}
+# start by putting together a complete data frame
+len_mod_gen     <- merge(lengths_mod_narm_nodead, juv_genetics, by = "pop")
+len_mod_gen_env <- merge(len_mod_gen, env_parents, by = "pop")
+```
+
+### t1 length, Lewisetta
+
+```{r t1_len_lew}
+
+# t1 length, Lewisetta — individuals within bags within populations.
+# temp_quantile_10 excluded (collinearity); all retained VIF < 2.
+# (1|pop/bags_label): bag clustering AND population clustering. Predictors vary
+# only at the population level (8 pops); watch the pop term for singularity.
+len_lew_t1 <- len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "Lewisetta", ]
+
+len_GE1.lew <- lmer(
+  length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_90 +
+    (1 | pop / bags_label),
+  data = len_lew_t1
+)
+isSingular(len_GE1.lew)   # TRUE = pop or bag variance ~0
+VarCorr(len_GE1.lew)      # pop vs bag vs residual variance split
+summary(len_GE1.lew)      # Satterthwaite df/p-values
+
+len_t1_lew_scaled <- lmer(
+  scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +
+    scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 | pop / bags_label),
+  data = len_lew_t1
+)
+isSingular(len_t1_lew_scaled)
+
+```
+
+### t2 length, Lewisetta
+
+```{r t2_len_lew}
+
+len_lew_t2 <- len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "Lewisetta", ]
+
+len_GE2.lew <- lmer(
+  length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_90 +
+    (1 | pop / bags_label),
+  data = len_lew_t2
+)
+isSingular(len_GE2.lew)
+VarCorr(len_GE2.lew)
+summary(len_GE2.lew)
+
+len_t2_lew_scaled <- lmer(
+  scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +
+    scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 | pop / bags_label),
+  data = len_lew_t2
+)
+isSingular(len_t2_lew_scaled)
+
+```
+
+### t3 length, Lewisetta
+
+```{r t3_len_lew}
+
+len_lew_t3 <- len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "Lewisetta", ]
+
+len_GE3.lew <- lmer(
+  length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_90 +
+    (1 | pop / bags_label),
+  data = len_lew_t3
+)
+isSingular(len_GE3.lew)
+VarCorr(len_GE3.lew)
+summary(len_GE3.lew)
+
+len_t3_lew_scaled <- lmer(
+  scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +
+    scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 | pop / bags_label),
+  data = len_lew_t3
+)
+isSingular(len_t3_lew_scaled)
+
+```
+
+### t1 length, York River
+
+```{r t1_len_yrk}
+
+len_yrk_t1 <- len_mod_gen_env[len_mod_gen_env$t == 1 & len_mod_gen_env$bag_site == "YorkRiver", ]
+
+len_GE1.york <- lmer(
+  length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_90 +
+    (1 | pop / bags_label),
+  data = len_yrk_t1
+)
+isSingular(len_GE1.york)
+VarCorr(len_GE1.york)
+summary(len_GE1.york)
+
+len_t1_yrk_scaled <- lmer(
+  scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +
+    scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 | pop / bags_label),
+  data = len_yrk_t1
+)
+isSingular(len_t1_yrk_scaled)
+
+```
+
+### t2 length, York River
+
+```{r t2_len_yrk}
+
+len_yrk_t2 <- len_mod_gen_env[len_mod_gen_env$t == 2 & len_mod_gen_env$bag_site == "YorkRiver", ]
+
+len_GE2.york <- lmer(
+  length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_90 +
+    (1 | pop / bags_label),
+  data = len_yrk_t2
+)
+isSingular(len_GE2.york)
+VarCorr(len_GE2.york)
+summary(len_GE2.york)
+
+len_t2_yrk_scaled <- lmer(
+  scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +
+    scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 | pop / bags_label),
+  data = len_yrk_t2
+)
+isSingular(len_t2_yrk_scaled)
+
+```
+
+### t3 length, York River
+
+```{r t3_len_yrk}
+
+len_yrk_t3 <- len_mod_gen_env[len_mod_gen_env$t == 3 & len_mod_gen_env$bag_site == "YorkRiver", ]
+
+len_GE3.york <- lmer(
+  length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_90 +
+    (1 | pop / bags_label),
+  data = len_yrk_t3
+)
+isSingular(len_GE3.york)
+VarCorr(len_GE3.york)
+summary(len_GE3.york)
+
+len_t3_yrk_scaled <- lmer(
+  scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +
+    scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 | pop / bags_label),
+  data = len_yrk_t3
+)
+isSingular(len_t3_yrk_scaled)
+
+```
+
+```{r}
+
+# save everything
+sink(paste0("results/juvenile_effects_H2F/models/length_Q2a_quantiles_results_", Sys.Date(), ".txt"))
+cat("\nLewisetta t1 (November 2023) modeling approach 1\n")
+cat("singular fit:", isSingular(len_GE1.lew), "\n")
+print(VarCorr(len_GE1.lew))
+print(summary(len_GE1.lew))
+cat("\nLewisetta t1 (November 2023) scaled modeling approach 1\n")
+print(summary(len_t1_lew_scaled))
+cat("\nLewisetta t2 (May 2024) modeling approach 1\n")
+cat("singular fit:", isSingular(len_GE2.lew), "\n")
+print(VarCorr(len_GE2.lew))
+print(summary(len_GE2.lew))
+cat("\nLewisetta t2 (May 2024) scaled modeling approach 1\n")
+print(summary(len_t2_lew_scaled))
+cat("\nLewisetta t3 (November 2024) modeling approach 1\n")
+cat("singular fit:", isSingular(len_GE3.lew), "\n")
+print(VarCorr(len_GE3.lew))
+print(summary(len_GE3.lew))
+cat("\nLewisetta t3 (November 2024) scaled modeling approach 1\n")
+print(summary(len_t3_lew_scaled))
+cat("\nYork River t1 (November 2023) modeling approach 1\n")
+cat("singular fit:", isSingular(len_GE1.york), "\n")
+print(VarCorr(len_GE1.york))
+print(summary(len_GE1.york))
+cat("\nYork River t1 (November 2023) scaled modeling approach 1\n")
+print(summary(len_t1_yrk_scaled))
+cat("\nYork River t2 (May 2024) modeling approach 1\n")
+cat("singular fit:", isSingular(len_GE2.york), "\n")
+print(VarCorr(len_GE2.york))
+print(summary(len_GE2.york))
+cat("\nYork River t2 (May 2024) scaled modeling approach 1\n")
+print(summary(len_t2_yrk_scaled))
+cat("\nYork River t3 (November 2024) modeling approach 1\n")
+cat("singular fit:", isSingular(len_GE3.york), "\n")
+print(VarCorr(len_GE3.york))
+print(summary(len_GE3.york))
+cat("\nYork River t3 (November 2024) scaled modeling approach 1\n")
+print(summary(len_t3_yrk_scaled))
+sink()
+
+```
+
+## Figures
+
+```{r}
+
+# helper: tidy a set of scaled models, tag time, and build honest t-based 95% CIs.
+# df comes from lmerTest's Satterthwaite approximation (~2 here), so qt(0.975, df)
+# gives the correct multiplier (~4.3), NOT 2. Bars now match the Satterthwaite p-values.
+build_slope_df <- function(m_t1, m_t2, m_t3) {
+  bind_rows(
+    tidy(m_t1, effects = "fixed") %>% mutate(t = "t1"),
+    tidy(m_t2, effects = "fixed") %>% mutate(t = "t2"),
+    tidy(m_t3, effects = "fixed") %>% mutate(t = "t3")
+  ) %>%
+    filter(term != "(Intercept)") %>%
+    mutate(
+      tmult = qt(0.975, df),
+      lower = estimate - tmult * std.error,
+      upper = estimate + tmult * std.error
+    ) %>%
+    select(explanatory = term, slope = estimate, lower, upper, t)
+}
+
+# shared y-axis ordering + labels (all five predictors, present in every cell now)
+y_limits <- c("scale(salinity_quantile_10)", "scale(salinity_quantile_90)",
+              "scale(temp_quantile_90)", "scale(ho)", "scale(ar)")
+y_labels <- c("Salinity Q10", "Salinity Q90", "Temperature Q90",
+              "Heterozygosity", "Allelic richness")
+
+time_labels <- c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024")
+
+# Lewisetta survival
+lew_surv_df <- build_slope_df(surv_t1_lew_scaled, surv_t2_lew_scaled, surv_t3_lew_scaled)
+
+lew_surv_plot <- lew_surv_df %>%
+  ggplot(aes(x = slope, y = explanatory)) +
+  geom_point(aes(alpha = t, shape = t), color = "#F06292", size = 3.5,
+             position = position_dodge2v(height = .85, reverse = T, preserve = "total")) +
+  geom_errorbarh(aes(xmax = upper, xmin = lower, alpha = t),
+                 color = "#F06292", height = 0, size = 1.2,
+                 position = position_dodgev(height = -.85, preserve = "total")) +
+  scale_alpha_manual(name = "Time", na.translate = F,
+                     values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = time_labels) +
+  scale_shape_manual(name = "Time", na.translate = F,
+                     values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = time_labels) +
+  coord_cartesian(xlim = c(-1.6, 2)) +
+  xlab("Slope on scaled data") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  scale_y_discrete(name = "Explanatory variable", limits = y_limits, labels = y_labels) +
+  theme_classic() +
+  theme(axis.text = element_text(color = "black", size = 14),
+        axis.title = element_text(size = 15),
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15))
+
+lew_surv_plot
+ggsave("Fig3A_lew_surv_quantiles.pdf", plot = lew_surv_plot, device = "pdf",
+       path = "figures/juvenile_effects_H2F", height = 4, width = 7)
+
+# York survival
+yrk_surv_df <- build_slope_df(surv_t1_yrk_scaled, surv_t2_yrk_scaled, surv_t3_yrk_scaled)
+
+yrk_surv_plot <- yrk_surv_df %>%
+  ggplot(aes(x = slope, y = explanatory)) +
+  geom_point(aes(alpha = t, shape = t), color = "#880E4F", size = 3.5,
+             position = position_dodge2v(height = .85, reverse = T, preserve = "total")) +
+  geom_errorbarh(aes(xmax = upper, xmin = lower, alpha = t),
+                 color = "#880E4F", height = 0, size = 1.2,
+                 position = position_dodgev(height = -.85, preserve = "total")) +
+  scale_alpha_manual(name = "Time", na.translate = F,
+                     values = c("t1" = .4, "t2" = .7, "t3" = 1), labels = time_labels) +
+  scale_shape_manual(name = "Time", na.translate = F,
+                     values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = time_labels) +
+  coord_cartesian(xlim = c(-1.6, 2)) +
+  xlab("Slope on scaled data") + ylab("Variable") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  scale_y_discrete(name = "Explanatory variable", limits = y_limits, labels = y_labels) +
+  theme_classic() +
+  theme(axis.text = element_text(color = "black", size = 14),
+        axis.title = element_text(size = 15),
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15))
+
+yrk_surv_plot
+ggsave("Fig3C_york_surv_quantiles.pdf", plot = yrk_surv_plot, device = "pdf",
+       path = "figures/juvenile_effects_H2F", height = 4, width = 7)
+
+# Lewisetta length
+lew_len_df <- build_slope_df(len_t1_lew_scaled, len_t2_lew_scaled, len_t3_lew_scaled)
+
+lew_len_plot <- lew_len_df %>%
+  ggplot(aes(x = slope, y = explanatory)) +
+  geom_point(aes(alpha = t, shape = t), color = "#F06292", size = 3.5,
+             position = position_dodge2v(height = .85, reverse = T, preserve = "total")) +
+  geom_errorbarh(aes(xmax = upper, xmin = lower, alpha = t),
+                 color = "#F06292", height = 0, size = 1.2,
+                 position = position_dodgev(height = -.85, preserve = "total")) +
+  scale_alpha_manual(name = "Time", na.translate = F,
+                     values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = time_labels) +
+  scale_shape_manual(name = "Time", na.translate = F,
+                     values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = time_labels) +
+  coord_cartesian(xlim = c(-1.6, 2)) +
+  xlab("Slope on scaled data") + ylab("Variable") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  scale_y_discrete(name = "Explanatory variable", limits = y_limits, labels = y_labels) +
+  theme_classic() +
+  theme(axis.text = element_text(color = "black", size = 14),
+        axis.title = element_text(size = 15),
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15))
+
+lew_len_plot
+ggsave("FigS5A_lew_length_quantiles.pdf", plot = lew_len_plot, device = "pdf",
+       path = "figures/juvenile_effects_H2F", height = 4, width = 7)
+
+# York length
+yrk_len_df <- build_slope_df(len_t1_yrk_scaled, len_t2_yrk_scaled, len_t3_yrk_scaled)
+
+yrk_len_plot <- yrk_len_df %>%
+  ggplot(aes(x = slope, y = explanatory)) +
+  geom_point(aes(alpha = t, shape = t), color = "#880E4F", size = 3.5,
+             position = position_dodge2v(height = .85, reverse = T, preserve = "total")) +
+  geom_errorbarh(aes(xmax = upper, xmin = lower, alpha = t),
+                 color = "#880E4F", height = 0, size = 1.2,
+                 position = position_dodgev(height = -.85, preserve = "total")) +
+  scale_alpha_manual(name = "Time", na.translate = F,
+                     values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = time_labels) +
+  scale_shape_manual(name = "Time", na.translate = F,
+                     values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = time_labels) +
+  coord_cartesian(xlim = c(-1.6, 2)) +
+  xlab("Slope on scaled data") + ylab("Variable") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  scale_y_discrete(name = "Explanatory variable", limits = y_limits, labels = y_labels) +
+  theme_classic() +
+  theme(axis.text = element_text(color = "black", size = 14),
+        axis.title = element_text(size = 15),
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 15))
+
+yrk_len_plot
+ggsave("FigS5C_york_length_quantiles.pdf", plot = yrk_len_plot, device = "pdf",
+       path = "figures/juvenile_effects_H2F", height = 4, width = 7)
+
+```
+
+## Check assumptions
+
+```{r}
+
+# collect the raw (unscaled) fitted models
+surv_models <- list(
+  "surv Lew t1" = surv_GE1.lew, "surv Lew t2" = surv_GE2.lew, "surv Lew t3" = surv_GE3.lew,
+  "surv Yrk t1" = surv_GE1.york, "surv Yrk t2" = surv_GE2.york, "surv Yrk t3" = surv_GE3.york
+)
+len_models <- list(
+  "len Lew t1" = len_GE1.lew, "len Lew t2" = len_GE2.lew, "len Lew t3" = len_GE3.lew,
+  "len Yrk t1" = len_GE1.york, "len Yrk t2" = len_GE2.york, "len Yrk t3" = len_GE3.york
+)
+all_models <- c(surv_models, len_models)
+
+# residuals vs fitted + QQ for every model, two per row
+op <- par(mfrow = c(2, 2), mar = c(4, 4, 2, 1))
+for (nm in names(all_models)) {
+  m <- all_models[[nm]]
+  plot(fitted(m), resid(m), main = paste(nm, "- resid vs fitted"),
+       xlab = "Fitted", ylab = "Residual", pch = 19, col = rgb(0,0,0,0.3))
+  abline(h = 0, lty = 2)
+  qqnorm(resid(m), main = paste(nm, "- QQ")); qqline(resid(m))
+}
+par(op)
+
+# quick numeric summary: normality of residuals per model
+sapply(all_models, function(m) {
+  r <- resid(m)
+  c(shapiro_p = tryCatch(shapiro.test(r)$p.value, error = function(e) NA),
+    n = length(r))
+})
+
+```
+
+```{r}
+
+op <- par(mfrow = c(2, 3), mar = c(4, 4, 2, 1))
+for (nm in names(len_models)) {
+  qqnorm(resid(len_models[[nm]]), main = nm, pch = 19, col = rgb(0,0,0,0.2))
+  qqline(resid(len_models[[nm]]))
+}
+par(op)
+
+```

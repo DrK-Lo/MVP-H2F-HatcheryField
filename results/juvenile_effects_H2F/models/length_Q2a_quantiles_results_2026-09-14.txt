@@ -1,0 +1,466 @@
+
+Lewisetta t1 (November 2023) modeling approach 1
+singular fit: FALSE 
+ Groups         Name        Std.Dev.
+ bags_label:pop (Intercept) 1.9426  
+ pop            (Intercept) 4.3444  
+ Residual                   7.2067  
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 +  
+    temp_quantile_90 + (1 | pop/bags_label)
+   Data: len_lew_t1
+
+REML criterion at convergence: 7282.1
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-3.03158 -0.65878  0.00416  0.61307  2.93508 
+
+Random effects:
+ Groups         Name        Variance Std.Dev.
+ bags_label:pop (Intercept)  3.774   1.943   
+ pop            (Intercept) 18.874   4.344   
+ Residual                   51.937   7.207   
+Number of obs: 1069, groups:  bags_label:pop, 24; pop, 8
+
+Fixed effects:
+                     Estimate Std. Error       df t value Pr(>|t|)
+(Intercept)          100.8795   104.2983   2.0026   0.967    0.435
+ho                   120.6857   188.7045   2.0021   0.640    0.588
+ar                   -70.5934    49.8925   2.0048  -1.415    0.292
+salinity_quantile_10   0.2245     0.2554   2.0033   0.879    0.472
+salinity_quantile_90  -0.0742     0.3259   2.0066  -0.228    0.841
+temp_quantile_90       1.3599     0.6212   2.0013   2.189    0.160
+
+Correlation of Fixed Effects:
+            (Intr) ho     ar     sl__10 sl__90
+ho          -0.497                            
+ar          -0.888  0.081                     
+slnty_qn_10  0.434 -0.330 -0.407              
+slnty_qn_90 -0.513  0.664  0.238 -0.568       
+tmp_qntl_90  0.126 -0.109 -0.276  0.461 -0.167
+
+Lewisetta t1 (November 2023) scaled modeling approach 1
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +  
+    scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 |      pop/bags_label)
+   Data: len_lew_t1
+
+REML criterion at convergence: 2675.6
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-3.03158 -0.65878  0.00416  0.61307  2.93508 
+
+Random effects:
+ Groups         Name        Variance Std.Dev.
+ bags_label:pop (Intercept) 0.04929  0.2220  
+ pop            (Intercept) 0.24648  0.4965  
+ Residual                   0.67827  0.8236  
+Number of obs: 1069, groups:  bags_label:pop, 24; pop, 8
+
+Fixed effects:
+                            Estimate Std. Error       df t value Pr(>|t|)
+(Intercept)                  0.02057    0.18332  2.00242   0.112    0.921
+scale(ho)                    0.15946    0.24933  2.00215   0.640    0.588
+scale(ar)                   -0.28715    0.20295  2.00474  -1.415    0.292
+scale(salinity_quantile_10)  0.22578    0.25688  2.00332   0.879    0.472
+scale(salinity_quantile_90) -0.06326    0.27785  2.00664  -0.228    0.841
+scale(temp_quantile_90)      0.45885    0.20962  2.00134   2.189    0.160
+
+Correlation of Fixed Effects:
+            (Intr) scl(h) scl(r) s(__10 scl(s__90)
+scale(ho)    0.021                                
+scale(ar)    0.029  0.081                         
+scl(sl__10) -0.021 -0.330 -0.407                  
+scl(sl__90)  0.022  0.664  0.238 -0.568           
+scl(tm__90) -0.048 -0.109 -0.276  0.461 -0.167    
+
+Lewisetta t2 (May 2024) modeling approach 1
+singular fit: FALSE 
+ Groups         Name        Std.Dev.
+ bags_label:pop (Intercept) 1.2086  
+ pop            (Intercept) 3.8254  
+ Residual                   7.3885  
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 +  
+    temp_quantile_90 + (1 | pop/bags_label)
+   Data: len_lew_t2
+
+REML criterion at convergence: 6624.8
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.1924 -0.6856 -0.0748  0.6679  3.5867 
+
+Random effects:
+ Groups         Name        Variance Std.Dev.
+ bags_label:pop (Intercept)  1.461   1.209   
+ pop            (Intercept) 14.633   3.825   
+ Residual                   54.590   7.388   
+Number of obs: 967, groups:  bags_label:pop, 24; pop, 8
+
+Fixed effects:
+                      Estimate Std. Error        df t value Pr(>|t|)
+(Intercept)           11.11099   90.85013   1.99944   0.122    0.914
+ho                   195.12420  164.40200   2.00042   1.187    0.357
+ar                   -24.55922   43.44593   1.99913  -0.565    0.629
+salinity_quantile_10   0.04594    0.22238   1.99691   0.207    0.855
+salinity_quantile_90   0.10671    0.28385   2.00232   0.376    0.743
+temp_quantile_90       1.03542    0.54118   1.99892   1.913    0.196
+
+Correlation of Fixed Effects:
+            (Intr) ho     ar     sl__10 sl__90
+ho          -0.497                            
+ar          -0.888  0.082                     
+slnty_qn_10  0.433 -0.330 -0.406              
+slnty_qn_90 -0.513  0.664  0.238 -0.568       
+tmp_qntl_90  0.125 -0.108 -0.276  0.461 -0.167
+
+Lewisetta t2 (May 2024) scaled modeling approach 1
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +  
+    scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 |      pop/bags_label)
+   Data: len_lew_t2
+
+REML criterion at convergence: 2538.3
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.1924 -0.6856 -0.0748  0.6679  3.5867 
+
+Random effects:
+ Groups         Name        Variance Std.Dev.
+ bags_label:pop (Intercept) 0.02068  0.1438  
+ pop            (Intercept) 0.20715  0.4551  
+ Residual                   0.77277  0.8791  
+Number of obs: 967, groups:  bags_label:pop, 24; pop, 8
+
+Fixed effects:
+                             Estimate Std. Error        df t value Pr(>|t|)
+(Intercept)                  0.005966   0.166080  1.999674   0.036    0.975
+scale(ho)                    0.265851   0.223993  2.000426   1.187    0.357
+scale(ar)                   -0.104076   0.184113  1.999132  -0.565    0.629
+scale(salinity_quantile_10)  0.048639   0.235452  1.996915   0.207    0.855
+scale(salinity_quantile_90)  0.096908   0.257775  2.002318   0.376    0.743
+scale(temp_quantile_90)      0.360309   0.188321  1.998922   1.913    0.196
+
+Correlation of Fixed Effects:
+            (Intr) scl(h) scl(r) s(__10 scl(s__90)
+scale(ho)    0.007                                
+scale(ar)    0.012  0.082                         
+scl(sl__10)  0.013 -0.330 -0.406                  
+scl(sl__90)  0.010  0.664  0.238 -0.568           
+scl(tm__90)  0.008 -0.108 -0.276  0.461 -0.167    
+
+Lewisetta t3 (November 2024) modeling approach 1
+singular fit: FALSE 
+ Groups         Name        Std.Dev.
+ bags_label:pop (Intercept)  4.3205 
+ pop            (Intercept)  8.6548 
+ Residual                   12.5111 
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 +  
+    temp_quantile_90 + (1 | pop/bags_label)
+   Data: len_lew_t3
+
+REML criterion at convergence: 6229.9
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.4276 -0.6024 -0.0043  0.6513  3.2449 
+
+Random effects:
+ Groups         Name        Variance Std.Dev.
+ bags_label:pop (Intercept)  18.67    4.320  
+ pop            (Intercept)  74.91    8.655  
+ Residual                   156.53   12.511  
+Number of obs: 787, groups:  bags_label:pop, 24; pop, 8
+
+Fixed effects:
+                     Estimate Std. Error       df t value Pr(>|t|)
+(Intercept)           56.4415   209.3705   1.9916   0.270    0.813
+ho                   332.1292   378.7161   1.9892   0.877    0.473
+ar                   -76.0969   100.1431   1.9928  -0.760    0.527
+salinity_quantile_10   0.3715     0.5127   1.9929   0.725    0.544
+salinity_quantile_90  -0.5900     0.6537   1.9888  -0.903    0.462
+temp_quantile_90       3.2193     1.2483   1.9984   2.579    0.123
+
+Correlation of Fixed Effects:
+            (Intr) ho     ar     sl__10 sl__90
+ho          -0.497                            
+ar          -0.888  0.081                     
+slnty_qn_10  0.433 -0.330 -0.406              
+slnty_qn_90 -0.512  0.664  0.237 -0.567       
+tmp_qntl_90  0.124 -0.107 -0.275  0.461 -0.167
+
+Lewisetta t3 (November 2024) scaled modeling approach 1
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +  
+    scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 |      pop/bags_label)
+   Data: len_lew_t3
+
+REML criterion at convergence: 1779.9
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.4276 -0.6024 -0.0043  0.6513  3.2449 
+
+Random effects:
+ Groups         Name        Variance Std.Dev.
+ bags_label:pop (Intercept) 0.06219  0.2494  
+ pop            (Intercept) 0.24955  0.4995  
+ Residual                   0.52147  0.7221  
+Number of obs: 787, groups:  bags_label:pop, 24; pop, 8
+
+Fixed effects:
+                             Estimate Std. Error        df t value Pr(>|t|)
+(Intercept)                 -0.006054   0.186123  1.993074  -0.033    0.977
+scale(ho)                    0.222466   0.253671  1.989218   0.877    0.473
+scale(ar)                   -0.153881   0.202506  1.992790  -0.760    0.527
+scale(salinity_quantile_10)  0.189936   0.262151  1.992869   0.725    0.544
+scale(salinity_quantile_90) -0.264141   0.292637  1.988830  -0.903    0.462
+scale(temp_quantile_90)      0.533709   0.206956  1.998393   2.579    0.123
+
+Correlation of Fixed Effects:
+            (Intr) scl(h) scl(r) s(__10 scl(s__90)
+scale(ho)    0.024                                
+scale(ar)   -0.004  0.081                         
+scl(sl__10)  0.016 -0.330 -0.406                  
+scl(sl__90)  0.010  0.664  0.237 -0.567           
+scl(tm__90)  0.064 -0.107 -0.275  0.461 -0.167    
+
+York River t1 (November 2023) modeling approach 1
+singular fit: FALSE 
+ Groups         Name        Std.Dev.
+ bags_label:pop (Intercept) 1.2363  
+ pop            (Intercept) 2.5135  
+ Residual                   7.3267  
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 +  
+    temp_quantile_90 + (1 | pop/bags_label)
+   Data: len_yrk_t1
+
+REML criterion at convergence: 7284.6
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.4142 -0.4435  0.0848  0.6585  2.7579 
+
+Random effects:
+ Groups         Name        Variance Std.Dev.
+ bags_label:pop (Intercept)  1.529   1.236   
+ pop            (Intercept)  6.318   2.513   
+ Residual                   53.680   7.327   
+Number of obs: 1066, groups:  bags_label:pop, 24; pop, 8
+
+Fixed effects:
+                      Estimate Std. Error        df t value Pr(>|t|)
+(Intercept)           50.28371   61.91076   1.99891   0.812    0.502
+ho                   132.11318  112.02517   1.99930   1.179    0.360
+ar                   -36.43422   29.61563   2.00101  -1.230    0.344
+salinity_quantile_10   0.37137    0.15163   2.00083   2.449    0.134
+salinity_quantile_90  -0.01152    0.19346   2.00288  -0.060    0.958
+temp_quantile_90       0.57229    0.36867   1.99569   1.552    0.261
+
+Correlation of Fixed Effects:
+            (Intr) ho     ar     sl__10 sl__90
+ho          -0.497                            
+ar          -0.888  0.081                     
+slnty_qn_10  0.434 -0.330 -0.407              
+slnty_qn_90 -0.513  0.664  0.238 -0.568       
+tmp_qntl_90  0.126 -0.109 -0.276  0.462 -0.167
+
+York River t1 (November 2023) scaled modeling approach 1
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +  
+    scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 |      pop/bags_label)
+   Data: len_yrk_t1
+
+REML criterion at convergence: 2851.3
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.4142 -0.4435  0.0848  0.6585  2.7579 
+
+Random effects:
+ Groups         Name        Variance Std.Dev.
+ bags_label:pop (Intercept) 0.02322  0.1524  
+ pop            (Intercept) 0.09596  0.3098  
+ Residual                   0.81540  0.9030  
+Number of obs: 1066, groups:  bags_label:pop, 24; pop, 8
+
+Fixed effects:
+                             Estimate Std. Error        df t value Pr(>|t|)
+(Intercept)                  0.004438   0.117231  1.998179   0.038    0.973
+scale(ho)                    0.185377   0.157190  1.999300   1.179    0.360
+scale(ar)                   -0.159833   0.129921  2.001014  -1.230    0.344
+scale(salinity_quantile_10)  0.405855   0.165711  2.000827   2.449    0.134
+scale(salinity_quantile_90) -0.010730   0.180202  2.002882  -0.060    0.958
+scale(temp_quantile_90)      0.210408   0.135543  1.995691   1.552    0.261
+
+Correlation of Fixed Effects:
+            (Intr) scl(h) scl(r) s(__10 scl(s__90)
+scale(ho)   -0.006                                
+scale(ar)    0.017  0.081                         
+scl(sl__10) -0.008 -0.330 -0.407                  
+scl(sl__90)  0.001  0.664  0.238 -0.568           
+scl(tm__90) -0.027 -0.109 -0.276  0.462 -0.167    
+
+York River t2 (May 2024) modeling approach 1
+singular fit: FALSE 
+ Groups         Name        Std.Dev.
+ bags_label:pop (Intercept) 0.87898 
+ pop            (Intercept) 2.26081 
+ Residual                   5.78109 
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 +  
+    temp_quantile_90 + (1 | pop/bags_label)
+   Data: len_yrk_t2
+
+REML criterion at convergence: 5941.1
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.1905 -0.6193 -0.0129  0.6761  3.3490 
+
+Random effects:
+ Groups         Name        Variance Std.Dev.
+ bags_label:pop (Intercept)  0.7726  0.879   
+ pop            (Intercept)  5.1113  2.261   
+ Residual                   33.4210  5.781   
+Number of obs: 934, groups:  bags_label:pop, 24; pop, 8
+
+Fixed effects:
+                     Estimate Std. Error       df t value Pr(>|t|)
+(Intercept)            8.3430    54.7414   1.9982   0.152    0.893
+ho                   155.8585    99.0363   1.9973   1.574    0.256
+ar                   -16.3887    26.1802   1.9985  -0.626    0.595
+salinity_quantile_10   0.3209     0.1340   1.9968   2.395    0.139
+salinity_quantile_90   0.0711     0.1709   1.9958   0.416    0.718
+temp_quantile_90       0.6850     0.3262   2.0010   2.100    0.171
+
+Correlation of Fixed Effects:
+            (Intr) ho     ar     sl__10 sl__90
+ho          -0.497                            
+ar          -0.888  0.081                     
+slnty_qn_10  0.433 -0.330 -0.406              
+slnty_qn_90 -0.513  0.663  0.238 -0.568       
+tmp_qntl_90  0.124 -0.107 -0.275  0.461 -0.167
+
+York River t2 (May 2024) scaled modeling approach 1
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +  
+    scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 |      pop/bags_label)
+   Data: len_yrk_t2
+
+REML criterion at convergence: 2421.1
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.1905 -0.6193 -0.0129  0.6761  3.3490 
+
+Random effects:
+ Groups         Name        Variance Std.Dev.
+ bags_label:pop (Intercept) 0.01731  0.1316  
+ pop            (Intercept) 0.11451  0.3384  
+ Residual                   0.74875  0.8653  
+Number of obs: 934, groups:  bags_label:pop, 24; pop, 8
+
+Fixed effects:
+                             Estimate Std. Error        df t value Pr(>|t|)
+(Intercept)                  0.001536   0.125929  1.999197   0.012    0.991
+scale(ho)                    0.265973   0.169006  1.997307   1.574    0.256
+scale(ar)                   -0.086817   0.138687  1.998528  -0.626    0.595
+scale(salinity_quantile_10)  0.428205   0.178814  1.996771   2.395    0.139
+scale(salinity_quantile_90)  0.081840   0.196750  1.995849   0.416    0.718
+scale(temp_quantile_90)      0.300576   0.143138  2.000960   2.100    0.171
+
+Correlation of Fixed Effects:
+            (Intr) scl(h) scl(r) s(__10 scl(s__90)
+scale(ho)   -0.005                                
+scale(ar)    0.008  0.081                         
+scl(sl__10)  0.016 -0.330 -0.406                  
+scl(sl__90) -0.003  0.663  0.238 -0.568           
+scl(tm__90)  0.029 -0.107 -0.275  0.461 -0.167    
+
+York River t3 (November 2024) modeling approach 1
+singular fit: FALSE 
+ Groups         Name        Std.Dev.
+ bags_label:pop (Intercept)  0.4487 
+ pop            (Intercept)  2.4352 
+ Residual                   11.3648 
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: length ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 +  
+    temp_quantile_90 + (1 | pop/bags_label)
+   Data: len_yrk_t3
+
+REML criterion at convergence: 3999.4
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.3283 -0.5537  0.0712  0.6872  2.4848 
+
+Random effects:
+ Groups         Name        Variance Std.Dev.
+ bags_label:pop (Intercept)   0.2013  0.4487 
+ pop            (Intercept)   5.9300  2.4352 
+ Residual                   129.1590 11.3648 
+Number of obs: 521, groups:  bags_label:pop, 24; pop, 8
+
+Fixed effects:
+                      Estimate Std. Error        df t value Pr(>|t|)  
+(Intercept)          -99.74289   64.57172   1.76121  -1.545   0.2784  
+ho                   480.82247  116.52905   1.74351   4.126   0.0679 .
+ar                     7.18589   30.62308   1.70410   0.235   0.8396  
+salinity_quantile_10   0.39180    0.16034   1.85064   2.444   0.1445  
+salinity_quantile_90  -0.09274    0.20227   1.78244  -0.459   0.6963  
+temp_quantile_90       1.04691    0.39944   2.04674   2.621   0.1172  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) ho     ar     sl__10 sl__90
+ho          -0.503                            
+ar          -0.885  0.086                     
+slnty_qn_10  0.409 -0.318 -0.389              
+slnty_qn_90 -0.510  0.659  0.241 -0.572       
+tmp_qntl_90  0.083 -0.079 -0.252  0.451 -0.167
+
+York River t3 (November 2024) scaled modeling approach 1
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: scale(length) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) +  
+    scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 |      pop/bags_label)
+   Data: len_yrk_t3
+
+REML criterion at convergence: 1350.8
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.3283 -0.5537  0.0712  0.6872  2.4848 
+
+Random effects:
+ Groups         Name        Variance Std.Dev.
+ bags_label:pop (Intercept) 0.001164 0.03412 
+ pop            (Intercept) 0.034296 0.18519 
+ Residual                   0.746996 0.86429 
+Number of obs: 521, groups:  bags_label:pop, 24; pop, 8
+
+Fixed effects:
+                            Estimate Std. Error       df t value Pr(>|t|)  
+(Intercept)                 -0.00129    0.07739  1.77262  -0.017   0.9884  
+scale(ho)                    0.43095    0.10444  1.74351   4.126   0.0679 .
+scale(ar)                    0.02017    0.08597  1.70410   0.235   0.8396  
+scale(salinity_quantile_10)  0.25802    0.10559  1.85064   2.444   0.1445  
+scale(salinity_quantile_90) -0.05558    0.12122  1.78243  -0.459   0.6963  
+scale(temp_quantile_90)      0.20555    0.07842  2.04674   2.621   0.1172  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) scl(h) scl(r) s(__10 scl(s__90)
+scale(ho)    0.042                                
+scale(ar)    0.035  0.086                         
+scl(sl__10)  0.051 -0.318 -0.389                  
+scl(sl__90) -0.019  0.659  0.241 -0.572           
+scl(tm__90)  0.121 -0.079 -0.252  0.451 -0.167    

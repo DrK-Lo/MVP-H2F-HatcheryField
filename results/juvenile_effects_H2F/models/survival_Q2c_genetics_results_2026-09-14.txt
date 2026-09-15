@@ -1,0 +1,336 @@
+
+ surv_G1.lew   singular fit: FALSE 
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [lmerModLmerTest]
+Formula: surv ~ ho + ar + (1 | pop)
+   Data: surv_lew_t1
+
+REML criterion at convergence: -35.7
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-2.25321 -0.28117  0.00337  0.43224  1.96262 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ pop      (Intercept) 0.01576  0.1255  
+ Residual             0.01240  0.1113  
+Number of obs: 30, groups:  pop, 10
+
+Fixed effects:
+            Estimate Std. Error      df t value Pr(>|t|)
+(Intercept)   0.8376     1.8334  7.0000   0.457    0.662
+ho            4.2584     3.6822  7.0000   1.156    0.285
+ar           -0.5278     1.1137  7.0000  -0.474    0.650
+
+Correlation of Fixed Effects:
+   (Intr) ho    
+ho  0.124       
+ar -0.921 -0.501
+
+ surv_G2.lew   singular fit: FALSE 
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [lmerModLmerTest]
+Formula: surv ~ ho + ar + (1 | pop)
+   Data: surv_lew_t2
+
+REML criterion at convergence: -44.2
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-2.25704 -0.28180 -0.05604  0.41762  1.89517 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ pop      (Intercept) 0.027547 0.16597 
+ Residual             0.007029 0.08384 
+Number of obs: 30, groups:  pop, 10
+
+Fixed effects:
+            Estimate Std. Error      df t value Pr(>|t|)
+(Intercept)   1.1223     2.2475  7.0000   0.499    0.633
+ho            3.6055     4.5139  7.0000   0.799    0.451
+ar           -0.6301     1.3652  7.0000  -0.462    0.658
+
+Correlation of Fixed Effects:
+   (Intr) ho    
+ho  0.124       
+ar -0.921 -0.501
+
+ surv_G3.lew   singular fit: FALSE 
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [lmerModLmerTest]
+Formula: surv ~ ho + ar + (1 | pop)
+   Data: surv_lew_t3
+
+REML criterion at convergence: -40.9
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-1.4129 -0.7207  0.1459  0.5886  1.7788 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ pop      (Intercept) 0.075292 0.27439 
+ Residual             0.005934 0.07703 
+Number of obs: 30, groups:  pop, 10
+
+Fixed effects:
+            Estimate Std. Error      df t value Pr(>|t|)
+(Intercept)   0.4870     3.6136  7.0000   0.135    0.897
+ho            4.5355     7.2575  7.0000   0.625    0.552
+ar           -0.4864     2.1950  7.0000  -0.222    0.831
+
+Correlation of Fixed Effects:
+   (Intr) ho    
+ho  0.124       
+ar -0.921 -0.501
+
+ surv_G1.york   singular fit: FALSE 
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [lmerModLmerTest]
+Formula: surv ~ ho + ar + (1 | pop)
+   Data: surv_yrk_t1
+
+REML criterion at convergence: -56.9
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-2.2976 -0.4421  0.2021  0.5242  1.4413 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ pop      (Intercept) 0.009458 0.09725 
+ Residual             0.005253 0.07248 
+Number of obs: 30, groups:  pop, 10
+
+Fixed effects:
+            Estimate Std. Error       df t value Pr(>|t|)
+(Intercept)  0.85057    1.37629  7.00000   0.618    0.556
+ho           0.39430    2.76412  7.00000   0.143    0.891
+ar          -0.05222    0.83601  7.00000  -0.062    0.952
+
+Correlation of Fixed Effects:
+   (Intr) ho    
+ho  0.124       
+ar -0.921 -0.501
+
+ surv_G2.york   singular fit: FALSE 
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [lmerModLmerTest]
+Formula: surv ~ ho + ar + (1 | pop)
+   Data: surv_yrk_t2
+
+REML criterion at convergence: -63.9
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-2.63205 -0.27476  0.07811  0.47229  1.76819 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ pop      (Intercept) 0.012281 0.11082 
+ Residual             0.003473 0.05894 
+Number of obs: 30, groups:  pop, 10
+
+Fixed effects:
+            Estimate Std. Error     df t value Pr(>|t|)
+(Intercept)   0.1246     1.5070 7.0000   0.083    0.936
+ho            0.6906     3.0267 7.0000   0.228    0.826
+ar            0.2010     0.9154 7.0000   0.220    0.832
+
+Correlation of Fixed Effects:
+   (Intr) ho    
+ho  0.124       
+ar -0.921 -0.501
+
+ surv_G3.york   singular fit: FALSE 
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [lmerModLmerTest]
+Formula: surv ~ ho + ar + (1 | pop)
+   Data: surv_yrk_t3
+
+REML criterion at convergence: -69.7
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-1.74174 -0.44614 -0.02383  0.40885  1.88412 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ pop      (Intercept) 0.034501 0.18574 
+ Residual             0.001858 0.04311 
+Number of obs: 30, groups:  pop, 10
+
+Fixed effects:
+            Estimate Std. Error      df t value Pr(>|t|)
+(Intercept)  -2.1029     2.4362  7.0000  -0.863    0.417
+ho            0.8583     4.8928  7.0000   0.175    0.866
+ar            1.1911     1.4798  7.0000   0.805    0.447
+
+Correlation of Fixed Effects:
+   (Intr) ho    
+ho  0.124       
+ar -0.921 -0.501
+
+ surv_t1_lew_scaled (scaled)
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [lmerModLmerTest]
+Formula: scale(surv) ~ scale(ho) + scale(ar) + (1 | pop)
+   Data: surv_lew_t1
+
+REML criterion at convergence: 77.7
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-2.25321 -0.28117  0.00337  0.43224  1.96262 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ pop      (Intercept) 0.6124   0.7825  
+ Residual             0.4816   0.6940  
+Number of obs: 30, groups:  pop, 10
+
+Fixed effects:
+              Estimate Std. Error         df t value Pr(>|t|)
+(Intercept)  9.177e-16  2.780e-01  7.000e+00   0.000    1.000
+scale(ho)    3.779e-01  3.268e-01  7.000e+00   1.156    0.285
+scale(ar)   -1.549e-01  3.268e-01  7.000e+00  -0.474    0.650
+
+Correlation of Fixed Effects:
+          (Intr) scl(h)
+scale(ho)  0.000       
+scale(ar)  0.000 -0.501
+
+ surv_t2_lew_scaled (scaled)
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [lmerModLmerTest]
+Formula: scale(surv) ~ scale(ho) + scale(ar) + (1 | pop)
+   Data: surv_lew_t2
+
+REML criterion at convergence: 66.5
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-2.25704 -0.28180 -0.05604  0.41762  1.89517 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ pop      (Intercept) 0.9672   0.9835  
+ Residual             0.2468   0.4968  
+Number of obs: 30, groups:  pop, 10
+
+Fixed effects:
+              Estimate Std. Error         df t value Pr(>|t|)
+(Intercept) -1.033e-15  3.240e-01  7.000e+00   0.000    1.000
+scale(ho)    3.042e-01  3.808e-01  7.000e+00   0.799    0.451
+scale(ar)   -1.757e-01  3.808e-01  7.000e+00  -0.462    0.658
+
+Correlation of Fixed Effects:
+          (Intr) scl(h)
+scale(ho)  0.000       
+scale(ar)  0.000 -0.501
+
+ surv_t3_lew_scaled (scaled)
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [lmerModLmerTest]
+Formula: scale(surv) ~ scale(ho) + scale(ar) + (1 | pop)
+   Data: surv_lew_t3
+
+REML criterion at convergence: 48.2
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-1.4129 -0.7207  0.1459  0.5886  1.7788 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ pop      (Intercept) 1.19023  1.0910  
+ Residual             0.09381  0.3063  
+Number of obs: 30, groups:  pop, 10
+
+Fixed effects:
+              Estimate Std. Error         df t value Pr(>|t|)
+(Intercept) -3.998e-15  3.495e-01  7.000e+00   0.000    1.000
+scale(ho)    2.567e-01  4.108e-01  7.000e+00   0.625    0.552
+scale(ar)   -9.103e-02  4.108e-01  7.000e+00  -0.222    0.831
+
+Correlation of Fixed Effects:
+          (Intr) scl(h)
+scale(ho)  0.000       
+scale(ar)  0.000 -0.501
+
+ surv_t1_yrk_scaled (scaled)
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [lmerModLmerTest]
+Formula: scale(surv) ~ scale(ho) + scale(ar) + (1 | pop)
+   Data: surv_yrk_t1
+
+REML criterion at convergence: 77.7
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-2.2976 -0.4421  0.2021  0.5242  1.4413 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ pop      (Intercept) 0.8040   0.8967  
+ Residual             0.4465   0.6682  
+Number of obs: 30, groups:  pop, 10
+
+Fixed effects:
+              Estimate Std. Error         df t value Pr(>|t|)
+(Intercept)  4.323e-16  3.087e-01  7.000e+00   0.000    1.000
+scale(ho)    5.176e-02  3.628e-01  7.000e+00   0.143    0.891
+scale(ar)   -2.266e-02  3.628e-01  7.000e+00  -0.062    0.952
+
+Correlation of Fixed Effects:
+          (Intr) scl(h)
+scale(ho)  0.000       
+scale(ar)  0.000 -0.501
+
+ surv_t2_yrk_scaled (scaled)
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [lmerModLmerTest]
+Formula: scale(surv) ~ scale(ho) + scale(ar) + (1 | pop)
+   Data: surv_yrk_t2
+
+REML criterion at convergence: 69.3
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-2.63205 -0.27476  0.07811  0.47229  1.76819 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ pop      (Intercept) 0.9899   0.9949  
+ Residual             0.2800   0.5291  
+Number of obs: 30, groups:  pop, 10
+
+Fixed effects:
+              Estimate Std. Error         df t value Pr(>|t|)
+(Intercept) -8.732e-16  3.291e-01  7.000e+00   0.000    1.000
+scale(ho)    8.826e-02  3.869e-01  7.000e+00   0.228    0.826
+scale(ar)    8.493e-02  3.869e-01  7.000e+00   0.220    0.832
+
+Correlation of Fixed Effects:
+          (Intr) scl(h)
+scale(ho)  0.000       
+scale(ar)  0.000 -0.501
+
+ surv_t3_yrk_scaled (scaled)
+Linear mixed model fit by REML. t-tests use Satterthwaite's method [lmerModLmerTest]
+Formula: scale(surv) ~ scale(ho) + scale(ar) + (1 | pop)
+   Data: surv_yrk_t3
+
+REML criterion at convergence: 39
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-1.74174 -0.44614 -0.02383  0.40885  1.88412 
+
+Random effects:
+ Groups   Name        Variance Std.Dev.
+ pop      (Intercept) 1.12407  1.0602  
+ Residual             0.06055  0.2461  
+Number of obs: 30, groups:  pop, 10
+
+Fixed effects:
+              Estimate Std. Error         df t value Pr(>|t|)
+(Intercept) -4.925e-15  3.383e-01  7.000e+00   0.000    1.000
+scale(ho)    6.975e-02  3.976e-01  7.000e+00   0.175    0.866
+scale(ar)    3.200e-01  3.976e-01  7.000e+00   0.805    0.447
+
+Correlation of Fixed Effects:
+          (Intr) scl(h)
+scale(ho)  0.000       
+scale(ar)  0.000 -0.501

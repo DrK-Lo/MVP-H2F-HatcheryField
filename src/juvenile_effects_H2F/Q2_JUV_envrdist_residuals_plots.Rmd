@@ -1,33 +1,25 @@
 ---
-title: "Q2_envrdist_residuals_plots"
-authors: "Camille Rumberger, Nicole Mongillo"
-date: "2025-08-20"
+title: "Q2c_JUV_genetic_diversity_models_field"
+author: "Kiran Bajaj"
+date: "2026-08-23"
 output: pdf_document
 ---
 
-This file compares survival and length of each treatment group at each common garden site to environmental distance from their environment-of-origin to the common garden environment. We found that groups from EoOs with less extreme cold temperatures have higher survival in the field experiment. Therefore, we are testing the hypothesis that the southern sites (W1-TX, W2-LA, W3-FL) are driving the positive relationship between environmental distance and survival. 
+This file addresses Q2c: the direct effect of offspring genetic diversity (heterozygosity, allelic richness) on oyster survival, length, and condition index at each field timepoint, **including both monoculture and polyculture treatments**. The mixed-origin groups (H1-HYBRIDMIX, H2-SEEDMIX) are included here because this approach uses only genetic diversity (which they have) and no environment-of-origin (which they lack).
 
-NM initially created 6 figure panels for of survival vs. environmental distance. CR then plotted the residuals of the multiple regression models from Q2 to see which sites are driving the positive relationships - this is now Fig S9. 
-
-260610: KEB: that these analyses were run with heterozygosity and allelic richness data that was calculated incorrectly. This needs to be fixed. 
+Model structure matches Q2a/Q2b: full models, a population random effect (survival) or nested population/bag effect (length, CI) so genetic predictors are tested against the source groups, with Satterthwaite inference. Because predictors vary only across the 10 source groups, population-level df is low; non-significant effects mean "undetectable at this replication," not "absent."
 
 ## Load packages
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-
-# Set working directory relative to project root
 knitr::opts_knit$set(root.dir = here::here())
 
 if (!require("pacman")) install.packages("pacman")
-
-packages <- c("tidyverse", "here", "ggplot2", "stringr")
+packages <- c("tidyverse", "here", "ggplot2", "lme4", "lmerTest", "car", "broom", "broom.mixed", "corrplot", "ggstance", "stringr")
 pacman::p_load(char = packages)
 
-# log versions for reproducibility
 r_version <- paste(R.version$major, R.version$minor, sep = ".")
-lib_ver <- packages %>%
-  map_chr(~ paste0(.x, " (v", packageVersion(.x), ")")) %>%
-  paste(collapse = ", ")
+lib_ver <- packages %>% map_chr(~ paste0(.x, " (v", packageVersion(.x), ")")) %>% paste(collapse = ", ")
 ```
 
 ```{r}
@@ -36,312 +28,262 @@ getwd()
 
 ## Read in data
 ```{r}
+surv_mod_ord_rename     <- read.csv("data/performance_H2F/field_surv_all_times.csv")[, -1]
+lengths_mod_narm_nodead <- read.csv("data/performance_H2F/field_length_all_times.csv")[ ,-1]
+ci_df                   <- read_csv("data/performance_H2F/MVP_phenotyping_final.csv", show_col_types = FALSE)
 
-# read in data
-surv_mod_ord_rename <- read.csv("data/performance_H2F/field_surv_all_times.csv")[, -1]
-
-#environmental distance based on scaled envr quantiles
-env_dist <- read.csv("results/environment/envr_quantiles_dist_all.csv")
-
-# residuals of models looking at env dist/gen vs survival (without dist)
-resid_surv <- read.csv("results/parent_effects_H2F/residuals_distance_vs_surv.csv")
-resid_len <- read.csv("results/parent_effects_H2F/residuals_distance_vs_length.csv")
+# juvenile genetics — 10 groups, INCLUDING SEEDMIX and HYBRIDMIX
+juv_genetics <- read.csv("results/juvenile_effects_H2F/juvenile_genetic_effects_full.csv")
 ```
 
 ## Data preparation
-### Clean data and create merged data frame
 ```{r}
-#remove H1-HYBRIDMIX and H2-SEEDMIX from survival
-surv_sub <- surv_mod_ord_rename %>% 
-  filter(pop != "H1-HYBRIDMIX" & pop!= "H2-SEEDMIX")
+colnames(juv_genetics) <- c("pop", "ho", "exp_hs", "ar")
 
-#keep only columns for environmental distance to LEW and YRK, exclude rows where common garden sites are compared to themselves
-env_dist_cg <- env_dist[1:8, c(1, 10:11)]
-colnames(env_dist_cg) <- c("pop", "dist_LEW", "dist_YRK")
+# genetics file labels the mix groups SEEDMIX/HYBRIDMIX; performance data uses
+# H2-SEEDMIX/H1-HYBRIDMIX. Recode genetics to match. dplyr:: guards against car::recode.
+juv_genetics$pop <- dplyr::recode(juv_genetics$pop,
+  "SEEDMIX" = "H2-SEEDMIX", "HYBRIDMIX" = "H1-HYBRIDMIX")
 
-#find mean survival for each pop at each monitoring event at each cg site
-surv_means <- aggregate(surv_mod_ord_rename$surv, by = list(surv_mod_ord_rename$pop, surv_mod_ord_rename$bag_site, surv_mod_ord_rename$t), FUN = mean)
+# survival + genetics (mix groups retained)
+surv_mod_gen <- merge(surv_mod_ord_rename, juv_genetics, by = "pop")
 
-colnames(surv_means) <- c("pop", "bag_site", "t", "mean_surv")
+# length + genetics
+len_mod_gen  <- merge(lengths_mod_narm_nodead, juv_genetics, by = "pop")
 
-#merge surv and environmental distance data
-surv_dist_means <- merge(surv_means, env_dist_cg, by = "pop")
+# condition index: build frame, THEN recode hybrid label (CI data calls it H1-LARMIX), THEN merge
+ci_sub <- ci_df %>%
+  mutate(population = as.character(population)) %>%
+  filter(!is.na(population), population != "NA") %>%
+  transmute(
+    ci         = CI,
+    t          = fct_recode(as.factor(samplingTimePoint), t1 = "2023-11", t2 = "2024-05", t3 = "2024-11"),
+    bag_site   = fct_recode(as.factor(site), Lewisetta = "LEW", YorkRiver = "YR"),
+    pop        = population,
+    bags_label = bagID
+  )
+ci_sub$pop <- dplyr::recode(ci_sub$pop, "H1-LARMIX" = "H1-HYBRIDMIX")
+ci_gen <- merge(ci_sub, juv_genetics, by = "pop")
 
-surv_dist_means$t <- as.character(surv_dist_means$t)
-
-surv_dist_means$pop <- factor(surv_dist_means$pop, levels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY",  "W5-NH", "W6-ME"))
+# GUARD: all three frames must carry all 10 groups, or a label drift silently dropped some
+stopifnot(
+  length(unique(surv_mod_gen$pop)) == 10,
+  length(unique(len_mod_gen$pop))  == 10,
+  length(unique(ci_gen$pop))       == 10
+)
 ```
 
-##Survival vs. environmental distance (Fig S9 OLD) 
-
-KEB edited to just define plotting settings once and change as needed. 
+## Survival ~ ho + ar
 
 ```{r}
-# shared plot settings
-site_config <- list(
-  Lewisetta = list(dist_col = "dist_LEW", label = "Lewisetta"),
-  YorkRiver = list(dist_col = "dist_YRK", label = "York River")
-)
+surv_lew_t1 <- surv_mod_gen[surv_mod_gen$t == 1 & surv_mod_gen$bag_site == "Lewisetta", ]
+surv_G1.lew <- lmer(surv ~ ho + ar + (1 | pop), data = surv_lew_t1)
+isSingular(surv_G1.lew); summary(surv_G1.lew)
+surv_t1_lew_scaled <- lmer(scale(surv) ~ scale(ho) + scale(ar) + (1 | pop), data = surv_lew_t1)
 
-time_labels <- c("1" = "November 2023", "2" = "May 2024", "3" = "November 2024")
+surv_lew_t2 <- surv_mod_gen[surv_mod_gen$t == 2 & surv_mod_gen$bag_site == "Lewisetta", ]
+surv_G2.lew <- lmer(surv ~ ho + ar + (1 | pop), data = surv_lew_t2)
+isSingular(surv_G2.lew); summary(surv_G2.lew)
+surv_t2_lew_scaled <- lmer(scale(surv) ~ scale(ho) + scale(ar) + (1 | pop), data = surv_lew_t2)
 
-# function to create a single plot
-make_surv_plot <- function(data, site, t_val) {
-  cfg <- site_config[[site]]
-  
-  data %>%
-    filter(bag_site == site, t == t_val) %>%
-    ggplot(aes(x = .data[[cfg$dist_col]], y = mean_surv)) +
-    geom_point(aes(shape = pop), size = 2.5) +
-    scale_shape_manual(name = "EOO", values = c(15, 16, 17, 18, 4, 3, 7, 10)) +
-    ylim(c(0, 1)) +
-    ggtitle(str_wrap(paste0("Survival vs. environmental distance (EOO to ", cfg$label, ")"), width = 35)) +
-    labs(subtitle = time_labels[t_val]) +
-    xlab(paste0("Environmental distance (EOO to ", cfg$label, ")")) +
-    ylab("% Survival") +
+surv_lew_t3 <- surv_mod_gen[surv_mod_gen$t == 3 & surv_mod_gen$bag_site == "Lewisetta", ]
+surv_G3.lew <- lmer(surv ~ ho + ar + (1 | pop), data = surv_lew_t3)
+isSingular(surv_G3.lew); summary(surv_G3.lew)
+surv_t3_lew_scaled <- lmer(scale(surv) ~ scale(ho) + scale(ar) + (1 | pop), data = surv_lew_t3)
+
+surv_yrk_t1 <- surv_mod_gen[surv_mod_gen$t == 1 & surv_mod_gen$bag_site == "YorkRiver", ]
+surv_G1.york <- lmer(surv ~ ho + ar + (1 | pop), data = surv_yrk_t1)
+isSingular(surv_G1.york); summary(surv_G1.york)
+surv_t1_yrk_scaled <- lmer(scale(surv) ~ scale(ho) + scale(ar) + (1 | pop), data = surv_yrk_t1)
+
+surv_yrk_t2 <- surv_mod_gen[surv_mod_gen$t == 2 & surv_mod_gen$bag_site == "YorkRiver", ]
+surv_G2.york <- lmer(surv ~ ho + ar + (1 | pop), data = surv_yrk_t2)
+isSingular(surv_G2.york); summary(surv_G2.york)
+surv_t2_yrk_scaled <- lmer(scale(surv) ~ scale(ho) + scale(ar) + (1 | pop), data = surv_yrk_t2)
+
+surv_yrk_t3 <- surv_mod_gen[surv_mod_gen$t == 3 & surv_mod_gen$bag_site == "YorkRiver", ]
+surv_G3.york <- lmer(surv ~ ho + ar + (1 | pop), data = surv_yrk_t3)
+isSingular(surv_G3.york); summary(surv_G3.york)
+surv_t3_yrk_scaled <- lmer(scale(surv) ~ scale(ho) + scale(ar) + (1 | pop), data = surv_yrk_t3)
+
+# save survival results
+sink(paste0("results/juvenile_effects_H2F/models/survival_Q2c_genetics_results_", Sys.Date(), ".txt"))
+for (nm in c("surv_G1.lew","surv_G2.lew","surv_G3.lew","surv_G1.york","surv_G2.york","surv_G3.york")) {
+  m <- get(nm); cat("\n", nm, "  singular fit:", isSingular(m), "\n"); print(summary(m))
+}
+for (nm in c("surv_t1_lew_scaled","surv_t2_lew_scaled","surv_t3_lew_scaled","surv_t1_yrk_scaled","surv_t2_yrk_scaled","surv_t3_yrk_scaled")) {
+  cat("\n", nm, "(scaled)\n"); print(summary(get(nm)))
+}
+sink()
+```
+
+## Length ~ ho + ar + (1|pop/bags_label)
+
+```{r}
+len_lew_t1 <- len_mod_gen[len_mod_gen$t == 1 & len_mod_gen$bag_site == "Lewisetta", ]
+len_G1.lew <- lmer(length ~ ho + ar + (1 | pop / bags_label), data = len_lew_t1)
+isSingular(len_G1.lew); VarCorr(len_G1.lew); summary(len_G1.lew)
+len_t1_lew_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + (1 | pop / bags_label), data = len_lew_t1)
+
+len_lew_t2 <- len_mod_gen[len_mod_gen$t == 2 & len_mod_gen$bag_site == "Lewisetta", ]
+len_G2.lew <- lmer(length ~ ho + ar + (1 | pop / bags_label), data = len_lew_t2)
+isSingular(len_G2.lew); VarCorr(len_G2.lew); summary(len_G2.lew)
+len_t2_lew_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + (1 | pop / bags_label), data = len_lew_t2)
+
+len_lew_t3 <- len_mod_gen[len_mod_gen$t == 3 & len_mod_gen$bag_site == "Lewisetta", ]
+len_G3.lew <- lmer(length ~ ho + ar + (1 | pop / bags_label), data = len_lew_t3)
+isSingular(len_G3.lew); VarCorr(len_G3.lew); summary(len_G3.lew)
+len_t3_lew_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + (1 | pop / bags_label), data = len_lew_t3)
+
+len_yrk_t1 <- len_mod_gen[len_mod_gen$t == 1 & len_mod_gen$bag_site == "YorkRiver", ]
+len_G1.york <- lmer(length ~ ho + ar + (1 | pop / bags_label), data = len_yrk_t1)
+isSingular(len_G1.york); VarCorr(len_G1.york); summary(len_G1.york)
+len_t1_yrk_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + (1 | pop / bags_label), data = len_yrk_t1)
+
+len_yrk_t2 <- len_mod_gen[len_mod_gen$t == 2 & len_mod_gen$bag_site == "YorkRiver", ]
+len_G2.york <- lmer(length ~ ho + ar + (1 | pop / bags_label), data = len_yrk_t2)
+isSingular(len_G2.york); VarCorr(len_G2.york); summary(len_G2.york)
+len_t2_yrk_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + (1 | pop / bags_label), data = len_yrk_t2)
+
+len_yrk_t3 <- len_mod_gen[len_mod_gen$t == 3 & len_mod_gen$bag_site == "YorkRiver", ]
+len_G3.york <- lmer(length ~ ho + ar + (1 | pop / bags_label), data = len_yrk_t3)
+isSingular(len_G3.york); VarCorr(len_G3.york); summary(len_G3.york)
+len_t3_yrk_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + (1 | pop / bags_label), data = len_yrk_t3)
+
+# save length results
+sink(paste0("results/juvenile_effects_H2F/models/length_Q2c_genetics_results_", Sys.Date(), ".txt"))
+for (nm in c("len_G1.lew","len_G2.lew","len_G3.lew","len_G1.york","len_G2.york","len_G3.york")) {
+  m <- get(nm); cat("\n", nm, "  singular fit:", isSingular(m), "\n"); print(VarCorr(m)); print(summary(m))
+}
+for (nm in c("len_t1_lew_scaled","len_t2_lew_scaled","len_t3_lew_scaled","len_t1_yrk_scaled","len_t2_yrk_scaled","len_t3_yrk_scaled")) {
+  cat("\n", nm, "(scaled)\n"); print(summary(get(nm)))
+}
+sink()
+```
+
+## Condition index ~ ho + ar + (1|pop/bags_label)
+
+```{r}
+ci_lew_t1 <- ci_gen[ci_gen$t == "t1" & ci_gen$bag_site == "Lewisetta", ]
+ci_G1.lew <- lmer(ci ~ ho + ar + (1 | pop / bags_label), data = ci_lew_t1)
+isSingular(ci_G1.lew); VarCorr(ci_G1.lew); summary(ci_G1.lew)
+ci_t1_lew_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + (1 | pop / bags_label), data = ci_lew_t1)
+
+ci_lew_t2 <- ci_gen[ci_gen$t == "t2" & ci_gen$bag_site == "Lewisetta", ]
+ci_G2.lew <- lmer(ci ~ ho + ar + (1 | pop / bags_label), data = ci_lew_t2)
+isSingular(ci_G2.lew); VarCorr(ci_G2.lew); summary(ci_G2.lew)
+ci_t2_lew_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + (1 | pop / bags_label), data = ci_lew_t2)
+
+ci_lew_t3 <- ci_gen[ci_gen$t == "t3" & ci_gen$bag_site == "Lewisetta", ]
+ci_G3.lew <- lmer(ci ~ ho + ar + (1 | pop / bags_label), data = ci_lew_t3)
+isSingular(ci_G3.lew); VarCorr(ci_G3.lew); summary(ci_G3.lew)
+ci_t3_lew_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + (1 | pop / bags_label), data = ci_lew_t3)
+
+ci_yrk_t1 <- ci_gen[ci_gen$t == "t1" & ci_gen$bag_site == "YorkRiver", ]
+ci_G1.york <- lmer(ci ~ ho + ar + (1 | pop / bags_label), data = ci_yrk_t1)
+isSingular(ci_G1.york); VarCorr(ci_G1.york); summary(ci_G1.york)
+ci_t1_yrk_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + (1 | pop / bags_label), data = ci_yrk_t1)
+
+ci_yrk_t2 <- ci_gen[ci_gen$t == "t2" & ci_gen$bag_site == "YorkRiver", ]
+ci_G2.york <- lmer(ci ~ ho + ar + (1 | pop / bags_label), data = ci_yrk_t2)
+isSingular(ci_G2.york); VarCorr(ci_G2.york); summary(ci_G2.york)
+ci_t2_yrk_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + (1 | pop / bags_label), data = ci_yrk_t2)
+
+ci_yrk_t3 <- ci_gen[ci_gen$t == "t3" & ci_gen$bag_site == "YorkRiver", ]
+ci_G3.york <- lmer(ci ~ ho + ar + (1 | pop / bags_label), data = ci_yrk_t3)
+isSingular(ci_G3.york); VarCorr(ci_G3.york); summary(ci_G3.york)
+ci_t3_yrk_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + (1 | pop / bags_label), data = ci_yrk_t3)
+
+# save CI results
+sink(paste0("results/juvenile_effects_H2F/models/condition_Q2c_genetics_results_", Sys.Date(), ".txt"))
+for (nm in c("ci_G1.lew","ci_G2.lew","ci_G3.lew","ci_G1.york","ci_G2.york","ci_G3.york")) {
+  m <- get(nm); cat("\n", nm, "  singular fit:", isSingular(m), "\n"); print(VarCorr(m)); print(summary(m))
+}
+for (nm in c("ci_t1_lew_scaled","ci_t2_lew_scaled","ci_t3_lew_scaled","ci_t1_yrk_scaled","ci_t2_yrk_scaled","ci_t3_yrk_scaled")) {
+  cat("\n", nm, "(scaled)\n"); print(summary(get(nm)))
+}
+sink()
+```
+
+## Figures
+```{r}
+build_slope_df <- function(m_t1, m_t2, m_t3) {
+  bind_rows(
+    tidy(m_t1, effects = "fixed") %>% mutate(t = "t1"),
+    tidy(m_t2, effects = "fixed") %>% mutate(t = "t2"),
+    tidy(m_t3, effects = "fixed") %>% mutate(t = "t3")
+  ) %>%
+    filter(term != "(Intercept)") %>%
+    mutate(tmult = qt(0.975, df),
+           lower = estimate - tmult * std.error,
+           upper = estimate + tmult * std.error) %>%
+    select(explanatory = term, slope = estimate, lower, upper, t)
+}
+
+time_labels <- c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024")
+y_limits <- c("scale(ho)", "scale(ar)")
+y_labels <- c("Heterozygosity", "Allelic richness")
+
+plot_slopes <- function(df, point_color) {
+  ggplot(df, aes(x = slope, y = explanatory)) +
+    geom_point(aes(alpha = t, shape = t), color = point_color, size = 3.5,
+               position = position_dodge2v(height = .85, reverse = T, preserve = "total")) +
+    geom_errorbarh(aes(xmax = upper, xmin = lower, alpha = t), color = point_color,
+                   height = 0, size = 1.2, position = position_dodgev(height = -.85, preserve = "total")) +
+    scale_alpha_manual(name = "Time", na.translate = F,
+                       values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = time_labels) +
+    scale_shape_manual(name = "Time", na.translate = F,
+                       values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = time_labels) +
+    coord_cartesian(xlim = c(-1.6, 2)) +
+    xlab("Slope on scaled data") + ylab("Variable") +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    scale_y_discrete(name = "Explanatory variable", limits = y_limits, labels = y_labels) +
     theme_classic() +
-    theme(
-      panel.grid.major = element_line(color = "grey90"),
-      axis.text = element_text(color = "black"),
-      plot.subtitle = element_text(color = "black")
-    )
+    theme(axis.text = element_text(color = "black", size = 14),
+          axis.title = element_text(size = 15),
+          legend.text = element_text(size = 14),
+          legend.title = element_text(size = 15))
 }
 
-# generate all plots
-plots <- list()
-for (site in names(site_config)) {
-  prefix <- ifelse(site == "Lewisetta", "L", "Y")
-  for (t_val in c("1", "2", "3")) {
-    name <- paste0(prefix, "surv_dist_t", t_val)
-    plots[[name]] <- make_surv_plot(surv_dist_means, site, t_val)
-    print(plots[[name]])
-  }
-}
+# survival
+plot_slopes(build_slope_df(surv_t1_lew_scaled, surv_t2_lew_scaled, surv_t3_lew_scaled), "#F06292") -> p; p
+ggsave("FigSx_lew_surv_genetics.pdf", p, device = "pdf", path = "figures/juvenile_effects_H2F", height = 4, width = 7)
+plot_slopes(build_slope_df(surv_t1_yrk_scaled, surv_t2_yrk_scaled, surv_t3_yrk_scaled), "#880E4F") -> p; p
+ggsave("FigSx_york_surv_genetics.pdf", p, device = "pdf", path = "figures/juvenile_effects_H2F", height = 4, width = 7)
 
-# Save all plots
-file_map <- list(
-  Lsurv_dist_t1 = "lew_surv_envrdist_t1.pdf",
-  Lsurv_dist_t2 = "lew_surv_envrdist_t2.pdf",
-  Lsurv_dist_t3 = "lew_surv_envrdist_t3.pdf",
-  Ysurv_dist_t1 = "york_surv_envrdist_t1.pdf",
-  Ysurv_dist_t2 = "york_surv_envrdist_t2.pdf",
-  Ysurv_dist_t3 = "york_survl_envrdist_t3.pdf"
-)
+# length
+plot_slopes(build_slope_df(len_t1_lew_scaled, len_t2_lew_scaled, len_t3_lew_scaled), "#F06292") -> p; p
+ggsave("FigSx_lew_length_genetics.pdf", p, device = "pdf", path = "figures/juvenile_effects_H2F", height = 4, width = 7)
+plot_slopes(build_slope_df(len_t1_yrk_scaled, len_t2_yrk_scaled, len_t3_yrk_scaled), "#880E4F") -> p; p
+ggsave("FigSx_york_length_genetics.pdf", p, device = "pdf", path = "figures/juvenile_effects_H2F", height = 4, width = 7)
 
-# We won't save these plots because we have updated plots for Figure S9 (below)
-
-# for (name in names(file_map)) {
-#   ggsave(file_map[[name]],
-#          plot = plots[[name]],
-#          device = "pdf",
-#          path = "figures/parent_effects_H2F/",
-#          height = 3, width = 5)
-# }
+# condition index
+plot_slopes(build_slope_df(ci_t1_lew_scaled, ci_t2_lew_scaled, ci_t3_lew_scaled), "#F06292") -> p; p
+ggsave("FigSx_lew_ci_genetics.pdf", p, device = "pdf", path = "figures/juvenile_effects_H2F", height = 4, width = 7)
+plot_slopes(build_slope_df(ci_t1_yrk_scaled, ci_t2_yrk_scaled, ci_t3_yrk_scaled), "#880E4F") -> p; p
+ggsave("FigSx_york_ci_genetics.pdf", p, device = "pdf", path = "figures/juvenile_effects_H2F", height = 4, width = 7)
 ```
 
-## Residuals vs Survival
-
-CR wrote the plotting code below to create Fig S9.
-
+## Check assumptions
 ```{r}
-# lewisetta
-lew_surv1 <- resid_surv %>% 
-  filter(bag_site == "Lewisetta", t == 1) %>%
-  ggplot(aes(x = dist, y = resid_surv)) +
-  geom_point(aes(col = pop, shape = pop), size = 4) + 
-  scale_colour_manual(
-    values = c("W1-TX" = "#3e4989", "W2-LA" = "#31688e", "W3-FL" = "#26828e", "S1-LOLA" = "#440154", "S2-DEBY" = "#482878", "W4-VA" = "#1f9e89", "W5-NH" = "#35b779", "W6-ME" = "#6ece58"),
-    name = "Source population") + 
-  scale_shape_manual(values = c(15, 16, 17, 18, 19, 20, 21, 22), name = "Source population") +
-  ylim(c(-0.3,0.4)) +
-  geom_smooth(method = "lm", col = "black") +
-  labs(title = "Residuals vs. environmental distance (EoO to Lewisetta) November 2023", x = "Environmental distance to Lewisetta", y = "Residuals of survival ~ H0 + Ar") +
-  theme_classic()
-  
-lew_surv2 <- resid_surv %>% 
-  filter(bag_site == "Lewisetta", t == 2) %>%
-  ggplot(aes(x = dist, y = resid_surv)) +
-  geom_point(aes(col = pop, shape = pop), size = 4) + 
-  scale_colour_manual(
-    values = c("W1-TX" = "#3e4989", "W2-LA" = "#31688e", "W3-FL" = "#26828e", "S1-LOLA" = "#440154", "S2-DEBY" = "#482878", "W4-VA" = "#1f9e89", "W5-NH" = "#35b779", "W6-ME" = "#6ece58"),
-    name = "Source population") + 
-  scale_shape_manual(values = c(15, 16, 17, 18, 19, 20, 21, 22), name = "Source population") +
-  ylim(c(-0.3,0.4)) +
-  geom_smooth(method = "lm", col = "black") +
-  labs(title = "Residuals vs. environmental distance (EoO to Lewisetta) May 2024", x = "Environmental distance to Lewisetta", y = "Residuals of survival ~ H0 + Ar") +
-  theme_classic()
-
-lew_surv3 <- resid_surv %>% 
-  filter(bag_site == "Lewisetta", t == 3) %>%
-  ggplot(aes(x = dist, y = resid_surv)) +
-  geom_point(aes(col = pop, shape = pop), size = 4) + 
-  scale_colour_manual(
-    values = c("W1-TX" = "#3e4989", "W2-LA" = "#31688e", "W3-FL" = "#26828e", "S1-LOLA" = "#440154", "S2-DEBY" = "#482878", "W4-VA" = "#1f9e89", "W5-NH" = "#35b779", "W6-ME" = "#6ece58"),
-    name = "Source population") + 
-  scale_shape_manual(values = c(15, 16, 17, 18, 19, 20, 21, 22), name = "Source population") +
-  ylim(c(-0.3,0.4)) +
-  geom_smooth(method = "lm", col = "black") +
-  labs(title = "Residuals vs. environmental distance (EoO to Lewisetta) November 2024", x = "Environmental distance to Lewisetta", y = "Residuals of survival ~ H0 + Ar") +
-  theme_classic()
-
-# york river
-yrk_surv1 <- resid_surv %>% 
-  filter(bag_site == "YorkRiver", t == 1) %>%
-  ggplot(aes(x = dist, y = resid_surv)) +
-  geom_point(aes(col = pop, shape = pop), size = 4) + 
-  scale_colour_manual(
-    values = c("W1-TX" = "#3e4989", "W2-LA" = "#31688e", "W3-FL" = "#26828e", "S1-LOLA" = "#440154", "S2-DEBY" = "#482878", "W4-VA" = "#1f9e89", "W5-NH" = "#35b779", "W6-ME" = "#6ece58"),
-    name = "Source population") + 
-  scale_shape_manual(values = c(15, 16, 17, 18, 19, 20, 21, 22), name = "Source population") +
-  ylim(c(-0.3,0.4)) +
-  geom_smooth(method = "lm", col = "black") +
-  labs(title = "Residuals vs. environmental distance (EoO to York River) November 2023", x = "Environmental distance to York River", y = "Residuals of survival ~ H0 + Ar") +
-  theme_classic()
-
-yrk_surv2 <- resid_surv %>% 
-  filter(bag_site == "YorkRiver", t == 2) %>%
-  ggplot(aes(x = dist, y = resid_surv)) +
-  geom_point(aes(col = pop, shape = pop), size = 4) + 
-  scale_colour_manual(
-    values = c("W1-TX" = "#3e4989", "W2-LA" = "#31688e", "W3-FL" = "#26828e", "S1-LOLA" = "#440154", "S2-DEBY" = "#482878", "W4-VA" = "#1f9e89", "W5-NH" = "#35b779", "W6-ME" = "#6ece58"),
-    name = "Source population") + 
-  scale_shape_manual(values = c(15, 16, 17, 18, 19, 20, 21, 22), name = "Source population") +
-  ylim(c(-0.3,0.4)) +
-  geom_smooth(method = "lm", col = "black") +
-  labs(title = "Residuals vs. environmental distance (EoO to York River) May 2024", x = "Environmental distance to York River", y = "Residuals of survival ~ H0 + Ar") +
-  theme_classic()
-
-yrk_surv3 <- resid_surv %>% 
-  filter(bag_site == "YorkRiver", t == 3) %>%
-  ggplot(aes(x = dist, y = resid_surv)) +
-  geom_point(aes(col = pop, shape = pop), size = 4) + 
-  scale_colour_manual(
-    values = c("W1-TX" = "#3e4989", "W2-LA" = "#31688e", "W3-FL" = "#26828e", "S1-LOLA" = "#440154", "S2-DEBY" = "#482878", "W4-VA" = "#1f9e89", "W5-NH" = "#35b779", "W6-ME" = "#6ece58"),
-    name = "Source population") + 
-  scale_shape_manual(values = c(15, 16, 17, 18, 19, 20, 21, 22), name = "Source population") +
-  ylim(c(-0.3,0.4)) +
-  geom_smooth(method = "lm", col = "black") +
-  labs(title = "Residuals vs. environmental distance (EoO to York River) November 2024", x = "Environmental distance to York River", y = "Residuals of survival ~ H0 + Ar") +
-  theme_classic()
-
-plots <- list(
-  "lew_surv_envrdist_residuals_t1" = lew_surv1,
-  "lew_surv_envrdist_residuals_t2" = lew_surv2,
-  "FigS9A_lew_surv_envrdist_residuals_t3" = lew_surv3,
-  "york_surv_envrdist_residuals_t1" = yrk_surv1,
-  "york_surv_envrdist_residuals_t2" = yrk_surv2,
-  "FigS9C_york_surv_envrdist_residuals_t3" = yrk_surv3
+all_models <- list(
+  "surv Lew t1"=surv_G1.lew,"surv Lew t2"=surv_G2.lew,"surv Lew t3"=surv_G3.lew,
+  "surv Yrk t1"=surv_G1.york,"surv Yrk t2"=surv_G2.york,"surv Yrk t3"=surv_G3.york,
+  "len Lew t1"=len_G1.lew,"len Lew t2"=len_G2.lew,"len Lew t3"=len_G3.lew,
+  "len Yrk t1"=len_G1.york,"len Yrk t2"=len_G2.york,"len Yrk t3"=len_G3.york,
+  "CI Lew t1"=ci_G1.lew,"CI Lew t2"=ci_G2.lew,"CI Lew t3"=ci_G3.lew,
+  "CI Yrk t1"=ci_G1.york,"CI Yrk t2"=ci_G2.york,"CI Yrk t3"=ci_G3.york
 )
 
-# We will only save plots we are using in the supplement
-for (name in grep("S9", names(plots), value = TRUE)) {
-  ggsave(paste0(name, ".pdf"),
-         plot = plots[[name]],
-         device = "pdf",
-         path = "figures/parent_effects_H2F",
-         height = 3, width = 5)
+op <- par(mfrow = c(2, 2), mar = c(4, 4, 2, 1))
+for (nm in names(all_models)) {
+  m <- all_models[[nm]]
+  plot(fitted(m), resid(m), main = paste(nm, "resid vs fitted"), xlab = "Fitted", ylab = "Residual", pch = 19, col = rgb(0,0,0,0.3)); abline(h = 0, lty = 2)
+  qqnorm(resid(m), main = paste(nm, "QQ")); qqline(resid(m))
 }
+par(op)
+
+sapply(all_models, function(m) c(singular = isSingular(m),
+                                 shapiro_p = tryCatch(shapiro.test(resid(m))$p.value, error=function(e) NA),
+                                 n = length(resid(m))))
 ```
-
-## Residuals vs Length
-
-```{r}
-# lewisetta
-lew_length1 <- resid_len %>% 
-  filter(bag_site == "Lewisetta", t == 1) %>%
-  ggplot(aes(x = dist, y = resid_len)) +
-  geom_point(aes(col = pop, shape = pop), size = 4) + 
-  scale_colour_manual(
-    values = c("W1-TX" = "#3e4989", "W2-LA" = "#31688e", "W3-FL" = "#26828e", "S1-LOLA" = "#440154", "S2-DEBY" = "#482878", "W4-VA" = "#1f9e89", "W5-NH" = "#35b779", "W6-ME" = "#6ece58"),
-    name = "Source population") + 
-  scale_shape_manual(values = c(15, 16, 17, 18, 19, 20, 21, 22), name = "Source population") +
-  ylim(c(-26, 25)) +
-  geom_smooth(method = "lm", col = "black") +
-  labs(title = "Residuals vs. environmental distance (EoO to Lewisetta) November 2023", x = "Environmental distance to Lewisetta", y = "Residuals of length ~ H0 + Ar") +
-  theme_classic()
-  
-lew_length2 <- resid_len %>% 
-  filter(bag_site == "Lewisetta", t == 2) %>%
-  ggplot(aes(x = dist, y = resid_len)) +
-  geom_point(aes(col = pop, shape = pop), size = 4) + 
-  scale_colour_manual(
-    values = c("W1-TX" = "#3e4989", "W2-LA" = "#31688e", "W3-FL" = "#26828e", "S1-LOLA" = "#440154", "S2-DEBY" = "#482878", "W4-VA" = "#1f9e89", "W5-NH" = "#35b779", "W6-ME" = "#6ece58"),
-    name = "Source population") + 
-  scale_shape_manual(values = c(15, 16, 17, 18, 19, 20, 21, 22), name = "Source population") +
-  ylim(c(-26, 25)) +
-  geom_smooth(method = "lm", col = "black") +
-  labs(title = "Residuals vs. environmental distance (EoO to Lewisetta) May 2024", x = "Environmental distance to Lewisetta", y = "Residuals of length ~ H0 + Ar") +
-  theme_classic()
-
-lew_length3 <- resid_len %>% 
-  filter(bag_site == "Lewisetta", t == 3) %>%
-  ggplot(aes(x = dist, y = resid_len)) +
-  geom_point(aes(col = pop, shape = pop), size = 4) + 
-  scale_colour_manual(
-    values = c("W1-TX" = "#3e4989", "W2-LA" = "#31688e", "W3-FL" = "#26828e", "S1-LOLA" = "#440154", "S2-DEBY" = "#482878", "W4-VA" = "#1f9e89", "W5-NH" = "#35b779", "W6-ME" = "#6ece58"),
-    name = "Source population") + 
-  scale_shape_manual(values = c(15, 16, 17, 18, 19, 20, 21, 22), name = "Source population") +
-  ylim(c(-45,45)) +
-  geom_smooth(method = "lm", col = "black") +
-  labs(title = "Residuals vs. environmental distance (EoO to Lewisetta) November 2024", x = "Environmental distance to Lewisetta", y = "Residuals of length ~ H0 + Ar") +
-  theme_classic()
-
-# york river
-yrk_length1 <- resid_len %>% 
-  filter(bag_site == "YorkRiver", t == 1) %>%
-  ggplot(aes(x = dist, y = resid_len)) +
-  geom_point(aes(col = pop, shape = pop), size = 4) + 
-  scale_colour_manual(
-    values = c("W1-TX" = "#3e4989", "W2-LA" = "#31688e", "W3-FL" = "#26828e", "S1-LOLA" = "#440154", "S2-DEBY" = "#482878", "W4-VA" = "#1f9e89", "W5-NH" = "#35b779", "W6-ME" = "#6ece58"),
-    name = "Source population") + 
-  scale_shape_manual(values = c(15, 16, 17, 18, 19, 20, 21, 22), name = "Source population") +
-  ylim(c(-26,25)) +
-  geom_smooth(method = "lm", col = "black") +
-  labs(title = "Residuals vs. environmental distance (EoO to York River) November 2023", x = "Environmental distance to York River", y = "Residuals of length ~ H0 + Ar") +
-  theme_classic()
-
-yrk_length2 <- resid_len %>% 
-  filter(bag_site == "YorkRiver", t == 2) %>%
-  ggplot(aes(x = dist, y = resid_len)) +
-  geom_point(aes(col = pop, shape = pop), size = 4) + 
-  scale_colour_manual(
-    values = c("W1-TX" = "#3e4989", "W2-LA" = "#31688e", "W3-FL" = "#26828e", "S1-LOLA" = "#440154", "S2-DEBY" = "#482878", "W4-VA" = "#1f9e89", "W5-NH" = "#35b779", "W6-ME" = "#6ece58"),
-    name = "Source population") + 
-  scale_shape_manual(values = c(15, 16, 17, 18, 19, 20, 21, 22), name = "Source population") +
-  ylim(c(-26,25)) +
-  geom_smooth(method = "lm", col = "black") +
-  labs(title = "Residuals vs. environmental distance (EoO to York River) May 2024", x = "Environmental distance to York River", y = "Residuals of length ~ H0 + Ar") +
-  theme_classic()
-
-yrk_length3 <- resid_len %>% 
-  filter(bag_site == "YorkRiver", t == 3) %>%
-  ggplot(aes(x = dist, y = resid_len)) +
-  geom_point(aes(col = pop, shape = pop), size = 4) + 
-  scale_colour_manual(
-    values = c("W1-TX" = "#3e4989", "W2-LA" = "#31688e", "W3-FL" = "#26828e", "S1-LOLA" = "#440154", "S2-DEBY" = "#482878", "W4-VA" = "#1f9e89", "W5-NH" = "#35b779", "W6-ME" = "#6ece58"),
-    name = "Source population") + 
-  scale_shape_manual(values = c(15, 16, 17, 18, 19, 20, 21, 22), name = "Source population") +
-  ylim(c(-60,45)) +
-  geom_smooth(method = "lm", col = "black") +
-  labs(title = "Residuals vs. environmental distance (EoO to York River) November 2024", x = "Environmental distance to York River", y = "Residuals of length ~ H0 + Ar") +
-  theme_classic()
-
-plots <- list(
-  "lew_length_envrdist_residuals_t1" = lew_length1,
-  "lew_length_envrdist_residuals_t2" = lew_length2,
-  "FigS9B_lew_length_envrdist_residuals_t3" = lew_length3,
-  "york_length_envrdist_residuals_t1" = yrk_length1,
-  "york_length_envrdist_residuals_t2" = yrk_length2,
-  "FigS9D_york_length_envrdist_residuals_t3" = yrk_length3
-)
-
-# We will only save plots we are using in the supplement
-for (name in grep("S9", names(plots), value = TRUE)) {
-  ggsave(paste0(name, ".pdf"),
-         plot = plots[[name]],
-         device = "pdf",
-         path = "figures/parent_effects_H2F",
-         height = 3, width = 5)
-}
-```
-

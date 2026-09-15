@@ -1,29 +1,24 @@
 ---
-title: "Q2_condition_index_models_field"
-author: "Nicole Mongillo"
-date: "2025-07-30"
+title: "Q2_JUV_condition_index_models_field"
+author: "Kiran Bajaj"
+date: "2026-08-23"
 output: pdf_document
 ---
 
-This file is for modeling the effects of heterozygosity, allelic richness, and environment-of-origin environmental conditions on oyster condition index during the MVP field experiment. Multicollinearity and VIF assessments for these explanatory variables are conducted in Q2_envr_dist_models_field.Rmd and Q2_envr_quantile_models_field.Rmd. 
+This file models the effects of offspring genetic diversity (heterozygosity, allelic richness) and environment-of-origin — as both absolute environmental quantiles (Q2a) and environmental distance to the field site (Q2b) — on oyster condition index (monocultures only).
 
-CI data and calculations are from ZS. Modeling is based on code from CR.
-
-260610: KEB: that these analyses were run with heterozygosity and allelic richness data that was calculated incorrectly. This needs to be fixed. 
+CI data and calculations are from ZS. Modeling structure mirrors the Q2a/Q2b notebooks: full models (no stepwise selection), a nested population/bag random effect so population-level predictors are tested against the 8 source populations, and Satterthwaite-based inference.
 
 ## Load packages
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-
-# Set working directory relative to project root
 knitr::opts_knit$set(root.dir = here::here())
 
 if (!require("pacman")) install.packages("pacman")
 
-packages <- c("tidyverse", "here", "ggplot2", "lme4", "lmerTest", "car", "broom.mixed", "ggstance", "stringr")
+packages <- c("tidyverse", "here", "ggplot2", "lme4", "lmerTest", "car", "broom", "broom.mixed", "corrplot", "ggstance", "stringr")
 pacman::p_load(char = packages)
 
-# log versions for reproducibility
 r_version <- paste(R.version$major, R.version$minor, sep = ".")
 lib_ver <- packages %>%
   map_chr(~ paste0(.x, " (v", packageVersion(.x), ")")) %>%
@@ -36,17 +31,16 @@ getwd()
 
 ## Read in data
 ```{r}
-
-#Condition index data
+# condition index
 ci_df <- read_csv("data/performance_H2F/MVP_phenotyping_final.csv", show_col_types = FALSE)
 
-#parent genetics
-gen_parents <- read.csv("results/parent_effects_H2F/parent_genetic_effects.csv")
+# juvenile heterozygosity and allelic richness (recoded genotype matrix)
+juv_genetics <- read.csv("results/juvenile_effects_H2F/juvenile_genetic_effects_full.csv")
 
-#environment of origin quantiles
+# environment of origin quantiles
 env_parents <- read.csv("results/environment/envr_quantiles_allsites.csv")
 
-#environmental distance based on scaled envr quantiles
+# pairwise environmental distance matrix; LEW/YRK cols = distance to each field site
 env_dist <- read.csv("results/environment/envr_quantiles_dist_all.csv")
 ```
 
@@ -54,558 +48,299 @@ env_dist <- read.csv("results/environment/envr_quantiles_dist_all.csv")
 
 ### Clean CI data
 ```{r}
-#make population a character column
-ci_df$population <- as.character(ci_df$population)
-
-#remove LARMIX (aka HYBRIDMIX) and SEEDMIX
-ci_filter <- ci_df %>% 
-  filter(population != "H1-LARMIX" & population != "H2-SEEDMIX" & population != "NA")
-
-# put the populations in correct factor order
-ci_df$population <- factor(ci_df$population, levels = c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME"))
-
-#select only relevant columns
-ci_sub <- subset(ci_filter, select = c("CI", "samplingTimePoint", "site", "population", "bagID"))
-
-#recode sampling time points as t1, t2, t3
-ci_sub$samplingTimePoint <- as.factor(ci_sub$samplingTimePoint)
-ci_sub$samplingTimePoint <- fct_recode(ci_sub$samplingTimePoint, t1 = "2023-11", t2 = "2024-05", t3 = "2024-11")
-
-#recode field sites as Lewisetta and York
-ci_sub$site <- as.factor(ci_sub$site)
-ci_sub$site <- fct_recode(ci_sub$site, Lewisetta = "LEW", YorkRiver = "YR")
-
-#rename columns
-colnames(ci_sub) <- c("ci", "t", "bag_site", "pop", "bags_label")
+# recode to match the other notebooks: pop / t / bag_site / bags_label
+ci_sub <- ci_df %>%
+  mutate(population = as.character(population)) %>%
+  # drop mixed-origin groups (CI data labels the hybrid as LARMIX) and missing pops
+  filter(!population %in% c("H1-LARMIX", "H1-HYBRIDMIX", "H2-SEEDMIX"),
+         !is.na(population)) %>%
+  transmute(
+    ci         = CI,
+    t          = fct_recode(as.factor(samplingTimePoint),
+                            t1 = "2023-11", t2 = "2024-05", t3 = "2024-11"),
+    bag_site   = fct_recode(as.factor(site), Lewisetta = "LEW", YorkRiver = "YR"),
+    pop        = population,
+    bags_label = bagID
+  )
 ```
 
-### Combine CI, envr quantile, and genetic diversity data
+### Combine CI + genetics + environment (quantiles, Q2a)
 ```{r}
-colnames(gen_parents) <- c("pop","ho","exp_hs","ar")
-ci_gen <- merge(ci_sub, gen_parents, by = "pop")
+colnames(juv_genetics) <- c("pop", "ho", "exp_hs", "ar")
+ci_gen <- merge(ci_sub, juv_genetics, by = "pop")
 
-#clean env_parents
-colnames(env_parents) <- c("pop","salinity_quantile_10","salinity_quantile_90","Salinity_st_dev","temp_quantile_10","temp_quantile_90","Temperature_st_dev")
-
-#add environmental data to df
-ci_gen_env <- merge(ci_gen, env_parents, by = c("pop"))
+colnames(env_parents) <- c("pop","salinity_quantile_10","salinity_quantile_90","Salinity_st_dev","temp_quantile_10","temp_quantile_90","Temperature_st_dev", "salinity")
+ci_gen_env <- merge(ci_gen, env_parents, by = "pop")
 ```
 
-### Combine CI, envr distance, and genetic diversity data
+### Combine CI + genetics + distance (Q2b)
 ```{r}
-#clean env_dist. Remove all columns except distance to Lewisetta and distance to York and remove rows for LEW and YRK.
-env_dist_filter <- env_dist[c(1:8), c("X", "LEW", "YRK")]
-colnames(env_dist_filter) <- c("pop", "dist_LEW", "dist_YRK")
+# melt distance matrix to one dist column, site-matched (same approach as Q2b)
+env_dist_long <- env_dist %>%
+  select(pop = X, Lewisetta = LEW, YorkRiver = YRK) %>%
+  pivot_longer(cols = c(Lewisetta, YorkRiver),
+               names_to = "bag_site", values_to = "dist")
 
-#add environmental data to df
-ci_gen_dist <- merge(ci_gen, env_dist_filter, by = c("pop"))
+ci_gen_dist <- merge(ci_gen, env_dist_long, by = c("pop", "bag_site"))
+
+# confirm mixed groups gone and check structure
+unique(ci_gen_env$pop)
+table(ci_gen_env$pop, ci_gen_env$bag_site)
+# confirm bag labels are unique per population (justifies the nested random effect)
+# with(ci_gen_env, table(bags_label, pop))
 ```
 
-## Run analyses - Model 1 (Heterozygosity/allelic richness and environmental quantiles)
-### t1, CI + quantiles, Lewisetta
-```{r t1_ci_lew}
-ci_t1_lew <- lmerTest::lmer(ci ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t1" & ci_gen_env$bag_site == "Lewisetta",])
+## Assess collinearity
+```{r}
+# --- corrplots: quantile predictors + genetics + CI ---
+cor_vars_q   <- c("temp_quantile_90", "salinity_quantile_10", "salinity_quantile_90", "ho", "ar", "ci")
+cor_labels_q <- c("Temperature Q90", "Salinity Q10", "Salinity Q90", "Heterozygosity", "Allelic richness", "Condition index")
 
-#plot(ci_t1_lew) 
-Anova(ci_t1_lew, type = "III") # nothing signif
-summary(ci_t1_lew)
-step(ci_t1_lew) # Function says to drop everything, including random effect, except ho. We will keep the random effect for consistency among all tests, but note this in the results.
+q_mat <- cor(ci_gen_env[, cor_vars_q], use = "complete.obs")
+dimnames(q_mat) <- list(cor_labels_q, cor_labels_q)
 
-ci_t1_lew2 <-lmerTest::lmer(ci ~ ho + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t1" & ci_gen_env$bag_site == "Lewisetta",]) 
-#plot(ci_t1_lew2) 
-Anova(ci_t1_lew2, type = 3)
-summary(ci_t1_lew2) # final model
+pdf(file = "figures/juvenile_effects_H2F/FigS7_corrplot_ci_quantiles.pdf")
+corrplot(q_mat, method = "color", type = "upper", tl.col = "black", tl.srt = 45,
+         title = "Pairwise correlations — CI quantiles", addCoef.col = "black", mar = c(0,0,2,0))
+dev.off()
+corrplot(q_mat, method = "color", type = "upper", tl.col = "black", tl.srt = 45,
+         title = "Pairwise correlations — CI quantiles", addCoef.col = "black", mar = c(0,0,2,0))
 
-ci_t1_lew_scaled <- lmerTest::lmer(scale(ci) ~ scale(ho) + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t1" & ci_gen_env$bag_site == "Lewisetta",])
-summary(ci_t1_lew_scaled)
-```
+# --- corrplots: distance + genetics + CI, per site (dist is site-specific) ---
+cor_vars_d   <- c("dist", "ho", "ar", "ci")
+cor_labels_d <- c("Environmental distance", "Heterozygosity", "Allelic richness", "Condition index")
 
-### t2, CI + quantiles, Lewisetta
-```{r t2_ci_lew}
-ci_t2_lew <- lmerTest::lmer(ci ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "Lewisetta",]) 
-#plot(ci_t2_lew) 
-Anova(ci_t2_lew, type = "III") # nothing signif, but temp10 is borderline significant based on p-val (p = 0.06)
-summary(ci_t2_lew)
-step(ci_t2_lew) # says drop everything but ho, but will keep temp10 and check again
-
-ci_t2_lew2 <- lmerTest::lmer(ci ~ temp_quantile_10 + ho + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "Lewisetta",]) 
-#plot(ci_t2_lew2) 
-Anova(ci_t2_lew2, type = "III") # both temp10 and ho significant
-summary(ci_t2_lew2)
-step(ci_t2_lew2) #says to drop random effect, we will keep it for consistency among all models. Also drop temp10
-
-ci_t2_lew_scaled <- lmerTest::lmer(scale(ci) ~ scale(ho) + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "Lewisetta",])
-```
-
-### t3, CI + quantiles, Lewisetta
-```{r t3_ci_lew}
-ci_t3_lew <- lmerTest::lmer(ci ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t3" & ci_gen_env$bag_site == "Lewisetta",]) 
-#plot(ci_t3_lew) 
-Anova(ci_t3_lew, type = "III") # sal10 signif
-summary(ci_t3_lew)
-step(ci_t3_lew) # drop everything but sal10 and ar, we will keep the random effect for consistency among all models
-
-ci_t3_lew2 <- lmerTest::lmer(ci ~ ar + salinity_quantile_10 + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t3" & ci_gen_env$bag_site == "Lewisetta",])
-
-#plot(ci_t3_lew) 
-Anova(ci_t3_lew2) #sal10 signif
-summary(ci_t3_lew2)
-step(ci_t3_lew2) #final model
-
-ci_t3_lew_scaled <- lmerTest::lmer(scale(ci) ~ scale(ar) +  scale(salinity_quantile_10) + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t3" & ci_gen_env$bag_site == "Lewisetta",])
-```
-
-### t1, CI + quantiles, York River
-```{r t1_ci_yrk}
-ci_t1_yrk <- lmerTest::lmer(ci ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t1" & ci_gen_env$bag_site == "YorkRiver",]) 
-#plot(ci_t1_yrk) 
-Anova(ci_t1_yrk, type = "III") # ho and sal10 signif
-summary(ci_t1_yrk)
-step(ci_t1_yrk) # drop everything but ho and sal10, function says to drop random effect but we will keep it for consistency between models
-
-ci_t1_yrk2 <-lmerTest::lmer(ci ~ ho + salinity_quantile_10 + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t1" & ci_gen_env$bag_site == "YorkRiver",])
-#plot(ci_t1_yrk2) 
-Anova(ci_t1_yrk2) #both signif
-summary(ci_t1_yrk2)
-
-ci_t1_yrk_scaled <- lmerTest::lmer(scale(ci) ~ scale(ho) + scale(salinity_quantile_10) + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t1" & ci_gen_env$bag_site == "YorkRiver",])
-```
-
-### t2, CI + quantiles, York River
-```{r t2_ci_yrk}
-ci_t2_yrk <- lmerTest::lmer(ci ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "YorkRiver",]) 
-#plot(ci_t2_yrk) 
-Anova(ci_t2_yrk, type = "III") # ar signif
-summary(ci_t2_yrk)
-step(ci_t2_yrk) # drop everything but ar keep random effect
-
-ci_t2_yrk2 <-lmerTest::lmer(ci ~ ar + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "YorkRiver",]) 
-#plot(ci_t2_yrk2) 
-Anova(ci_t2_yrk2, type = "III") #both signif
-summary(ci_t2_yrk2)
-
-
-ci_t2_yrk_scaled <- lmerTest::lmer(scale(ci) ~ scale(ar) + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "YorkRiver",])
-```
-
-### t3, CI + quantiles, York River
-```{r t3_ci_yrk}
-ci_t3_yrk <- lmerTest::lmer(ci ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_10 + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t3" & ci_gen_env$bag_site == "YorkRiver",]) 
-#plot(ci_t3_yrk) 
-Anova(ci_t3_yrk, type = "III") # sal10, ar signif
-summary(ci_t3_yrk)
-step(ci_t3_yrk) # drop everything but ar and sal10, keep random effect
-
-ci_t3_yrk2 <-lmerTest::lmer(ci ~ ar + salinity_quantile_10 + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t3" & ci_gen_env$bag_site == "YorkRiver",]) 
-#plot(ci_t3_yrk2) 
-Anova(ci_t3_yrk2, type = "III") #both signif
-summary(ci_t3_yrk2)
-step(ci_t3_yrk2) # final model
-
-ci_t3_yrk_scaled <- lmerTest::lmer(scale(ci) ~ scale(ar) + scale(salinity_quantile_10) + (1|bags_label), data = ci_gen_env[ci_gen_env$t == "t3" & ci_gen_env$bag_site == "YorkRiver",]) 
+for (s in c("Lewisetta", "YorkRiver")) {
+  m <- cor(ci_gen_dist[ci_gen_dist$bag_site == s, cor_vars_d], use = "complete.obs")
+  dimnames(m) <- list(cor_labels_d, cor_labels_d)
+  corrplot(m, method = "color", type = "upper", tl.col = "black", tl.srt = 45,
+           title = paste("Pairwise correlations — CI distance,", s),
+           addCoef.col = "black", mar = c(0,0,2,0))
+}
 ```
 
 ```{r}
-# save everything
-sink(paste0("results/parent_effects_H2F/models/condition_model1_quantiles_results_",Sys.Date(),".txt"))
-cat("\nLewisetta t1 (November 2023) modeling approach 1\n")
-summary(ci_t1_lew2)
-Anova(ci_t1_lew2)
-cat("\nLewisetta t1 (November 2023) scaled modeling approach 1\n")
-summary(ci_t1_lew_scaled)
-Anova(ci_t1_lew_scaled)
-cat("\nLewisetta t2 (May 2024) modeling approach 1\n")
-summary(ci_t2_lew2)
-Anova(ci_t2_lew2)
-cat("\nLewisetta t2 (May 2024) scaled modeling approach 1\n")
-summary(ci_t2_lew_scaled)
-Anova(ci_t2_lew_scaled)
-cat("\nLewisetta t3 (November 2024) modeling approach 1\n")
-summary(ci_t3_lew2)
-Anova(ci_t3_lew2)
-cat("\nLewisetta t3 (November 2024) scaled modeling approach 1\n")
-summary(ci_t3_lew_scaled)
-Anova(ci_t3_lew_scaled)
-cat("\nYork River t1 (November 2023) modeling approach 1\n")
-summary(ci_t1_yrk2)
-Anova(ci_t1_yrk2)
-cat("\nYork River t1 (November 2023) scaled modeling approach 1\n")
-summary(ci_t1_yrk_scaled)
-Anova(ci_t1_yrk_scaled)
-cat("\nYork River t2 (May 2024) modeling approach 1\n")
-summary(ci_t2_yrk2)
-Anova(ci_t2_yrk2)
-cat("\nYork River t2 (May 2024) scaled modeling approach 1\n")
-summary(ci_t2_yrk_scaled)
-Anova(ci_t2_yrk_scaled)
-cat("\nYork River t3 (November 2024) modeling approach 1\n")
-summary(ci_t3_yrk2)
-Anova(ci_t3_yrk2)
-cat("\nYork River t3 (November 2024) scaled modeling approach 1\n")
-summary(ci_t3_yrk_scaled)
-Anova(ci_t3_yrk_scaled)
+# brief VIF. NOTE: predictors vary across only 8 source populations, so indicative.
+VIF5 <- function(a, b, c, d, e) 1 / (1 - summary(lm(a ~ b + c + d + e))$r.squared)
+d <- ci_gen_env
+VIF5(d$temp_quantile_90,     d$salinity_quantile_10, d$salinity_quantile_90, d$ho, d$ar)  # temp90
+VIF5(d$salinity_quantile_10, d$salinity_quantile_90, d$temp_quantile_90,     d$ho, d$ar)  # sal10
+VIF5(d$salinity_quantile_90, d$salinity_quantile_10, d$temp_quantile_90,     d$ho, d$ar)  # sal90
+VIF5(d$ho, d$salinity_quantile_10, d$salinity_quantile_90, d$temp_quantile_90, d$ar)      # ho
+VIF5(d$ar, d$salinity_quantile_10, d$salinity_quantile_90, d$temp_quantile_90, d$ho)      # ar
+```
+
+## Model 1: genetic diversity + environmental quantiles (Q2a)
+
+### t1 CI, Lewisetta
+```{r}
+ci_lew_t1 <- ci_gen_env[ci_gen_env$t == "t1" & ci_gen_env$bag_site == "Lewisetta", ]
+ci_GE1.lew <- lmer(ci ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_90 + (1 | pop / bags_label), data = ci_lew_t1)
+isSingular(ci_GE1.lew); VarCorr(ci_GE1.lew); summary(ci_GE1.lew)
+ci_t1_lew_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 | pop / bags_label), data = ci_lew_t1)
+isSingular(ci_t1_lew_scaled)
+```
+
+### t2 CI, Lewisetta
+```{r}
+ci_lew_t2 <- ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "Lewisetta", ]
+ci_GE2.lew <- lmer(ci ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_90 + (1 | pop / bags_label), data = ci_lew_t2)
+isSingular(ci_GE2.lew); VarCorr(ci_GE2.lew); summary(ci_GE2.lew)
+ci_t2_lew_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 | pop / bags_label), data = ci_lew_t2)
+isSingular(ci_t2_lew_scaled)
+```
+
+### t3 CI, Lewisetta
+```{r}
+ci_lew_t3 <- ci_gen_env[ci_gen_env$t == "t3" & ci_gen_env$bag_site == "Lewisetta", ]
+ci_GE3.lew <- lmer(ci ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_90 + (1 | pop / bags_label), data = ci_lew_t3)
+isSingular(ci_GE3.lew); VarCorr(ci_GE3.lew); summary(ci_GE3.lew)
+ci_t3_lew_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 | pop / bags_label), data = ci_lew_t3)
+isSingular(ci_t3_lew_scaled)
+```
+
+### t1 CI, York River
+```{r}
+ci_yrk_t1 <- ci_gen_env[ci_gen_env$t == "t1" & ci_gen_env$bag_site == "YorkRiver", ]
+ci_GE1.york <- lmer(ci ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_90 + (1 | pop / bags_label), data = ci_yrk_t1)
+isSingular(ci_GE1.york); VarCorr(ci_GE1.york); summary(ci_GE1.york)
+ci_t1_yrk_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 | pop / bags_label), data = ci_yrk_t1)
+isSingular(ci_t1_yrk_scaled)
+```
+
+### t2 CI, York River
+```{r}
+ci_yrk_t2 <- ci_gen_env[ci_gen_env$t == "t2" & ci_gen_env$bag_site == "YorkRiver", ]
+ci_GE2.york <- lmer(ci ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_90 + (1 | pop / bags_label), data = ci_yrk_t2)
+isSingular(ci_GE2.york); VarCorr(ci_GE2.york); summary(ci_GE2.york)
+ci_t2_yrk_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 | pop / bags_label), data = ci_yrk_t2)
+isSingular(ci_t2_yrk_scaled)
+```
+
+### t3 CI, York River
+```{r}
+ci_yrk_t3 <- ci_gen_env[ci_gen_env$t == "t3" & ci_gen_env$bag_site == "YorkRiver", ]
+ci_GE3.york <- lmer(ci ~ ho + ar + salinity_quantile_10 + salinity_quantile_90 + temp_quantile_90 + (1 | pop / bags_label), data = ci_yrk_t3)
+isSingular(ci_GE3.york); VarCorr(ci_GE3.york); summary(ci_GE3.york)
+ci_t3_yrk_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + scale(salinity_quantile_90) + scale(temp_quantile_90) + (1 | pop / bags_label), data = ci_yrk_t3)
+isSingular(ci_t3_yrk_scaled)
+
+# save quantile results
+sink(paste0("results/juvenile_effects_H2F/models/condition_Q2a_quantiles_results_", Sys.Date(), ".txt"))
+for (nm in c("ci_GE1.lew","ci_GE2.lew","ci_GE3.lew","ci_GE1.york","ci_GE2.york","ci_GE3.york")) {
+  m <- get(nm)
+  cat("\n", nm, "  singular fit:", isSingular(m), "\n"); print(VarCorr(m)); print(summary(m))
+}
+for (nm in c("ci_t1_lew_scaled","ci_t2_lew_scaled","ci_t3_lew_scaled","ci_t1_yrk_scaled","ci_t2_yrk_scaled","ci_t3_yrk_scaled")) {
+  cat("\n", nm, "(scaled)\n"); print(summary(get(nm)))
+}
 sink()
 ```
 
-## Run Analyses- Model 2 (Heterozygosity/allelic richness and environmental distance)
-### t1, CI + distance, Lewisetta
+## Model 2: genetic diversity + environmental distance (Q2b)
+
+### t1 CI, Lewisetta
 ```{r}
-dist_t1_lew <- lmerTest::lmer(ci ~ ho + ar + dist_LEW + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t1" & ci_gen_dist$bag_site == "Lewisetta",]) 
-#plot(dist_t1_lew) 
-Anova(dist_t1_lew, type = "III") # nothing signif
-summary(dist_t1_lew)
-step(dist_t1_lew) # drop everything except ho, says to drop random effect, but will keep for consistency between models
-
-dist_t1_lew2 <- lmerTest::lmer(ci ~ ho + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t1" & ci_gen_dist$bag_site == "Lewisetta",]) 
-summary(dist_t1_lew2) #final model
-
-dist_t1_lew_scaled <- lmerTest::lmer(scale(ci) ~ scale(ho) + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t1" & ci_gen_dist$bag_site == "Lewisetta",])
+cid_lew_t1 <- ci_gen_dist[ci_gen_dist$t == "t1" & ci_gen_dist$bag_site == "Lewisetta", ]
+ci_D1.lew <- lmer(ci ~ ho + ar + dist + (1 | pop / bags_label), data = cid_lew_t1)
+isSingular(ci_D1.lew); VarCorr(ci_D1.lew); summary(ci_D1.lew)
+cid_t1_lew_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop / bags_label), data = cid_lew_t1)
+isSingular(cid_t1_lew_scaled)
 ```
 
-### t2, CI + distance, Lewisetta
+### t2 CI, Lewisetta
 ```{r}
-dist_t2_lew <- lmerTest::lmer(ci ~ ho + ar + dist_LEW + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t2" & ci_gen_dist$bag_site == "Lewisetta",]) 
-#plot(dist_t2_lew) 
-Anova(dist_t2_lew, type = "III") # ho signif
-summary(dist_t2_lew)
-step(dist_t2_lew) # drop everything except ho, keep random effect
-
-dist_t2_lew2 <-lmerTest::lmer(ci ~ ho + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t2" & ci_gen_dist$bag_site == "Lewisetta",]) 
-#plot(dist_t2_lew2) 
-summary(dist_t2_lew2)
-step(dist_t2_lew2) #final model
-
-dist_t2_lew_scaled <- lmerTest::lmer(scale(ci) ~ scale(ho) + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t2" & ci_gen_dist$bag_site == "Lewisetta",]) 
+cid_lew_t2 <- ci_gen_dist[ci_gen_dist$t == "t2" & ci_gen_dist$bag_site == "Lewisetta", ]
+ci_D2.lew <- lmer(ci ~ ho + ar + dist + (1 | pop / bags_label), data = cid_lew_t2)
+isSingular(ci_D2.lew); VarCorr(ci_D2.lew); summary(ci_D2.lew)
+cid_t2_lew_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop / bags_label), data = cid_lew_t2)
+isSingular(cid_t2_lew_scaled)
 ```
 
-### t3, CI + distance, Lewisetta
+### t3 CI, Lewisetta
 ```{r}
-dist_t3_lew <- lmerTest::lmer(ci ~ ho + ar + dist_LEW + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t3" & ci_gen_dist$bag_site == "Lewisetta",]) 
-#plot(dist_t3_lew) 
-Anova(dist_t3_lew, type = "III") # ho, ar, dist_LEW signif
-summary(dist_t3_lew)
-step(dist_t3_lew) # says to drop random effect, but ignoring for consistency
-
-dist_t3_lew_scaled <- lmerTest::lmer(scale(ci) ~ scale(ho) + scale(ar) + scale(dist_LEW) + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t3" & ci_gen_dist$bag_site == "Lewisetta",]) 
+cid_lew_t3 <- ci_gen_dist[ci_gen_dist$t == "t3" & ci_gen_dist$bag_site == "Lewisetta", ]
+ci_D3.lew <- lmer(ci ~ ho + ar + dist + (1 | pop / bags_label), data = cid_lew_t3)
+isSingular(ci_D3.lew); VarCorr(ci_D3.lew); summary(ci_D3.lew)
+cid_t3_lew_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop / bags_label), data = cid_lew_t3)
+isSingular(cid_t3_lew_scaled)
 ```
 
-### t1, CI + distance, York River
+### t1 CI, York River
 ```{r}
-dist_t1_yrk <- lmerTest::lmer(ci ~ ho + ar + dist_YRK + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t1" & ci_gen_dist$bag_site == "YorkRiver",]) 
-#plot(dist_t1_yrk) 
-Anova(dist_t1_yrk, type = "III") # nothing signif
-summary(dist_t1_yrk)
-step(dist_t1_yrk) # drop everything, except random effect
-
-dist_t1_yrk2 <-lm(ci ~ bags_label, data = ci_gen_dist[ci_gen_dist$t == "t1" & ci_gen_dist$bag_site == "YorkRiver",]) 
-#plot(dist_t1_yrk2) 
-Anova(dist_t1_yrk2) #signif effect of bag label
-
-#plot this as nothing significant, note the significant effect of bag label in figure caption
+cid_yrk_t1 <- ci_gen_dist[ci_gen_dist$t == "t1" & ci_gen_dist$bag_site == "YorkRiver", ]
+ci_D1.york <- lmer(ci ~ ho + ar + dist + (1 | pop / bags_label), data = cid_yrk_t1)
+isSingular(ci_D1.york); VarCorr(ci_D1.york); summary(ci_D1.york)
+cid_t1_yrk_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop / bags_label), data = cid_yrk_t1)
+isSingular(cid_t1_yrk_scaled)
 ```
 
-### t2, CI + distance, York River
+### t2 CI, York River
 ```{r}
-dist_t2_yrk <- lmerTest::lmer(ci ~ ho + ar + dist_YRK + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t2" & ci_gen_dist$bag_site == "YorkRiver",]) 
-#plot(dist_t2_yrk) 
-Anova(dist_t2_yrk, type = "III") # ar, dist_YRK signif
-summary(dist_t2_yrk)
-step(dist_t2_yrk) # drop ho
-
-dist_t2_yrk2 <-lmerTest::lmer(ci ~ ar + dist_YRK + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t2" & ci_gen_dist$bag_site == "YorkRiver",]) 
-#plot(dist_t2_yrk2) 
-Anova(dist_t2_yrk2) #both signif
-summary(dist_t2_yrk2)
-step(dist_t2_yrk2) #final model
-
-dist_t2_yrk_scaled <- lmerTest::lmer(scale(ci) ~ scale(ar) + scale(dist_YRK) + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t2" & ci_gen_dist$bag_site == "YorkRiver",]) 
+cid_yrk_t2 <- ci_gen_dist[ci_gen_dist$t == "t2" & ci_gen_dist$bag_site == "YorkRiver", ]
+ci_D2.york <- lmer(ci ~ ho + ar + dist + (1 | pop / bags_label), data = cid_yrk_t2)
+isSingular(ci_D2.york); VarCorr(ci_D2.york); summary(ci_D2.york)
+cid_t2_yrk_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop / bags_label), data = cid_yrk_t2)
+isSingular(cid_t2_yrk_scaled)
 ```
 
-### t3, CI + distance, York River
+### t3 CI, York River
 ```{r}
-dist_t3_yrk <- lmerTest::lmer(ci ~ ho + ar + dist_YRK + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t3" & ci_gen_dist$bag_site == "YorkRiver",]) 
-#plot(dist_t3_yrk) 
-Anova(dist_t3_yrk, type = "III") # ho signif
-summary(dist_t3_yrk)
-step(dist_t3_yrk) # drop dist_YRK
+cid_yrk_t3 <- ci_gen_dist[ci_gen_dist$t == "t3" & ci_gen_dist$bag_site == "YorkRiver", ]
+ci_D3.york <- lmer(ci ~ ho + ar + dist + (1 | pop / bags_label), data = cid_yrk_t3)
+isSingular(ci_D3.york); VarCorr(ci_D3.york); summary(ci_D3.york)
+cid_t3_yrk_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop / bags_label), data = cid_yrk_t3)
+isSingular(cid_t3_yrk_scaled)
 
-dist_t3_yrk2 <-lmerTest::lmer(ci ~ ar + ho + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t3" & ci_gen_dist$bag_site == "YorkRiver",]) 
-#plot(dist_t3_yrk2) 
-Anova(dist_t3_yrk2) #both signif
-summary(dist_t3_yrk2)
-step(dist_t3_yrk2) #final model
-
-dist_t3_yrk_scaled <- lmerTest::lmer(scale(ci) ~ scale(ar) + scale(ho) + (1|bags_label), data = ci_gen_dist[ci_gen_dist$t == "t3" & ci_gen_dist$bag_site == "YorkRiver",]) 
-```
-
-```{r}
-#save results
-sink(paste0("results/parent_effects_H2F/models/condition_model2_envrdist_results_",Sys.Date(),".txt"))
-cat("\nLewisetta t1 (November 2023) modeling approach 2\n")
-summary(dist_t1_lew2)
-Anova(dist_t1_lew2)
-cat("\nLewisetta t1 (November 2023) scaled modeling approach 2\n")
-summary(dist_t1_lew_scaled)
-Anova(dist_t1_lew_scaled)
-cat("\nLewisetta t2 (May 2024) modeling approach 2\n")
-summary(dist_t2_lew2)
-Anova(dist_t2_lew2)
-cat("\nLewisetta t2 (May 2024) scaled modeling approach 2\n")
-summary(dist_t2_lew_scaled)
-Anova(dist_t2_lew_scaled)
-cat("\nLewisetta t3 (November 2024) modeling approach 2\n")
-summary(dist_t3_lew)
-Anova(dist_t3_lew)
-cat("\nLewisetta t3 (November 2024) scaled modeling approach 2\n")
-summary(dist_t3_lew_scaled)
-Anova(dist_t3_lew_scaled)
-cat("\nYork River t1 (November 2023) modeling approach 2\n")
-summary(dist_t1_yrk2)
-Anova(dist_t1_yrk2)
-cat("\nYork River t2 (May 2024) modeling approach 2\n")
-summary(dist_t2_yrk2)
-Anova(dist_t2_yrk2)
-cat("\nYork River t2 (May 2024) scaled modeling approach 2\n")
-summary(dist_t2_yrk_scaled)
-Anova(dist_t2_yrk_scaled)
-cat("\nYork River t3 (November 2024) modeling approach 2\n")
-summary(dist_t3_yrk2)
-Anova(dist_t3_yrk2)
-cat("\nYork River t3 (November 2024) scaled modeling approach 2\n")
-summary(dist_t3_yrk_scaled)
-Anova(dist_t3_yrk_scaled)
+# save distance results
+sink(paste0("results/juvenile_effects_H2F/models/condition_Q2b_envrdist_results_", Sys.Date(), ".txt"))
+for (nm in c("ci_D1.lew","ci_D2.lew","ci_D3.lew","ci_D1.york","ci_D2.york","ci_D3.york")) {
+  m <- get(nm)
+  cat("\n", nm, "  singular fit:", isSingular(m), "\n"); print(VarCorr(m)); print(summary(m))
+}
+for (nm in c("cid_t1_lew_scaled","cid_t2_lew_scaled","cid_t3_lew_scaled","cid_t1_yrk_scaled","cid_t2_yrk_scaled","cid_t3_yrk_scaled")) {
+  cat("\n", nm, "(scaled)\n"); print(summary(get(nm)))
+}
 sink()
 ```
 
-## Plotting
-##Figure product - Lewisetta CI model 1 (environmental quantiles)
+## Figures
 ```{r}
-lew_ci1_df <- rbind(broom.mixed::tidy(ci_t1_lew_scaled), tidy(ci_t2_lew_scaled), tidy(ci_t3_lew_scaled))
-lew_ci1_df$t <- c(rep(c("t1"), 4), rep(c("t2"), 4), rep(c("t3"), 5))
+build_slope_df <- function(m_t1, m_t2, m_t3) {
+  bind_rows(
+    tidy(m_t1, effects = "fixed") %>% mutate(t = "t1"),
+    tidy(m_t2, effects = "fixed") %>% mutate(t = "t2"),
+    tidy(m_t3, effects = "fixed") %>% mutate(t = "t3")
+  ) %>%
+    filter(term != "(Intercept)") %>%
+    mutate(tmult = qt(0.975, df),
+           lower = estimate - tmult * std.error,
+           upper = estimate + tmult * std.error) %>%
+    select(explanatory = term, slope = estimate, lower, upper, t)
+}
 
-#remove rows with Intercept slopes and ran_par
-lew_ci1_df <- lew_ci1_df %>% 
-  filter(term != "(Intercept)") %>% 
-  filter(effect != "ran_pars")
+time_labels <- c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024")
 
-#remove cols for effect and group
-lew_ci1_df_sub <- subset(lew_ci1_df, select = -c(effect, group)) 
-
-colnames(lew_ci1_df_sub) <- c("explanatory", "slope", "se", "Fstat", "df", "pval", "t")
-
-#add dummy rows for time points lacking variables so that position_dodge v plots each data point in the same time point at consistent vertical positions for each y axis variable
-#t1
-lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(ar)",-.4,.01,NA,NA,NA,"t1")
-lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(temp_quantile_10)",-.4,.01,NA,NA,NA,"t1")
-lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(salinity_quantile_10)",-.4,.01,NA,NA, NA,"t1")
-lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(salinity_quantile_90)",-.4,.01,NA,NA,NA,"t1")
-#t2
-lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(ar)",-.4,.01,NA,NA,NA,"t2")
-lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(salinity_quantile_10)",-.4,.01,NA,NA,NA,"t2")
-lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(salinity_quantile_90)",-.4,.01,NA,NA,NA,"t2")
-lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(temp_quantile_10)",-.4,.01,NA,NA,NA,"t2")
-#t3
-lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(ho)",-.4,.01,NA,NA,NA,"t3")
-lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(temp_quantile_10)",-.4,.01,NA,NA,NA,"t3")
-lew_ci1_df_sub[nrow(lew_ci1_df_sub)+1,]=list("scale(salinity_quantile_90)",-.4,.01,NA,NA,NA,"t3")
-
-#plot
-lew_ci1_plot <- lew_ci1_df_sub %>% 
-  ggplot(aes(x = slope, y = explanatory))+
-  geom_point(aes(alpha = t, shape = t), color = "#F06292", size = 3.5, position = position_dodge2v(height = .85, reverse = T, preserve = "total"))+
-  geom_errorbarh(aes(xmax = slope + 2*se, xmin = slope - 2*se, alpha= t), color = "#F06292", height = 0, size = 1.2, position = position_dodgev(height = -.85, preserve = "total"))+
-  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
-  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
-  xlim(c(-1,2))+
-  xlab("Slope on scaled data")+
-  geom_vline(xintercept = 0, linetype = "dashed")+
-  scale_y_discrete(name = "Explanatory variable", 
-                   limits = c("scale(salinity_quantile_10)", "scale(salinity_quantile_90)", "scale(temp_quantile_10)", "scale(ho)", "scale(ar)"), 
-                   labels = c("Salinity Q10", "Salinity Q90", "Temperature Q10",  str_wrap(c("Heterozygosity/ Temperature Q90"), width = 17), str_wrap(c("Allelic richness/ Temperature Q90"), width = 20)))+
-  theme_classic()+
+plot_slopes <- function(df, point_color, y_limits, y_labels) {
+  ggplot(df, aes(x = slope, y = explanatory)) +
+    geom_point(aes(alpha = t, shape = t), color = point_color, size = 3.5,
+               position = position_dodge2v(height = .85, reverse = T, preserve = "total")) +
+    geom_errorbarh(aes(xmax = upper, xmin = lower, alpha = t), color = point_color,
+                   height = 0, size = 1.2,
+                   position = position_dodgev(height = -.85, preserve = "total")) +
+    scale_alpha_manual(name = "Time", na.translate = F,
+                       values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = time_labels) +
+    scale_shape_manual(name = "Time", na.translate = F,
+                       values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = time_labels) +
+    coord_cartesian(xlim = c(-1.6, 2)) +
+    xlab("Slope on scaled data") + ylab("Variable") +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    scale_y_discrete(name = "Explanatory variable", limits = y_limits, labels = y_labels) +
+    theme_classic() +
     theme(axis.text = element_text(color = "black", size = 14),
-        axis.title = element_text(size = 15),
-        legend.text = element_text(size = 14),
-        legend.title = element_text(size = 15))
+          axis.title = element_text(size = 15),
+          legend.text = element_text(size = 14),
+          legend.title = element_text(size = 15))
+}
 
-lew_ci1_plot
+# quantile label set
+yq_limits <- c("scale(salinity_quantile_10)", "scale(salinity_quantile_90)", "scale(temp_quantile_90)", "scale(ho)", "scale(ar)")
+yq_labels <- c("Salinity Q10", "Salinity Q90", "Temperature Q90", "Heterozygosity", "Allelic richness")
 
-ggsave("FigS7A_lew_ci_quantiles.pdf",
-       plot = lew_ci1_plot,
-       device = "pdf",
-       path = "figures/parent_effects_H2F",
-       height = 4,
-       width = 7)
+# distance label set
+yd_limits <- c("scale(dist)", "scale(ho)", "scale(ar)")
+yd_labels <- c(str_wrap("Environmental distance (EoO to field site)", 20), "Heterozygosity", "Allelic richness")
+
+# --- CI quantiles ---
+lew_ci1 <- plot_slopes(build_slope_df(ci_t1_lew_scaled, ci_t2_lew_scaled, ci_t3_lew_scaled), "#F06292", yq_limits, yq_labels)
+lew_ci1; ggsave("FigS7A_lew_ci_quantiles.pdf", lew_ci1, device = "pdf", path = "figures/juvenile_effects_H2F", height = 4, width = 7)
+
+yrk_ci1 <- plot_slopes(build_slope_df(ci_t1_yrk_scaled, ci_t2_yrk_scaled, ci_t3_yrk_scaled), "#880E4F", yq_limits, yq_labels)
+yrk_ci1; ggsave("FigS7C_york_ci_quantiles.pdf", yrk_ci1, device = "pdf", path = "figures/juvenile_effects_H2F", height = 4, width = 7)
+
+# --- CI distance ---
+lew_ci2 <- plot_slopes(build_slope_df(cid_t1_lew_scaled, cid_t2_lew_scaled, cid_t3_lew_scaled), "#F06292", yd_limits, yd_labels)
+lew_ci2; ggsave("FigS7B_lew_ci_envrdist.pdf", lew_ci2, device = "pdf", path = "figures/juvenile_effects_H2F", height = 4, width = 7)
+
+yrk_ci2 <- plot_slopes(build_slope_df(cid_t1_yrk_scaled, cid_t2_yrk_scaled, cid_t3_yrk_scaled), "#880E4F", yd_limits, yd_labels)
+yrk_ci2; ggsave("FigS7D_york_ci_envrdist.pdf", yrk_ci2, device = "pdf", path = "figures/juvenile_effects_H2F", height = 4, width = 7)
 ```
 
-#Figure product - York CI model 1 (environmental quantiles)
+## Check assumptions
 ```{r}
-yrk_ci1_df <- rbind(broom.mixed::tidy(ci_t1_yrk_scaled), tidy(ci_t2_yrk_scaled), tidy(ci_t3_yrk_scaled))
-yrk_ci1_df$t <- c(rep(c("t1"), 5), rep(c("t2"), 4), rep(c("t3"), 5))
+ci_models <- list(
+  "CI-q Lew t1"=ci_GE1.lew, "CI-q Lew t2"=ci_GE2.lew, "CI-q Lew t3"=ci_GE3.lew,
+  "CI-q Yrk t1"=ci_GE1.york,"CI-q Yrk t2"=ci_GE2.york,"CI-q Yrk t3"=ci_GE3.york,
+  "CI-d Lew t1"=ci_D1.lew,  "CI-d Lew t2"=ci_D2.lew,  "CI-d Lew t3"=ci_D3.lew,
+  "CI-d Yrk t1"=ci_D1.york, "CI-d Yrk t2"=ci_D2.york, "CI-d Yrk t3"=ci_D3.york
+)
+op <- par(mfrow = c(2, 2), mar = c(4, 4, 2, 1))
+for (nm in names(ci_models)) {
+  m <- ci_models[[nm]]
+  plot(fitted(m), resid(m), main = paste(nm, "- resid vs fitted"), xlab = "Fitted", ylab = "Residual", pch = 19, col = rgb(0,0,0,0.3)); abline(h = 0, lty = 2)
+  qqnorm(resid(m), main = paste(nm, "- QQ")); qqline(resid(m))
+}
+par(op)
 
-#remove rows with Intercept slopes and ran_par
-yrk_ci1_df <- yrk_ci1_df %>% 
-  filter(term != "(Intercept)") %>% 
-  filter(effect != "ran_pars")
-
-#remove cols for effect and group
-yrk_ci1_df_sub <- subset(yrk_ci1_df, select = -c(effect, group)) 
-
-colnames(yrk_ci1_df_sub) <- c("explanatory", "slope", "se", "Fstat", "df", "pval", "t")
-
-#add dummy rows for time points lacking variables so that position_dodge v plots each data point in the same time point at consistent vertical positions for each y axis variable
-#t1
-yrk_ci1_df_sub[nrow(yrk_ci1_df_sub)+1,]=list("scale(ar)",-.4,.01,NA,NA,NA,"t1")
-yrk_ci1_df_sub[nrow(yrk_ci1_df_sub)+1,]=list("scale(temp_quantile_10)",-.4,.01,NA,NA,NA,"t1")
-yrk_ci1_df_sub[nrow(yrk_ci1_df_sub)+1,]=list("scale(salinity_quantile_90)",-.4,.01,NA,NA,NA,"t1")
-#t2
-yrk_ci1_df_sub[nrow(yrk_ci1_df_sub)+1,]=list("scale(ho)",-.4,.01,NA,NA,NA,"t2")
-yrk_ci1_df_sub[nrow(yrk_ci1_df_sub)+1,]=list("scale(salinity_quantile_10)",-.4,.01,NA,NA,NA,"t2")
-yrk_ci1_df_sub[nrow(yrk_ci1_df_sub)+1,]=list("scale(salinity_quantile_90)",-.4,.01,NA,NA,NA,"t2")
-yrk_ci1_df_sub[nrow(yrk_ci1_df_sub)+1,]=list("scale(temp_quantile_10)",-.4,.01,NA,NA,NA,"t2")
-#t3
-yrk_ci1_df_sub[nrow(yrk_ci1_df_sub)+1,]=list("scale(ho)",-.4,.01,NA,NA,NA,"t3")
-yrk_ci1_df_sub[nrow(yrk_ci1_df_sub)+1,]=list("scale(temp_quantile_10)",-.4,.01,NA,NA,NA,"t3")
-yrk_ci1_df_sub[nrow(yrk_ci1_df_sub)+1,]=list("scale(salinity_quantile_90)",-.4,.01,NA,NA,NA,"t3")
-
-#plot
-yrk_ci1_plot <- yrk_ci1_df_sub %>% 
-  ggplot(aes(x = slope, y = explanatory))+
-  geom_point(aes(alpha = t, shape = t), color = "#880E4F", size = 3.5, position = position_dodge2v(height = .85, reverse = T, preserve = "total"))+
-  geom_errorbarh(aes(xmax = slope + 2*se, xmin = slope - 2*se, alpha= t), color = "#880E4F", height = 0, size = 1.2, position = position_dodgev(height = -.85, preserve = "total"))+
-  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
-  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
-  xlim(c(-1,2))+
-  xlab("Slope on scaled data")+
-  geom_vline(xintercept = 0, linetype = "dashed")+
-  scale_y_discrete(name = "Explanatory variable", 
-                   limits = c("scale(salinity_quantile_10)", "scale(salinity_quantile_90)", "scale(temp_quantile_10)", "scale(ho)", "scale(ar)"), 
-                   labels = c("Salinity Q10", "Salinity Q90", "Temperature Q10",  str_wrap(c("Heterozygosity/ Temperature Q90"), width = 17), str_wrap(c("Allelic richness/ Temperature Q90"), width = 20)))+
-  theme_classic()+
-    theme(axis.text = element_text(color = "black", size = 14),
-        axis.title = element_text(size = 15),
-        legend.text = element_text(size = 14),
-        legend.title = element_text(size = 15))
-
-yrk_ci1_plot
-
-ggsave("FigS7C_york_ci_quantiles.pdf",
-       plot = yrk_ci1_plot,
-       device = "pdf",
-       path = "figures/parent_effects_H2F",
-       height = 4,
-       width = 7)
+sapply(ci_models, function(m) c(shapiro_p = tryCatch(shapiro.test(resid(m))$p.value, error=function(e) NA), n = length(resid(m))))
 ```
-
-#Figure product - Lewisetta CI model 2 (environmental distance)
-```{r}
-#save scaled functions
-lew_ci2_df <- rbind(broom.mixed::tidy(dist_t1_lew_scaled),broom.mixed::tidy(dist_t2_lew_scaled),broom.mixed::tidy(dist_t3_lew_scaled))
-lew_ci2_df$t <- c(rep(c("t1"), 4), rep(c("t2"), 4), rep(c("t3"), 6))
-
-#remove rows with Intercept slopes and ran_par
-lew_ci2_df <- lew_ci2_df %>% 
-  filter(term != "(Intercept)") %>% 
-  filter(effect != "ran_pars")
-
-#remove cols for effect and group
-lew_ci2_df_sub <- subset(lew_ci2_df, select = -c(effect, group)) 
-
-colnames(lew_ci2_df_sub) <- c("explanatory", "slope", "se", "Fstat", "df", "pval", "t")
-
-#add dummy rows for time points lacking variables so that position_dodge v plots each data point in the same time point at consistent vertical positions for each y axis variable
-#t1
-lew_ci2_df_sub[nrow(lew_ci2_df_sub)+1,]=list("scale(ar)",-.4,.01,NA,NA,NA,"t1")
-lew_ci2_df_sub[nrow(lew_ci2_df_sub)+1,]=list("scale(dist_LEW)",-.4,.01,NA,NA,NA,"t1")
-#t2
-lew_ci2_df_sub[nrow(lew_ci2_df_sub)+1,]=list("scale(ar)",-.4,.01,NA,NA,NA,"t2")
-lew_ci2_df_sub[nrow(lew_ci2_df_sub)+1,]=list("scale(dist_LEW)",-.4,.01,NA,NA,NA,"t2")
-
-lew_ci2_plot <- lew_ci2_df_sub %>% 
-  ggplot(aes(x = slope, y = explanatory))+
-  geom_point(aes(alpha = t, shape = t), color = "#F06292", size = 3.5, position = position_dodge2v(height = .85, reverse = T, preserve = "total"))+
-  geom_errorbarh(aes(xmax = slope + 2*se, xmin = slope - 2*se, alpha= t), color = "#F06292", height = 0, size = 1.2, position = position_dodgev(height = -.85, preserve = "total"))+
-  scale_alpha_manual(name = "Time", na.translate = F, values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
-  scale_shape_manual(name = "Time", na.translate = F, values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
-  xlim(c(-1,2))+
-  xlab("Slope on scaled data")+
-  ylab("Variable")+
-  geom_vline(xintercept = 0, linetype = "dashed")+
-  scale_y_discrete(name = "Explanatory variable", 
-                   limits = c("scale(dist_LEW)", "scale(ho)", "scale(ar)"),
-                   labels = c(str_wrap(c("Environmental distance (EoO to Lewisetta)"), width = 20), "Heterozygosity", "Allelic richness"))+
-  theme_classic()+
-    theme(axis.text = element_text(color = "black", size = 14),
-        axis.title = element_text(size = 15),
-        legend.text = element_text(size = 14),
-        legend.title = element_text(size = 15))
-
-lew_ci2_plot
-
-ggsave("FigS7B_lew_ci_envrdist.pdf",
-       plot = lew_ci2_plot,
-       device = "pdf",
-       path = "figures/parent_effects_H2F",
-       height = 4,
-       width = 7)
-```
-
-#Figure product - York CI model 2 (environmental distance)
-```{r}
-#save scaled functions, all t1 rows will have to be added manually, as nothing was significant from that model, except bag label
-yrk_ci2_df <- rbind(broom.mixed::tidy(dist_t2_yrk_scaled),broom.mixed::tidy(dist_t3_yrk_scaled))
-yrk_ci2_df$t <- c(rep(c("t2"), 5), rep(c("t3"), 5))
-
-#remove rows with Intercept slopes and ran_par
-yrk_ci2_df <- yrk_ci2_df %>% 
-  filter(term != "(Intercept)") %>% 
-  filter(effect != "ran_pars")
-
-#remove cols for effect and group
-yrk_ci2_df_sub <- subset(yrk_ci2_df, select = -c(effect, group)) 
-
-colnames(yrk_ci2_df_sub) <- c("explanatory", "slope", "se", "Fstat", "df", "pval", "t")
-
-#add dummy rows for time points lacking variables so that position_dodge v plots each data point in the same time point at consistent vertical positions for each y axis variable
-#t1
-yrk_ci2_df_sub[nrow(yrk_ci2_df_sub)+1,]=list("scale(ho)",-.4,.01,NA,NA,NA,"t1")
-yrk_ci2_df_sub[nrow(yrk_ci2_df_sub)+1,]=list("scale(ar)",-.4,.01,NA,NA,NA,"t1")
-yrk_ci2_df_sub[nrow(yrk_ci2_df_sub)+1,]=list("scale(dist_YRK)",-.4,.01,NA,NA,NA,"t1")
-#t2
-yrk_ci2_df_sub[nrow(yrk_ci2_df_sub)+1,]=list("scale(ho)",-.4,.01,NA,NA,NA,"t2")
-#t3
-yrk_ci2_df_sub[nrow(yrk_ci2_df_sub)+1,]=list("scale(dist_YRK)",-.4,.01,NA,NA,NA,"t3")
-
-yrk_ci2_plot <- yrk_ci2_df_sub %>% 
-  ggplot(aes(x = slope, y = explanatory))+
-  geom_point(aes(alpha = t, shape = t), color = "#880E4F", size = 3.5, position = position_dodge2v(height = .85, reverse = T, preserve = "total"))+
-  geom_errorbarh(aes(xmax = slope + 2*se, xmin = slope - 2*se, alpha= t), color = "#880E4F", height = 0, size = 1.2, position = position_dodgev(height = -.85, preserve = "total"))+
-  scale_alpha_manual(name = "Time", na.translate = F, 
-                     values = c("t1" = .45, "t2" = .7, "t3" = 1), 
-                     labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
-  scale_shape_manual(name = "Time", na.translate = F, 
-                     values = c("t1" = 15, "t2" = 16, "t3" = 17), 
-                     labels = c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024"))+
-  xlim(c(-1,2))+
-  xlab("Slope on scaled data")+
-  ylab("Variable")+
-  geom_vline(xintercept = 0, linetype = "dashed")+
-   scale_y_discrete(name = "Explanatory variable", 
-                   limits = c("scale(dist_YRK)", "scale(ho)", "scale(ar)"),
-                   labels = c(str_wrap(c("Environmental distance (EoO to York River)"), width = 20), "Heterozygosity", "Allelic richness"))+
-  theme_classic()+
-    theme(axis.text = element_text(color = "black", size = 14),
-        axis.title = element_text(size = 15),
-        legend.text = element_text(size = 14),
-        legend.title = element_text(size = 15))
-
-yrk_ci2_plot
-
-ggsave("FigS7D_york_ci_envrdist.pdf",
-       plot = yrk_ci2_plot,
-       device = "pdf",
-       path = "figures/parent_effects_H2F",
-       height = 4,
-       width = 7)
-```
-
