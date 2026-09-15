@@ -42,7 +42,7 @@ P-values come from Satterthwaite-approximated t-tests (lmerTest). Figure error b
 
 ## Q2a — Genetic diversity + environmental quantiles (monocultures)
 
-_Model: `response ~ HO + Ar + TemperatureQ90 + SalinityQ10 + SalinityQ90 + (1|Population[/Bag])`, fit separately per site × timepoint._
+_Model: `response ~ HO + Ar + TemperatureQ90 + SalinityQ10 + SalinityQ90 + (1|Population[/Bag])`
 
 **Temperature Q90 is a consistent driver of survival.** It was positive and among the strongest predictors in all six survival models (both sites, all timepoints), with the effect strengthening over time. No other predictor genetic or environmental showed a strong independent effect on survival once population-level replication was accounted for.
 
@@ -65,7 +65,7 @@ _Length, Lewisetta / York (Fig S5A / S5C):_
 <img width="881" height="498" alt="Screenshot 2026-09-14 at 10 25 05 PM" src="https://github.com/user-attachments/assets/1fecfd19-6d44-4b9b-9a3c-e8fd800b8b55" />
 <img width="884" height="502" alt="Screenshot 2026-09-14 at 10 25 24 PM" src="https://github.com/user-attachments/assets/d52524ed-b9ae-4982-8ddb-1d35cfab2449" />
 
-_Predictor correlation matrix (Fig S2):_
+_Correlation matrix (Fig S2):_
 
 <img width="646" height="535" alt="Screenshot 2026-09-14 at 10 25 43 PM" src="https://github.com/user-attachments/assets/22c12582-c18d-415e-894c-c0f810519cd0" />
 
@@ -73,75 +73,68 @@ _Predictor correlation matrix (Fig S2):_
 
 ## Q2b — Genetic diversity + environmental distance (monocultures)
 
-_Model: `response ~ HO + Ar + [environmental distance] + (1|Population[/Bag])`, fit separately per site × timepoint._
+_Model: `response ~ HO + Ar + [environmental distance] + (1|Population[/Bag])`
 
-This approach collapses the four environmental quantiles into a single measure — the Euclidean distance between each source population's environment-of-origin and the field site — which reduces the predictor count and eases the strain of estimating many effects from few populations.
+This approach collapses the four environmental quantiles into a single measure — the Euclidean distance between each source population's environment-of-origin and the field site.
 
-**Note on collinearity:** heterozygosity and environmental distance are moderately correlated (r ≈ −0.71 to −0.78; VIF ≤ 3.4, below thresholds requiring action). This means the diversity and distance effects share variance and are harder to fully separate from each other — an effect attributed to one could partly belong to the other. Worth keeping in mind when interpreting any distance or diversity result here.
-
-**Summary of results:** _[paste key findings from your Q2b output — which cells, if any, showed significant distance, HO, or Ar effects, and whether the pattern is consistent across sites/times]_
+**Collinearity:** heterozygosity and environmental distance are moderately correlated (r ≈ −0.71 to −0.78; VIF ≤ 3.4). This means the diversity and distance effects share variance and are harder to fully separate from each other.
 
 ### Figures — Q2b
 
 _Survival, Lewisetta / York (Fig 3B / 3D):_
 
-<br><br><br><br><br>
+<img width="897" height="506" alt="Screenshot 2026-09-14 at 10 29 22 PM" src="https://github.com/user-attachments/assets/d8a5550e-7f0f-45f0-89d6-dd46f628f65a" />
+<img width="884" height="497" alt="Screenshot 2026-09-14 at 10 29 36 PM" src="https://github.com/user-attachments/assets/46462783-3595-4aee-a357-01041912782a" />
 
 _Length, Lewisetta / York (Fig S5B / S5D):_
 
-<br><br><br><br><br>
+<img width="882" height="501" alt="Screenshot 2026-09-14 at 10 29 58 PM" src="https://github.com/user-attachments/assets/a9c74b5e-654e-4301-b2d7-ea6789916c75" />
+<img width="887" height="495" alt="Screenshot 2026-09-14 at 10 30 11 PM" src="https://github.com/user-attachments/assets/3c53b578-e626-48ee-b7f6-7bda3b42b6d1" />
 
 _Distance correlation matrices (Lewisetta / York):_
 
-<br><br><br><br><br>
+<img width="677" height="652" alt="Screenshot 2026-09-14 at 10 30 41 PM" src="https://github.com/user-attachments/assets/c498dd64-b956-4c33-86f7-abc739469afb" />
+<img width="674" height="628" alt="Screenshot 2026-09-14 at 10 30 58 PM" src="https://github.com/user-attachments/assets/c11a7dae-6c5d-4b7d-bc80-5b8fc5b35e56" />
 
 ---
 
 ## Q2c — Genetic diversity alone (monocultures + polycultures)
 
-_Model: `response ~ HO + Ar + (1|Population[/Bag])`, fit separately per site × timepoint, 10 groups._
+_Model: `response ~ HO + Ar + (1|Population[/Bag])`
 
-This is the only approach that includes the polyculture groups (HYBRIDMIX, SEEDMIX), since it uses genetic diversity alone. The two mix groups have the highest heterozygosity values in the dataset, so they sit at the high end of the diversity axis and carry leverage on the HO slope.
+This is the only approach that includes the polyculture groups (HYBRIDMIX, SEEDMIX), since it uses genetic diversity alone. The two mix groups have the highest heterozygosity values in the dataset.
 
-**Headline result: genetic diversity shows essentially no direct effect on any response.** Across all 18 models (3 responses × 2 sites × 3 timepoints), neither HO nor Ar was significant for survival or condition index at any site or time. The single exception was a heterozygosity effect on **York River length at November 2024** (p ≈ 0.03) — but this came from the one model where the nested random effect was singular, and rests heavily on the two high-diversity mix groups. It should be treated as suggestive pending a leverage check (refitting without the mix groups).
-
-This is consistent with Q2a and Q2b: genetic diversity did not emerge as a robust driver of field performance once population-level replication was properly handled.
+**Genetic diversity shows no direct effect on any response.** Across all 18 models (3 responses × 2 sites × 3 timepoints), neither HO nor Ar was significant for survival or condition index at any site or time. This is consistent with Q2a and Q2b: genetic diversity did not emerge as a driver of field performance once population-level replication was handled.s
 
 ### Figures — Q2c
 
 _Survival, Lewisetta / York:_
 
-<br><br><br><br><br>
+<img width="885" height="498" alt="Screenshot 2026-09-14 at 10 32 24 PM" src="https://github.com/user-attachments/assets/5174dd64-a9b1-412d-b454-03923825e801" />
+<img width="884" height="504" alt="Screenshot 2026-09-14 at 10 32 48 PM" src="https://github.com/user-attachments/assets/e85208e9-cdcf-4f4f-9396-cba68335e3db" />
 
 _Length, Lewisetta / York:_
 
-<br><br><br><br><br>
+<img width="882" height="498" alt="Screenshot 2026-09-14 at 10 33 06 PM" src="https://github.com/user-attachments/assets/d8b93391-72ec-4ff7-b16c-53dcbdeabe38" />
+<img width="883" height="495" alt="Screenshot 2026-09-14 at 10 33 18 PM" src="https://github.com/user-attachments/assets/1dc26b4f-3621-47a8-a261-b0cb5b9ed62c" />
 
 _Condition index, Lewisetta / York:_
 
-<br><br><br><br><br>
+<img width="894" height="504" alt="Screenshot 2026-09-14 at 10 33 43 PM" src="https://github.com/user-attachments/assets/cbaec290-b358-41ca-bd79-618cb8721a18" />
+<img width="882" height="503" alt="Screenshot 2026-09-14 at 10 33 55 PM" src="https://github.com/user-attachments/assets/67e14192-fe86-47dc-a389-23a05823d455" />
 
 ---
 
 ## Overall takeaways
 
-1. **Thermal origin, not genetic diversity, is the clearest signal.** Across all three approaches, the one robust, consistent effect is that populations from warmer-origin environments (Temperature Q90) survive better in the field, with the effect growing over time — consistent with selective mortality favoring warm-adapted origins.
+1. **High temperature at environment-of-origin is the clearest signal.**.
 
-2. **Genetic diversity effects are not detectable** on survival, length, or condition once the nested design is accounted for. Where they appeared in earlier (uncorrected) analyses, they did not survive proper handling of population-level replication.
+2. **Genetic diversity effects are not detectable.**
 
-3. **The design limits power, and we report it honestly.** With 8–10 source populations, we can only detect strong population-level effects. Non-significant results are "underpowered to detect," not "shown to be zero" — worth stating plainly rather than over-claiming.
+3. **The design limits power.**
 
-4. **Results are robust to how environment is represented.** The quantile (Q2a) and distance (Q2b) framings tell a consistent story, which strengthens confidence in the thermal-origin conclusion.
-
----
-
-## Open questions for discussion
-
-- The York-t3 length HO effect (Q2c): worth the leverage check, or set aside as a single singular-fit result among 18 tests?
-- Condition index has a persistent right-skew in residuals — acceptable as-is, or worth a transformation?
-- Is the diversity–distance collinearity in Q2b worth addressing (e.g., reporting single-predictor sensitivity models), or is a stated caveat sufficient?
-- How to frame the low-power / 8-population limitation in the manuscript.
+4. **Results are robust to how environment is represented.** The quantile (Q2a) and distance (Q2b) models tell a consistent story.
 
 ---
 
-_Notes: model results files are in `results/juvenile_effects_H2F/models/`; figures in `figures/juvenile_effects_H2F/`._
+_Model results files are in `results/juvenile_effects_H2F/models/`; figures in `figures/juvenile_effects_H2F/`._
