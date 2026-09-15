@@ -1,13 +1,10 @@
-# Q2 Analysis Summary: Genetic Diversity and Environment-of-Origin Effects on Field Performance
-
-**MVP H2F project — juvenile effects**
-_Prepared for group discussion_
+# Summary of Q2 analysis with juvenile genetic data
 
 ---
 
 ## Overview
 
-Q2 asks how offspring **genetic diversity** (heterozygosity, allelic richness) and **environment-of-origin** relate to oyster performance (survival, shell length, condition index) in the field, across two garden sites (Lewisetta, York River) and three timepoints (November 2023, May 2024, November 2024).
+Q2 asks how offspring **genetic diversity** (heterozygosity, allelic richness) and **environment-of-origin** relate to oyster performance (survival, shell length, condition index) in the field, across two common garden sites (Lewisetta, York River) and three timepoints (November 2023, May 2024, November 2024).
 
 We approached this three ways, differing in how environment-of-origin is represented and which treatments are included:
 
@@ -21,27 +18,25 @@ Q2a and Q2b are restricted to monocultures because polyculture bags mix multiple
 
 ---
 
-## Key methodological decisions
-
-A few choices shape how all the results should be read. These came out of reworking the original analysis, and they matter for interpretation:
+## Changes to methods
 
 **1. Mixed models with a population-level random effect (not bag-level regression).**
-The genetic and environmental predictors vary only across source populations (8, or 10 for Q2c), not across individual bags or oysters. Earlier versions treated each bag or individual as independent, which overstated the evidence. All models now include a random effect at the population level so that population-level predictors are tested against the number of independent source populations:
+The genetic and environmental predictors vary only across source populations (8, or 10 for Q2c), not across individual bags or oysters. Previous analysis treated each bag or individual as independent. I changed the models to include a random effect at the population level so that population-level predictors are tested against the number of independent source populations:
 
 - Survival: `response ~ predictors + (1|Population)`
 - Length & Condition index: `response ~ predictors + (1|Population/Bag)`
 
-**2. Full models, no stepwise selection.**
-All predictors are retained in every model rather than dropped by `step()`/`drop1()`. With clean collinearity (below) there's no need to prune, and reporting the full model avoids the biased p-values that stepwise selection produces.
+**2. No stepwise selection.**
+All predictors are retained in every model rather than dropped by `step()`/`drop1()`. We have mostly clean collinearity now (below).
 
 **3. Temperature Q10 excluded from Q2a for collinearity.**
-Of the four environmental quantiles, temperature Q10 was collinear with the others and was dropped; the retained Q2a set is temperature Q90, salinity Q10, salinity Q90 (plus HO and Ar). All retained predictors had acceptable VIF.
+Of the four environmental quantiles, I dropped temperature Q10 to keep VIF lower. The retained Q2a set is temperature Q90, salinity Q10, salinity Q90 (plus HO and Ar).
 
-**4. Low statistical power is inherent, not a flaw.**
-Because predictors vary across only 8–10 source populations, the effective degrees of freedom for population-level terms are low (≈ 2 for Q2a/Q2b, ≈ 7 for Q2c). **Non-significant effects mean "undetectable at this level of replication," not "absent."** Confidence intervals are correspondingly wide. This is the honest cost of accounting for the nested design properly.
+**4. Low statistical power**
+Because predictors vary across only 8–10 source populations, the degrees of freedom for population-level terms are low (≈ 2 for Q2a/Q2b, ≈ 7 for Q2c). Confidence intervals are also wide.
 
-**5. Inference and figures use matched, honest uncertainty.**
-P-values come from Satterthwaite-approximated t-tests (lmerTest). Figure error bars are t-based 95% confidence intervals using the same degrees of freedom, so a bar crossing zero corresponds exactly to a non-significant effect.
+**5. P-values and figures are aligned for interpretation**
+P-values come from Satterthwaite-approximated t-tests (lmerTest). Figure error bars are t-based 95% confidence intervals using the same degrees of freedom, so a bar crossing zero corresponds to a non-significant effect.
 
 ---
 
