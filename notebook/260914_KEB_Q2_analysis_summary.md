@@ -14,19 +14,19 @@ We approached this three ways, differing in how environment-of-origin is represe
 | **Q2b** | Diversity + environmental distance | Monocultures only (8 source populations) | 1 distance term (origin → field site) |
 | **Q2c** | Diversity alone | Monocultures **and** polycultures (10 groups) | none |
 
-Q2a and Q2b are restricted to monocultures because polyculture bags mix multiple source populations and so have no single environment-of-origin. Q2c drops the environmental term entirely, which is what allows the polycultures back into the analysis.
+Q2a and Q2b are restricted to monocultures because polyculture bags mix multiple source populations and so have no environment-of-origin. Q2c drops the environmental term entirely, so polycultures are in this analysis.
 
 ---
 
 ## Changes to methods
 
-**1. Mixed models with a population-level random effect.**
-The genetic and environmental predictors vary only across source populations (8, or 10 for Q2c), not across individual bags or oysters. Previous analysis treated each bag or individual as independent. I changed the models to include a random effect at the population level so that population-level predictors are tested against the number of independent source populations.
+**1. Mixed models with population-level random effect.**
+The genetic and environmental predictors vary only across source populations (8, or 10 for Q2c), not across bags or individuals. Previous analysis treated each bag or individual as independent. I changed the models to include a random effect at the population level so that population-level predictors are tested against the number of independent source populations.
 
 - Survival: `response ~ predictors + (1|Population)`
 - Length & Condition index: `response ~ predictors + (1|Population/Bag)`
 
-**2. No stepwise selection.**
+**2. No stepwise dropping of predictors.**
 All predictors are retained in every model rather than dropped by `step()`/`drop1()`. We have mostly clean collinearity now (below).
 
 **3. Temperature Q10 excluded from Q2a.**
@@ -36,7 +36,7 @@ Of the four environmental quantiles, I dropped temperature Q10 to keep VIF lower
 Because predictors vary across only 8–10 source populations, the degrees of freedom for population-level terms are low (= 2 for Q2a/Q2b, = 7 for Q2c). Confidence intervals are also wide.
 
 **5. P-values and confidence intervals on figures are aligned**
-P-values come from Satterthwaite-approximated t-tests (lmerTest). Figure error bars are t-based 95% confidence intervals using the same degrees of freedom, so a bar crossing zero corresponds to a non-significant effect.
+P-values come from Satterthwaite-approximated t-tests (I think from lmerTest?). Figure error bars are t-based 95% confidence intervals using the same degrees of freedom, so a bar crossing zero corresponds to a non-significant effect.
 
 ---
 
@@ -77,7 +77,7 @@ _Model: `response ~ HO + Ar + [environmental distance] + (1|Population[/Bag])`
 
 This approach collapses the four environmental quantiles into a single measure (Euclidean distance between each source population's environment-of-origin and the field site).
 
-**Collinearity:** heterozygosity and environmental distance are moderately correlated (r = −0.71 to −0.78; VIF ≤ 3.4). This means the diversity and distance effects share variance and are harder to fully separate from each other.
+**Collinearity:** heterozygosity and environmental distance are moderately correlated (r = −0.71 to −0.78; VIF less than 3.4).
 
 ### Figures — Q2b
 
@@ -104,7 +104,7 @@ _Model: `response ~ HO + Ar + (1|Population[/Bag])`
 
 This is the only approach that includes the polyculture groups (HYBRIDMIX, SEEDMIX), since it uses genetic diversity alone. The two mix groups have the highest heterozygosity values in the dataset.
 
-**Genetic diversity shows no direct effect on any response.** Across all 18 models (3 responses × 2 sites × 3 timepoints), neither HO nor Ar was significant for survival or condition index at any site or time. This is consistent with Q2a and Q2b: genetic diversity was not a driver of field performance once population-level replication was handled.
+**Genetic diversity shows no effect on any response variable.** Across all models (3 responses × 2 sites × 3 timepoints), neither HO nor Ar was significant for survival or condition index at any site or time. This is consistent with Q2a and Q2b: genetic diversity was not a driver of field performance.
 
 ### Figures — Q2c
 
@@ -125,15 +125,15 @@ _Condition index, Lewisetta / York:_
 
 ---
 
-## Overall takeaways
+## Overall
 
 1. **High temperature at environment-of-origin is the clearest signal.**
 
 2. **Genetic diversity effects are not detectable.**
 
-3. **The design limits power.**
+3. **Power is low?**
 
-4. **Results are robust to how environment is represented.** The quantile (Q2a) and distance (Q2b) models are consistent.
+4. **Results are robust to how the environment is represented.** The quantile (Q2a) and distance (Q2b) models are consistent.
 
 ---
 
