@@ -14,13 +14,13 @@ We approached this three ways, differing in how environment-of-origin is represe
 | **Q2b** | Diversity + environmental distance | Monocultures only (8 source populations) | 1 distance term (origin → field site) |
 | **Q2c** | Diversity alone | Monocultures **and** polycultures (10 groups) | none |
 
-Q2a and Q2b are restricted to monocultures because polyculture bags mix multiple source populations and so have no single environment-of-origin. Q2c drops the environmental term entirely, which is what allows the polyculture groups (which have genetic-diversity values but no single origin) back into the analysis.
+Q2a and Q2b are restricted to monocultures because polyculture bags mix multiple source populations and so have no single environment-of-origin. Q2c drops the environmental term entirely, which is what allows the polycultures back into the analysis.
 
 ---
 
 ## Changes to methods
 
-**1. Mixed models with a population-level random effect (not bag-level regression).**
+**1. Mixed models with a population-level random effect.**
 The genetic and environmental predictors vary only across source populations (8, or 10 for Q2c), not across individual bags or oysters. Previous analysis treated each bag or individual as independent. I changed the models to include a random effect at the population level so that population-level predictors are tested against the number of independent source populations:
 
 - Survival: `response ~ predictors + (1|Population)`
@@ -29,13 +29,13 @@ The genetic and environmental predictors vary only across source populations (8,
 **2. No stepwise selection.**
 All predictors are retained in every model rather than dropped by `step()`/`drop1()`. We have mostly clean collinearity now (below).
 
-**3. Temperature Q10 excluded from Q2a for collinearity.**
+**3. Temperature Q10 excluded from Q2a.**
 Of the four environmental quantiles, I dropped temperature Q10 to keep VIF lower. The retained Q2a set is temperature Q90, salinity Q10, salinity Q90 (plus HO and Ar).
 
 **4. Low statistical power**
 Because predictors vary across only 8–10 source populations, the degrees of freedom for population-level terms are low (≈ 2 for Q2a/Q2b, ≈ 7 for Q2c). Confidence intervals are also wide.
 
-**5. P-values and figures are aligned for interpretation**
+**5. P-values and confidence intervals on figures are aligned**
 P-values come from Satterthwaite-approximated t-tests (lmerTest). Figure error bars are t-based 95% confidence intervals using the same degrees of freedom, so a bar crossing zero corresponds to a non-significant effect.
 
 ---
@@ -44,9 +44,9 @@ P-values come from Satterthwaite-approximated t-tests (lmerTest). Figure error b
 
 _Model: `response ~ HO + Ar + TemperatureQ90 + SalinityQ10 + SalinityQ90 + (1|Population[/Bag])`, fit separately per site × timepoint._
 
-**Headline result: warm-end thermal origin (Temperature Q90) is the dominant, consistent driver of survival.** It was positive and among the strongest predictors in all six survival cells (both sites, all timepoints), with the effect strengthening over time. No other predictor — genetic or environmental — showed a robust independent effect on survival once population-level replication was accounted for.
+**Temperature Q90 is a consistent driver of survival.** It was positive and among the strongest predictors in all six survival models (both sites, all timepoints), with the effect strengthening over time. No other predictor genetic or environmental showed a strong independent effect on survival once population-level replication was accounted for.
 
-**Length** showed the same positive thermal-origin direction, but too weak to reach significance at this sample size; no predictor was significant for length. So warm-origin populations both survive better and trend larger, but only the survival effect is strong enough to detect with 8 populations.
+**Length** No predictor was significant for length. Warm-origin populations both survive better and trend larger, but only the survival effect is strong enough to detect with 8 populations.
 
 **Condition index** showed no consistent significant predictor.
 
@@ -54,19 +54,20 @@ _Model: `response ~ HO + Ar + TemperatureQ90 + SalinityQ10 + SalinityQ90 + (1|Po
 
 _Survival, Lewisetta (Fig 3A):_
 
-<br><br><br><br><br>
+<img width="758" height="429" alt="Screenshot 2026-09-14 at 10 24 16 PM" src="https://github.com/user-attachments/assets/2356f3ba-f2f5-46e9-80d3-13d9a69b0683" />
 
 _Survival, York River (Fig 3C):_
 
-<br><br><br><br><br>
+<img width="900" height="500" alt="Screenshot 2026-09-14 at 10 24 41 PM" src="https://github.com/user-attachments/assets/88440698-016b-421f-961d-62159e520536" />
 
 _Length, Lewisetta / York (Fig S5A / S5C):_
 
-<br><br><br><br><br>
+<img width="881" height="498" alt="Screenshot 2026-09-14 at 10 25 05 PM" src="https://github.com/user-attachments/assets/1fecfd19-6d44-4b9b-9a3c-e8fd800b8b55" />
+<img width="884" height="502" alt="Screenshot 2026-09-14 at 10 25 24 PM" src="https://github.com/user-attachments/assets/d52524ed-b9ae-4982-8ddb-1d35cfab2449" />
 
 _Predictor correlation matrix (Fig S2):_
 
-<br><br><br><br><br>
+<img width="646" height="535" alt="Screenshot 2026-09-14 at 10 25 43 PM" src="https://github.com/user-attachments/assets/22c12582-c18d-415e-894c-c0f810519cd0" />
 
 ---
 
