@@ -1,0 +1,244 @@
+
+ surv_G1.lew 
+
+Call:
+lm(formula = surv ~ ho + ar, data = surv_lew_t1)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.39185 -0.07595  0.03226  0.10711  0.20850 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)  
+(Intercept)   0.8376     1.1784   0.711   0.4833  
+ho            4.2584     2.3667   1.799   0.0832 .
+ar           -0.5278     0.7158  -0.737   0.4673  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.157 on 27 degrees of freedom
+Multiple R-squared:  0.1081,	Adjusted R-squared:  0.04207 
+F-statistic: 1.637 on 2 and 27 DF,  p-value: 0.2133
+
+
+ surv_G2.lew 
+
+Call:
+lm(formula = surv ~ ho + ar, data = surv_lew_t2)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.38293 -0.04848  0.01754  0.05795  0.30253 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)
+(Intercept)   1.1223     1.2660   0.886    0.383
+ho            3.6055     2.5427   1.418    0.168
+ar           -0.6301     0.7690  -0.819    0.420
+
+Residual standard error: 0.1687 on 27 degrees of freedom
+Multiple R-squared:  0.06981,	Adjusted R-squared:  0.0009081 
+F-statistic: 1.013 on 2 and 27 DF,  p-value: 0.3765
+
+
+ surv_G3.lew 
+
+Call:
+lm(formula = surv ~ ho + ar, data = surv_lew_t3)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.48123 -0.10038  0.04059  0.10838  0.41188 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)
+(Intercept)   0.4870     1.9060   0.256    0.800
+ho            4.5355     3.8281   1.185    0.246
+ar           -0.4864     1.1578  -0.420    0.678
+
+Residual standard error: 0.254 on 27 degrees of freedom
+Multiple R-squared:  0.05077,	Adjusted R-squared:  -0.01955 
+F-statistic: 0.722 on 2 and 27 DF,  p-value: 0.4949
+
+
+ surv_G1.york 
+
+Call:
+lm(formula = surv ~ ho + ar, data = surv_yrk_t1)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.28077 -0.05523  0.03241  0.07869  0.14332 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)
+(Intercept)  0.85057    0.84277   1.009    0.322
+ho           0.39430    1.69261   0.233    0.818
+ar          -0.05222    0.51193  -0.102    0.920
+
+Residual standard error: 0.1123 on 27 degrees of freedom
+Multiple R-squared:  0.002017,	Adjusted R-squared:  -0.07191 
+F-statistic: 0.02728 on 2 and 27 DF,  p-value: 0.9731
+
+
+ surv_G2.york 
+
+Call:
+lm(formula = surv ~ ho + ar, data = surv_yrk_t2)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.33639 -0.07084  0.00743  0.07626  0.20050 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)
+(Intercept)   0.1246     0.8566   0.145    0.885
+ho            0.6906     1.7204   0.401    0.691
+ar            0.2010     0.5203   0.386    0.702
+
+Residual standard error: 0.1141 on 27 degrees of freedom
+Multiple R-squared:  0.02252,	Adjusted R-squared:  -0.04989 
+F-statistic: 0.311 on 2 and 27 DF,  p-value: 0.7353
+
+
+ surv_G3.york 
+
+Call:
+lm(formula = surv ~ ho + ar, data = surv_yrk_t3)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.28544 -0.10854  0.02064  0.12390  0.30528 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)
+(Intercept)  -2.1029     1.2713  -1.654    0.110
+ho            0.8583     2.5533   0.336    0.739
+ar            1.1911     0.7722   1.542    0.135
+
+Residual standard error: 0.1694 on 27 degrees of freedom
+Multiple R-squared:  0.1296,	Adjusted R-squared:  0.06518 
+F-statistic: 2.011 on 2 and 27 DF,  p-value: 0.1534
+
+
+ surv_t1_lew_scaled (scaled)
+
+Call:
+lm(formula = scale(surv) ~ scale(ho) + scale(ar), data = surv_lew_t1)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.4426 -0.4735  0.2011  0.6677  1.2997 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)  
+(Intercept)  1.302e-15  1.787e-01   0.000   1.0000  
+scale(ho)    3.779e-01  2.100e-01   1.799   0.0832 .
+scale(ar)   -1.549e-01  2.100e-01  -0.737   0.4673  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.9787 on 27 degrees of freedom
+Multiple R-squared:  0.1081,	Adjusted R-squared:  0.04207 
+F-statistic: 1.637 on 2 and 27 DF,  p-value: 0.2133
+
+
+ surv_t2_lew_scaled (scaled)
+
+Call:
+lm(formula = scale(surv) ~ scale(ho) + scale(ar), data = surv_lew_t2)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.2691 -0.2873  0.1039  0.3434  1.7927 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)
+(Intercept)  1.005e-15  1.825e-01   0.000    1.000
+scale(ho)    3.042e-01  2.145e-01   1.418    0.168
+scale(ar)   -1.757e-01  2.145e-01  -0.819    0.420
+
+Residual standard error: 0.9995 on 27 degrees of freedom
+Multiple R-squared:  0.06981,	Adjusted R-squared:  0.0009081 
+F-statistic: 1.013 on 2 and 27 DF,  p-value: 0.3765
+
+
+ surv_t3_lew_scaled (scaled)
+
+Call:
+lm(formula = scale(surv) ~ scale(ho) + scale(ar), data = surv_lew_t3)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.9134 -0.3991  0.1614  0.4309  1.6376 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)
+(Intercept)  1.388e-15  1.843e-01   0.000    1.000
+scale(ho)    2.567e-01  2.167e-01   1.185    0.246
+scale(ar)   -9.103e-02  2.167e-01  -0.420    0.678
+
+Residual standard error: 1.01 on 27 degrees of freedom
+Multiple R-squared:  0.05077,	Adjusted R-squared:  -0.01955 
+F-statistic: 0.722 on 2 and 27 DF,  p-value: 0.4949
+
+
+ surv_t1_yrk_scaled (scaled)
+
+Call:
+lm(formula = scale(surv) ~ scale(ho) + scale(ar), data = surv_yrk_t1)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.5888 -0.5092  0.2988  0.7255  1.3214 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)
+(Intercept)  3.576e-16  1.890e-01   0.000    1.000
+scale(ho)    5.176e-02  2.222e-01   0.233    0.818
+scale(ar)   -2.266e-02  2.222e-01  -0.102    0.920
+
+Residual standard error: 1.035 on 27 degrees of freedom
+Multiple R-squared:  0.002017,	Adjusted R-squared:  -0.07191 
+F-statistic: 0.02728 on 2 and 27 DF,  p-value: 0.9731
+
+
+ surv_t2_yrk_scaled (scaled)
+
+Call:
+lm(formula = scale(surv) ~ scale(ho) + scale(ar), data = surv_yrk_t2)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-3.02005 -0.63601  0.06669  0.68462  1.80009 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)
+(Intercept) -1.021e-15  1.871e-01   0.000    1.000
+scale(ho)    8.826e-02  2.199e-01   0.401    0.691
+scale(ar)    8.493e-02  2.199e-01   0.386    0.702
+
+Residual standard error: 1.025 on 27 degrees of freedom
+Multiple R-squared:  0.02252,	Adjusted R-squared:  -0.04989 
+F-statistic: 0.311 on 2 and 27 DF,  p-value: 0.7353
+
+
+ surv_t3_yrk_scaled (scaled)
+
+Call:
+lm(formula = scale(surv) ~ scale(ho) + scale(ar), data = surv_yrk_t3)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.6293 -0.6195  0.1178  0.7072  1.7425 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)
+(Intercept) -1.655e-15  1.765e-01   0.000    1.000
+scale(ho)    6.975e-02  2.075e-01   0.336    0.739
+scale(ar)    3.200e-01  2.075e-01   1.542    0.135
+
+Residual standard error: 0.9669 on 27 degrees of freedom
+Multiple R-squared:  0.1296,	Adjusted R-squared:  0.06518 
+F-statistic: 2.011 on 2 and 27 DF,  p-value: 0.1534
+

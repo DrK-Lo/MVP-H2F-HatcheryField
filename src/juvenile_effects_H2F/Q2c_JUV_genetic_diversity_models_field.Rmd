@@ -1,0 +1,316 @@
+---
+title: "Q2c_JUV_genetic_diversity_models_field"
+author: "Kiran Bajaj"
+date: "2026-08-23"
+output: pdf_document
+---
+
+This file addresses Q2c: the direct effect of offspring genetic diversity (heterozygosity, allelic richness) on oyster survival, shell length, and condition index at each field timepoint, **including both monoculture and polyculture treatments**. The mixed-origin groups (H1-HYBRIDMIX, H2-SEEDMIX) are included here because this approach uses only genetic diversity, which they have, and no environment-of-origin, which they lack. This is the only Q2 approach that can include the polyculture groups.
+
+260915 KEB: model structure matches Q2a/Q2b. The genetic predictors (ho, ar) are constant within source group, so a group-level random effect would be collinear with the fixed effects; survival is therefore plain `lm` (no random effect), and length and condition index use `lmer` with only a bag random effect `(1|bags_label)` to capture non-independence of individuals within a bag. Predictors vary across only 10 source groups, so effects have low power; non-significant results mean "undetectable at this replication," not "absent."
+
+NOTE: the two mix groups have the highest heterozygosity values in the dataset, so they carry leverage on the ho slope. Any significant ho effect should be checked with a with-vs-without-mix-groups sensitivity refit before interpreting it as a diversity gradient rather than a mix-vs-mono contrast.
+
+## Load packages
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = here::here())
+
+if (!require("pacman")) install.packages("pacman")
+packages <- c("tidyverse", "here", "ggplot2", "lme4", "lmerTest", "car", "broom", "broom.mixed", "corrplot", "ggstance", "stringr")
+pacman::p_load(char = packages)
+
+# make dplyr win the common name collisions (car/MASS mask select/recode/filter)
+select <- dplyr::select
+recode <- dplyr::recode
+filter <- dplyr::filter
+
+r_version <- paste(R.version$major, R.version$minor, sep = ".")
+lib_ver <- packages %>% map_chr(~ paste0(.x, " (v", packageVersion(.x), ")")) %>% paste(collapse = ", ")
+```
+
+```{r}
+getwd()
+```
+
+## Read in data
+
+```{r}
+surv_mod_ord_rename     <- read.csv("data/performance_H2F/field_surv_all_times.csv")[, -1]
+lengths_mod_narm_nodead <- read.csv("data/performance_H2F/field_length_all_times.csv")[ ,-1]
+ci_df                   <- read_csv("data/performance_H2F/MVP_phenotyping_final.csv", show_col_types = FALSE)
+
+# juvenile genetics — 10 groups, INCLUDING SEEDMIX and HYBRIDMIX
+juv_genetics <- read.csv("results/juvenile_effects_H2F/juvenile_genetic_effects_full.csv")
+```
+
+## Data preparation
+
+The three data sources label the mix groups differently, so they are recoded to a
+common convention (H1-HYBRIDMIX / H2-SEEDMIX) before merging. The `stopifnot` guard
+halts if any merge silently drops a group.
+
+```{r}
+colnames(juv_genetics) <- c("pop", "ho", "exp_hs", "ar")
+
+# genetics file uses bare SEEDMIX / HYBRIDMIX -> match performance labels
+juv_genetics$pop <- recode(juv_genetics$pop,
+  "SEEDMIX" = "H2-SEEDMIX", "HYBRIDMIX" = "H1-HYBRIDMIX")
+
+# survival + genetics (mix groups retained — do NOT exclude)
+surv_mod_gen <- merge(surv_mod_ord_rename, juv_genetics, by = "pop")
+
+# length + genetics
+len_mod_gen <- merge(lengths_mod_narm_nodead, juv_genetics, by = "pop")
+
+# condition index: build frame, recode hybrid label (CI data calls it H1-LARMIX), then merge
+ci_sub <- ci_df %>%
+  mutate(population = as.character(population)) %>%
+  filter(!is.na(population), population != "NA") %>%
+  transmute(
+    ci         = CI,
+    t          = fct_recode(as.factor(samplingTimePoint), t1 = "2023-11", t2 = "2024-05", t3 = "2024-11"),
+    bag_site   = fct_recode(as.factor(site), Lewisetta = "LEW", YorkRiver = "YR"),
+    pop        = population,
+    bags_label = bagID
+  )
+ci_sub$pop <- recode(ci_sub$pop, "H1-LARMIX" = "H1-HYBRIDMIX")
+ci_gen <- merge(ci_sub, juv_genetics, by = "pop")
+
+# GUARD: all three frames must carry all 10 groups
+stopifnot(
+  length(unique(surv_mod_gen$pop)) == 10,
+  length(unique(len_mod_gen$pop))  == 10,
+  length(unique(ci_gen$pop))       == 10
+)
+
+# confirm structure
+table(surv_mod_gen$pop, surv_mod_gen$bag_site)
+```
+
+## Survival ~ ho + ar  (plain lm)
+
+```{r}
+surv_lew_t1 <- surv_mod_gen[surv_mod_gen$t == 1 & surv_mod_gen$bag_site == "Lewisetta", ]
+surv_G1.lew <- lm(surv ~ ho + ar, data = surv_lew_t1); summary(surv_G1.lew)
+surv_t1_lew_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar), data = surv_lew_t1)
+
+surv_lew_t2 <- surv_mod_gen[surv_mod_gen$t == 2 & surv_mod_gen$bag_site == "Lewisetta", ]
+surv_G2.lew <- lm(surv ~ ho + ar, data = surv_lew_t2); summary(surv_G2.lew)
+surv_t2_lew_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar), data = surv_lew_t2)
+
+surv_lew_t3 <- surv_mod_gen[surv_mod_gen$t == 3 & surv_mod_gen$bag_site == "Lewisetta", ]
+surv_G3.lew <- lm(surv ~ ho + ar, data = surv_lew_t3); summary(surv_G3.lew)
+surv_t3_lew_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar), data = surv_lew_t3)
+
+surv_yrk_t1 <- surv_mod_gen[surv_mod_gen$t == 1 & surv_mod_gen$bag_site == "YorkRiver", ]
+surv_G1.york <- lm(surv ~ ho + ar, data = surv_yrk_t1); summary(surv_G1.york)
+surv_t1_yrk_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar), data = surv_yrk_t1)
+
+surv_yrk_t2 <- surv_mod_gen[surv_mod_gen$t == 2 & surv_mod_gen$bag_site == "YorkRiver", ]
+surv_G2.york <- lm(surv ~ ho + ar, data = surv_yrk_t2); summary(surv_G2.york)
+surv_t2_yrk_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar), data = surv_yrk_t2)
+
+surv_yrk_t3 <- surv_mod_gen[surv_mod_gen$t == 3 & surv_mod_gen$bag_site == "YorkRiver", ]
+surv_G3.york <- lm(surv ~ ho + ar, data = surv_yrk_t3); summary(surv_G3.york)
+surv_t3_yrk_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar), data = surv_yrk_t3)
+
+# save survival results
+sink(paste0("results/juvenile_effects_H2F/models/survival_Q2c_genetics_results_", Sys.Date(), ".txt"))
+for (nm in c("surv_G1.lew","surv_G2.lew","surv_G3.lew","surv_G1.york","surv_G2.york","surv_G3.york")) {
+  cat("\n", nm, "\n"); print(summary(get(nm)))
+}
+for (nm in c("surv_t1_lew_scaled","surv_t2_lew_scaled","surv_t3_lew_scaled","surv_t1_yrk_scaled","surv_t2_yrk_scaled","surv_t3_yrk_scaled")) {
+  cat("\n", nm, "(scaled)\n"); print(summary(get(nm)))
+}
+sink()
+```
+
+## Length ~ ho + ar + (1|bags_label)
+
+```{r}
+len_lew_t1 <- len_mod_gen[len_mod_gen$t == 1 & len_mod_gen$bag_site == "Lewisetta", ]
+len_G1.lew <- lmer(length ~ ho + ar + (1 | bags_label), data = len_lew_t1)
+isSingular(len_G1.lew); VarCorr(len_G1.lew); summary(len_G1.lew)
+len_t1_lew_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + (1 | bags_label), data = len_lew_t1)
+
+len_lew_t2 <- len_mod_gen[len_mod_gen$t == 2 & len_mod_gen$bag_site == "Lewisetta", ]
+len_G2.lew <- lmer(length ~ ho + ar + (1 | bags_label), data = len_lew_t2)
+isSingular(len_G2.lew); VarCorr(len_G2.lew); summary(len_G2.lew)
+len_t2_lew_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + (1 | bags_label), data = len_lew_t2)
+
+len_lew_t3 <- len_mod_gen[len_mod_gen$t == 3 & len_mod_gen$bag_site == "Lewisetta", ]
+len_G3.lew <- lmer(length ~ ho + ar + (1 | bags_label), data = len_lew_t3)
+isSingular(len_G3.lew); VarCorr(len_G3.lew); summary(len_G3.lew)
+len_t3_lew_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + (1 | bags_label), data = len_lew_t3)
+
+len_yrk_t1 <- len_mod_gen[len_mod_gen$t == 1 & len_mod_gen$bag_site == "YorkRiver", ]
+len_G1.york <- lmer(length ~ ho + ar + (1 | bags_label), data = len_yrk_t1)
+isSingular(len_G1.york); VarCorr(len_G1.york); summary(len_G1.york)
+len_t1_yrk_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + (1 | bags_label), data = len_yrk_t1)
+
+len_yrk_t2 <- len_mod_gen[len_mod_gen$t == 2 & len_mod_gen$bag_site == "YorkRiver", ]
+len_G2.york <- lmer(length ~ ho + ar + (1 | bags_label), data = len_yrk_t2)
+isSingular(len_G2.york); VarCorr(len_G2.york); summary(len_G2.york)
+len_t2_yrk_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + (1 | bags_label), data = len_yrk_t2)
+
+len_yrk_t3 <- len_mod_gen[len_mod_gen$t == 3 & len_mod_gen$bag_site == "YorkRiver", ]
+len_G3.york <- lmer(length ~ ho + ar + (1 | bags_label), data = len_yrk_t3)
+isSingular(len_G3.york); VarCorr(len_G3.york); summary(len_G3.york)
+len_t3_yrk_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + (1 | bags_label), data = len_yrk_t3)
+
+# save length results
+sink(paste0("results/juvenile_effects_H2F/models/length_Q2c_genetics_results_", Sys.Date(), ".txt"))
+for (nm in c("len_G1.lew","len_G2.lew","len_G3.lew","len_G1.york","len_G2.york","len_G3.york")) {
+  m <- get(nm); cat("\n", nm, "  singular fit:", isSingular(m), "\n"); print(VarCorr(m)); print(summary(m))
+}
+for (nm in c("len_t1_lew_scaled","len_t2_lew_scaled","len_t3_lew_scaled","len_t1_yrk_scaled","len_t2_yrk_scaled","len_t3_yrk_scaled")) {
+  cat("\n", nm, "(scaled)\n"); print(summary(get(nm)))
+}
+sink()
+```
+
+## Condition index ~ ho + ar + (1|bags_label)
+
+```{r}
+ci_lew_t1 <- ci_gen[ci_gen$t == "t1" & ci_gen$bag_site == "Lewisetta", ]
+ci_G1.lew <- lmer(ci ~ ho + ar + (1 | bags_label), data = ci_lew_t1)
+isSingular(ci_G1.lew); VarCorr(ci_G1.lew); summary(ci_G1.lew)
+ci_t1_lew_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + (1 | bags_label), data = ci_lew_t1)
+
+ci_lew_t2 <- ci_gen[ci_gen$t == "t2" & ci_gen$bag_site == "Lewisetta", ]
+ci_G2.lew <- lmer(ci ~ ho + ar + (1 | bags_label), data = ci_lew_t2)
+isSingular(ci_G2.lew); VarCorr(ci_G2.lew); summary(ci_G2.lew)
+ci_t2_lew_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + (1 | bags_label), data = ci_lew_t2)
+
+ci_lew_t3 <- ci_gen[ci_gen$t == "t3" & ci_gen$bag_site == "Lewisetta", ]
+ci_G3.lew <- lmer(ci ~ ho + ar + (1 | bags_label), data = ci_lew_t3)
+isSingular(ci_G3.lew); VarCorr(ci_G3.lew); summary(ci_G3.lew)
+ci_t3_lew_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + (1 | bags_label), data = ci_lew_t3)
+
+ci_yrk_t1 <- ci_gen[ci_gen$t == "t1" & ci_gen$bag_site == "YorkRiver", ]
+ci_G1.york <- lmer(ci ~ ho + ar + (1 | bags_label), data = ci_yrk_t1)
+isSingular(ci_G1.york); VarCorr(ci_G1.york); summary(ci_G1.york)
+ci_t1_yrk_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + (1 | bags_label), data = ci_yrk_t1)
+
+ci_yrk_t2 <- ci_gen[ci_gen$t == "t2" & ci_gen$bag_site == "YorkRiver", ]
+ci_G2.york <- lmer(ci ~ ho + ar + (1 | bags_label), data = ci_yrk_t2)
+isSingular(ci_G2.york); VarCorr(ci_G2.york); summary(ci_G2.york)
+ci_t2_yrk_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + (1 | bags_label), data = ci_yrk_t2)
+
+ci_yrk_t3 <- ci_gen[ci_gen$t == "t3" & ci_gen$bag_site == "YorkRiver", ]
+ci_G3.york <- lmer(ci ~ ho + ar + (1 | bags_label), data = ci_yrk_t3)
+isSingular(ci_G3.york); VarCorr(ci_G3.york); summary(ci_G3.york)
+ci_t3_yrk_scaled <- lmer(scale(ci) ~ scale(ho) + scale(ar) + (1 | bags_label), data = ci_yrk_t3)
+
+# save CI results
+sink(paste0("results/juvenile_effects_H2F/models/condition_Q2c_genetics_results_", Sys.Date(), ".txt"))
+for (nm in c("ci_G1.lew","ci_G2.lew","ci_G3.lew","ci_G1.york","ci_G2.york","ci_G3.york")) {
+  m <- get(nm); cat("\n", nm, "  singular fit:", isSingular(m), "\n"); print(VarCorr(m)); print(summary(m))
+}
+for (nm in c("ci_t1_lew_scaled","ci_t2_lew_scaled","ci_t3_lew_scaled","ci_t1_yrk_scaled","ci_t2_yrk_scaled","ci_t3_yrk_scaled")) {
+  cat("\n", nm, "(scaled)\n"); print(summary(get(nm)))
+}
+sink()
+```
+
+## Figures
+
+```{r}
+# lm (survival): residual df from df.residual()
+build_slope_df_lm <- function(m_t1, m_t2, m_t3) {
+  bind_rows(
+    tidy(m_t1) %>% mutate(t = "t1", df = df.residual(m_t1)),
+    tidy(m_t2) %>% mutate(t = "t2", df = df.residual(m_t2)),
+    tidy(m_t3) %>% mutate(t = "t3", df = df.residual(m_t3))
+  ) %>%
+    filter(term != "(Intercept)") %>%
+    mutate(tmult = qt(0.975, df),
+           lower = estimate - tmult * std.error,
+           upper = estimate + tmult * std.error) %>%
+    select(explanatory = term, slope = estimate, lower, upper, t)
+}
+
+# lmer (length, CI): Satterthwaite df from tidy()
+build_slope_df_lmer <- function(m_t1, m_t2, m_t3) {
+  bind_rows(
+    tidy(m_t1, effects = "fixed") %>% mutate(t = "t1"),
+    tidy(m_t2, effects = "fixed") %>% mutate(t = "t2"),
+    tidy(m_t3, effects = "fixed") %>% mutate(t = "t3")
+  ) %>%
+    filter(term != "(Intercept)") %>%
+    mutate(tmult = qt(0.975, df),
+           lower = estimate - tmult * std.error,
+           upper = estimate + tmult * std.error) %>%
+    select(explanatory = term, slope = estimate, lower, upper, t)
+}
+
+# genetics-only: two predictors
+y_limits <- c("scale(ho)", "scale(ar)")
+y_labels <- c("Heterozygosity", "Allelic richness")
+time_labels <- c("t1" = "November 2023", "t2" = "May 2024", "t3" = "November 2024")
+
+plot_slopes <- function(df, point_color) {
+  ggplot(df, aes(x = slope, y = explanatory)) +
+    geom_point(aes(alpha = t, shape = t), color = point_color, size = 3.5,
+               position = position_dodge2v(height = .85, reverse = T, preserve = "total")) +
+    geom_errorbarh(aes(xmax = upper, xmin = lower, alpha = t), color = point_color,
+                   height = 0, size = 1.2, position = position_dodgev(height = -.85, preserve = "total")) +
+    scale_alpha_manual(name = "Time", na.translate = F,
+                       values = c("t1" = .45, "t2" = .7, "t3" = 1), labels = time_labels) +
+    scale_shape_manual(name = "Time", na.translate = F,
+                       values = c("t1" = 15, "t2" = 16, "t3" = 17), labels = time_labels) +
+    coord_cartesian(xlim = c(-1.6, 2)) +
+    xlab("Slope on scaled data") + ylab("Variable") +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    scale_y_discrete(name = "Explanatory variable", limits = y_limits, labels = y_labels) +
+    theme_classic() +
+    theme(axis.text = element_text(color = "black", size = 14),
+          axis.title = element_text(size = 15),
+          legend.text = element_text(size = 14),
+          legend.title = element_text(size = 15))
+}
+
+# survival (lm)
+p <- plot_slopes(build_slope_df_lm(surv_t1_lew_scaled, surv_t2_lew_scaled, surv_t3_lew_scaled), "#F06292"); p
+ggsave("FigSx_lew_surv_genetics.pdf", p, device = "pdf", path = "figures/juvenile_effects_H2F", height = 4, width = 7)
+p <- plot_slopes(build_slope_df_lm(surv_t1_yrk_scaled, surv_t2_yrk_scaled, surv_t3_yrk_scaled), "#880E4F"); p
+ggsave("FigSx_york_surv_genetics.pdf", p, device = "pdf", path = "figures/juvenile_effects_H2F", height = 4, width = 7)
+
+# length (lmer)
+p <- plot_slopes(build_slope_df_lmer(len_t1_lew_scaled, len_t2_lew_scaled, len_t3_lew_scaled), "#F06292"); p
+ggsave("FigSx_lew_length_genetics.pdf", p, device = "pdf", path = "figures/juvenile_effects_H2F", height = 4, width = 7)
+p <- plot_slopes(build_slope_df_lmer(len_t1_yrk_scaled, len_t2_yrk_scaled, len_t3_yrk_scaled), "#880E4F"); p
+ggsave("FigSx_york_length_genetics.pdf", p, device = "pdf", path = "figures/juvenile_effects_H2F", height = 4, width = 7)
+
+# condition index (lmer)
+p <- plot_slopes(build_slope_df_lmer(ci_t1_lew_scaled, ci_t2_lew_scaled, ci_t3_lew_scaled), "#F06292"); p
+ggsave("FigSx_lew_ci_genetics.pdf", p, device = "pdf", path = "figures/juvenile_effects_H2F", height = 4, width = 7)
+p <- plot_slopes(build_slope_df_lmer(ci_t1_yrk_scaled, ci_t2_yrk_scaled, ci_t3_yrk_scaled), "#880E4F"); p
+ggsave("FigSx_york_ci_genetics.pdf", p, device = "pdf", path = "figures/juvenile_effects_H2F", height = 4, width = 7)
+```
+
+## Check assumptions
+
+```{r}
+all_models <- list(
+  "surv Lew t1"=surv_G1.lew,"surv Lew t2"=surv_G2.lew,"surv Lew t3"=surv_G3.lew,
+  "surv Yrk t1"=surv_G1.york,"surv Yrk t2"=surv_G2.york,"surv Yrk t3"=surv_G3.york,
+  "len Lew t1"=len_G1.lew,"len Lew t2"=len_G2.lew,"len Lew t3"=len_G3.lew,
+  "len Yrk t1"=len_G1.york,"len Yrk t2"=len_G2.york,"len Yrk t3"=len_G3.york,
+  "CI Lew t1"=ci_G1.lew,"CI Lew t2"=ci_G2.lew,"CI Lew t3"=ci_G3.lew,
+  "CI Yrk t1"=ci_G1.york,"CI Yrk t2"=ci_G2.york,"CI Yrk t3"=ci_G3.york
+)
+
+op <- par(mfrow = c(2, 2), mar = c(4, 4, 2, 1))
+for (nm in names(all_models)) {
+  m <- all_models[[nm]]
+  plot(fitted(m), resid(m), main = paste(nm, "resid vs fitted"), xlab = "Fitted", ylab = "Residual", pch = 19, col = rgb(0,0,0,0.3)); abline(h = 0, lty = 2)
+  qqnorm(resid(m), main = paste(nm, "QQ")); qqline(resid(m))
+}
+par(op)
+
+sapply(all_models, function(m) c(shapiro_p = tryCatch(shapiro.test(resid(m))$p.value, error=function(e) NA),
+                                 n = length(resid(m))))
+```

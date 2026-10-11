@@ -318,7 +318,7 @@ lew_ci1; ggsave("FigS7A_lew_ci_quantiles.pdf", lew_ci1, device = "pdf", path = "
 yrk_ci1 <- plot_slopes(build_slope_df(ci_t1_yrk_scaled, ci_t2_yrk_scaled, ci_t3_yrk_scaled), "#880E4F", yq_limits, yq_labels)
 yrk_ci1; ggsave("FigS7C_york_ci_quantiles.pdf", yrk_ci1, device = "pdf", path = "figures/juvenile_effects_H2F", height = 4, width = 7)
 
-# --- CI distance ---
+# CI distance
 lew_ci2 <- plot_slopes(build_slope_df(cid_t1_lew_scaled, cid_t2_lew_scaled, cid_t3_lew_scaled), "#F06292", yd_limits, yd_labels)
 lew_ci2; ggsave("FigS7B_lew_ci_envrdist.pdf", lew_ci2, device = "pdf", path = "figures/juvenile_effects_H2F", height = 4, width = 7)
 

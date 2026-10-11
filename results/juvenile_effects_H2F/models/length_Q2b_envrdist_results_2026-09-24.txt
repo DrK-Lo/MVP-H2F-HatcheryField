@@ -1,0 +1,404 @@
+
+Lewisetta t1 (November 2023) modeling approach 2
+singular fit: FALSE 
+ Groups     Name        Std.Dev.
+ bags_label (Intercept) 4.7713  
+ Residual               7.2068  
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: length ~ ho + ar + dist + (1 | bags_label)
+   Data: len_lew_t1
+
+REML criterion at convergence: 7301.4
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-3.07003 -0.64129 -0.01058  0.61584  2.90335 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 22.77    4.771   
+ Residual               51.94    7.207   
+Number of obs: 1069, groups:  bags_label, 24
+
+Fixed effects:
+            Estimate Std. Error      df t value Pr(>|t|)  
+(Intercept)   51.883     62.614  19.986   0.829   0.4171  
+ho           231.145    123.615  19.991   1.870   0.0762 .
+ar           -38.166     28.654  20.086  -1.332   0.1978  
+dist           1.081      1.163  20.052   0.929   0.3638  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+     (Intr) ho     ar    
+ho   -0.509              
+ar   -0.886  0.054       
+dist -0.490  0.705  0.167
+
+Lewisetta t1 (November 2023) scaled modeling approach 2
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | bags_label)
+   Data: len_lew_t1
+
+REML criterion at convergence: 2696.4
+
+Scaled residuals: 
+     Min       1Q   Median       3Q      Max 
+-3.07003 -0.64129 -0.01058  0.61584  2.90335 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 0.2973   0.5453  
+ Residual               0.6783   0.8236  
+Number of obs: 1069, groups:  bags_label, 24
+
+Fixed effects:
+            Estimate Std. Error       df t value Pr(>|t|)  
+(Intercept)  0.04001    0.11417 20.08162   0.350   0.7296  
+scale(ho)    0.30541    0.16333 19.99066   1.870   0.0762 .
+scale(ar)   -0.15525    0.11656 20.08627  -1.332   0.1978  
+scale(dist)  0.15089    0.16238 20.05217   0.929   0.3638  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) scl(h) scl(r)
+scale(ho)   0.007               
+scale(ar)   0.017  0.054        
+scale(dist) 0.002  0.705  0.167 
+
+Lewisetta t2 (May 2024) modeling approach 2
+singular fit: FALSE 
+ Groups     Name        Std.Dev.
+ bags_label (Intercept) 3.8584  
+ Residual               7.3888  
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: length ~ ho + ar + dist + (1 | bags_label)
+   Data: len_lew_t2
+
+REML criterion at convergence: 6646
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.1043 -0.7045 -0.0481  0.6441  3.6124 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 14.89    3.858   
+ Residual               54.59    7.389   
+Number of obs: 967, groups:  bags_label, 24
+
+Fixed effects:
+            Estimate Std. Error       df t value Pr(>|t|)  
+(Intercept)   2.3333    51.6325  19.9181   0.045   0.9644  
+ho          231.4489   101.9215  19.9133   2.271   0.0344 *
+ar           -8.3026    23.6020  19.9286  -0.352   0.7287  
+dist          0.9911     0.9583  19.9015   1.034   0.3135  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+     (Intr) ho     ar    
+ho   -0.511              
+ar   -0.886  0.056       
+dist -0.491  0.705  0.169
+
+Lewisetta t2 (May 2024) scaled modeling approach 2
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | bags_label)
+   Data: len_lew_t2
+
+REML criterion at convergence: 2561.1
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.1043 -0.7045 -0.0481  0.6441  3.6124 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 0.2107   0.4591  
+ Residual               0.7728   0.8791  
+Number of obs: 967, groups:  bags_label, 24
+
+Fixed effects:
+            Estimate Std. Error       df t value Pr(>|t|)  
+(Intercept)  0.00451    0.09792 19.92804   0.046   0.9637  
+scale(ho)    0.31534    0.13886 19.91329   2.271   0.0344 *
+scale(ar)   -0.03518    0.10002 19.92861  -0.352   0.7287  
+scale(dist)  0.14621    0.14138 19.90146   1.034   0.3135  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) scl(h) scl(r)
+scale(ho)   0.009               
+scale(ar)   0.019  0.056        
+scale(dist) 0.014  0.705  0.169 
+
+Lewisetta t3 (November 2024) modeling approach 2
+singular fit: FALSE 
+ Groups     Name        Std.Dev.
+ bags_label (Intercept) 11.621  
+ Residual               12.512  
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: length ~ ho + ar + dist + (1 | bags_label)
+   Data: len_lew_t3
+
+REML criterion at convergence: 6256.9
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.5454 -0.6164  0.0097  0.6475  3.2834 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 135.0    11.62   
+ Residual               156.6    12.51   
+Number of obs: 787, groups:  bags_label, 24
+
+Fixed effects:
+            Estimate Std. Error       df t value Pr(>|t|)
+(Intercept)  -1.8217   151.6076  19.9323  -0.012    0.991
+ho          510.0662   299.1242  19.8891   1.705    0.104
+ar          -23.1990    69.2827  19.9209  -0.335    0.741
+dist         -0.9023     2.8152  19.9516  -0.320    0.752
+
+Correlation of Fixed Effects:
+     (Intr) ho     ar    
+ho   -0.512              
+ar   -0.886  0.057       
+dist -0.491  0.706  0.168
+
+Lewisetta t3 (November 2024) scaled modeling approach 2
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | bags_label)
+   Data: len_lew_t3
+
+REML criterion at convergence: 1805.6
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.5454 -0.6164  0.0097  0.6475  3.2834 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 0.4499   0.6707  
+ Residual               0.5216   0.7222  
+Number of obs: 787, groups:  bags_label, 24
+
+Fixed effects:
+            Estimate Std. Error       df t value Pr(>|t|)
+(Intercept) -0.03649    0.13946 19.90127  -0.262    0.796
+scale(ho)    0.34165    0.20036 19.88907   1.705    0.104
+scale(ar)   -0.04691    0.14010 19.92087  -0.335    0.741
+scale(dist) -0.06430    0.20062 19.95164  -0.320    0.752
+
+Correlation of Fixed Effects:
+            (Intr) scl(h) scl(r)
+scale(ho)   0.033               
+scale(ar)   0.013  0.057        
+scale(dist) 0.023  0.706  0.168 
+
+York River t1 (November 2023) modeling approach 2
+singular fit: FALSE 
+ Groups     Name        Std.Dev.
+ bags_label (Intercept) 2.4526  
+ Residual               7.3275  
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: length ~ ho + ar + dist + (1 | bags_label)
+   Data: len_yrk_t1
+
+REML criterion at convergence: 7290.6
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.4916 -0.4396  0.0730  0.6493  2.7280 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept)  6.015   2.453   
+ Residual               53.692   7.327   
+Number of obs: 1066, groups:  bags_label, 24
+
+Fixed effects:
+            Estimate Std. Error       df t value Pr(>|t|)    
+(Intercept) -126.287     45.281   19.754  -2.789  0.01142 *  
+ho           399.109     81.918   19.872   4.872 9.39e-05 ***
+ar            32.503     18.042   19.882   1.802  0.08681 .  
+dist           4.730      1.116   19.826   4.238  0.00041 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+     (Intr) ho     ar    
+ho   -0.709              
+ar   -0.915  0.365       
+dist -0.750  0.808  0.510
+
+York River t1 (November 2023) scaled modeling approach 2
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | bags_label)
+   Data: len_yrk_t1
+
+REML criterion at convergence: 2859.7
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.4916 -0.4396  0.0730  0.6493  2.7280 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 0.09137  0.3023  
+ Residual               0.81557  0.9031  
+Number of obs: 1066, groups:  bags_label, 24
+
+Fixed effects:
+            Estimate Std. Error       df t value Pr(>|t|)    
+(Intercept)  0.00345    0.06765 19.99047   0.051  0.95983    
+scale(ho)    0.56002    0.11495 19.87238   4.872 9.39e-05 ***
+scale(ar)    0.14259    0.07915 19.88157   1.802  0.08681 .  
+scale(dist)  0.53007    0.12506 19.82569   4.238  0.00041 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) scl(h) scl(r)
+scale(ho)   -0.019              
+scale(ar)    0.001  0.365       
+scale(dist) -0.018  0.808  0.510
+
+York River t2 (May 2024) modeling approach 2
+singular fit: FALSE 
+ Groups     Name        Std.Dev.
+ bags_label (Intercept) 2.1567  
+ Residual               5.7811  
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: length ~ ho + ar + dist + (1 | bags_label)
+   Data: len_yrk_t2
+
+REML criterion at convergence: 5950.2
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.1128 -0.6413 -0.0347  0.6880  3.3989 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept)  4.651   2.157   
+ Residual               33.421   5.781   
+Number of obs: 934, groups:  bags_label, 24
+
+Fixed effects:
+             Estimate Std. Error        df t value Pr(>|t|)    
+(Intercept) -158.5953    39.8378   20.4252  -3.981 0.000711 ***
+ho           405.3264    71.9370   20.3944   5.634 1.52e-05 ***
+ar            51.7001    15.8246   20.3073   3.267 0.003801 ** 
+dist           4.9316     0.9795   20.3150   5.035 6.07e-05 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+     (Intr) ho     ar    
+ho   -0.713              
+ar   -0.916  0.373       
+dist -0.753  0.811  0.515
+
+York River t2 (May 2024) scaled modeling approach 2
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | bags_label)
+   Data: len_yrk_t2
+
+REML criterion at convergence: 2433.4
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-3.1128 -0.6413 -0.0347  0.6880  3.3989 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 0.1042   0.3228  
+ Residual               0.7488   0.8653  
+Number of obs: 934, groups:  bags_label, 24
+
+Fixed effects:
+             Estimate Std. Error        df t value Pr(>|t|)    
+(Intercept) 9.179e-04  7.176e-02 2.007e+01   0.013   0.9899    
+scale(ho)   6.917e-01  1.228e-01 2.039e+01   5.634 1.52e-05 ***
+scale(ar)   2.739e-01  8.383e-02 2.031e+01   3.267   0.0038 ** 
+scale(dist) 6.755e-01  1.342e-01 2.032e+01   5.035 6.07e-05 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) scl(h) scl(r)
+scale(ho)   0.014               
+scale(ar)   0.025  0.373        
+scale(dist) 0.020  0.811  0.515 
+
+York River t3 (November 2024) modeling approach 2
+singular fit: FALSE 
+ Groups     Name        Std.Dev.
+ bags_label (Intercept)  3.3554 
+ Residual               11.3451 
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: length ~ ho + ar + dist + (1 | bags_label)
+   Data: len_yrk_t3
+
+REML criterion at convergence: 4007.1
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.2361 -0.5492  0.0494  0.6283  2.5174 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept)  11.26    3.355  
+ Residual               128.71   11.345  
+Number of obs: 521, groups:  bags_label, 24
+
+Fixed effects:
+            Estimate Std. Error       df t value Pr(>|t|)    
+(Intercept) -213.401     77.723   26.237  -2.746   0.0108 *  
+ho           650.890    137.157   24.446   4.746 7.59e-05 ***
+ar            62.047     29.686   23.253   2.090   0.0477 *  
+dist           2.743      1.877   24.805   1.462   0.1564    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+     (Intr) ho     ar    
+ho   -0.769              
+ar   -0.928  0.476       
+dist -0.802  0.842  0.598
+
+York River t3 (November 2024) scaled modeling approach 2
+Linear mixed model fit by REML. t-tests use Satterthwaite's method ['lmerModLmerTest']
+Formula: scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | bags_label)
+   Data: len_yrk_t3
+
+REML criterion at convergence: 1358.7
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-4.2361 -0.5492  0.0494  0.6283  2.5174 
+
+Random effects:
+ Groups     Name        Variance Std.Dev.
+ bags_label (Intercept) 0.06512  0.2552  
+ Residual               0.74441  0.8628  
+Number of obs: 521, groups:  bags_label, 24
+
+Fixed effects:
+            Estimate Std. Error       df t value Pr(>|t|)    
+(Intercept) -0.01096    0.06546 19.32578  -0.167   0.8688    
+scale(ho)    0.58338    0.12293 24.44604   4.746 7.59e-05 ***
+scale(ar)    0.17420    0.08334 23.25314   2.090   0.0477 *  
+scale(dist)  0.19957    0.13655 24.80536   1.462   0.1564    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Correlation of Fixed Effects:
+            (Intr) scl(h) scl(r)
+scale(ho)   0.063               
+scale(ar)   0.068  0.476        
+scale(dist) 0.041  0.842  0.598 

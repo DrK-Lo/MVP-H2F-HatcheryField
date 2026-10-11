@@ -1,0 +1,300 @@
+
+ surv_GE1.lew 
+
+Call:
+lm(formula = surv ~ ho + ar + salinity_quantile_10 + temp_quantile_90, 
+    data = lew_t1)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.173574 -0.047363  0.008255  0.044001  0.311713 
+
+Coefficients:
+                      Estimate Std. Error t value Pr(>|t|)    
+(Intercept)           1.613748   1.374912   1.174 0.255015    
+ho                    3.030736   2.166949   1.399 0.178039    
+ar                   -1.484153   0.743900  -1.995 0.060576 .  
+salinity_quantile_10  0.002637   0.003229   0.817 0.424232    
+temp_quantile_90      0.045276   0.009406   4.814 0.000121 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.1205 on 19 degrees of freedom
+Multiple R-squared:  0.6049,	Adjusted R-squared:  0.5218 
+F-statistic: 7.273 on 4 and 19 DF,  p-value: 0.0009943
+
+
+ surv_GE2.lew 
+
+Call:
+lm(formula = surv ~ ho + ar + salinity_quantile_10 + temp_quantile_90, 
+    data = lew_t2)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.157550 -0.088291  0.009548  0.049405  0.260552 
+
+Coefficients:
+                      Estimate Std. Error t value Pr(>|t|)    
+(Intercept)           1.541357   1.205561   1.279   0.2165    
+ho                    2.645964   1.900041   1.393   0.1798    
+ar                   -1.535198   0.652272  -2.354   0.0295 *  
+salinity_quantile_10  0.001600   0.002831   0.565   0.5786    
+temp_quantile_90      0.053174   0.008247   6.448 3.52e-06 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.1056 on 19 degrees of freedom
+Multiple R-squared:  0.736,	Adjusted R-squared:  0.6804 
+F-statistic: 13.24 on 4 and 19 DF,  p-value: 2.556e-05
+
+
+ surv_GE3.lew 
+
+Call:
+lm(formula = surv ~ ho + ar + salinity_quantile_10 + temp_quantile_90, 
+    data = lew_t3)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.17621 -0.09010  0.01419  0.06307  0.18770 
+
+Coefficients:
+                      Estimate Std. Error t value Pr(>|t|)    
+(Intercept)          -1.020634   1.245068  -0.820  0.42253    
+ho                    5.902509   1.962307   3.008  0.00723 ** 
+ar                   -1.186560   0.673647  -1.761  0.09426 .  
+salinity_quantile_10  0.004870   0.002924   1.666  0.11220    
+temp_quantile_90      0.089650   0.008517  10.526 2.29e-09 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.1091 on 19 degrees of freedom
+Multiple R-squared:  0.8754,	Adjusted R-squared:  0.8491 
+F-statistic: 33.37 on 4 and 19 DF,  p-value: 2.384e-08
+
+
+ surv_GE1.york 
+
+Call:
+lm(formula = surv ~ ho + ar + salinity_quantile_10 + temp_quantile_90, 
+    data = yrk_t1)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.13182 -0.03244  0.01872  0.03975  0.09716 
+
+Coefficients:
+                      Estimate Std. Error t value Pr(>|t|)    
+(Intercept)           0.314918   0.744077   0.423  0.67688    
+ho                    1.267154   1.172713   1.081  0.29343    
+ar                   -0.424507   0.402585  -1.054  0.30490    
+salinity_quantile_10  0.006532   0.001747   3.738  0.00139 ** 
+temp_quantile_90      0.034993   0.005090   6.875 1.47e-06 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.0652 on 19 degrees of freedom
+Multiple R-squared:  0.7235,	Adjusted R-squared:  0.6653 
+F-statistic: 12.43 on 4 and 19 DF,  p-value: 3.914e-05
+
+
+ surv_GE2.york 
+
+Call:
+lm(formula = surv ~ ho + ar + salinity_quantile_10 + temp_quantile_90, 
+    data = yrk_t2)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.174489 -0.031215  0.008817  0.046216  0.084841 
+
+Coefficients:
+                      Estimate Std. Error t value Pr(>|t|)    
+(Intercept)          -0.156165   0.721869  -0.216 0.831033    
+ho                    1.284433   1.137711   1.129 0.272967    
+ar                   -0.342469   0.390569  -0.877 0.391523    
+salinity_quantile_10  0.007626   0.001695   4.498 0.000246 ***
+temp_quantile_90      0.039046   0.004938   7.907 1.99e-07 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.06325 on 19 degrees of freedom
+Multiple R-squared:  0.779,	Adjusted R-squared:  0.7325 
+F-statistic: 16.74 on 4 and 19 DF,  p-value: 4.967e-06
+
+
+ surv_GE3.york 
+
+Call:
+lm(formula = surv ~ ho + ar + salinity_quantile_10 + temp_quantile_90, 
+    data = yrk_t3)
+
+Residuals:
+      Min        1Q    Median        3Q       Max 
+-0.131010 -0.035409  0.002045  0.022102  0.109531 
+
+Coefficients:
+                      Estimate Std. Error t value Pr(>|t|)    
+(Intercept)          -4.792377   0.703578  -6.811 1.67e-06 ***
+ho                    4.363527   1.108883   3.935 0.000889 ***
+ar                    1.311094   0.380673   3.444 0.002719 ** 
+salinity_quantile_10  0.008825   0.001652   5.341 3.73e-05 ***
+temp_quantile_90      0.058231   0.004813  12.099 2.26e-10 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.06165 on 19 degrees of freedom
+Multiple R-squared:  0.9184,	Adjusted R-squared:  0.9012 
+F-statistic: 53.43 on 4 and 19 DF,  p-value: 4.48e-10
+
+
+ surv_t1_lew_scaled (scaled)
+
+Call:
+lm(formula = scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + 
+    scale(temp_quantile_90), data = lew_t1)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.99634 -0.27187  0.04738  0.25257  1.78927 
+
+Coefficients:
+                              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                  1.019e-16  1.412e-01   0.000 1.000000    
+scale(ho)                    2.032e-01  1.453e-01   1.399 0.178039    
+scale(ar)                   -3.089e-01  1.549e-01  -1.995 0.060576 .  
+scale(salinity_quantile_10)  1.370e-01  1.678e-01   0.817 0.424232    
+scale(temp_quantile_90)      7.835e-01  1.628e-01   4.814 0.000121 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.6916 on 19 degrees of freedom
+Multiple R-squared:  0.6049,	Adjusted R-squared:  0.5218 
+F-statistic: 7.273 on 4 and 19 DF,  p-value: 0.0009943
+
+
+ surv_t2_lew_scaled (scaled)
+
+Call:
+lm(formula = scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + 
+    scale(temp_quantile_90), data = lew_t2)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.84308 -0.47247  0.05109  0.26438  1.39427 
+
+Coefficients:
+                              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                  2.930e-16  1.154e-01   0.000   1.0000    
+scale(ho)                    1.654e-01  1.187e-01   1.393   0.1798    
+scale(ar)                   -2.979e-01  1.266e-01  -2.354   0.0295 *  
+scale(salinity_quantile_10)  7.751e-02  1.372e-01   0.565   0.5786    
+scale(temp_quantile_90)      8.578e-01  1.330e-01   6.448 3.52e-06 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.5653 on 19 degrees of freedom
+Multiple R-squared:  0.736,	Adjusted R-squared:  0.6804 
+F-statistic: 13.24 on 4 and 19 DF,  p-value: 2.556e-05
+
+
+ surv_t3_lew_scaled (scaled)
+
+Call:
+lm(formula = scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + 
+    scale(temp_quantile_90), data = lew_t3)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-0.6273 -0.3207  0.0505  0.2245  0.6682 
+
+Coefficients:
+                              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                  3.495e-16  7.928e-02   0.000  1.00000    
+scale(ho)                    2.454e-01  8.159e-02   3.008  0.00723 ** 
+scale(ar)                   -1.532e-01  8.697e-02  -1.761  0.09426 .  
+scale(salinity_quantile_10)  1.570e-01  9.424e-02   1.666  0.11220    
+scale(temp_quantile_90)      9.622e-01  9.141e-02  10.526 2.29e-09 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.3884 on 19 degrees of freedom
+Multiple R-squared:  0.8754,	Adjusted R-squared:  0.8491 
+F-statistic: 33.37 on 4 and 19 DF,  p-value: 2.384e-08
+
+
+ surv_t1_yrk_scaled (scaled)
+
+Call:
+lm(formula = scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + 
+    scale(temp_quantile_90), data = yrk_t1)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.1698 -0.2878  0.1661  0.3528  0.8622 
+
+Coefficients:
+                              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                  3.875e-16  1.181e-01   0.000  1.00000    
+scale(ho)                    1.313e-01  1.215e-01   1.081  0.29343    
+scale(ar)                   -1.366e-01  1.296e-01  -1.054  0.30490    
+scale(salinity_quantile_10)  5.248e-01  1.404e-01   3.738  0.00139 ** 
+scale(temp_quantile_90)      9.361e-01  1.362e-01   6.875 1.47e-06 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.5786 on 19 degrees of freedom
+Multiple R-squared:  0.7235,	Adjusted R-squared:  0.6653 
+F-statistic: 12.43 on 4 and 19 DF,  p-value: 3.914e-05
+
+
+ surv_t2_yrk_scaled (scaled)
+
+Call:
+lm(formula = scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + 
+    scale(temp_quantile_90), data = yrk_t2)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.4268 -0.2552  0.0721  0.3779  0.6937 
+
+Coefficients:
+                              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                  4.091e-16  1.056e-01   0.000 1.000000    
+scale(ho)                    1.227e-01  1.086e-01   1.129 0.272967    
+scale(ar)                   -1.016e-01  1.158e-01  -0.877 0.391523    
+scale(salinity_quantile_10)  5.646e-01  1.255e-01   4.498 0.000246 ***
+scale(temp_quantile_90)      9.625e-01  1.217e-01   7.907 1.99e-07 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.5172 on 19 degrees of freedom
+Multiple R-squared:  0.779,	Adjusted R-squared:  0.7325 
+F-statistic: 16.74 on 4 and 19 DF,  p-value: 4.967e-06
+
+
+ surv_t3_yrk_scaled (scaled)
+
+Call:
+lm(formula = scale(surv) ~ scale(ho) + scale(ar) + scale(salinity_quantile_10) + 
+    scale(temp_quantile_90), data = yrk_t3)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.66806 -0.18056  0.01043  0.11270  0.55854 
+
+Coefficients:
+                             Estimate Std. Error t value Pr(>|t|)    
+(Intercept)                 2.837e-16  6.417e-02   0.000 1.000000    
+scale(ho)                   2.599e-01  6.604e-02   3.935 0.000889 ***
+scale(ar)                   2.425e-01  7.040e-02   3.444 0.002719 ** 
+scale(salinity_quantile_10) 4.074e-01  7.628e-02   5.341 3.73e-05 ***
+scale(temp_quantile_90)     8.952e-01  7.399e-02  12.099 2.26e-10 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.3144 on 19 degrees of freedom
+Multiple R-squared:  0.9184,	Adjusted R-squared:  0.9012 
+F-statistic: 53.43 on 4 and 19 DF,  p-value: 4.48e-10
+

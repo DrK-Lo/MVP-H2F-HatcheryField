@@ -11,6 +11,8 @@ Modeling is based on code from CR.
 
 260823 KEB: updated these models to include juvenile heterozygosity and allelic richness data which is calculated correctly based on the recoded genotype matrix.
 
+260915 KEB: the genetic and environmental (distance) predictors are constant within source populations, so a population-level random effect is collinear with the fixed effects and competes with them for the same between-population variation. Survival is therefore modeled with plain `lm` (no random effect). Length is modeled with `lmer` including only a bag random effect `(1|bags_label)`, which captures the non-independence of individuals measured within the same bag. Because predictors vary across only 8 source populations, population-level terms have low power.
+
 ## Load packages
 
 ```{r setup, include=FALSE}
@@ -161,16 +163,16 @@ VIF(d_yrk$dist, d_yrk$ho, d_yrk$ar)    # dist
 
 ```{r t1_surv_lew}
 
-# full model, no selection. (1|pop) accounts for bags within the 8 source
-# populations. Predictors are population-level.
+# ho + ar + dist. No random effect: predictors are constant within population,
+# so (1|pop) would compete with the fixed effects for the same between-population
+# variation. lm p-values are tested against bag-level residual df; interpret with
+# the 8 source populations in mind.
 lew_t1 <- surv_mod_gen_dist[surv_mod_gen_dist$t == 1 & surv_mod_gen_dist$bag_site == "Lewisetta", ]
 
-surv_GE1.lew <- lmer(surv ~ ho + ar + dist + (1 | pop), data = lew_t1)
-isSingular(surv_GE1.lew)
+surv_GE1.lew <- lm(surv ~ ho + ar + dist, data = lew_t1)
 summary(surv_GE1.lew)
 
-surv_t1_lew_scaled <- lmer(scale(surv) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop), data = lew_t1)
-isSingular(surv_t1_lew_scaled)
+surv_t1_lew_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(dist), data = lew_t1)
 
 ```
 
@@ -180,12 +182,10 @@ isSingular(surv_t1_lew_scaled)
 
 lew_t2 <- surv_mod_gen_dist[surv_mod_gen_dist$t == 2 & surv_mod_gen_dist$bag_site == "Lewisetta", ]
 
-surv_GE2.lew <- lmer(surv ~ ho + ar + dist + (1 | pop), data = lew_t2)
-isSingular(surv_GE2.lew)
+surv_GE2.lew <- lm(surv ~ ho + ar + dist, data = lew_t2)
 summary(surv_GE2.lew)
 
-surv_t2_lew_scaled <- lmer(scale(surv) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop), data = lew_t2)
-isSingular(surv_t2_lew_scaled)
+surv_t2_lew_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(dist), data = lew_t2)
 
 ```
 
@@ -195,12 +195,10 @@ isSingular(surv_t2_lew_scaled)
 
 lew_t3 <- surv_mod_gen_dist[surv_mod_gen_dist$t == 3 & surv_mod_gen_dist$bag_site == "Lewisetta", ]
 
-surv_GE3.lew <- lmer(surv ~ ho + ar + dist + (1 | pop), data = lew_t3)
-isSingular(surv_GE3.lew)
+surv_GE3.lew <- lm(surv ~ ho + ar + dist, data = lew_t3)
 summary(surv_GE3.lew)
 
-surv_t3_lew_scaled <- lmer(scale(surv) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop), data = lew_t3)
-isSingular(surv_t3_lew_scaled)
+surv_t3_lew_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(dist), data = lew_t3)
 
 ```
 
@@ -210,12 +208,10 @@ isSingular(surv_t3_lew_scaled)
 
 yrk_t1 <- surv_mod_gen_dist[surv_mod_gen_dist$t == 1 & surv_mod_gen_dist$bag_site == "YorkRiver", ]
 
-surv_GE1.york <- lmer(surv ~ ho + ar + dist + (1 | pop), data = yrk_t1)
-isSingular(surv_GE1.york)
+surv_GE1.york <- lm(surv ~ ho + ar + dist, data = yrk_t1)
 summary(surv_GE1.york)
 
-surv_t1_yrk_scaled <- lmer(scale(surv) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop), data = yrk_t1)
-isSingular(surv_t1_yrk_scaled)
+surv_t1_yrk_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(dist), data = yrk_t1)
 
 ```
 
@@ -225,12 +221,10 @@ isSingular(surv_t1_yrk_scaled)
 
 yrk_t2 <- surv_mod_gen_dist[surv_mod_gen_dist$t == 2 & surv_mod_gen_dist$bag_site == "YorkRiver", ]
 
-surv_GE2.york <- lmer(surv ~ ho + ar + dist + (1 | pop), data = yrk_t2)
-isSingular(surv_GE2.york)
+surv_GE2.york <- lm(surv ~ ho + ar + dist, data = yrk_t2)
 summary(surv_GE2.york)
 
-surv_t2_yrk_scaled <- lmer(scale(surv) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop), data = yrk_t2)
-isSingular(surv_t2_yrk_scaled)
+surv_t2_yrk_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(dist), data = yrk_t2)
 
 ```
 
@@ -240,32 +234,30 @@ isSingular(surv_t2_yrk_scaled)
 
 yrk_t3 <- surv_mod_gen_dist[surv_mod_gen_dist$t == 3 & surv_mod_gen_dist$bag_site == "YorkRiver", ]
 
-surv_GE3.york <- lmer(surv ~ ho + ar + dist + (1 | pop), data = yrk_t3)
-isSingular(surv_GE3.york)
+surv_GE3.york <- lm(surv ~ ho + ar + dist, data = yrk_t3)
 summary(surv_GE3.york)
 
-surv_t3_yrk_scaled <- lmer(scale(surv) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop), data = yrk_t3)
-isSingular(surv_t3_yrk_scaled)
+surv_t3_yrk_scaled <- lm(scale(surv) ~ scale(ho) + scale(ar) + scale(dist), data = yrk_t3)
 
 # save everything
 sink(paste0("results/juvenile_effects_H2F/models/survival_Q2b_envrdist_results_", Sys.Date(), ".txt"))
 cat("\nLewisetta t1 (November 2023) modeling approach 2\n")
-cat("singular fit:", isSingular(surv_GE1.lew), "\n"); print(summary(surv_GE1.lew))
+print(summary(surv_GE1.lew))
 cat("\nLewisetta t1 (November 2023) scaled modeling approach 2\n"); print(summary(surv_t1_lew_scaled))
 cat("\nLewisetta t2 (May 2024) modeling approach 2\n")
-cat("singular fit:", isSingular(surv_GE2.lew), "\n"); print(summary(surv_GE2.lew))
+print(summary(surv_GE2.lew))
 cat("\nLewisetta t2 (May 2024) scaled modeling approach 2\n"); print(summary(surv_t2_lew_scaled))
 cat("\nLewisetta t3 (November 2024) modeling approach 2\n")
-cat("singular fit:", isSingular(surv_GE3.lew), "\n"); print(summary(surv_GE3.lew))
+print(summary(surv_GE3.lew))
 cat("\nLewisetta t3 (November 2024) scaled modeling approach 2\n"); print(summary(surv_t3_lew_scaled))
 cat("\nYork River t1 (November 2023) modeling approach 2\n")
-cat("singular fit:", isSingular(surv_GE1.york), "\n"); print(summary(surv_GE1.york))
+print(summary(surv_GE1.york))
 cat("\nYork River t1 (November 2023) scaled modeling approach 2\n"); print(summary(surv_t1_yrk_scaled))
 cat("\nYork River t2 (May 2024) modeling approach 2\n")
-cat("singular fit:", isSingular(surv_GE2.york), "\n"); print(summary(surv_GE2.york))
+print(summary(surv_GE2.york))
 cat("\nYork River t2 (May 2024) scaled modeling approach 2\n"); print(summary(surv_t2_yrk_scaled))
 cat("\nYork River t3 (November 2024) modeling approach 2\n")
-cat("singular fit:", isSingular(surv_GE3.york), "\n"); print(summary(surv_GE3.york))
+print(summary(surv_GE3.york))
 cat("\nYork River t3 (November 2024) scaled modeling approach 2\n"); print(summary(surv_t3_yrk_scaled))
 sink()
 ```
@@ -279,10 +271,10 @@ sink()
 # individuals within bags within populations; (1|pop/bags_label)
 len_lew_t1 <- len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "Lewisetta", ]
 
-len_GE1.lew <- lmer(length ~ ho + ar + dist + (1 | pop / bags_label), data = len_lew_t1)
+len_GE1.lew <- lmer(length ~ ho + ar + dist + (1 | bags_label), data = len_lew_t1)
 isSingular(len_GE1.lew); VarCorr(len_GE1.lew); summary(len_GE1.lew)
 
-len_t1_lew_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop / bags_label), data = len_lew_t1)
+len_t1_lew_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | bags_label), data = len_lew_t1)
 isSingular(len_t1_lew_scaled)
 
 ```
@@ -293,10 +285,10 @@ isSingular(len_t1_lew_scaled)
 
 len_lew_t2 <- len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "Lewisetta", ]
 
-len_GE2.lew <- lmer(length ~ ho + ar + dist + (1 | pop / bags_label), data = len_lew_t2)
+len_GE2.lew <- lmer(length ~ ho + ar + dist + (1 | bags_label), data = len_lew_t2)
 isSingular(len_GE2.lew); VarCorr(len_GE2.lew); summary(len_GE2.lew)
 
-len_t2_lew_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop / bags_label), data = len_lew_t2)
+len_t2_lew_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | bags_label), data = len_lew_t2)
 isSingular(len_t2_lew_scaled)
 
 ```
@@ -307,10 +299,10 @@ isSingular(len_t2_lew_scaled)
 
 len_lew_t3 <- len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site == "Lewisetta", ]
 
-len_GE3.lew <- lmer(length ~ ho + ar + dist + (1 | pop / bags_label), data = len_lew_t3)
+len_GE3.lew <- lmer(length ~ ho + ar + dist + (1 | bags_label), data = len_lew_t3)
 isSingular(len_GE3.lew); VarCorr(len_GE3.lew); summary(len_GE3.lew)
 
-len_t3_lew_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop / bags_label), data = len_lew_t3)
+len_t3_lew_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | bags_label), data = len_lew_t3)
 isSingular(len_t3_lew_scaled)
 
 ```
@@ -321,10 +313,10 @@ isSingular(len_t3_lew_scaled)
 
 len_yrk_t1 <- len_mod_gen_dist[len_mod_gen_dist$t == 1 & len_mod_gen_dist$bag_site == "YorkRiver", ]
 
-len_GE1.york <- lmer(length ~ ho + ar + dist + (1 | pop / bags_label), data = len_yrk_t1)
+len_GE1.york <- lmer(length ~ ho + ar + dist + (1 | bags_label), data = len_yrk_t1)
 isSingular(len_GE1.york); VarCorr(len_GE1.york); summary(len_GE1.york)
 
-len_t1_yrk_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop / bags_label), data = len_yrk_t1)
+len_t1_yrk_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | bags_label), data = len_yrk_t1)
 isSingular(len_t1_yrk_scaled)
 
 ```
@@ -335,10 +327,10 @@ isSingular(len_t1_yrk_scaled)
 
 len_yrk_t2 <- len_mod_gen_dist[len_mod_gen_dist$t == 2 & len_mod_gen_dist$bag_site == "YorkRiver", ]
 
-len_GE2.york <- lmer(length ~ ho + ar + dist + (1 | pop / bags_label), data = len_yrk_t2)
+len_GE2.york <- lmer(length ~ ho + ar + dist + (1 | bags_label), data = len_yrk_t2)
 isSingular(len_GE2.york); VarCorr(len_GE2.york); summary(len_GE2.york)
 
-len_t2_yrk_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop / bags_label), data = len_yrk_t2)
+len_t2_yrk_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | bags_label), data = len_yrk_t2)
 isSingular(len_t2_yrk_scaled)
 
 ```
@@ -349,10 +341,10 @@ isSingular(len_t2_yrk_scaled)
 
 len_yrk_t3 <- len_mod_gen_dist[len_mod_gen_dist$t == 3 & len_mod_gen_dist$bag_site == "YorkRiver", ]
 
-len_GE3.york <- lmer(length ~ ho + ar + dist + (1 | pop / bags_label), data = len_yrk_t3)
+len_GE3.york <- lmer(length ~ ho + ar + dist + (1 | bags_label), data = len_yrk_t3)
 isSingular(len_GE3.york); VarCorr(len_GE3.york); summary(len_GE3.york)
 
-len_t3_yrk_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | pop / bags_label), data = len_yrk_t3)
+len_t3_yrk_scaled <- lmer(scale(length) ~ scale(ho) + scale(ar) + scale(dist) + (1 | bags_label), data = len_yrk_t3)
 isSingular(len_t3_yrk_scaled)
 
 # save everything
@@ -382,8 +374,24 @@ sink()
 
 ```{r}
 
-# helper: tidy scaled models, tag time, build t-based 95% CIs (Satterthwaite df ~2)
-build_slope_df <- function(m_t1, m_t2, m_t3) {
+# two helpers: survival is now lm (residual df), length is lmer (Satterthwaite df)
+
+# lm (survival)
+build_slope_df_lm <- function(m_t1, m_t2, m_t3) {
+  bind_rows(
+    tidy(m_t1) %>% mutate(t = "t1", df = df.residual(m_t1)),
+    tidy(m_t2) %>% mutate(t = "t2", df = df.residual(m_t2)),
+    tidy(m_t3) %>% mutate(t = "t3", df = df.residual(m_t3))
+  ) %>%
+    filter(term != "(Intercept)") %>%
+    mutate(tmult = qt(0.975, df),
+           lower = estimate - tmult * std.error,
+           upper = estimate + tmult * std.error) %>%
+    select(explanatory = term, slope = estimate, lower, upper, t)
+}
+
+# lmer (length)
+build_slope_df_lmer <- function(m_t1, m_t2, m_t3) {
   bind_rows(
     tidy(m_t1, effects = "fixed") %>% mutate(t = "t1"),
     tidy(m_t2, effects = "fixed") %>% mutate(t = "t2"),
@@ -424,22 +432,22 @@ plot_slopes <- function(df, point_color) {
           legend.title = element_text(size = 15))
 }
 
-lew_surv_df <- build_slope_df(surv_t1_lew_scaled, surv_t2_lew_scaled, surv_t3_lew_scaled)
+lew_surv_df <- build_slope_df_lm(surv_t1_lew_scaled, surv_t2_lew_scaled, surv_t3_lew_scaled)
 lew_surv_plot <- plot_slopes(lew_surv_df, "#F06292"); lew_surv_plot
-ggsave("Fig3B_lew_surv_envrdist.pdf", plot = lew_surv_plot, device = "pdf",
+ggsave("Fig3C_lew_surv_envrdist.pdf", plot = lew_surv_plot, device = "pdf",
        path = "figures/juvenile_effects_H2F", height = 4, width = 7)
 
-yrk_surv_df <- build_slope_df(surv_t1_yrk_scaled, surv_t2_yrk_scaled, surv_t3_yrk_scaled)
+yrk_surv_df <- build_slope_df_lm(surv_t1_yrk_scaled, surv_t2_yrk_scaled, surv_t3_yrk_scaled)
 yrk_surv_plot <- plot_slopes(yrk_surv_df, "#880E4F"); yrk_surv_plot
 ggsave("Fig3D_york_surv_envrdist.pdf", plot = yrk_surv_plot, device = "pdf",
        path = "figures/juvenile_effects_H2F", height = 4, width = 7)
 
-lew_len_df <- build_slope_df(len_t1_lew_scaled, len_t2_lew_scaled, len_t3_lew_scaled)
+lew_len_df <- build_slope_df_lmer(len_t1_lew_scaled, len_t2_lew_scaled, len_t3_lew_scaled)
 lew_len_plot <- plot_slopes(lew_len_df, "#F06292"); lew_len_plot
-ggsave("FigS5B_lew_len_envrdist.pdf", plot = lew_len_plot, device = "pdf",
+ggsave("FigS5C_lew_len_envrdist.pdf", plot = lew_len_plot, device = "pdf",
        path = "figures/juvenile_effects_H2F", height = 4, width = 7)
 
-yrk_len_df <- build_slope_df(len_t1_yrk_scaled, len_t2_yrk_scaled, len_t3_yrk_scaled)
+yrk_len_df <- build_slope_df_lmer(len_t1_yrk_scaled, len_t2_yrk_scaled, len_t3_yrk_scaled)
 yrk_len_plot <- plot_slopes(yrk_len_df, "#880E4F"); yrk_len_plot
 ggsave("FigS5D_york_len_envrdist.pdf", plot = yrk_len_plot, device = "pdf",
        path = "figures/juvenile_effects_H2F", height = 4, width = 7)

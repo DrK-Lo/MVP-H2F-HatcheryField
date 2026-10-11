@@ -1,0 +1,270 @@
+
+Lewisetta t1 (November 2023) modeling approach 2
+
+Call:
+lm(formula = surv ~ ho + ar + dist, data = lew_t1)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.39528 -0.16124  0.05204  0.12723  0.20445 
+
+Coefficients:
+             Estimate Std. Error t value Pr(>|t|)
+(Intercept)  1.638746   2.301498   0.712    0.485
+ho           3.521524   4.543369   0.775    0.447
+ar          -0.876547   1.051911  -0.833    0.415
+dist         0.003431   0.042725   0.080    0.937
+
+Residual standard error: 0.1796 on 20 degrees of freedom
+Multiple R-squared:  0.07538,	Adjusted R-squared:  -0.06332 
+F-statistic: 0.5435 on 3 and 20 DF,  p-value: 0.6581
+
+
+Lewisetta t1 (November 2023) scaled modeling approach 2
+
+Call:
+lm(formula = scale(surv) ~ scale(ho) + scale(ar) + scale(dist), 
+    data = lew_t1)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.2689 -0.9255  0.2987  0.7303  1.1736 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)
+(Intercept) -1.016e-15  2.105e-01   0.000    1.000
+scale(ho)    2.361e-01  3.046e-01   0.775    0.447
+scale(ar)   -1.825e-01  2.190e-01  -0.833    0.415
+scale(dist)  2.477e-02  3.085e-01   0.080    0.937
+
+Residual standard error: 1.031 on 20 degrees of freedom
+Multiple R-squared:  0.07538,	Adjusted R-squared:  -0.06332 
+F-statistic: 0.5435 on 3 and 20 DF,  p-value: 0.6581
+
+
+Lewisetta t2 (May 2024) modeling approach 2
+
+Call:
+lm(formula = surv ~ ho + ar + dist, data = lew_t2)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.37887 -0.14923  0.03084  0.15980  0.29769 
+
+Coefficients:
+             Estimate Std. Error t value Pr(>|t|)
+(Intercept)  1.876547   2.485819   0.755    0.459
+ho           2.857779   4.907236   0.582    0.567
+ar          -0.945600   1.136156  -0.832    0.415
+dist        -0.002072   0.046147  -0.045    0.965
+
+Residual standard error: 0.194 on 20 degrees of freedom
+Multiple R-squared:  0.06256,	Adjusted R-squared:  -0.07806 
+F-statistic: 0.4449 on 3 and 20 DF,  p-value: 0.7236
+
+
+Lewisetta t2 (May 2024) scaled modeling approach 2
+
+Call:
+lm(formula = scale(surv) ~ scale(ho) + scale(ar) + scale(dist), 
+    data = lew_t2)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-2.0274 -0.7985  0.1650  0.8551  1.5930 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)
+(Intercept) -8.030e-16  2.119e-01   0.000    1.000
+scale(ho)    1.786e-01  3.067e-01   0.582    0.567
+scale(ar)   -1.835e-01  2.205e-01  -0.832    0.415
+scale(dist) -1.394e-02  3.106e-01  -0.045    0.965
+
+Residual standard error: 1.038 on 20 degrees of freedom
+Multiple R-squared:  0.06256,	Adjusted R-squared:  -0.07806 
+F-statistic: 0.4449 on 3 and 20 DF,  p-value: 0.7236
+
+
+Lewisetta t3 (November 2024) modeling approach 2
+
+Call:
+lm(formula = surv ~ ho + ar + dist, data = lew_t3)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-0.4644 -0.1830  0.0412  0.1833  0.4141 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)
+(Intercept) -0.46347    3.71860  -0.125    0.902
+ho           5.55148    7.34085   0.756    0.458
+ar          -0.08073    1.69960  -0.047    0.963
+dist        -0.01113    0.06903  -0.161    0.874
+
+Residual standard error: 0.2903 on 20 degrees of freedom
+Multiple R-squared:  0.07152,	Adjusted R-squared:  -0.06775 
+F-statistic: 0.5136 on 3 and 20 DF,  p-value: 0.6776
+
+
+Lewisetta t3 (November 2024) scaled modeling approach 2
+
+Call:
+lm(formula = scale(surv) ~ scale(ho) + scale(ar) + scale(dist), 
+    data = lew_t3)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.6532 -0.6516  0.1467  0.6526  1.4742 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)
+(Intercept) -7.121e-16  2.109e-01   0.000    1.000
+scale(ho)    2.308e-01  3.052e-01   0.756    0.458
+scale(ar)   -1.042e-02  2.194e-01  -0.047    0.963
+scale(dist) -4.984e-02  3.091e-01  -0.161    0.874
+
+Residual standard error: 1.033 on 20 degrees of freedom
+Multiple R-squared:  0.07152,	Adjusted R-squared:  -0.06775 
+F-statistic: 0.5136 on 3 and 20 DF,  p-value: 0.6776
+
+
+York River t1 (November 2023) modeling approach 2
+
+Call:
+lm(formula = surv ~ ho + ar + dist, data = yrk_t1)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.19246 -0.06013  0.02286  0.05696  0.11601 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -4.69076    1.45724  -3.219 0.004306 ** 
+ho          10.24683    2.63238   3.893 0.000904 ***
+ar           1.59603    0.57969   2.753 0.012259 *  
+dist         0.15289    0.03588   4.261 0.000382 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.08625 on 20 degrees of freedom
+Multiple R-squared:  0.4907,	Adjusted R-squared:  0.4143 
+F-statistic: 6.422 on 3 and 20 DF,  p-value: 0.003184
+
+
+York River t1 (November 2023) scaled modeling approach 2
+
+Call:
+lm(formula = scale(surv) ~ scale(ho) + scale(ar) + scale(dist), 
+    data = yrk_t1)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.7078 -0.5335  0.2029  0.5054  1.0294 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -5.878e-15  1.562e-01   0.000 1.000000    
+scale(ho)    1.062e+00  2.728e-01   3.893 0.000904 ***
+scale(ar)    5.136e-01  1.865e-01   2.753 0.012259 *  
+scale(dist)  1.257e+00  2.951e-01   4.261 0.000382 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.7653 on 20 degrees of freedom
+Multiple R-squared:  0.4907,	Adjusted R-squared:  0.4143 
+F-statistic: 6.422 on 3 and 20 DF,  p-value: 0.003184
+
+
+York River t2 (May 2024) modeling approach 2
+
+Call:
+lm(formula = surv ~ ho + ar + dist, data = yrk_t2)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.18720 -0.04241  0.02405  0.06585  0.12032 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -5.44200    1.61684  -3.366 0.003074 ** 
+ho          10.63620    2.92068   3.642 0.001623 ** 
+ar           1.84417    0.64318   2.867 0.009524 ** 
+dist         0.15970    0.03981   4.012 0.000685 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.09569 on 20 degrees of freedom
+Multiple R-squared:  0.4676,	Adjusted R-squared:  0.3877 
+F-statistic: 5.854 on 3 and 20 DF,  p-value: 0.004862
+
+
+York River t2 (May 2024) scaled modeling approach 2
+
+Call:
+lm(formula = scale(surv) ~ scale(ho) + scale(ar) + scale(dist), 
+    data = yrk_t2)
+
+Residuals:
+    Min      1Q  Median      3Q     Max 
+-1.5308 -0.3468  0.1967  0.5385  0.9838 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -5.807e-15  1.597e-01   0.000 1.000000    
+scale(ho)    1.016e+00  2.789e-01   3.642 0.001623 ** 
+scale(ar)    5.469e-01  1.907e-01   2.867 0.009524 ** 
+scale(dist)  1.210e+00  3.017e-01   4.012 0.000685 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.7825 on 20 degrees of freedom
+Multiple R-squared:  0.4676,	Adjusted R-squared:  0.3877 
+F-statistic: 5.854 on 3 and 20 DF,  p-value: 0.004862
+
+
+York River t3 (November 2024) modeling approach 2
+
+Call:
+lm(formula = surv ~ ho + ar + dist, data = yrk_t3)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-0.34419 -0.02064  0.01467  0.07414  0.24587 
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)   
+(Intercept)  -9.6012     2.6887  -3.571  0.00191 **
+ho           12.9601     4.8570   2.668  0.01476 * 
+ar            3.6362     1.0696   3.400  0.00284 **
+dist          0.1454     0.0662   2.196  0.04002 * 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.1591 on 20 degrees of freedom
+Multiple R-squared:  0.4274,	Adjusted R-squared:  0.3415 
+F-statistic: 4.976 on 3 and 20 DF,  p-value: 0.009697
+
+
+York River t3 (November 2024) scaled modeling approach 2
+
+Call:
+lm(formula = scale(surv) ~ scale(ho) + scale(ar) + scale(dist), 
+    data = yrk_t3)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1.75515 -0.10523  0.07481  0.37808  1.25378 
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)   
+(Intercept) -3.705e-15  1.656e-01   0.000  1.00000   
+scale(ho)    7.718e-01  2.892e-01   2.668  0.01476 * 
+scale(ar)    6.724e-01  1.978e-01   3.400  0.00284 **
+scale(dist)  6.872e-01  3.129e-01   2.196  0.04002 * 
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.8115 on 20 degrees of freedom
+Multiple R-squared:  0.4274,	Adjusted R-squared:  0.3415 
+F-statistic: 4.976 on 3 and 20 DF,  p-value: 0.009697
+
