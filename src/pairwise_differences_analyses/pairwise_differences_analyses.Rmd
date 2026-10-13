@@ -36,13 +36,20 @@ getwd()
 # save population display order
 POP_ORDER <- c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME")
 
+# mixed groups: shown in the response heatmaps, but left out of the Mantel tests
+# because they have no Fst or environment-of-origin data
+MIX_GROUPS <- c("H1-HYBRIDMIX", "H2-SEEDMIX")
+
+# display order for heatmaps that include the mixed groups
+HEATMAP_ORDER <- c(POP_ORDER, MIX_GROUPS)
+
 # site name recoding from raw data to standardized names
 SITE_RECODE <- c(
   "MVP-TX" = "W1-TX", "MVP-LA" = "W2-LA", "MVP-FL" = "W3-FL", "MVP-JR" = "W4-VA",
   "MVP-LOLA" = "S1-LOLA", "MVP-DEBY" = "S2-DEBY", "MVP-NH" = "W5-NH", "MVP-ME" = "W6-ME"
 )
 
-# groups to exclude from analysis (no environment-of-origin data available)
+# groups to exclude from the Mantel tests (no environment-of-origin data available)
 EXCLUDE_GROUPS <- c("H1-HYBRIDMIX", "H2-SEEDMIX", "MVP-LARMIX", "MVP-SEEDMIX")
 
 ```
@@ -62,15 +69,17 @@ clean_site_names <- function(df, site_col = "site_name") {
     ))
 }
 
-# reorder data frame by population order
+# reorder data frame by population order (mixed groups sort to the end)
 order_by_pop <- function(df, site_col = "site_name") {
-  df %>% arrange(factor(.data[[site_col]], levels = POP_ORDER))
+  df %>% arrange(factor(.data[[site_col]], levels = HEATMAP_ORDER))
 }
 
 #' create distance matrix from a two-column data frame (site_name, value)
-make_dist_matrix <- function(df) {
-  df <- df %>% filter(!site_name %in% EXCLUDE_GROUPS) %>% order_by_pop()
-  stopifnot(identical(df$site_name, POP_ORDER))  # will error loudly if mismatch
+#' `groups` sets which groups go in the matrix and in what order:
+#' POP_ORDER (default) for the Mantel tests, HEATMAP_ORDER to include the mixes
+make_dist_matrix <- function(df, groups = POP_ORDER) {
+  df <- df %>% filter(site_name %in% groups) %>% order_by_pop()
+  stopifnot(identical(df$site_name, groups))  # will error loudly if mismatch
   mat <- as.matrix(dist(df[[2]]))
   rownames(mat) <- colnames(mat) <- df$site_name
   mat
@@ -102,8 +111,8 @@ split_field_data <- function(df, prefix, group_col = "bag_site") {
 plot_heatmap <- function(mat, fill_label, title = "") {
   as.data.frame(as.table(mat)) %>%
     ggplot(aes(Var1, Var2, fill = Freq)) +
-    geom_tile(color = "white") +
-    scale_fill_viridis_c(option = "D", na.value = "grey50",
+    geom_tile(color = "grey85") +   # light grey borders so white tiles stay visible
+    scale_fill_distiller(palette = "Blues", direction = 1, na.value = "grey50",
                          guide = guide_colorbar(label.theme = element_text(angle = 45, size = 12))) +
     labs(title = title, x = "Treatment group", y = "Treatment group", fill = fill_label) +
     theme_minimal() +
@@ -175,13 +184,13 @@ means_mm_78 <- calc_mean_length(hatchery_length_clean, "78")
 
 ### Field data
 
-The goal is to summaraize data by monitoring event (3) and by each field site (2) with the average length across all bags for each treatment group. 
+The goal is to summarize data by monitoring event (3) and by each field site (2) with the average length across all bags for each treatment group. The mixed groups (H1-HYBRIDMIX, H2-SEEDMIX) are kept here so they can be shown in the response heatmaps; they are dropped from the matrices used in the Mantel tests because they have no Fst or environment-of-origin data.
 
 ```{r field-data}
-# clean field data: filter excluded groups, rename pop to site_name for consistency
+# clean field data: rename pop to site_name for consistency
+# (mixed groups are kept; make_dist_matrix() drops them for the Mantel tests)
 clean_field <- function(df) {
   df %>%
-    dplyr::filter(!.data[["pop"]] %in% EXCLUDE_GROUPS) %>%
     dplyr::rename(site_name = pop, monitoring_event = t)
 }
 
@@ -213,15 +222,19 @@ response_dfs <- c(
   field_survival_list
 )
 
-# convert each to distance matrix
+# convert each to distance matrix (8 environment-of-origin groups only, for Mantel tests)
 dist_matrices <- map(response_dfs, make_dist_matrix)
 
 # verify all matrices have correct ordering
 stopifnot(all(map_lgl(dist_matrices, ~ identical(rownames(.x), POP_ORDER))))
 message("All matrices have correct row/column ordering.")
+
+# field response matrices including the mixed groups, for heatmaps only
+heatmap_matrices <- map(c(field_length_list, field_survival_list),
+                        ~ make_dist_matrix(.x, groups = HEATMAP_ORDER))
 ```
 
-e## Partial Mantel tests
+## Partial Mantel tests
 ```{r mantel-tests}
 # test genetic distance effect (controlling for environment)
 genetic_results <- map(dist_matrices, ~ mantel.partial(
@@ -272,12 +285,12 @@ heatmap_envr <- plot_heatmap(envr_dist, "Standardized Euclidean\nenvironmental d
 ggsave(file.path("figures", "pairwise_differences_analyses", "Fig4A_fst_heatmap.pdf"), heatmap_fst, width = 12, height = 10)
 ggsave(file.path("figures", "pairwise_differences_analyses", "Fig4B_envr_dist_heatmap.pdf"), heatmap_envr, width = 12, height = 10)
 
-
+# response heatmaps (include the mixed groups)
 response_heatmaps <- list(
-  FigS10A_length_lew = plot_heatmap(dist_matrices$len_event3_lewisetta, "Euclidean distance\nin shell length"),
-  FigS10B_length_york = plot_heatmap(dist_matrices$len_event3_yorkriver, "Euclidean distance\nin shell length"),
-  Fig4C_survival_lew = plot_heatmap(dist_matrices$surv_event3_lewisetta, "Euclidean distance\nin survival"),
-  Fig4D_survival_york = plot_heatmap(dist_matrices$surv_event3_yorkriver, "Euclidean distance\nin survival")
+  FigS10A_length_lew = plot_heatmap(heatmap_matrices$len_event3_lewisetta, "Euclidean distance\nin shell length"),
+  FigS10B_length_york = plot_heatmap(heatmap_matrices$len_event3_yorkriver, "Euclidean distance\nin shell length"),
+  Fig4C_survival_lew = plot_heatmap(heatmap_matrices$surv_event3_lewisetta, "Euclidean distance\nin survival"),
+  Fig4D_survival_york = plot_heatmap(heatmap_matrices$surv_event3_yorkriver, "Euclidean distance\nin survival")
 )
 
 iwalk(response_heatmaps, ~ ggsave(
