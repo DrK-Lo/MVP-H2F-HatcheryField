@@ -132,6 +132,44 @@ corrplot(yrk_mat, method = "color", type = "upper", tl.col = "black", tl.srt = 4
          addCoef.col = "black", mar = c(0,0,2,0))
 ```
 
+### Pairwise correlation significance
+
+```{r}
+
+cor_vars_sig <- c("dist", "ho", "ar", "surv", "mean_len")
+
+# helper: pairwise Pearson correlations + p-values for one data frame
+pairwise_cor <- function(dat, vars) {
+  combn(vars, 2, simplify = FALSE) %>%
+    map_dfr(function(pair) {
+      ct <- cor.test(dat[[pair[1]]], dat[[pair[2]]], method = "pearson")
+      tibble(var1 = pair[1], var2 = pair[2],
+             r = unname(ct$estimate), p = ct$p.value,
+             n = sum(complete.cases(dat[pair])))
+    })
+}
+
+# bag-level data, run separately for each site (same rows as the corrplots)
+cor_df_q2b <- bind_rows(
+  pairwise_cor(filter(surv_len_gen_dist, bag_site == "Lewisetta"), cor_vars_sig) %>%
+    mutate(site = "Lewisetta"),
+  pairwise_cor(filter(surv_len_gen_dist, bag_site == "YorkRiver"), cor_vars_sig) %>%
+    mutate(site = "YorkRiver")
+) %>%
+  mutate(sig = case_when(p < 0.001 ~ "***",
+                         p < 0.01  ~ "**",
+                         p < 0.05  ~ "*",
+                         TRUE      ~ "ns")) %>%
+  relocate(site) %>%
+  arrange(site, p)
+
+cor_df_q2b
+
+write.csv(cor_df_q2b, "results/juvenile_effects_H2F/Q2b_pairwise_correlations.csv",
+          row.names = FALSE)
+
+```
+
 ```{r}
 
 # only three predictors here (ho, ar, dist), but check briefly for each site. 
@@ -156,6 +194,67 @@ VIF(d_yrk$ho,  d_yrk$ar,  d_yrk$dist)  # ho
 VIF(d_yrk$ar,  d_yrk$ho,  d_yrk$dist)  # ar
 VIF(d_yrk$dist, d_yrk$ho, d_yrk$ar)    # dist
 ```
+
+### Heterozygosity vs. environmental distance
+
+```{r}
+
+# one row per source population per site (predictors are constant within population)
+het_dist <- surv_mod_gen_dist %>%
+  distinct(pop, bag_site, ho, ar, dist) %>%
+  mutate(
+    Group = case_when(
+      pop %in% c("W1-TX", "W2-LA") ~ "Gulf wild",
+      pop %in% c("W3-FL", "W4-VA", "W5-NH", "W6-ME") ~ "Atlantic wild",
+      pop %in% c("S1-LOLA", "S2-DEBY") ~ "Selection line"
+    ),
+    bag_site = dplyr::recode(bag_site, "YorkRiver" = "York River")
+  )
+
+# check: should be 8 rows per site
+table(het_dist$bag_site)
+
+# population-level correlations (n = 8 per site)
+het_dist_cor <- het_dist %>%
+  group_by(bag_site) %>%
+  summarise(
+    r = cor.test(ho, dist)$estimate,
+    p = cor.test(ho, dist)$p.value,
+    .groups = "drop"
+  ) %>%
+  mutate(label = sprintf("r = %.2f, p = %.3f", r, p))
+
+het_dist_cor
+
+group_colors <- c("Gulf wild"      = "#C8553D",
+                  "Atlantic wild"  = "#2E6F95",
+                  "Selection line" = "#E0A458")
+
+fig_het_dist <- ggplot(het_dist, aes(x = dist, y = ho)) +
+  geom_smooth(method = "lm", se = FALSE, color = "grey60", linetype = "dashed", linewidth = 0.6) +
+  geom_point(aes(fill = Group), shape = 21, color = "black", size = 3.5, stroke = 0.5) +
+  ggrepel::geom_text_repel(aes(label = pop), size = 3.5, seed = 1, min.segment.length = 0) +
+  geom_text(data = het_dist_cor, aes(label = label),
+            x = Inf, y = Inf, hjust = 1.05, vjust = 1.5, size = 3.8, inherit.aes = FALSE) +
+  facet_wrap(~ bag_site) +
+  scale_fill_manual(values = group_colors) +
+  labs(x = "Environmental distance (EoO to common garden site)",
+       y = "Juvenile heterozygosity",
+       fill = NULL) +
+  theme_classic() +
+  theme(axis.text = element_text(color = "black", size = 12),
+        axis.title = element_text(size = 13),
+        strip.background = element_blank(),
+        strip.text = element_text(size = 13),
+        legend.position = "bottom")
+
+fig_het_dist
+
+ggsave(here::here("figures", "juvenile_effects_H2F", "FigSX_het_vs_envrdist.pdf"),
+       plot = fig_het_dist, height = 4.5, width = 8)
+
+```
+
 
 ## Modeling drivers of differences in survival
 

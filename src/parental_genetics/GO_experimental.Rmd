@@ -12,14 +12,22 @@ to generate GO results. These results are then imported for plotting and analysi
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-
-# Set working directory relative to project root
 knitr::opts_knit$set(root.dir = here::here())
 
 if (!require("pacman")) install.packages("pacman")
 
-packages <- c("here", "readr", "dplyr", "purrr", "tidyr", "stringr", "ggplot2", "ggrepel", "colorspace", "rtracklayer", "GenomicRanges", "IRanges", "biomaRt")
+packages <- c("here", "readr", "dplyr", "purrr", "tidyr", "stringr", "ggplot2", "ggrepel",
+              "colorspace", "rtracklayer", "GenomicRanges", "IRanges", "biomaRt")
 pacman::p_load(char = packages)
+
+# make dplyr's versions the defaults (Bioconductor packages mask these)
+rename <- dplyr::rename
+select <- dplyr::select
+filter <- dplyr::filter
+first  <- dplyr::first
+desc   <- dplyr::desc
+slice  <- dplyr::slice
+lag    <- dplyr::lag
 
 # log versions for reproducibility
 r_version <- paste(R.version$major, R.version$minor, sep = ".")
@@ -272,6 +280,19 @@ genes <- read_csv(file.path("results", "parental_genetics", "shinyGO_genes.csv")
 
 ```
 
+```{r}
+
+# one color lookup shared by the Manhattan and lollipop plots
+category_colors <- c(
+  "Transcription and gene regulation"       = "#6B8F71",
+  "Membrane and ion transport"              = "#C8553D",
+  "Signal transduction and kinase activity" = "#2E6F95",
+  "Motor and cytoskeleton function"         = "#E0A458",
+  "Binding and general cell structure"      = "#7B5E7B"
+)
+
+```
+
 #### Data preparation
 
 ```{r}
@@ -287,8 +308,8 @@ manhattan_fst <- snp_annotated %>%
     Outlier = ifelse(qvalues < 0.01, "outlier", "nonoutlier"), # outliers are designated with q values 
     Color = ifelse(
       Outlier == "nonoutlier",
-      ifelse(Chromosome %% 2 == 1, "#8c9bad", "#a5b7cc"),  # base color
-      lighten(ifelse(Chromosome %% 2 == 1, "#8c9bad", "#a5b7cc"), 0.4) # lighten for outliers
+      ifelse(Chromosome %% 2 == 1, "#7A7A7A", "#B5B5B5"),  # base color
+      lighten(ifelse(Chromosome %% 2 == 1, "#7A7A7A", "#B5B5B5"), 0.4) # lighten for outliers
     )
   )
 # compute chromosome lengths and cumulative positions for plotting
@@ -310,7 +331,6 @@ chrom_ticks <- manhattan_fst %>%
 ```
 
 These data need to be reshaped. The OutFLANK data product has loci in rows, and genes IDs, brief functional annotations, chromosomes, and chromosome positions in columns. The "enriched" csv has pathways in rows, and a list of genes separated by spaces in one column that need to be split. The "genes" csv has genes in rows, and positions and bunch of other stuff in columns. We should check these positions with the OutFLANK positions (they might come from the same place so should be the same). 
-
 ```{r}
 
 # split up the genes column so there is one row per gene
@@ -327,32 +347,57 @@ genes <- genes %>%
 enriched_joined <- enriched_split %>%
   inner_join(genes, by = "gene")
 
-manhattan_fst <- manhattan_fst %>%
-  rename(gene = cust_gene_id)
-
-# join enriched pathway genes with Outflank output data
+# join on the reannotated gene_id (the IDs pasted into ShinyGO),
+# not the sparser cust_gene_id from the sequencing facility
 enriched_fully_joined <- manhattan_fst %>%
-  inner_join(enriched_joined, by = "gene") %>%
-  dplyr::select(LocusName, `Enrichment FDR`, nGenes, `Pathway Genes`, `Fold Enrichment`, Pathway) %>%
+  inner_join(enriched_joined, by = c("gene_id" = "gene")) %>%
+  dplyr::select(LocusName, gene_id, `Enrichment FDR`, nGenes, `Pathway Genes`,
+                `Fold Enrichment`, Pathway) %>%
   mutate(
-    # extract GO_id
     GO_id = str_extract(Pathway, "^GO:\\d+"),
-    # assign gene_type based on GO term grouping
+
+    # manual assignments by GO ID
     gene_type = case_when(
-      GO_id %in% c("GO:0003700", "GO:0006355", "GO:0043565", "GO:0005634") ~ 
+      GO_id %in% c("GO:0003700", "GO:0006355", "GO:0043565", "GO:0005634") ~
         "Transcription and gene regulation",
-      GO_id %in% c("GO:0055085", "GO:0022857", "GO:0070588", "GO:0016020", "GO:0016021") ~ 
+      GO_id %in% c("GO:0055085", "GO:0022857", "GO:0070588", "GO:0016020", "GO:0016021") ~
         "Membrane and ion transport",
-      GO_id %in% c("GO:0007165", "GO:0004672", "GO:0006468", 
-                   "GO:0004930", "GO:0007186", "GO:0009190", "GO:0008083") ~ 
+      GO_id %in% c("GO:0007165", "GO:0004672", "GO:0006468",
+                   "GO:0004930", "GO:0007186", "GO:0009190", "GO:0008083") ~
         "Signal transduction and kinase activity",
-      GO_id %in% c("GO:0030286", "GO:0008569") ~ 
+      GO_id %in% c("GO:0030286", "GO:0008569") ~
         "Motor and cytoskeleton function",
-      GO_id %in% c("GO:0005524", "GO:0110165") ~ 
+      GO_id %in% c("GO:0005524", "GO:0110165") ~
+        "Binding and general cell structure",
+      TRUE ~ NA_character_
+    ),
+
+    # keyword fallback for any GO terms not assigned above (first match wins)
+    gene_type = case_when(
+      !is.na(gene_type) ~ gene_type,
+      str_detect(Pathway, regex("transcription|DNA-binding|nucleus|nuclear|chromatin|RNA polymerase",
+                                ignore_case = TRUE)) ~
+        "Transcription and gene regulation",
+      str_detect(Pathway, regex("transport|channel|\\bions?\\b|membrane|calcium|potassium|sodium",
+                                ignore_case = TRUE)) ~
+        "Membrane and ion transport",
+      str_detect(Pathway, regex("signal|kinase|phosphoryl|receptor|growth factor|G protein",
+                                ignore_case = TRUE)) ~
+        "Signal transduction and kinase activity",
+      str_detect(Pathway, regex("myosin|actin|microtubule|cytoskelet|motor|dynein|kinesin",
+                                ignore_case = TRUE)) ~
+        "Motor and cytoskeleton function",
+      str_detect(Pathway, regex("binding|cell|structur|organelle|component",
+                                ignore_case = TRUE)) ~
         "Binding and general cell structure",
       TRUE ~ "Other"
     )
   )
+
+# check how every pathway was categorized; fix any that look wrong
+enriched_fully_joined %>%
+  distinct(GO_id, Pathway, gene_type) %>%
+  arrange(gene_type, Pathway)
 
 ```
 
@@ -360,91 +405,80 @@ enriched_fully_joined <- manhattan_fst %>%
 
 ```{r}
 
-# this is all the data we need for the manhattan plot
+# SNPs in several pathways appear once per pathway; keep one category per SNP
+# (the pathway with the highest fold enrichment) so overlapping points don't conflict
+enriched_one_per_snp <- enriched_fully_joined %>%
+  group_by(LocusName) %>%
+  slice_max(order_by = `Fold Enrichment`, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  dplyr::select(LocusName, Pathway, `Fold Enrichment`, gene_type)
 
 merged_manhattan <- manhattan_fst %>%
-  left_join(enriched_fully_joined, by = "LocusName")
+  left_join(enriched_one_per_snp, by = "LocusName")
 
 # outlier threshold
 threshold_fst <- min(merged_manhattan$FST[merged_manhattan$qvalues < 0.01], na.rm = TRUE)
 
 # genes to highlight + y text positions
+# confirm whether LOC111122700 is advillin or HSP40 (Results say HSP40; advillin = LOC111122703)
 gene_labels <- tibble(
   gene_id = c("LOC111118916", "LOC111122700", "LOC111110350", "LOC111130444"),
   label = c("Myosin (LOC111118916)",
-            "Advillin (LOC111122700)",
+            "DnaJ homolog, HSP40 family (LOC111122700)",
             "Voltage-dependent calcium channel (LOC111110350)",
             "Organic cation transporter protein-like (LOC111130444)"),
   y_pos = c(0.90, 0.85, 0.84, 0.88),
   slant = c(-70000000, -60000000, 50000000, 60000000)
 )
 
-# subset SNPs to highlight
+highlight_categories <- c(
+  "LOC111118916" = "Motor and cytoskeleton function",     # myosin heavy chain
+  "LOC111122700" = "Binding and general cell structure",  # DnaJ homolog (HSP40 chaperone)
+  "LOC111110350" = "Membrane and ion transport",          # voltage-dependent calcium channel
+  "LOC111130444" = "Membrane and ion transport"           # organic cation transporter
+)
+
+# subset SNPs to highlight, fill in missing categories, assign colors
 highlight_snps <- merged_manhattan %>%
-  filter(Outlier == "outlier", gene_id %in% gene_labels$gene_id)
+  filter(Outlier == "outlier", gene_id %in% gene_labels$gene_id) %>%
+  mutate(gene_type = coalesce(gene_type, unname(highlight_categories[gene_id])),
+         fill_col  = coalesce(unname(category_colors[gene_type]), "darkgrey"))
 
 # pick one top SNP per gene for label placement
 label_points <- highlight_snps %>%
   group_by(gene_id) %>%
-  slice_max(order_by = FST, n = 1) %>%
+  slice_max(order_by = FST, n = 1, with_ties = FALSE) %>%
   left_join(gene_labels, by = "gene_id")
 
-# base manhattan plot
+# GO-category outliers (excluding "Other"), with fill colors from the shared lookup
+go_points <- merged_manhattan %>%
+  filter(Outlier == "outlier", !is.na(gene_type), gene_type != "Other") %>%
+  mutate(fill_col = unname(category_colors[gene_type]))
+
 ggplot_manhattan <- ggplot(merged_manhattan, aes(x = Cumulative_Position, y = FST)) +
 
   # background points
-  geom_point(aes(color = Color), size = 1, shape = 1, alpha = 1) +
+  geom_point(aes(color = Color), size = 1, shape = 1) +
 
-  # highlighted GO category points
-  geom_point(
-    data = merged_manhattan %>% filter(!is.na(gene_type) & Outlier == "outlier"),
-    # aes(color = case_when(
-    #   gene_type == "Transcription and gene regulation" ~ "#1B4F72",
-    #   gene_type == "Membrane and ion transport" ~ "#1B7837",
-    #   gene_type == "Signal transduction and kinase activity" ~ "#542788",
-    #   gene_type == "Motor and cytoskeleton function" ~ "#994F88",
-    #   gene_type == "Binding and general cell structure" ~ "#E08214"
-    # )),
-    aes(color = case_when(
-      gene_type == "Transcription and gene regulation" ~ "#3e4989",
-      gene_type == "Membrane and ion transport" ~ "#440154",
-      gene_type == "Signal transduction and kinase activity" ~ "#fde725",
-      gene_type == "Motor and cytoskeleton function" ~ "#7b3294",
-      gene_type == "Binding and general cell structure" ~ "#35b779"
-    )),
-    size = 2
-  ) +
+  # GO category points, filled with black border
+    geom_point(data = go_points, aes(fill = fill_col),
+             shape = 21, color = scales::alpha("black", 0.5), stroke = 0.3, size = 2, alpha = 0.6) +
 
-  # circles around specific genes' SNPs
-  geom_point(
-    data = highlight_snps,
-    aes(x = Cumulative_Position, y = FST),
-    shape = 21, fill = "darkgrey", color = "black", size = 3, stroke = 0.8) +
-  geom_segment(
-  data = label_points,
-  aes(
-    x = Cumulative_Position,
-    xend = Cumulative_Position + slant, 
-    y = FST,
-    yend = y_pos + 0.08  # make segment end at the label y
-  ),
-  color = "black",
-  size = 0.4
-) +
-geom_text(
-  data = label_points,
-  aes(
-    x = Cumulative_Position + slant,
-    y = y_pos + 0.11,
-    label = label
-  ),
-  color = "black",
-  size = 4
-) +
+  # highlighted genes, filled by category with a thicker border
+  geom_point(data = highlight_snps, aes(fill = fill_col),
+             shape = 21, color = "black", size = 3.5, stroke = 1.1) +
 
-  # rest of plot setup
+  geom_segment(data = label_points,
+               aes(x = Cumulative_Position, xend = Cumulative_Position + slant,
+                   y = FST, yend = y_pos + 0.08),
+               color = "black", linewidth = 0.4) +
+  geom_text(data = label_points,
+            aes(x = Cumulative_Position + slant, y = y_pos + 0.11, label = label),
+            color = "black", size = 4) +
+
   scale_x_continuous(breaks = chrom_ticks$center, labels = chrom_ticks$Chromosome) +
   scale_color_identity(guide = "none") +
+  scale_fill_identity(guide = "none") +
   labs(x = "Chromosome", y = expression(F[ST])) +
   geom_hline(aes(yintercept = threshold_fst, linetype = "q < 0.01"), color = "black") +
   scale_linetype_manual(name = "Outlier threshold", values = c("q < 0.01" = "dashed")) +
@@ -456,8 +490,9 @@ geom_text(
     axis.text = element_text(size = 14)
   )
 
-# save
-ggsave(file.path("figures", "putative_selection", "Fig5A_fst_manhattan_plot.pdf"),
+ggplot_manhattan
+
+ggsave(here::here("figures", "putative_selection", "Fig5A_fst_manhattan_plot.pdf"),
        ggplot_manhattan, width = 15, height = 6, dpi = 300)
 
 ```
@@ -466,59 +501,42 @@ ggsave(file.path("figures", "putative_selection", "Fig5A_fst_manhattan_plot.pdf"
 
 ```{r}
 
-# assign colors for GO categories
-# color_mapping <- c(
-#   "Transcription and gene regulation" = "#1B4F72",
-#   "Membrane and ion transport" = "#1B7837",
-#   "Signal transduction and kinase activity" = "#542788",
-#   "Motor and cytoskeleton function" = "#994F88",
-#   "Binding and general cell structure" = "#E08214"
-# )
+# enriched_fully_joined has one row per SNP per pathway; collapse to one row per pathway
+lollipop_data <- enriched_fully_joined %>%
+  distinct(Pathway, `Fold Enrichment`, nGenes, gene_type) %>%
+  filter(gene_type != "Other")
 
-color_mapping <- c(
-  "Transcription and gene regulation" = "#3e4989",
-  "Membrane and ion transport" = "#440154",
-  "Signal transduction and kinase activity" = "#fde725",
-  "Motor and cytoskeleton function" = "#7b3294",
-  "Binding and general cell structure" = "#35b779"
-)
-
-# lollipop plot
-lollipop_plot <- ggplot(enriched_fully_joined, aes(x = `Fold Enrichment`, 
-                                  y = reorder(Pathway, `Fold Enrichment`), 
-                                  color = gene_type, 
-                                  size = nGenes)) +
-  geom_segment(aes(x = 0, xend = `Fold Enrichment`,  # set lengths of the segments
-                   y = Pathway, yend = Pathway), 
-               linewidth = 0.8) +  # width of the segments
-  geom_point() +  # circles
-  scale_color_manual(values = color_mapping) +  # assign colors
-  scale_size_continuous(range = c(2, 5)) +  # adjust circle size range
-  # set limits of the x scale to adjust to the length of the segments
-  scale_x_continuous(expand = c(0, 0), limits = c(0, max(enriched_fully_joined$`Fold Enrichment`) * 1.1)) +  
+lollipop_plot <- ggplot(lollipop_data,
+                        aes(x = `Fold Enrichment`,
+                            y = reorder(Pathway, `Fold Enrichment`),
+                            size = nGenes)) +
+  geom_segment(aes(x = 0, xend = `Fold Enrichment`,
+                   yend = reorder(Pathway, `Fold Enrichment`), color = gene_type),
+               linewidth = 0.8, show.legend = FALSE) +
+  geom_point(aes(fill = gene_type), shape = 21, color = "black", stroke = 0.6) +
+  scale_color_manual(values = category_colors) +
+  scale_fill_manual(values = category_colors) +
+  scale_size_continuous(range = c(2, 5)) +
+  scale_x_continuous(expand = c(0, 0),
+                     limits = c(0, max(lollipop_data$`Fold Enrichment`) * 1.1)) +
   theme_bw() +
-  theme( 
-    axis.text = element_text(color = "black", size = 14),  # make axis text black
-    panel.grid.major.x = element_blank(), # remove grid lines
-    panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_blank(), 
-    panel.grid.minor.y = element_blank(), 
-    axis.title = element_text(size = 16),    
-    legend.title = element_text(size = 14),      
+  theme(
+    axis.text = element_text(color = "black", size = 14),
+    panel.grid = element_blank(),
+    axis.title = element_text(size = 16),
+    legend.title = element_text(size = 14),
     legend.text = element_text(size = 13)
   ) +
-  labs(x = "Fold enrichment", y = "Pathway", size = "Number of genes", color = "Pathway type") +
-  guides( # customize shapes and colors of symbols on legend with an override
-    color = guide_legend(override.aes = list(linetype = "blank", size = 3)),  
-    size = guide_legend(override.aes = list(linetype = "blank", shape = 21, fill = "slategrey",
-                                            color = "slategrey"))  
+  labs(x = "Fold enrichment", y = "Pathway", size = "Number of genes", fill = "Pathway type") +
+  guides(
+    fill = guide_legend(override.aes = list(shape = 21, size = 3, color = "black")),
+    size = guide_legend(override.aes = list(shape = 21, fill = "slategrey", color = "black"))
   )
 
-# save figure
-ggsave(file.path("figures", "putative_selection", "Fig5B_GO_lollipop_plot.pdf"), 
-       lollipop_plot, width = 14, height = 6, dpi = 300)
-
 lollipop_plot
+
+ggsave(here::here("figures", "putative_selection", "Fig5B_GO_lollipop_plot.pdf"),
+       lollipop_plot, width = 14, height = 6, dpi = 300)
 
 ```
 
@@ -537,7 +555,7 @@ outlier_collapsed <- snp_info_outlier_status_annotated %>%
   group_by(LocusName) %>%
   summarise(
     across(c(gene_id, description, go_id, go_term), collapse_unique),
-    across(-c(gene_id, description, go_id, go_term), first),  # keep all other columns
+    across(-c(gene_id, description, go_id, go_term), dplyr::first),  # keep all other columns
     .groups = "drop"
   )
 

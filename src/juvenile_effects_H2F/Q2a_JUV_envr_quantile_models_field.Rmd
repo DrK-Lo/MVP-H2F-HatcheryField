@@ -90,6 +90,36 @@ surv_len_mod_gen_env <- merge(surv_len_mod_gen, env_parents, by = "pop")
 
 ```
 
+### Pairwise correlation significance
+
+```{r}
+
+vars <- c("salinity_quantile_10","salinity_quantile_90","temp_quantile_10",
+          "temp_quantile_90","ho","ar","surv","mean_len")
+
+# bag-level data (same rows as the corrplot)
+dat <- surv_len_mod_gen_env[, vars]
+
+cor_df <- combn(vars, 2, simplify = FALSE) %>%
+  map_dfr(function(pair) {
+    ct <- cor.test(dat[[pair[1]]], dat[[pair[2]]], method = "pearson")
+    tibble(var1 = pair[1], var2 = pair[2],
+           r = unname(ct$estimate), p = ct$p.value,
+           n = sum(complete.cases(dat[pair])))
+  }) %>%
+  mutate(sig = case_when(p < 0.001 ~ "***",
+                         p < 0.01  ~ "**",
+                         p < 0.05  ~ "*",
+                         TRUE      ~ "ns")) %>%
+  arrange(p)
+
+cor_df
+
+write.csv(cor_df, "results/juvenile_effects_H2F/Q2a_pairwise_correlations.csv",
+          row.names = FALSE)
+
+```
+
 ### Assess multicollinearity and calculate pairwise correlations
 
 KEB 260823: Using the recoded juvenile genetic data to calculate heterozygosity and allelic richness, nothing is correlated.

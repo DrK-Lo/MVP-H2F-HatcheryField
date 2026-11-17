@@ -149,20 +149,20 @@ Used for both Fst and basic stats sections to keep labels consistent.
 
 recode_pop <- function(labels) {
   dplyr::case_match(labels,
-    "TX-CapBay"        ~ "W1-TX",
-    "LA-SisLake"       ~ "W2-LA",
-    "FL-KingPlan"      ~ "W3-FL",
-    "VA-JR-DeepWatSh"  ~ "W4-VA",
-    "LOLA"             ~ "S1-LOLA",
-    "DEBY"             ~ "S2-DEBY",
-    "NH-GrtBay"        ~ "W5-NH",
-    "ME-HogIs"         ~ "W6-ME",
-    "Poly-NoOutcross"  ~ "SEEDMIX",
-    "Poly-WithOutcross" ~ "HYBRIDMIX"
+    "TX-CapBay"         ~ "W1-TX",
+    "LA-SisLake"        ~ "W2-LA",
+    "FL-KingPlan"       ~ "W3-FL",
+    "VA-JR-DeepWatSh"   ~ "W4-VA",
+    "LOLA"              ~ "S1-LOLA",
+    "DEBY"              ~ "S2-DEBY",
+    "NH-GrtBay"         ~ "W5-NH",
+    "ME-HogIs"          ~ "W6-ME",
+    "Poly-WithOutcross" ~ "H1-HYBRIDMIX",
+    "Poly-NoOutcross"   ~ "H2-SEEDMIX"
   )
 }
 
-population_order <- c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME", "SEEDMIX", "HYBRIDMIX")
+population_order <- c("W1-TX", "W2-LA", "W3-FL", "W4-VA", "S1-LOLA", "S2-DEBY", "W5-NH", "W6-ME", "H1-HYBRIDMIX", "H2-SEEDMIX")
 
 ```
 
@@ -307,7 +307,7 @@ ncol(genind_obj_juv@tab) / ncol(FULL_filtered) # should be 2
 ```{r}
 
 # convert to hierfstat obj
-#hierfstat_obj_juv <- genind2hierfstat(genind_obj_juv)
+hierfstat_obj_juv <- genind2hierfstat(genind_obj_juv)
 
 # run basic stats - change here if you want to run on the thinned
 div <- basic.stats(hierfstat_fst)
@@ -464,6 +464,45 @@ ggplot(avg_het_per_pop, aes(x = Population, y = Value, group = Type, color = Typ
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
+#### Plot 4: Individual heterozygosity by population
+
+```{r}
+
+group_colors <- c("Gulf wild"      = "#C8553D",  # terracotta
+                  "Atlantic wild"  = "#2E6F95",  # slate blue
+                  "Selection line" = "#E0A458",  # ochre
+                  "Polyculture"    = "#7A7A7A")  # grey
+
+# proportion of heterozygous loci per individual (genotypes coded 0/1/2)
+ind_het <- tibble(
+  clean_ID = rownames(FULL_filtered),
+  Population = bs_pop_labels,
+  het = rowMeans(FULL_filtered == 1, na.rm = TRUE)
+) %>%
+  mutate(Population = factor(Population, levels = population_order),
+         Group = case_when(
+           Population %in% c("W1-TX","W2-LA") ~ "Gulf wild",
+           Population %in% c("W3-FL","W4-VA","W5-NH","W6-ME") ~ "Atlantic wild",
+           Population %in% c("S1-LOLA","S2-DEBY") ~ "Selection line",
+           TRUE ~ "Polyculture"))
+
+fig_ind_het <- ggplot(ind_het, aes(x = Population, y = het, color = Group)) +
+  geom_jitter(width = 0.15, alpha = 0.8, size = 1.5) +
+  stat_summary(fun.data = mean_cl_normal, geom = "pointrange",
+               color = "black", size = 0.4) +
+  scale_color_manual(values = group_colors,
+                     breaks = c("Gulf wild", "Atlantic wild", "Selection line", "Polyculture")) +
+  labs(x = NULL, y = "Individual heterozygosity\n(proportion heterozygous SNPs)", color = NULL) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, color = "black"))
+
+fig_ind_het
+
+ggsave("FigS7_individual_heterozygosity.pdf", plot = fig_ind_het,
+       path = file.path("figures", "juvenile_effects_H2F"), height = 4, width = 7)
+
+```
+
 ### Allelic richness 
 
 This should be fixed with the new hierfstat object that reads SNPs as biallelic.
@@ -485,6 +524,34 @@ ar_long <- melt(ar_results, id.vars = "Locus", variable.name = "Population", val
 
 # calculate means to put on graph
 means <- aggregate(Allelic_Richness ~ Population, data = ar_long, mean)
+
+```
+
+```{r}
+
+boot_ci <- function(x, n = 1000) {
+  x <- x[!is.na(x)]
+  b <- replicate(n, mean(sample(x, replace = TRUE)))
+  tibble(mean = mean(x), lower = quantile(b, 0.025), upper = quantile(b, 0.975))
+}
+
+ar_summary <- ar_long %>%
+  group_by(Population) %>%
+  summarise(boot_ci(Allelic_Richness), .groups = "drop") %>%
+  mutate(Population = factor(Population, levels = population_order),
+         Group = case_when(
+           Population %in% c("W1-TX","W2-LA") ~ "Gulf wild",
+           Population %in% c("W3-FL","W4-VA","W5-NH","W6-ME") ~ "Atlantic wild",
+           Population %in% c("S1-LOLA","S2-DEBY") ~ "Selection line",
+           TRUE ~ "Polyculture"))
+
+fig_ar <- ggplot(ar_summary, aes(x = Population, y = mean, color = Group)) +
+  geom_pointrange(aes(ymin = lower, ymax = upper), size = 0.6) +
+  scale_color_manual(values = group_colors,
+                     breaks = c("Gulf wild","Atlantic wild","Selection line","Polyculture")) +
+  labs(x = NULL, y = "Mean allelic richness\n(rarefied to 48 gene copies)", color = NULL) +
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, color = "black"))
 
 ```
 

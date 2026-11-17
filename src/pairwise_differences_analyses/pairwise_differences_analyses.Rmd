@@ -108,11 +108,12 @@ split_field_data <- function(df, prefix, group_col = "bag_site") {
 }
 
 # create a heatmap from a distance matrix
-plot_heatmap <- function(mat, fill_label, title = "") {
+plot_heatmap <- function(mat, fill_label, title = "", limits = NULL) {
   as.data.frame(as.table(mat)) %>%
     ggplot(aes(Var1, Var2, fill = Freq)) +
-    geom_tile(color = "grey85") +   # light grey borders so white tiles stay visible
+    geom_tile(color = "grey85") +
     scale_fill_distiller(palette = "Blues", direction = 1, na.value = "grey50",
+                         limits = limits,
                          guide = guide_colorbar(label.theme = element_text(angle = 45, size = 12))) +
     labs(title = title, x = "Treatment group", y = "Treatment group", fill = fill_label) +
     theme_minimal() +
@@ -145,10 +146,15 @@ field_survival <- read.csv(file.path("data", "performance_H2F", "field_surv_all_
 envr_dist <- readRDS(file.path("results", "environment", "envr_quantiles_dist_origin.rds"))
 
 # matrix of genetic distances between each group
-fst_mat <- readRDS(file.path("results", "parental_genetics", "20250606_fst_results.rds"))
+fst_mat <- read.csv(
+  file.path("results", "parental_genetics", "260707_recoded_fst_results.csv"),
+  row.names = 1,
+  check.names = FALSE
+)
 
 # reorder Fst matrix to match population order
 fst_mat <- fst_mat[POP_ORDER, POP_ORDER]
+fst_mat[is.na(fst_mat)] <- 0
 ```
 
 ## Data preparation
@@ -265,20 +271,24 @@ print(mantel_results)
 
 ### Assumption check: linearity
 ```{r assumptions, fig.height=4, fig.width=8}
+
 # check for linearity between predictor and response distances
+fst_dist <- as.dist(fst_mat)
+
 for (name in names(dist_matrices)) {
   par(mfrow = c(1, 2))
-  plot(as.vector(fst_mat), as.vector(dist_matrices[[name]]),
+  plot(as.vector(fst_dist), as.vector(as.dist(dist_matrices[[name]])),
        main = paste("Fst vs", name), xlab = "Fst", ylab = "Response variable distance")
-  plot(as.vector(envr_dist), as.vector(dist_matrices[[name]]),
+  plot(as.vector(as.dist(envr_dist)), as.vector(as.dist(dist_matrices[[name]])),
        main = paste("Environment vs", name), xlab = "Environmental distance", ylab = "Response variable distance")
 }
+
 ```
 
 ## Heatmaps
 ```{r heatmaps, fig.height=10, fig.width=12}
 # predictor distance heatmaps
-heatmap_fst <- plot_heatmap(fst_mat, expression("Pairwise " * F[ST]))
+heatmap_fst <- plot_heatmap(as.matrix(fst_mat), expression("Pairwise " * F[ST]))
 heatmap_envr <- plot_heatmap(envr_dist, "Standardized Euclidean\nenvironmental distance")
 
 # save predictor heatmaps
@@ -286,11 +296,14 @@ ggsave(file.path("figures", "pairwise_differences_analyses", "Fig4A_fst_heatmap.
 ggsave(file.path("figures", "pairwise_differences_analyses", "Fig4B_envr_dist_heatmap.pdf"), heatmap_envr, width = 12, height = 10)
 
 # response heatmaps (include the mixed groups)
+surv_limits <- range(c(heatmap_matrices$surv_event3_lewisetta,
+                       heatmap_matrices$surv_event3_yorkriver), na.rm = TRUE)
+
 response_heatmaps <- list(
   FigS10A_length_lew = plot_heatmap(heatmap_matrices$len_event3_lewisetta, "Euclidean distance\nin shell length"),
   FigS10B_length_york = plot_heatmap(heatmap_matrices$len_event3_yorkriver, "Euclidean distance\nin shell length"),
-  Fig4C_survival_lew = plot_heatmap(heatmap_matrices$surv_event3_lewisetta, "Euclidean distance\nin survival"),
-  Fig4D_survival_york = plot_heatmap(heatmap_matrices$surv_event3_yorkriver, "Euclidean distance\nin survival")
+  Fig4C_survival_lew = plot_heatmap(heatmap_matrices$surv_event3_lewisetta, "Euclidean distance\nin survival", limits = surv_limits),
+  Fig4D_survival_york = plot_heatmap(heatmap_matrices$surv_event3_yorkriver, "Euclidean distance\nin survival", limits = surv_limits)
 )
 
 iwalk(response_heatmaps, ~ ggsave(
